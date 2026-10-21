@@ -43,9 +43,20 @@ function sentenceFor(f: ExplainRequest["flags"][number], seen: Set<string>): str
   return `${base} They wrote: "${q.replace(/"/g, "'")}".`;
 }
 
+/** Section titles used by the pre-written explanation. Lines starting with "## " are titles, "- " are bullets. */
+export const FALLBACK_TITLES = { verdict: "Our take", flags: "What stood out", next: "What to do next" } as const;
+
+/**
+ * Pre-written explanation in short titled sections: a one-sentence verdict, the warning signs as
+ * bullets, and the next step. Plain text with "## " titles and "- " bullets so Explanation can lay it out.
+ */
 export function fallbackExplanation({ level, flags }: ExplainRequest): string {
+  const section = (title: string, ...lines: string[]) => [`## ${title}`, ...lines].join("\n");
   if (flags.length === 0) {
-    return "We didn't find any red flags in this message. That doesn't prove it's genuine, so apply through the company's official careers page.";
+    return [
+      section(FALLBACK_TITLES.verdict, "We didn't find any red flags in this message."),
+      section(FALLBACK_TITLES.next, "That doesn't prove it's genuine, so apply through the company's official careers page."),
+    ].join("\n\n");
   }
   const lead =
     level === "high"
@@ -61,9 +72,41 @@ export function fallbackExplanation({ level, flags }: ExplainRequest): string {
       : level === "medium"
         ? "Before you reply, confirm the role on the company's official careers page."
         : "If anything still feels off, confirm the role on the company's official careers page.";
-  const text = [lead, ...body, close].join(" ");
-  // Pre-written text must never trip the filter; fall back to the lead + close if a flag's own "why" does.
-  return hasBannedWord(text) ? [lead, close].join(" ") : text;
+  const verdict = section(FALLBACK_TITLES.verdict, lead);
+  const next = section(FALLBACK_TITLES.next, close);
+  const text = [verdict, section(FALLBACK_TITLES.flags, ...body.map((b) => `- ${b}`)), next].join("\n\n");
+  // Pre-written text must never trip the filter; fall back to the verdict + next step if a flag's own "why" does.
+  return hasBannedWord(text) ? [verdict, next].join("\n\n") : text;
+}
+
+export interface ExplanationSection {
+  title: string;
+  /** "text" = short sentences shown as a paragraph; "list" = bullet points. */
+  kind: "text" | "list";
+  items: string[];
+}
+
+/** Parses "## Title" sections (the pre-written format). Returns null for ordinary paragraphs. */
+export function explanationSections(text: string): ExplanationSection[] | null {
+  if (!/^## /m.test(text)) return null;
+  const out: ExplanationSection[] = [];
+  for (const block of text.split(/\n\s*\n/)) {
+    const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
+    if (!lines.length) continue;
+    const title = lines[0].startsWith("## ") ? lines.shift()!.slice(3).trim() : "";
+    const bullets = lines.filter((l) => l.startsWith("- "));
+    const isList = bullets.length > 0 && bullets.length === lines.length;
+    const items = isList ? bullets.map((l) => l.slice(2).trim()) : [lines.join(" ")];
+    if (items.join("").trim()) out.push({ title, kind: isList ? "list" : "text", items });
+  }
+  return out.length ? out : null;
+}
+
+/** Plain text for copying or announcing: titles become "Title:" lines, bullets stay as "- ". */
+export function explanationPlain(text: string): string {
+  const secs = explanationSections(text);
+  if (!secs) return text;
+  return secs.map((s) => [s.title ? `${s.title}:` : "", ...(s.kind === "list" ? s.items.map((i) => `- ${i}`) : s.items)].filter(Boolean).join("\n")).join("\n\n");
 }
 
 const QUOTED = /"([^"\n]+)"|“([^”\n]+)”/g;

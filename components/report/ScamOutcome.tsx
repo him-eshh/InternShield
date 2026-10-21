@@ -1,9 +1,9 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { copyReport, FTC_URL, IC3_URL } from "@/lib/client/copyReport";
+import { FTC_URL, IC3_URL } from "@/lib/client/copyReport";
 import type { Report, Source } from "@/lib/types";
-import { CheckIcon, CopyIcon, ExternalIcon } from "../icons";
+import { CheckIcon, ExternalIcon } from "../icons";
 import { btnPrimary, btnSecondary, card } from "../ui";
+import CopyReportButton from "./CopyReportButton";
 
 const PLATFORM: Partial<Record<Source, { label: string; url: string }>> = {
   linkedin: { label: "LinkedIn help", url: "https://www.linkedin.com/help/linkedin" },
@@ -28,20 +28,7 @@ function LinkButton({ href, label, primary }: { href: string; label: string; pri
 }
 
 export default function ScamOutcome({ report, source, careersUrl }: { report: Report; source: Source | null; careersUrl: string | null }) {
-  const [copied, setCopied] = useState<"idle" | "yes" | "no">("idle");
   const platform = source ? PLATFORM[source] : undefined;
-
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => {
-    if (timer.current) clearTimeout(timer.current);
-  }, []);
-
-  async function onCopy() {
-    const ok = await copyReport(report, careersUrl);
-    setCopied(ok ? "yes" : "no");
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => setCopied("idle"), 2500);
-  }
 
   return (
     <section aria-labelledby="todo-title" className={`${card} p-6 sm:p-8`}>
@@ -58,12 +45,8 @@ export default function ScamOutcome({ report, source, careersUrl }: { report: Re
         <LinkButton href={FTC_URL} label="Report to the FTC" primary />
         <LinkButton href={IC3_URL} label="Report to the FBI (IC3)" />
         {platform && <LinkButton href={platform.url} label={platform.label} />}
-        <button type="button" onClick={onCopy} className={btnSecondary}>
-          <CopyIcon size={16} />
-          {copied === "yes" ? "Copied" : copied === "no" ? "Couldn't copy" : "Copy report"}
-        </button>
+        <CopyReportButton report={report} careersUrl={careersUrl} />
       </div>
-      <p role="status" className="sr-only">{copied === "yes" ? "Report copied to clipboard" : copied === "no" ? "Couldn't copy the report" : ""}</p>
     </section>
   );
 }

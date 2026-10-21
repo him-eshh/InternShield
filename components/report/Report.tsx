@@ -6,6 +6,7 @@ import { describeChange, score } from "@/lib/scoring/score";
 import { LEVEL_LABELS, type Answers, type FlagGroup, type QuestionId, type Report as ReportData } from "@/lib/types";
 import { ExternalIcon, InfoIcon } from "../icons";
 import { btnPrimary, btnSecondary, linkClass } from "../ui";
+import CopyReportButton from "./CopyReportButton";
 import CouldntCheck, { COULDNT_CHECK_ID } from "./CouldntCheck";
 import EvidenceGroup from "./EvidenceGroup";
 import Explanation from "./Explanation";
@@ -175,7 +176,7 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, ex
         <QuickQuestions questions={questions} answers={answers} change={change} onAnswer={onAnswer} />
 
         {explanation ? (
-          <Explanation text={explanation.text} quotes={quotes} loading={explaining} />
+          <Explanation text={explanation.text} source={explanation.source} quotes={quotes} loading={explaining} />
         ) : (
           pending && <p className="text-[17px] text-muted" aria-busy="true">Writing the explanation...</p>
         )}
@@ -209,6 +210,7 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, ex
               <span className="sr-only">(opens in a new tab)</span>
             </a>
           </p>
+          {report.level === "low" && <CopyReportButton report={report} careersUrl={careersUrl} />}
           {extras}
           <button type="button" onClick={onAgain} className={btnPrimary}>
             Check another message
