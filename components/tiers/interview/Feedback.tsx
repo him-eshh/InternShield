@@ -1,4 +1,5 @@
-import type { InterviewSession, StarCheck } from "@/lib/tiers/types";
+import { checkTurn } from "@/lib/tiers/scripted";
+import type { InterviewSession, InterviewTurn, StarCheck } from "@/lib/tiers/types";
 import { btnPrimary, btnSecondary, card as cardCls } from "../../ui";
 
 const STAR: { key: keyof StarCheck; label: string }[] = [
@@ -7,6 +8,37 @@ const STAR: { key: keyof StarCheck; label: string }[] = [
   { key: "action", label: "Action" },
   { key: "result", label: "Result" },
 ];
+
+function fmt(n: number, unit: "$" | "%" | ""): string {
+  const s = Math.abs(n).toLocaleString("en-US", { maximumFractionDigits: 2 });
+  const sign = n < 0 ? "-" : "";
+  return unit === "$" ? `${sign}$${s}` : unit === "%" ? `${sign}${s}%` : `${sign}${s}`;
+}
+
+function CodeCheck({ turn }: { turn: InterviewTurn }) {
+  const r = checkTurn(turn);
+  if (!r) return null;
+  return (
+    <div className="mt-5 rounded-[12px] border border-border px-4 py-3">
+      <h2 className="text-[15px] font-semibold">Checked by code</h2>
+      {r.kind === "number" ? (
+        <p className="mt-1 break-words text-[16px]">
+          Your final number: {r.found === null ? "none found" : fmt(r.found, r.unit)} · Expected: {fmt(r.expected, r.unit)}{" "}
+          <span className={`font-medium ${r.correct ? "text-good" : "text-muted"}`}>{r.correct ? "✓ correct" : "– not quite"}</span>
+        </p>
+      ) : (
+        <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+          {[...r.covered.map((l) => ({ l, on: true })), ...r.missed.map((l) => ({ l, on: false }))].map(({ l, on }) => (
+            <li key={l} className={`rounded-[12px] border px-3 py-2 text-[14px] ${on ? "border-good/40" : "border-border text-muted"}`}>
+              <span className="block break-words font-medium text-text">{l}</span>
+              {on ? "✓ covered" : "– missing"}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 /** Feedback for any finished round. Pure view: the shell passes the actions. */
 export default function Feedback({
@@ -41,6 +73,7 @@ export default function Feedback({
                       {item.quote}
                     </blockquote>
                   )}
+                  <CodeCheck turn={turn} />
                   <h2 className="mt-5 text-[15px] font-semibold">What worked</h2>
                   <p className="mt-1 break-words text-[16px]">{item.strength}</p>
                   <h2 className="mt-4 text-[15px] font-semibold">Try next time</h2>

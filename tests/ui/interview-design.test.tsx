@@ -54,6 +54,13 @@ describe("DesignRound", () => {
     expect(html).toContain("Browser → API");
   });
 
+  it("shows a timer only for the design challenge", () => {
+    const html = render(session({ round: "challenge", createdAt: Date.now() }));
+    expect(html).toContain('role="timer"');
+    expect(html).toContain("left");
+    expect(render(session())).not.toContain('role="timer"');
+  });
+
   it("hides the follow-up button after the last question", () => {
     const turns = [1, 2].map((i) => ({ question: `Q${i}`, answer: `A${i}` }));
     const html = render(session({ turns, pending: "Q3" }));

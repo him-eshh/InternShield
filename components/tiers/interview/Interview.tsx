@@ -5,6 +5,7 @@ import {
   applyReply,
   buildRequest,
   canCall,
+  cleanLinks,
   loadSessions,
   newSession,
   nextStep,
@@ -62,6 +63,19 @@ function newId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
+const ROUND_BLURB: Record<InterviewRound, string> = {
+  screen: "A short first call: why you, why this role, and what you want next.",
+  behavioral: "Stories from your past, answered the STAR way: situation, task, action, result.",
+  coding: "One coding problem in the browser. Tests run on your device and are checked by code.",
+  design: "Sketch a system on a drawing board and explain your choices.",
+  case: "A short made-up business case: structure it, do one calculation (checked by code), then recommend.",
+  finance: "Four made-up accounting and valuation questions. Numbers are checked by code.",
+  portfolio: "Walk through your work: the problem, your role, your choices and what you learned.",
+  challenge: "A 20-minute design challenge on a drawing board.",
+};
+
+const LINK_CLS = `${linkClass} break-all`;
+
 function roundLabel(r: InterviewRound): string {
   return INTERVIEW_ROUNDS.find((x) => x.id === r)?.label ?? r;
 }
@@ -88,6 +102,7 @@ export default function Interview({ profile, resume, target, onBack, renderRound
   const [waitingFor, setWaitingFor] = useState<InterviewAsk>("question");
   const [error, setError] = useState<string | null>(null);
   const [answer, setAnswer] = useState("");
+  const [linksText, setLinksText] = useState("");
 
   const questionRef = useRef<HTMLDivElement>(null);
   const feedbackRef = useRef<HTMLDivElement>(null);
@@ -132,6 +147,10 @@ export default function Interview({ profile, resume, target, onBack, renderRound
       resume: resume && useResume ? resume.text.slice(0, MAX_RESUME_CONTEXT_CHARS) : null,
       field: profile?.field ?? null,
     };
+    if (activeRound === "portfolio") {
+      const links = cleanLinks(linksText);
+      if (links.length > 0) ctx.links = links;
+    }
     const s = newSession(activeRound, ctx, { id: newId(), now: now(), seed: randomSeed() });
     saveSession(s);
     setError(null);
@@ -216,6 +235,20 @@ export default function Interview({ profile, resume, target, onBack, renderRound
         {session.context.company || session.context.role ? (
           <p className="mt-1 break-words text-[17px] text-muted">{[session.context.role, session.context.company].filter(Boolean).join(" at ")}</p>
         ) : null}
+        {session.round === "portfolio" && session.context.links && session.context.links.length > 0 && (
+          <div className="mt-4">
+            <h2 className="text-[15px] font-semibold">Portfolio links</h2>
+            <ul className="mt-1 space-y-1 text-[15px]">
+              {session.context.links.map((l) => (
+                <li key={l}>
+                  <a href={l} target="_blank" rel="noopener noreferrer nofollow" className={LINK_CLS}>
+                    {l}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {isPanelRound ? (
           <RoundSlot render={renderRound} round={session.round} panel={panel} />
@@ -372,7 +405,28 @@ export default function Interview({ profile, resume, target, onBack, renderRound
             </label>
           ))}
         </div>
+        <p className="mt-3 max-w-[560px] text-[15px] text-muted">{ROUND_BLURB[activeRound]}</p>
       </fieldset>
+
+      {activeRound === "portfolio" && (
+        <div className="mt-6">
+          <label htmlFor="iv-links" className="text-[15px] font-medium">
+            Portfolio links <span className="font-normal text-muted">(optional)</span>
+          </label>
+          <p id="iv-links-help" className="mt-1 text-[15px] text-muted">
+            We only show these. Nothing opens them; the interviewer only sees the text of the link.
+          </p>
+          <textarea
+            id="iv-links"
+            value={linksText}
+            onChange={(e) => setLinksText(e.target.value)}
+            rows={3}
+            placeholder="One link per line"
+            aria-describedby="iv-links-help"
+            className={areaCls}
+          />
+        </div>
+      )}
 
       <div className="mt-8">
         <button type="button" onClick={start} className={btnPrimary}>
