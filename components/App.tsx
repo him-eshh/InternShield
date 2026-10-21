@@ -290,11 +290,18 @@ export default function App() {
             resume={resume}
             target={practiceTarget}
             onBack={practiceFromTracker ? () => setScreen("tracker") : back}
-            roundsEnabled={{ coding: TIER_FLAGS.coding, design: TIER_FLAGS.design }}
+            roundsEnabled={{
+              coding: TIER_FLAGS.coding,
+              design: TIER_FLAGS.design,
+              case: TIER_FLAGS.case,
+              finance: TIER_FLAGS.finance,
+              portfolio: TIER_FLAGS.portfolio,
+              challenge: TIER_FLAGS.challenge,
+            }}
             renderRound={(round, panel) =>
               round === "coding" && TIER_FLAGS.coding ? (
                 <CodingRound {...panel} />
-              ) : round === "design" && TIER_FLAGS.design ? (
+              ) : (round === "design" && TIER_FLAGS.design) || (round === "challenge" && TIER_FLAGS.challenge) ? (
                 <DesignRound {...panel} />
               ) : null
             }

@@ -13,6 +13,7 @@ import {
 } from "@/lib/tiers/interview";
 import { askInterview } from "@/lib/tiers/client";
 import {
+  BOARD_ROUNDS,
   INTERVIEW_ROUNDS,
   MAX_ANSWER_CHARS,
   MAX_CONTEXT_FIELD,
@@ -92,7 +93,7 @@ export default function Interview({ profile, resume, target, onBack, renderRound
   const feedbackRef = useRef<HTMLDivElement>(null);
   const hadContext = Boolean(target?.company || target?.role);
 
-  const rounds = INTERVIEW_ROUNDS.filter((r) => !r.techOnly || (profile?.field === "tech" && roundsEnabled?.[r.id] === true));
+  const rounds = INTERVIEW_ROUNDS.filter((r) => r.field === null || (profile?.field === r.field && roundsEnabled?.[r.id] === true));
   const activeRound = rounds.some((r) => r.id === round) ? round : "screen";
 
   useEffect(() => {
@@ -203,7 +204,7 @@ export default function Interview({ profile, resume, target, onBack, renderRound
   // ---------- Session ----------
   if (session && panel) {
     const total = QUESTIONS_PER_ROUND[session.round];
-    const isPanelRound = session.round === "coding" || session.round === "design";
+    const isPanelRound = session.round === "coding" || BOARD_ROUNDS.includes(session.round);
     const answered = session.turns.length;
     const needsRetry = !session.pending && !busy && !isPanelRound && nextStep(session) !== "done" && nextStep(session) !== "answer";
     // Coding/design panels have their own Finish (it saves the code/board first).

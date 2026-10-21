@@ -26,3 +26,4 @@
 - 2026-10-21 11:26 Live call 1/4 (Tier 3): /api/interview behavioral question, made-up answer -> 200, relevant follow-up on qwen.
 - 2026-10-21 11:26 Live call 2/4 (Tier 3): /api/interview behavioral feedback -> 200, schema valid, both quotes verbatim from the answers, STAR marks sensible (weak answer: task/action/result missing); 279 prompt + 301 completion tokens. Server log showed token counts only.
 - 2026-10-21 11:45 Merge-gate review: no blockers; 3 should-fixes + nits fixed (e33b624). Gates green on tier3 and on main after merge (2822cc3): 430 tests, eval 26/26, scoring diff empty. 2 live calls used. Summary committed. Tier 3 session ended.
+- 2026-10-21 15:40 Tier 4 session started (no tier4 branch existed). Main gates green (430 tests, eval 26/26, build). Vault profile unreachable; continued without it.

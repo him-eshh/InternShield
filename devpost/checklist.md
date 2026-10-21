@@ -143,6 +143,36 @@ Build mode: fast (chosen by Himesh; overnight parallel build per `devpost/build-
   Learner check: Draw client → server → database + cache with only the keyboard, export the PNG, ask for a follow-up.
   Commit: `Slice 13: system design board`
 
+- [ ] **14. Business: case interview**
+  Becomes usable: business profiles can run a made-up, interviewer-led case (structure, one calculation, recommendation) and get feedback with the math and structure checked in code.
+  Why now: Reuses the Tier 3 shell and route; adds the scripted-round engine the finance round also needs.
+  PRD ref: `prd.md > Deferred From the POC`
+  Spec ref: `tier4-spec.md > Scripted rounds`, `> Feedback view`, `> Route`
+  Build: `lib/tiers/scripted.ts` (cases, checks), scripted advance in `lib/tiers/interview.ts`, route check lines + question rejection, Feedback "Checked by code", round line, `TIER_FLAGS.case = true`.
+  Verify (mechanical): gates pass; `npm run eval` 26/26; scripted tests (answer keys recomputed, extractNumber table, rubric) pass; route test shows server-computed Check lines; UI test shows Case only for business.
+  Learner check: Run a case as a business profile, give a wrong number once and a right one once, read the code check.
+  Commit: `Slice 14: business case interview`
+
+- [ ] **15. Finance: technical questions**
+  Becomes usable: finance profiles get 4 made-up accounting/valuation questions, numeric answers checked in code and the rest against a rubric, with feedback.
+  Why now: Same scripted engine as Slice 14, different bank.
+  PRD ref: `prd.md > Deferred From the POC`
+  Spec ref: `tier4-spec.md > Scripted rounds`
+  Build: `FINANCE_BANK` in `lib/tiers/scripted.ts`, tests, `TIER_FLAGS.finance = true`.
+  Verify (mechanical): gates pass; bank has >= 12 questions, >= 5 numeric with keys verified in tests; 4 distinct per session; UI test shows Technical questions only for finance.
+  Learner check: Run the finance round, answer one numeric question with "$1.2 million" style text, check it's read right.
+  Commit: `Slice 15: finance technical questions`
+
+- [ ] **16. Design and arts: portfolio walkthrough + design challenge**
+  Becomes usable: design profiles can talk through their portfolio (links shown, never fetched) and do a 20-minute design challenge on the board, each with follow-ups and feedback.
+  Why now: Last field; reuses the board and shell.
+  PRD ref: `prd.md > Deferred From the POC`
+  Spec ref: `tier4-spec.md > Portfolio walkthrough`, `> Design challenge`
+  Build: `cleanLinks`, `PORTFOLIO_FIRST`, `CHALLENGE_PROMPTS`, `challengeLeft`, board `screen` kind, route links parse + prompts, setup links field, DesignRound timer, `TIER_FLAGS.portfolio = true`, `TIER_FLAGS.challenge = true`.
+  Verify (mechanical): gates pass; cleanLinks/challengeLeft tests pass; route rejects javascript: links and never fetches (no fetch call in the route for links); UI tests show the links field only for portfolio and the timer only for challenge.
+  Learner check: Add two made-up portfolio links, answer a follow-up; draw a 3-screen flow in the challenge and watch the timer.
+  Commit: `Slice 16: portfolio walkthrough and design challenge`
+
 ## Hands-on Checkpoints
 
 - [ ] Early usable behavior explored — pending Himesh (morning): after Slice 5, try both examples live and give feedback

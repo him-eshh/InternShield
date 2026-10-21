@@ -18,6 +18,8 @@ Tier 2 (`devpost/tier2-spec.md > Ownership`): orchestrator also owns `lib/tiers/
 
 Tier 3 (`devpost/tier3-spec.md > Ownership`): orchestrator keeps the Tier 2 shared files plus round wiring in `components/tiers/interview/Interview.tsx`. engine-builder: `lib/tiers/interview.ts`, `lib/tiers/problems.ts`, `lib/tiers/board.ts`, `tests/tiers/**`. api-builder: `app/api/interview/**`, `lib/server/interview.ts`, `tests/api/interview.test.ts`. ui-builder: `components/tiers/interview/**`, `lib/tiers/runner.ts`, `lib/tiers/client.ts`, `public/workers/**`, `components/tiers/Tracker.tsx` (`onPractice`), `tests/ui/interview*.test.tsx`.
 
+Tier 4 (`devpost/tier4-spec.md > Ownership`): orchestrator keeps the Tier 2/3 shared files (types, flags, App). engine-builder: `lib/tiers/scripted.ts`, `lib/tiers/interview.ts`, `lib/tiers/board.ts`, `tests/tiers/**`. api-builder: `lib/server/interview.ts`, `app/api/interview/**`, `tests/api/interview.test.ts`. ui-builder: `components/tiers/interview/**`, `tests/ui/interview*.test.tsx`.
+
 Contracts in `lib/types.ts` are read-only to workers: report needed changes, don't edit. No new dependencies: everything is installed.
 
 ## Gates (all must pass before any merge)
