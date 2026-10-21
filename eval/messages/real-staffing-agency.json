@@ -1,0 +1,26 @@
+{
+  "note": "Tricky real one: staffing agency recruiting for a client. Different domain from the client is not a flag.",
+  "text": "Hello Casey,\n\nI'm Megan Torres, a recruiter with Apex Talent Partners. We're helping our client, Riverside Health, fill a Finance Operations Intern role for summer 2027 in Columbus, OH ($24/hour, hybrid). If it sounds interesting, I can share the full job description and set up a phone screen, followed by interviews with the Riverside team.\n\nBest,\nMegan Torres\nmegan.torres@apextalentpartners.com",
+  "expectedLevel": "low",
+  "profile": { "field": "finance", "level": "senior", "skills": ["Excel"] },
+  "source": "linkedin",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Riverside Health", "quote": "our client, Riverside Health" },
+        "role": { "value": "Finance Operations Intern", "quote": "a Finance Operations Intern role" },
+        "pay": { "value": "$24/hour", "quote": "($24/hour, hybrid)" },
+        "sender": { "name": "Megan Torres", "email": "megan.torres@apextalentpartners.com", "phone": null },
+        "interview": { "status": "mentioned", "quote": "set up a phone screen, followed by interviews with the Riverside team" }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "riversidehealth.org", "careersUrl": "https://riversidehealth.org/careers" } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "megan.torres@apextalentpartners.com", "domain": "apextalentpartners.com", "freeEmail": false, "registeredAt": "2016-01-10T00:00:00Z", "hasMx": true }
+    },
+    "posting": { "status": "done", "data": { "found": false, "url": null, "title": null, "location": null, "pay": null, "postedDate": null, "onOfficialDomain": false } }
+  }
+}

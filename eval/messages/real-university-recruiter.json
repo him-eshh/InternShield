@@ -1,0 +1,26 @@
+{
+  "note": "Tricky real one: a professor hiring a research assistant from the exact university domain.",
+  "text": "Hi Jesse,\n\nI'm Dr. Ana Morales, a faculty member in the Department of Ecology at the University of Michigan. Your advisor mentioned you're interested in field research, and I have an opening for an undergraduate research assistant in my lab this winter (10 hours a week, $17/hour through the university payroll). Would you be free to meet in my office next Tuesday or Wednesday to talk about it?\n\nBest,\nAna Morales\namorales@umich.edu",
+  "expectedLevel": "low",
+  "profile": { "field": "other", "level": "sophomore", "skills": ["Field research"] },
+  "source": "email",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "University of Michigan", "quote": "the Department of Ecology at the University of Michigan" },
+        "role": { "value": "undergraduate research assistant", "quote": "an opening for an undergraduate research assistant" },
+        "pay": { "value": "$17/hour", "quote": "$17/hour through the university payroll" },
+        "sender": { "name": "Ana Morales", "email": "amorales@umich.edu", "phone": null },
+        "interview": { "status": "mentioned", "quote": "Would you be free to meet in my office next Tuesday or Wednesday" }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "umich.edu", "careersUrl": "https://careers.umich.edu" } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "amorales@umich.edu", "domain": "umich.edu", "freeEmail": false, "registeredAt": "1985-06-01T00:00:00Z", "hasMx": true }
+    },
+    "posting": { "status": "done", "data": { "found": false, "url": null, "title": null, "location": null, "pay": null, "postedDate": null, "onOfficialDomain": false } }
+  }
+}

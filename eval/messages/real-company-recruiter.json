@@ -1,0 +1,36 @@
+{
+  "note": "Normal interview invite after applying, from the company's own domain, posting found on its site.",
+  "text": "Hi Taylor,\n\nThank you for applying to the Data Science Intern role at Harborview Analytics. I'm Chris Patel from our campus recruiting team. We'd like to invite you to a 45-minute technical interview with two of our data scientists. Please use the scheduling link in our candidate portal to pick a time that works for you.\n\nBest,\nChris Patel\nCampus Recruiting, Harborview Analytics\nchris.patel@harborviewanalytics.com",
+  "expectedLevel": "low",
+  "profile": { "field": "tech", "level": "junior", "skills": ["Python", "Statistics"] },
+  "source": "company_site",
+  "stage": "interviewing",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Harborview Analytics", "quote": "Data Science Intern role at Harborview Analytics" },
+        "role": { "value": "Data Science Intern", "quote": "the Data Science Intern role" },
+        "sender": { "name": "Chris Patel", "email": "chris.patel@harborviewanalytics.com", "phone": null },
+        "interview": { "status": "mentioned", "quote": "invite you to a 45-minute technical interview" }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "harborviewanalytics.com", "careersUrl": "https://harborviewanalytics.com/careers" } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "chris.patel@harborviewanalytics.com", "domain": "harborviewanalytics.com", "freeEmail": false, "registeredAt": "2014-06-02T00:00:00Z", "hasMx": true }
+    },
+    "posting": {
+      "status": "done",
+      "data": {
+        "found": true,
+        "url": "https://harborviewanalytics.com/careers/data-science-intern",
+        "title": "Data Science Intern",
+        "location": "Boston, MA",
+        "pay": "$42/hour",
+        "postedDate": "2026-09-15",
+        "onOfficialDomain": true
+      }
+    }
+  }
+}

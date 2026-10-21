@@ -1,0 +1,24 @@
+{
+  "note": "Task scam: app optimization, pay in USDT to unlock earnings, Telegram, surprise text.",
+  "text": "Hello! I'm Mia, a recruiter with Brightpath Digital. We have a flexible remote job: complete app optimization tasks for 30 minutes a day and earn $200-$500 daily. No experience needed. To unlock your daily earnings, you need to top up your work account with 50 USDT first. Interested? Add me on Telegram: @mia_brightpath",
+  "expectedLevel": "high",
+  "profile": { "field": "other", "level": "sophomore", "skills": [] },
+  "source": "text_whatsapp",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Brightpath Digital", "quote": "I'm Mia, a recruiter with Brightpath Digital" },
+        "pay": { "value": "$200-$500 daily", "quote": "earn $200-$500 daily" },
+        "sender": { "name": "Mia", "email": null, "phone": null },
+        "asks": [{ "kind": "crypto_or_task_deposit", "quote": "To unlock your daily earnings, you need to top up your work account with 50 USDT first" }],
+        "offPlatform": { "app": "Telegram", "quote": "Add me on Telegram" },
+        "dutiesVague": { "quote": "complete app optimization tasks for 30 minutes a day" },
+        "noExperienceNeeded": { "quote": "No experience needed" }
+      }
+    },
+    "company": { "status": "done", "data": null },
+    "posting": { "status": "skipped", "reason": "needs step 2" }
+  }
+}

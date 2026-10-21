@@ -1,0 +1,24 @@
+{
+  "note": "Personal-assistant job whose first task is buying gift cards.",
+  "text": "Hello,\n\nI am Dr. Richard Hale, a professor relocating for research, and I need a part-time personal assistant for $400 per week. Your first task: purchase three $100 Apple gift cards for a client meeting, scratch the back, and email me photos of the codes. I will reimburse you with your first payment.\n\nDr. Richard Hale\nprof.richardhale@gmail.com",
+  "expectedLevel": "high",
+  "profile": { "field": "other", "level": "junior", "skills": [] },
+  "source": "email",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "role": { "value": "personal assistant", "quote": "a part-time personal assistant" },
+        "pay": { "value": "$400 per week", "quote": "$400 per week" },
+        "sender": { "name": "Richard Hale", "email": "prof.richardhale@gmail.com", "phone": null },
+        "asks": [{ "kind": "gift_cards", "quote": "purchase three $100 Apple gift cards for a client meeting" }]
+      }
+    },
+    "sender": {
+      "status": "done",
+      "data": { "email": "prof.richardhale@gmail.com", "domain": "gmail.com", "freeEmail": true, "registeredAt": null, "hasMx": true }
+    },
+    "posting": { "status": "skipped", "reason": "needs step 2" }
+  }
+}

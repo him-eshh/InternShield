@@ -1,0 +1,27 @@
+{
+  "note": "Tricky real one: an employer in India that coordinates on WhatsApp. No money or data asked, so it counts for less.",
+  "text": "Hi Alex, I'm Priyanka from the talent team at Saffron Systems in Bengaluru. We're hiring remote backend interns for our winter cohort and your profile looks like a good match. Our team usually coordinates on WhatsApp, so feel free to message me at +91 98450 12345 if you'd like to schedule an interview with our engineering lead.\n\nPriyanka\npriyanka@saffronsystems.in",
+  "expectedLevel": "low",
+  "profile": { "field": "tech", "level": "senior", "skills": ["Go", "PostgreSQL"] },
+  "source": "linkedin",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Saffron Systems", "quote": "the talent team at Saffron Systems in Bengaluru" },
+        "role": { "value": "backend intern", "quote": "hiring remote backend interns" },
+        "sender": { "name": "Priyanka", "email": "priyanka@saffronsystems.in", "phone": "+91 98450 12345" },
+        "offPlatform": { "app": "WhatsApp", "quote": "Our team usually coordinates on WhatsApp" },
+        "interview": { "status": "mentioned", "quote": "schedule an interview with our engineering lead" },
+        "employerCountryHint": "India"
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "saffronsystems.in", "careersUrl": "https://saffronsystems.in/careers" } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "priyanka@saffronsystems.in", "domain": "saffronsystems.in", "freeEmail": false, "registeredAt": "2015-02-11T00:00:00Z", "hasMx": true }
+    },
+    "posting": { "status": "done", "data": { "found": false, "url": null, "title": null, "location": null, "pay": null, "postedDate": null, "onOfficialDomain": false } }
+  }
+}

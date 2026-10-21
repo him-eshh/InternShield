@@ -1,0 +1,27 @@
+{
+  "note": "Fake check to buy equipment from their vendor, free email claiming a company.",
+  "text": "Hi there,\n\nI'm Daniel Ross from Crestview Logistics Group. Your profile was shared with us and we'd like to offer you a remote Administrative Assistant internship at $32/hour. No experience is required.\n\nBefore you start, we will send you a check for $3,200. Deposit the check and use the funds to buy your laptop and software from our approved vendor.\n\nPlease confirm today.\n\nDaniel Ross\nHiring Manager\ncrestview.logistics.hiring@outlook.com",
+  "expectedLevel": "high",
+  "profile": { "field": "business", "level": "junior", "skills": ["Excel"] },
+  "source": "email",
+  "stage": "offer",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Crestview Logistics Group", "quote": "I'm Daniel Ross from Crestview Logistics Group" },
+        "role": { "value": "Administrative Assistant", "quote": "remote Administrative Assistant internship" },
+        "pay": { "value": "$32/hour", "quote": "at $32/hour" },
+        "sender": { "name": "Daniel Ross", "email": "crestview.logistics.hiring@outlook.com", "phone": null },
+        "asks": [{ "kind": "deposit_check", "quote": "Deposit the check and use the funds to buy your laptop and software from our approved vendor" }],
+        "noExperienceNeeded": { "quote": "No experience is required" }
+      }
+    },
+    "company": { "status": "done", "data": null },
+    "sender": {
+      "status": "done",
+      "data": { "email": "crestview.logistics.hiring@outlook.com", "domain": "outlook.com", "freeEmail": true, "registeredAt": null, "hasMx": true }
+    },
+    "posting": { "status": "skipped", "reason": "needs step 2" }
+  }
+}

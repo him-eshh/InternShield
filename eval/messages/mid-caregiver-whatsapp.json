@@ -1,0 +1,20 @@
+{
+  "note": "Caregiver job by surprise WhatsApp from the UK. No money asked yet, so off-platform counts less.",
+  "text": "Hi, my name is Linda. I'm looking for a caregiver for my elderly mother three afternoons a week, $28 per hour. I saw your profile on a student job board. Can we talk on WhatsApp? Message me at +44 7700 900123.",
+  "expectedLevel": "medium",
+  "profile": { "field": "other", "level": "sophomore", "skills": [] },
+  "source": "text_whatsapp",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "role": { "value": "caregiver", "quote": "I'm looking for a caregiver for my elderly mother" },
+        "pay": { "value": "$28 per hour", "quote": "$28 per hour" },
+        "sender": { "name": "Linda", "email": null, "phone": "+44 7700 900123" },
+        "offPlatform": { "app": "WhatsApp", "quote": "Can we talk on WhatsApp?" },
+        "employerCountryHint": "United Kingdom"
+      }
+    }
+  }
+}

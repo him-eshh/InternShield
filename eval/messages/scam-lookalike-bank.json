@@ -1,0 +1,26 @@
+{
+  "note": "Offer with no interview from a lookalike of the bank's real website, same-day deadline.",
+  "text": "Hello Priya,\n\nFollowing your application, the Global Markets team at Meridian Trust Bank would like to offer you a Summer Analyst internship without an interview, based on your strong resume. Please review and sign the attached offer letter by the end of today, as we have limited positions remaining.\n\nKind regards,\nThomas Weller\nCampus Recruiting, Meridian Trust Bank\nt.weller@meridiantrustbank-careers.com",
+  "expectedLevel": "high",
+  "profile": { "field": "finance", "level": "junior", "skills": ["Financial modeling"] },
+  "source": "email",
+  "stage": "offer",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Meridian Trust Bank", "quote": "the Global Markets team at Meridian Trust Bank" },
+        "role": { "value": "Summer Analyst", "quote": "offer you a Summer Analyst internship" },
+        "sender": { "name": "Thomas Weller", "email": "t.weller@meridiantrustbank-careers.com", "phone": null },
+        "pressure": [{ "quote": "Please review and sign the attached offer letter by the end of today" }],
+        "interview": { "status": "none_hired_directly", "quote": "offer you a Summer Analyst internship without an interview" }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "meridiantrustbank.com", "careersUrl": "https://meridiantrustbank.com/careers" } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "t.weller@meridiantrustbank-careers.com", "domain": "meridiantrustbank-careers.com", "freeEmail": false, "registeredAt": "-200d", "hasMx": true }
+    },
+    "posting": { "status": "done", "data": { "found": false, "url": null, "title": null, "location": null, "pay": null, "postedDate": null, "onOfficialDomain": false } }
+  }
+}

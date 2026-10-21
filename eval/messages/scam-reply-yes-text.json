@@ -1,0 +1,23 @@
+{
+  "note": "Surprise text: easy pay, no experience, reply YES. No critical flag, high on points alone.",
+  "text": "Hi, this is Ashley from Talent Bridge Staffing. We found your resume online and have a remote position paying $300-$600 per day, flexible hours, no experience needed. Reply YES to learn more, or STOP to opt out.",
+  "expectedLevel": "high",
+  "profile": { "field": "business", "level": "sophomore", "skills": [] },
+  "source": "text_whatsapp",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Talent Bridge Staffing", "quote": "Ashley from Talent Bridge Staffing" },
+        "pay": { "value": "$300-$600 per day", "quote": "paying $300-$600 per day" },
+        "sender": { "name": "Ashley", "email": null, "phone": null },
+        "asks": [{ "kind": "reply_yes", "quote": "Reply YES to learn more" }],
+        "dutiesVague": { "quote": "have a remote position paying $300-$600 per day, flexible hours" },
+        "noExperienceNeeded": { "quote": "no experience needed" }
+      }
+    },
+    "company": { "status": "done", "data": null },
+    "posting": { "status": "skipped", "reason": "needs step 2" }
+  }
+}

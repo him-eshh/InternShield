@@ -1,0 +1,28 @@
+{
+  "note": "Freelance design role: interview over Telegram chat, 12-hour deadline, 20-day-old domain.",
+  "text": "Hi Sam, I came across your portfolio and think you'd be a great fit for a freelance UI Designer contract with Novalyn Creative. The project pays $45/hour. Our creative director will interview you over Telegram chat this week. Please reply within 12 hours to secure your spot.\n\nLucas\nlucas@novalyncreative.com",
+  "expectedLevel": "medium",
+  "profile": { "field": "design", "level": "senior", "skills": ["Figma", "UI design"] },
+  "source": "linkedin",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Novalyn Creative", "quote": "UI Designer contract with Novalyn Creative" },
+        "role": { "value": "UI Designer", "quote": "a freelance UI Designer contract" },
+        "pay": { "value": "$45/hour", "quote": "The project pays $45/hour" },
+        "sender": { "name": "Lucas", "email": "lucas@novalyncreative.com", "phone": null },
+        "offPlatform": { "app": "Telegram", "quote": "Our creative director will interview you over Telegram chat this week" },
+        "pressure": [{ "quote": "Please reply within 12 hours to secure your spot" }],
+        "interview": { "status": "mentioned", "quote": "will interview you over Telegram chat" }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "novalyncreative.com", "careersUrl": null } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "lucas@novalyncreative.com", "domain": "novalyncreative.com", "freeEmail": false, "registeredAt": "-20d", "hasMx": true }
+    },
+    "posting": { "status": "done", "data": { "found": false, "url": null, "title": null, "location": null, "pay": null, "postedDate": null, "onOfficialDomain": false } }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "note": "Normal first-round interview invite after applying on Handshake.",
+  "text": "Hi Sam,\n\nThank you for applying to the Audit Intern position at Pemberton & Lowe through Handshake. We'd like to invite you to a first-round virtual interview with our audit team. Please reply with two or three times that work for you over the next week.\n\nWarm regards,\nElena Brooks\nCampus Recruiting, Pemberton & Lowe\nebrooks@pembertonlowe.com",
+  "expectedLevel": "low",
+  "profile": { "field": "finance", "level": "junior", "skills": ["Accounting"] },
+  "source": "handshake",
+  "stage": "interviewing",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Pemberton & Lowe", "quote": "Audit Intern position at Pemberton & Lowe" },
+        "role": { "value": "Audit Intern", "quote": "the Audit Intern position" },
+        "sender": { "name": "Elena Brooks", "email": "ebrooks@pembertonlowe.com", "phone": null },
+        "interview": { "status": "mentioned", "quote": "invite you to a first-round virtual interview with our audit team" }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "pembertonlowe.com", "careersUrl": "https://pembertonlowe.com/careers" } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "ebrooks@pembertonlowe.com", "domain": "pembertonlowe.com", "freeEmail": false, "registeredAt": "2003-11-05T00:00:00Z", "hasMx": true }
+    },
+    "posting": {
+      "status": "done",
+      "data": {
+        "found": true,
+        "url": "https://pembertonlowe.com/careers/audit-intern-2027",
+        "title": "Audit Intern - Summer 2027",
+        "location": "Chicago, IL",
+        "pay": null,
+        "postedDate": "2026-08-30",
+        "onOfficialDomain": true
+      }
+    }
+  }
+}

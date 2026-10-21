@@ -1,0 +1,26 @@
+{
+  "note": "Mystery-shopper pattern from a free email. Warning signs, no critical ask yet.",
+  "text": "Hello,\n\nWe are hiring part-time mystery shoppers in your area. You will visit local stores, rate the customer service, and earn $250 per assignment. No experience needed, all training provided.\n\nShopper Insight Group\nshopperinsightgroup@yahoo.com",
+  "expectedLevel": "medium",
+  "profile": { "field": "business", "level": "freshman", "skills": [] },
+  "source": "email",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Shopper Insight Group", "quote": "Shopper Insight Group" },
+        "role": { "value": "mystery shopper", "quote": "part-time mystery shoppers" },
+        "pay": { "value": "$250 per assignment", "quote": "earn $250 per assignment" },
+        "sender": { "name": null, "email": "shopperinsightgroup@yahoo.com", "phone": null },
+        "noExperienceNeeded": { "quote": "No experience needed" }
+      }
+    },
+    "company": { "status": "done", "data": null },
+    "sender": {
+      "status": "done",
+      "data": { "email": "shopperinsightgroup@yahoo.com", "domain": "yahoo.com", "freeEmail": true, "registeredAt": null, "hasMx": true }
+    },
+    "posting": { "status": "skipped", "reason": "needs step 2" }
+  }
+}

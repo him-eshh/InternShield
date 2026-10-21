@@ -1,0 +1,36 @@
+{
+  "note": "Tricky real one: interview scheduling mail sent through Greenhouse, not the company's domain.",
+  "text": "Hi Avery,\n\nThanks for your application to the Software Engineer Intern position at Lumen Robotics. We'd like to move you forward to a technical phone interview. Please choose a time using the link below.\n\nSchedule your interview: https://app.greenhouse.io/scheduling/lumen-robotics\n\nThe Lumen Robotics Recruiting Team\nno-reply@greenhouse.io",
+  "expectedLevel": "low",
+  "profile": { "field": "tech", "level": "junior", "skills": ["C++", "ROS"] },
+  "source": "company_site",
+  "stage": "interviewing",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Lumen Robotics", "quote": "Software Engineer Intern position at Lumen Robotics" },
+        "role": { "value": "Software Engineer Intern", "quote": "the Software Engineer Intern position" },
+        "sender": { "name": null, "email": "no-reply@greenhouse.io", "phone": null },
+        "interview": { "status": "mentioned", "quote": "move you forward to a technical phone interview" }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "lumenrobotics.com", "careersUrl": "https://lumenrobotics.com/careers" } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "no-reply@greenhouse.io", "domain": "greenhouse.io", "freeEmail": false, "registeredAt": "2012-02-01T00:00:00Z", "hasMx": true }
+    },
+    "posting": {
+      "status": "done",
+      "data": {
+        "found": true,
+        "url": "https://boards.greenhouse.io/lumenrobotics/jobs/4410021",
+        "title": "Software Engineer Intern",
+        "location": "Pittsburgh, PA",
+        "pay": null,
+        "postedDate": null,
+        "onOfficialDomain": false
+      }
+    }
+  }
+}

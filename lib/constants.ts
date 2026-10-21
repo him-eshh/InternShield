@@ -8,7 +8,7 @@ export const FREE_EMAIL_DOMAINS = new Set([
 
 /** Applicant-tracking / hiring platforms that send mail or host postings for employers. */
 export const HIRING_PLATFORM_DOMAINS = new Set([
-  "greenhouse.io", "lever.co", "myworkdayjobs.com", "workday.com", "ashbyhq.com", "smartrecruiters.com",
+  "greenhouse.io", "greenhouse-mail.io", "lever.co", "hire.lever.co", "myworkdayjobs.com", "workday.com", "ashbyhq.com", "smartrecruiters.com",
   "icims.com", "jobvite.com", "bamboohr.com", "joinhandshake.com", "taleo.net", "successfactors.com",
 ]);
 

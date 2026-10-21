@@ -1,0 +1,25 @@
+{
+  "note": "Training fee after applying on Handshake; sender uses the company name with a different ending.",
+  "text": "Hi Jamie,\n\nThanks for your interest in the Graphic Design Intern position at Pixelcraft Studio. You've passed our initial screening! Before your first assignment, you will need to pay a $149 training fee for our design software certification. The fee is fully refundable after your first paycheck.\n\nPixelcraft Studio Talent Team\ntalent@pixelcraftstudio.co",
+  "expectedLevel": "high",
+  "profile": { "field": "design", "level": "freshman", "skills": ["Figma"] },
+  "source": "handshake",
+  "stage": "interviewing",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Pixelcraft Studio", "quote": "Graphic Design Intern position at Pixelcraft Studio" },
+        "role": { "value": "Graphic Design Intern", "quote": "the Graphic Design Intern position" },
+        "sender": { "name": null, "email": "talent@pixelcraftstudio.co", "phone": null },
+        "asks": [{ "kind": "pay_fee", "quote": "you will need to pay a $149 training fee for our design software certification" }]
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "pixelcraftstudio.com", "careersUrl": "https://pixelcraftstudio.com/careers" } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "talent@pixelcraftstudio.co", "domain": "pixelcraftstudio.co", "freeEmail": false, "registeredAt": "-60d", "hasMx": false }
+    },
+    "posting": { "status": "done", "data": { "found": false, "url": null, "title": null, "location": null, "pay": null, "postedDate": null, "onOfficialDomain": false } }
+  }
+}

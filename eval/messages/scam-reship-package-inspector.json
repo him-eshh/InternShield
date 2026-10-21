@@ -1,0 +1,27 @@
+{
+  "note": "Reshipping job from a brand-new lookalike domain, no interview.",
+  "text": "Good afternoon,\n\nNorthgate Supply Co. is hiring a remote Package Inspector for our new home-based program. You will receive packages at your home, inspect them, re-label them with the prepaid labels we email you, and ship them to our overseas clients. Pay is $2,400 per month plus bonuses.\n\nNo interview is needed, you can start Monday.\n\nRegards,\nKaren Holt\nNorthgate Supply Co.\nhr@northgate-supplyco.com",
+  "expectedLevel": "high",
+  "profile": { "field": "business", "level": "senior", "skills": [] },
+  "source": "linkedin",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Northgate Supply Co.", "quote": "Northgate Supply Co. is hiring a remote Package Inspector" },
+        "role": { "value": "Package Inspector", "quote": "Northgate Supply Co. is hiring a remote Package Inspector" },
+        "pay": { "value": "$2,400 per month", "quote": "Pay is $2,400 per month plus bonuses" },
+        "sender": { "name": "Karen Holt", "email": "hr@northgate-supplyco.com", "phone": null },
+        "asks": [{ "kind": "reship_or_forward", "quote": "You will receive packages at your home, inspect them, re-label them with the prepaid labels we email you, and ship them to our overseas clients" }],
+        "interview": { "status": "none_hired_directly", "quote": "No interview is needed, you can start Monday" }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "northgatesupply.com", "careersUrl": null } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "hr@northgate-supplyco.com", "domain": "northgate-supplyco.com", "freeEmail": false, "registeredAt": "-25d", "hasMx": true }
+    },
+    "posting": { "status": "done", "data": { "found": false, "url": null, "title": null, "location": null, "pay": null, "postedDate": null, "onOfficialDomain": false } }
+  }
+}

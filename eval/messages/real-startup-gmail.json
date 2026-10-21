@@ -1,0 +1,26 @@
+{
+  "note": "Tricky real one: a four-person startup founder writing from Gmail. Free email counts, but only a little.",
+  "text": "Hi Riley,\n\nI'm Noah, co-founder of Tidepool, a small startup building scheduling tools for clinics (we're four people right now). I saw your project on GitHub and wondered if you'd be interested in a paid part-time frontend internship this spring, around $25/hour. If you're open to it, I'd love to set up a video call next week so you can meet the team and ask questions.\n\nNoah\nnoah.tidepool@gmail.com",
+  "expectedLevel": "low",
+  "profile": { "field": "tech", "level": "sophomore", "skills": ["React", "TypeScript"] },
+  "source": "email",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Tidepool", "quote": "co-founder of Tidepool" },
+        "role": { "value": "frontend intern", "quote": "a paid part-time frontend internship" },
+        "pay": { "value": "$25/hour", "quote": "around $25/hour" },
+        "sender": { "name": "Noah", "email": "noah.tidepool@gmail.com", "phone": null },
+        "interview": { "status": "mentioned", "quote": "set up a video call next week so you can meet the team" }
+      }
+    },
+    "company": { "status": "done", "data": null },
+    "sender": {
+      "status": "done",
+      "data": { "email": "noah.tidepool@gmail.com", "domain": "gmail.com", "freeEmail": true, "registeredAt": null, "hasMx": true }
+    },
+    "posting": { "status": "skipped", "reason": "needs step 2" }
+  }
+}

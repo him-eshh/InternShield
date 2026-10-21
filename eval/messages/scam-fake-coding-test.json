@@ -1,0 +1,27 @@
+{
+  "note": "Fake coding test: clone a repo and npm install, from a 40-day-old domain, 24-hour deadline.",
+  "text": "Hey! I'm Ethan, engineering lead at Quantora Labs. We loved your GitHub and want to fast-track you for our paid Blockchain Developer Intern role ($60/hr).\n\nAs a quick technical assessment, please clone our repo from github.com/quantora-labs/assessment, run npm install and npm start, and fix the bug in the wallet module. Please finish within 24 hours so we can send an offer.\n\nEthan\nethan@quantoralabs.io",
+  "expectedLevel": "high",
+  "profile": { "field": "tech", "level": "junior", "skills": ["JavaScript", "React"] },
+  "source": "linkedin",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Quantora Labs", "quote": "engineering lead at Quantora Labs" },
+        "role": { "value": "Blockchain Developer Intern", "quote": "paid Blockchain Developer Intern role" },
+        "pay": { "value": "$60/hr", "quote": "($60/hr)" },
+        "sender": { "name": "Ethan", "email": "ethan@quantoralabs.io", "phone": null },
+        "asks": [{ "kind": "run_code_or_install", "quote": "please clone our repo from github.com/quantora-labs/assessment, run npm install and npm start" }],
+        "pressure": [{ "quote": "Please finish within 24 hours so we can send an offer" }]
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "quantoralabs.io", "careersUrl": null } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "ethan@quantoralabs.io", "domain": "quantoralabs.io", "freeEmail": false, "registeredAt": "-40d", "hasMx": true }
+    },
+    "posting": { "status": "done", "data": { "found": false, "url": null, "title": null, "location": null, "pay": null, "postedDate": null, "onOfficialDomain": false } }
+  }
+}

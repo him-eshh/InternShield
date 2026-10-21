@@ -15,6 +15,6 @@ function normalize(s: string): string {
 export function quoteIsReal(quote: string | null | undefined, message: string): boolean {
   if (!quote) return false;
   const q = normalize(quote);
-  if (!q || q.length > MAX_QUOTE_CHARS) return false;
+  if (q.length < 3 || q.length > MAX_QUOTE_CHARS) return false;
   return normalize(message).includes(q);
 }

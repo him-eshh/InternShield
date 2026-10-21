@@ -1,0 +1,24 @@
+{
+  "note": "Tricky real one: after a signed offer, HR points to the portal for bank and ID details. Caution, not critical.",
+  "text": "Hi Morgan,\n\nWelcome to Calloway Partners! Now that you've signed your offer letter, please complete your new-hire paperwork in Workday before your start date. You'll be asked to enter your bank account details for direct deposit and upload your passport or driver's license for I-9 verification. Please don't email these documents; enter them only in Workday.\n\nBest,\nPeople Operations, Calloway Partners\nonboarding@callowaypartners.com",
+  "expectedLevel": "low",
+  "profile": { "field": "business", "level": "senior", "skills": ["Consulting"] },
+  "source": "company_site",
+  "stage": "signed",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Calloway Partners", "quote": "Welcome to Calloway Partners" },
+        "sender": { "name": null, "email": "onboarding@callowaypartners.com", "phone": null },
+        "asks": [{ "kind": "sensitive_data", "quote": "You'll be asked to enter your bank account details for direct deposit" }]
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "callowaypartners.com", "careersUrl": "https://callowaypartners.com/careers" } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "onboarding@callowaypartners.com", "domain": "callowaypartners.com", "freeEmail": false, "registeredAt": "2009-04-14T00:00:00Z", "hasMx": true }
+    },
+    "posting": { "status": "skipped", "reason": "missing input" }
+  }
+}

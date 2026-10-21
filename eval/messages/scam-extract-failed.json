@@ -1,0 +1,10 @@
+{
+  "note": "The message reader timed out. The backstop alone still catches the fake check.",
+  "text": "Congratulations, you have been selected for our remote Customer Support internship! We will mail you a check for $1,850 to cover your home office setup. Deposit the check, keep $300 for yourself, and send the rest to our equipment supplier through Zelle.\n\nOffice Manager, Lakeside Services",
+  "expectedLevel": "high",
+  "profile": null,
+  "savedSteps": {
+    "extract": { "status": "failed", "reason": "timeout" },
+    "posting": { "status": "skipped", "reason": "needs step 2" }
+  }
+}

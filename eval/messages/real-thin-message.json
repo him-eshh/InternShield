@@ -1,0 +1,17 @@
+{
+  "note": "A one-line LinkedIn note. Not much to check, so the report says so.",
+  "text": "Hi! Are you open to a quick call this week about a summer internship at Bluefin Outdoors?",
+  "expectedLevel": "low",
+  "profile": { "field": "other", "level": "freshman", "skills": [] },
+  "source": "linkedin",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Bluefin Outdoors", "quote": "a summer internship at Bluefin Outdoors" }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "bluefinoutdoors.com", "careersUrl": "https://bluefinoutdoors.com/jobs" } }
+  }
+}

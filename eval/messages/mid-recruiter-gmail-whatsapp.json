@@ -1,0 +1,28 @@
+{
+  "note": "Agency recruiter on Gmail who wants to move to WhatsApp and rushes you. Worth double checking.",
+  "text": "Hi Jordan, I'm a recruiter at Keystone Talent Partners. One of our clients, a fintech company in Austin, has an open Data Engineering Intern role paying $38/hour. Are you open to a quick chat? It's easier to coordinate on WhatsApp, can you send me your number? The role is filling fast, so please get back to me soon.\n\nRachel Kim\nrachel.kim.recruits@gmail.com",
+  "expectedLevel": "medium",
+  "profile": { "field": "tech", "level": "senior", "skills": ["Python", "SQL"] },
+  "source": "linkedin",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Keystone Talent Partners", "quote": "I'm a recruiter at Keystone Talent Partners" },
+        "role": { "value": "Data Engineering Intern", "quote": "an open Data Engineering Intern role" },
+        "pay": { "value": "$38/hour", "quote": "paying $38/hour" },
+        "sender": { "name": "Rachel Kim", "email": "rachel.kim.recruits@gmail.com", "phone": null },
+        "offPlatform": { "app": "WhatsApp", "quote": "It's easier to coordinate on WhatsApp" },
+        "pressure": [{ "quote": "The role is filling fast, so please get back to me soon" }],
+        "employerCountryHint": "United States"
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "keystonetalent.com", "careersUrl": null } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "rachel.kim.recruits@gmail.com", "domain": "gmail.com", "freeEmail": true, "registeredAt": null, "hasMx": true }
+    },
+    "posting": { "status": "done", "data": { "found": false, "url": null, "title": null, "location": null, "pay": null, "postedDate": null, "onOfficialDomain": false } }
+  }
+}

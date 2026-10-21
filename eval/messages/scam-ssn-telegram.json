@@ -1,0 +1,20 @@
+{
+  "note": "Asks for SSN and bank details before any interview, then moves to Telegram.",
+  "text": "Dear Candidate,\n\nCongratulations! You have been selected for the Junior Financial Analyst internship at Halvorsen Capital. To process your onboarding, kindly send your Social Security Number, date of birth, and bank account details for direct deposit. Our HR team will continue the process on Telegram (@halvorsen_hr).\n\nBest,\nHR Department",
+  "expectedLevel": "high",
+  "profile": { "field": "finance", "level": "sophomore", "skills": ["Excel", "Accounting"] },
+  "source": "email",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Halvorsen Capital", "quote": "Junior Financial Analyst internship at Halvorsen Capital" },
+        "role": { "value": "Junior Financial Analyst", "quote": "the Junior Financial Analyst internship" },
+        "asks": [{ "kind": "sensitive_data", "quote": "kindly send your Social Security Number, date of birth, and bank account details for direct deposit" }],
+        "offPlatform": { "app": "Telegram", "quote": "Our HR team will continue the process on Telegram (@halvorsen_hr)" }
+      }
+    },
+    "company": { "status": "done", "data": null },
+    "posting": { "status": "skipped", "reason": "needs step 2" }
+  }
+}

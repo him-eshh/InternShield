@@ -1,0 +1,25 @@
+{
+  "note": "Offer that skips the interview, from a 45-day-old domain. No official site found.",
+  "text": "Hi Morgan,\n\nWe reviewed your resume and are happy to offer you the Marketing Intern position at Fernwood Goods. Our team was so impressed that you can skip the interview and start next Monday. Please confirm your start date by replying to this email.\n\nBest,\nOlivia Grant\nPeople Team, Fernwood Goods\nolivia@fernwoodgoods.shop",
+  "expectedLevel": "medium",
+  "profile": { "field": "business", "level": "junior", "skills": ["Social media"] },
+  "source": "email",
+  "stage": "offer",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Fernwood Goods", "quote": "Marketing Intern position at Fernwood Goods" },
+        "role": { "value": "Marketing Intern", "quote": "the Marketing Intern position" },
+        "sender": { "name": "Olivia Grant", "email": "olivia@fernwoodgoods.shop", "phone": null },
+        "interview": { "status": "none_hired_directly", "quote": "you can skip the interview and start next Monday" }
+      }
+    },
+    "company": { "status": "done", "data": null },
+    "sender": {
+      "status": "done",
+      "data": { "email": "olivia@fernwoodgoods.shop", "domain": "fernwoodgoods.shop", "freeEmail": false, "registeredAt": "-45d", "hasMx": true }
+    },
+    "posting": { "status": "skipped", "reason": "needs step 2" }
+  }
+}

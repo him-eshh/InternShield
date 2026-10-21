@@ -1,0 +1,36 @@
+{
+  "note": "Tricky real one: portfolio review invite sent through Lever.",
+  "text": "Hi Jordan,\n\nThanks for applying to the Product Design Intern role at Wavelength Media. Our hiring team reviewed your portfolio and would like to schedule a 30-minute portfolio review with our design manager. You can pick a slot that works for you here: https://jobs.lever.co/wavelengthmedia\n\nWavelength Media Recruiting\nno-reply@hire.lever.co",
+  "expectedLevel": "low",
+  "profile": { "field": "design", "level": "senior", "skills": ["Figma", "Prototyping"] },
+  "source": "linkedin",
+  "stage": "interviewing",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Wavelength Media", "quote": "Product Design Intern role at Wavelength Media" },
+        "role": { "value": "Product Design Intern", "quote": "the Product Design Intern role" },
+        "sender": { "name": null, "email": "no-reply@hire.lever.co", "phone": null },
+        "interview": { "status": "mentioned", "quote": "schedule a 30-minute portfolio review with our design manager" }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "wavelengthmedia.com", "careersUrl": "https://wavelengthmedia.com/careers" } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "no-reply@hire.lever.co", "domain": "lever.co", "freeEmail": false, "registeredAt": "2012-08-20T00:00:00Z", "hasMx": true }
+    },
+    "posting": {
+      "status": "done",
+      "data": {
+        "found": true,
+        "url": "https://jobs.lever.co/wavelengthmedia/7c1f2a90",
+        "title": "Product Design Intern",
+        "location": "Remote (US)",
+        "pay": null,
+        "postedDate": null,
+        "onOfficialDomain": false
+      }
+    }
+  }
+}
