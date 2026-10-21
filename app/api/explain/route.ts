@@ -1,4 +1,4 @@
-import { hasBannedWord, fallbackExplanation } from "@/lib/explainFallback";
+import { hasBannedWord, fallbackExplanation, tidyExplanation } from "@/lib/explainFallback";
 import { cacheGet, cacheSet, DAY } from "@/lib/server/cache";
 import { fingerprint } from "@/lib/server/extract";
 import { callGroq } from "@/lib/server/groq";
@@ -7,7 +7,7 @@ import { done, failed, MESSAGES } from "@/lib/server/http";
 import type { ExplainRequest, RiskLevel } from "@/lib/types";
 
 const SYSTEM =
-  "Explain these risk signals from a recruiter message to a student in about 100 words, calm plain English. Repeat each given quote word for word inside double quotes. Add no new facts. Never use the words safe, safety, safely, legit, legitimate or guaranteed. No markdown.";
+  "Explain these risk signals from a recruiter message to a student in at most 2 short paragraphs and about 80 words, calm plain English. Repeat each given quote word for word inside double quotes, and use each quote at most once. Add no new facts. Never use the words safe, safety, safely, legit, legitimate or guaranteed. No markdown.";
 
 const LEVELS: RiskLevel[] = ["low", "medium", "high"];
 const cut = (v: unknown, max: number) => (typeof v === "string" ? v.replace(/\s+/g, " ").trim().slice(0, max) : "");
@@ -45,7 +45,7 @@ export async function POST(req: Request) {
     if (!r.ok) return fallback();
     // gpt-oss keeps writing "a legitimate company would…"; swap to "real" rather than lose the whole paragraph.
     // "safe"/"guaranteed" still reject outright.
-    const text = r.data.trim().replace(/\blegitimate\b/gi, "real").replace(/\blegit\b/gi, "real");
+    const text = tidyExplanation(r.data.trim().replace(/\blegitimate\b/gi, "real").replace(/\blegit\b/gi, "real"));
     if (!text || hasBannedWord(text)) return fallback();
     cacheSet(key, text, DAY);
     return done({ text, source: "ai" as const });

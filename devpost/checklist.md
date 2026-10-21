@@ -71,7 +71,7 @@ Build mode: fast (chosen by Himesh; overnight parallel build per `devpost/build-
 
 ## Tier 2 Slices (`devpost/tier2-spec.md`)
 
-- [ ] **7. Core polish from browser QA**
+- [x] **7. Core polish from browser QA**
   Becomes usable: the resume step says what it read, the Check button explains itself, the explanation is shorter with no repeated quote, the match table fits at 320px, Clear my data asks first, and quick questions appear for a realistic unknown-source message.
   Why now: These are fixes to the finished core that Himesh found; they go first so later slices build on the polished screens.
   PRD ref: `prd.md > Profile and Resume`, `prd.md > Message Input and Auto-fill`, `prd.md > The Report`, `prd.md > Finding Missing Details and Quick Questions`, `prd.md > States and Boundaries`

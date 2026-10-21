@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
-import { readResume } from "@/lib/client/resume";
+import { readResume, spottedSkills } from "@/lib/client/resume";
 import { saveProfile, saveResume } from "@/lib/client/storage";
 import type { Field, Profile, ResumeData, UserLevel } from "@/lib/types";
 import { ArrowLeftIcon, CheckCircleIcon, CloseIcon, UploadIcon } from "./icons";
@@ -217,6 +217,15 @@ export default function ProfileSteps({ initial, initialResume, onDone, onCancel 
                 <>
                   <span className="text-good"><CheckCircleIcon size={32} /></span>
                   <p className="font-medium">{resume.fileName}</p>
+                  <p role="status" className="text-[15px]">
+                    {(() => {
+                      const words = resume.text.split(/\s+/).filter(Boolean).length;
+                      const spotted = spottedSkills(resume.text, [...SKILL_SUGGESTIONS[field ?? "other"], ...skills]);
+                      return spotted.length > 0
+                        ? `Read ${words.toLocaleString("en-US")} words. Skills we spotted: ${spotted.join(", ")}`
+                        : `Read ${words.toLocaleString("en-US")} words. No skills from your list spotted.`;
+                    })()}
+                  </p>
                   <p className="text-[14px] text-muted">Saved on this device only.</p>
                 </>
               ) : (

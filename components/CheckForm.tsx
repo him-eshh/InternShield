@@ -169,7 +169,7 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
         </div>
 
         <fieldset className="mt-6">
-          <legend className="text-[15px] font-medium">Where did it come from?</legend>
+          <legend className="text-[15px] font-medium">Where did it come from? <span className="font-normal text-muted">(optional)</span></legend>
           <div className="mt-2 flex flex-wrap gap-2">
             {SOURCES.map((s) => (
               <button
@@ -188,7 +188,7 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
           </div>
         </fieldset>
         <fieldset className="mt-6">
-          <legend className="text-[15px] font-medium">Where are you with them?</legend>
+          <legend className="text-[15px] font-medium">Where are you with them? <span className="font-normal text-muted">(optional)</span></legend>
           <div className="mt-2 flex flex-wrap gap-2">
             {STAGES.map((s) => (
               <button
@@ -208,9 +208,14 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
         </fieldset>
 
         <div className="mt-10 flex flex-col items-center gap-4">
-          <button type="submit" className={`${btnPrimary} w-full sm:w-auto sm:min-w-56`} disabled={!text.trim()}>
+          <button type="submit" className={`${btnPrimary} w-full sm:w-auto sm:min-w-56`} disabled={!text.trim()} aria-describedby={text.trim() ? undefined : "check-hint"}>
             Check it
           </button>
+          {!text.trim() && (
+            <p id="check-hint" className="-mt-2 text-[14px] text-muted">
+              Paste a message to check it.
+            </p>
+          )}
           <p className="text-[15px] text-muted">
             Try an example:{" "}
             <button type="button" className={linkClass} onClick={() => tryExample("scam")}>
