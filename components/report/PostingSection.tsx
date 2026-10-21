@@ -99,23 +99,46 @@ export default function PostingSection({ posting, match, company, careersUrl }: 
             ))}
           </dl>
           {match && match.length > 0 && (
-            <div className="mt-8 overflow-x-auto">
-              <table className="w-full min-w-[420px] border-collapse text-left text-[15px]">
+            <div className="mt-8">
+              <div className="sm:hidden">
+                <h4 className="pb-3 text-[17px] font-semibold">Does the message match the posting?</h4>
+                <ul>
+                  {match.map((r) => (
+                    <li key={r.row} className="border-t border-border py-3 text-[15px]">
+                      <p className="font-medium">{ROW_LABEL[r.row]}</p>
+                      <p className="mt-1 break-words">
+                        <span className="text-muted">The message says: </span>
+                        {r.message ?? <span className="text-muted">Not listed</span>}
+                      </p>
+                      <p className="mt-1 break-words">
+                        <span className="text-muted">The posting says: </span>
+                        {r.posting ?? <span className="text-muted">Not listed</span>}
+                      </p>
+                      <p className="mt-1.5 flex items-center gap-1.5">
+                        {r.ok === true && <span className="inline-flex items-center gap-1.5 text-good"><CheckCircleIcon size={20} />Matches</span>}
+                        {r.ok === false && <span className="inline-flex items-center gap-1.5 text-warn"><WarningIcon size={20} />Doesn&apos;t match</span>}
+                        {r.ok === null && <span className="text-muted">Not listed</span>}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <table className="hidden w-full table-fixed border-collapse text-left text-[15px] sm:table">
                 <caption className="pb-3 text-left text-[17px] font-semibold">Does the message match the posting?</caption>
                 <thead>
                   <tr className="text-[13px] uppercase tracking-wide text-muted">
-                    <th scope="col" className="py-2 pr-3 font-medium">&nbsp;</th>
+                    <th scope="col" className="w-24 py-2 pr-3 font-medium">&nbsp;</th>
                     <th scope="col" className="py-2 pr-3 font-medium">The message says</th>
                     <th scope="col" className="py-2 pr-3 font-medium">The posting says</th>
-                    <th scope="col" className="py-2 font-medium"><span className="sr-only">Result</span></th>
+                    <th scope="col" className="w-10 py-2 font-medium"><span className="sr-only">Result</span></th>
                   </tr>
                 </thead>
                 <tbody>
                   {match.map((r) => (
                     <tr key={r.row} className="border-t border-border align-top">
                       <th scope="row" className="py-3 pr-3 font-medium">{ROW_LABEL[r.row]}</th>
-                      <td className="py-3 pr-3">{r.message ?? <span className="text-muted">Not listed</span>}</td>
-                      <td className="py-3 pr-3">{r.posting ?? <span className="text-muted">Not listed</span>}</td>
+                      <td className="break-words py-3 pr-3">{r.message ?? <span className="text-muted">Not listed</span>}</td>
+                      <td className="break-words py-3 pr-3">{r.posting ?? <span className="text-muted">Not listed</span>}</td>
                       <td className="py-3">
                         {r.ok === true && <span className="text-good"><CheckCircleIcon size={20} /><span className="sr-only">Matches</span></span>}
                         {r.ok === false && <span className="text-warn"><WarningIcon size={20} /><span className="sr-only">Doesn&apos;t match</span></span>}

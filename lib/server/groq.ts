@@ -3,14 +3,18 @@ import Groq from "groq-sdk";
 import { cacheGet, cacheSet } from "./cache";
 import { classify, OUTSIDE_TIMEOUT_MS, type Outcome } from "./http";
 
-export type GroqTask = "extract" | "explain";
+export type GroqTask = "extract" | "explain" | "rewrite" | "transcribe";
 
 export const MODEL_20B = "openai/gpt-oss-20b";
 export const MODEL_120B = "openai/gpt-oss-120b";
+/** Preview vision model (api-facts.md > Vision). Its own per-model budget, so Tier 2 doesn't eat the core's. */
+export const MODEL_VISION = "qwen/qwen3.8-27b";
 
 const ORDER: Record<GroqTask, string[]> = {
   extract: [MODEL_20B, MODEL_120B],
   explain: [MODEL_120B, MODEL_20B],
+  rewrite: [MODEL_VISION], // no gpt-oss fallback: keeps Tier 2 off the core's budget
+  transcribe: [MODEL_VISION], // the only vision model; no fallback model
 };
 
 export interface GroqRequest {
@@ -19,6 +23,13 @@ export interface GroqRequest {
   /** Strict JSON schema; omit for plain text. */
   schema?: object;
   maxTokens: number;
+  /** Image data URLs sent with the user turn (vision model only, max 3). */
+  images?: string[];
+}
+
+/** Qwen 3 may still emit a <think> block in content; drop it. */
+export function stripThinking(s: string): string {
+  return s.replace(/<think>[\s\S]*?(<\/think>|$)/gi, "").trim();
 }
 
 type HeadersLike = { get?: (k: string) => string | null } & Record<string, unknown>;
@@ -81,15 +92,19 @@ export async function callGroq(task: GroqTask, req: GroqRequest): Promise<Outcom
       limited = true;
       continue;
     }
+    const userContent = req.images?.length
+      ? [{ type: "text", text: req.user }, ...req.images.slice(0, 3).map((url) => ({ type: "image_url", image_url: { url } }))]
+      : req.user;
     const params: Record<string, unknown> = {
       model,
       messages: [
         { role: "system", content: req.system },
-        { role: "user", content: req.user },
+        { role: "user", content: userContent },
       ],
       temperature: 0,
       max_completion_tokens: req.maxTokens,
-      reasoning_effort: "low",
+      // gpt-oss: lowest effort. Qwen 3: no thinking (its reasoning tokens would count too).
+      ...(model === MODEL_VISION ? { reasoning_effort: "none" } : { reasoning_effort: "low" }),
       ...(req.schema
         ? { response_format: { type: "json_schema", json_schema: { name: "facts", strict: true, schema: req.schema } } }
         : {}),
@@ -127,8 +142,10 @@ export async function callGroq(task: GroqTask, req: GroqRequest): Promise<Outcom
             completionTokens: data.usage?.completion_tokens,
           });
         }
-        const text = data.choices?.[0]?.message?.content;
-        if (typeof text === "string" && text.trim()) return { ok: true, data: text };
+        const raw = data.choices?.[0]?.message?.content;
+        // Only Qwen thinks in-band; never touch gpt-oss output (a message quoting "<think>" must not cut extract JSON).
+        const text = typeof raw === "string" ? (model === MODEL_VISION ? stripThinking(raw) : raw.trim()) : "";
+        if (text) return { ok: true, data: text };
         hardError = true;
         break;
       } catch (err) {
@@ -141,6 +158,11 @@ export async function callGroq(task: GroqTask, req: GroqRequest): Promise<Outcom
           break; // other model
         }
         if (e?.status === 400 && req.schema && attempt === 0) continue; // schema mismatch: retry once
+        if (e?.status === 400 && model === MODEL_VISION && attempt === 0 && "reasoning_effort" in params) {
+          // ponytail: Preview model; if it rejects the reasoning param, retry once without it.
+          delete params.reasoning_effort;
+          continue;
+        }
         if (classify(err) === "timeout") return { ok: false, reason: "timeout" };
         hardError = true;
         break;

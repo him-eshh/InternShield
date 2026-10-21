@@ -2,7 +2,13 @@
 // Every call is wrapped so a blocked/full/unavailable store never throws into the UI.
 import type { Profile, ResumeData, Theme } from "../types";
 
-export const KEYS = { profile: "is:profile", resume: "is:resume", theme: "is:theme" } as const;
+export const KEYS = {
+  profile: "is:profile",
+  resume: "is:resume",
+  theme: "is:theme",
+  tracker: "is:tracker", // Tier 2: TrackerCard[]
+  tailored: "is:tailored", // Tier 2: TailoredResume (accepted rewrites)
+} as const;
 
 function read<T>(key: string): T | null {
   try {
@@ -52,8 +58,14 @@ export function loadTheme(): Theme {
 }
 export const saveTheme = (t: Theme) => write(KEYS.theme, t);
 
-/** Removes profile + resume (not theme). The caller returns to the intro. */
+/** Raw JSON read/write for Tier 2 stores; each feature validates its own shape. */
+export const readKey = <T>(key: string): T | null => read<T>(key);
+export const writeKey = (key: string, value: unknown): void => write(key, value);
+
+/** Removes profile, resume and every Tier 2 store (not theme). The caller returns to the intro. */
 export function clearMyData(): void {
   remove(KEYS.profile);
   remove(KEYS.resume);
+  remove(KEYS.tracker);
+  remove(KEYS.tailored);
 }

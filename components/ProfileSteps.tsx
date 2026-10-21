@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
-import { readResume } from "@/lib/client/resume";
+import { readResume, spottedSkills } from "@/lib/client/resume";
 import { saveProfile, saveResume } from "@/lib/client/storage";
 import type { Field, Profile, ResumeData, UserLevel } from "@/lib/types";
 import { ArrowLeftIcon, CheckCircleIcon, CloseIcon, UploadIcon } from "./icons";
@@ -34,7 +34,7 @@ const WHY = [
   "We use this to check whether a role fits what you'd really be applying for.",
   "A role that asks for far more or far less than your level can be a warning sign.",
   "Skills help us spot jobs that don't match what you do. Totally optional.",
-  "With a resume we can compare the role to your background. It stays on this device and is never uploaded.",
+  "With a resume we can compare the role to your background. The file stays on this device. Only a line you choose to reword is ever sent to an AI.",
 ];
 
 interface Props {
@@ -217,6 +217,15 @@ export default function ProfileSteps({ initial, initialResume, onDone, onCancel 
                 <>
                   <span className="text-good"><CheckCircleIcon size={32} /></span>
                   <p className="font-medium">{resume.fileName}</p>
+                  <p role="status" className="text-[15px]">
+                    {(() => {
+                      const words = resume.text.split(/\s+/).filter(Boolean).length;
+                      const spotted = spottedSkills(resume.text, [...SKILL_SUGGESTIONS[field ?? "other"], ...skills]);
+                      return spotted.length > 0
+                        ? `Read ${words.toLocaleString("en-US")} words. Skills we spotted: ${spotted.join(", ")}`
+                        : `Read ${words.toLocaleString("en-US")} words. No skills from your list spotted.`;
+                    })()}
+                  </p>
                   <p className="text-[14px] text-muted">Saved on this device only.</p>
                 </>
               ) : (

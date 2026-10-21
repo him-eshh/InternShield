@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { fetchExplanation, type Explanation as ExplanationData, type PipelineInput, type PipelineOutcome, type StepKey } from "@/lib/client/pipeline";
 import { FTC_URL } from "@/lib/client/copyReport";
 import { describeChange, score } from "@/lib/scoring/score";
@@ -24,6 +24,8 @@ interface Props {
   onAgain: () => void;
   /** Test/preview hook: the fetch used to re-request the explanation. */
   fetchImpl?: typeof fetch;
+  /** Optional extra actions shown above "Check another message". */
+  extras?: ReactNode;
 }
 
 export function announcement(report: ReportData): string {
@@ -31,7 +33,7 @@ export function announcement(report: ReportData): string {
   return `${LEVEL_LABELS[report.level]}, risk ${report.score}, ${red} red flag${red === 1 ? "" : "s"}`;
 }
 
-export default function Report({ outcome, input, onRetry, onAgain, fetchImpl }: Props) {
+export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, extras }: Props) {
   const initial = outcome.report as ReportData;
   const [report, setReport] = useState<ReportData>(initial);
   const [questions] = useState(initial.questions);
@@ -207,6 +209,7 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl }: 
               <span className="sr-only">(opens in a new tab)</span>
             </a>
           </p>
+          {extras}
           <button type="button" onClick={onAgain} className={btnPrimary}>
             Check another message
           </button>

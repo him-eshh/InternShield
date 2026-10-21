@@ -33,14 +33,24 @@ export function highlightParts(text: string, quotes: string[]): { text: string; 
   return parts;
 }
 
+/** At most two paragraphs (split on blank lines). */
+export function explanationParagraphs(text: string): string[] {
+  const parts = text.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  return (parts.length ? parts : [text.trim()]).slice(0, 2);
+}
+
 export default function Explanation({ text, quotes, loading }: { text: string; quotes: string[]; loading?: boolean }) {
   return (
-    <p className={`text-[19px] leading-relaxed transition-opacity duration-300 ${loading ? "opacity-50" : ""}`} aria-busy={loading}>
-      {highlightParts(text, quotes).map((p, i) => (
-        <Fragment key={i}>
-          {p.hit ? <mark className="rounded bg-accent/15 px-0.5 text-text">{p.text}</mark> : p.text}
-        </Fragment>
+    <div className={`space-y-4 text-[19px] leading-relaxed transition-opacity duration-300 ${loading ? "opacity-50" : ""}`} aria-busy={loading}>
+      {explanationParagraphs(text).map((para, n) => (
+        <p key={n}>
+          {highlightParts(para, quotes).map((p, i) => (
+            <Fragment key={i}>
+              {p.hit ? <mark className="rounded bg-accent/15 px-0.5 text-text">{p.text}</mark> : p.text}
+            </Fragment>
+          ))}
+        </p>
       ))}
-    </p>
+    </div>
   );
 }

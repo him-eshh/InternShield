@@ -69,6 +69,48 @@ Build mode: fast (chosen by Himesh; overnight parallel build per `devpost/build-
   Learner check: Read the README as if you'd never seen the project and follow it to run the app.
   Commit: `Slice 6: review fixes and README`
 
+## Tier 2 Slices (`devpost/tier2-spec.md`)
+
+- [x] **7. Core polish from browser QA**
+  Becomes usable: the resume step says what it read, the Check button explains itself, the explanation is shorter with no repeated quote, the match table fits at 320px, Clear my data asks first, and quick questions appear for a realistic unknown-source message.
+  Why now: These are fixes to the finished core that Himesh found; they go first so later slices build on the polished screens.
+  PRD ref: `prd.md > Profile and Resume`, `prd.md > Message Input and Auto-fill`, `prd.md > The Report`, `prd.md > Finding Missing Details and Quick Questions`, `prd.md > States and Boundaries`
+  Spec ref: `tier2-spec.md > Slice 7`
+  Build: `spottedSkills` + confirmation line, optional legends + hint, `tidyExplanation` + prompt, stacked match rows, inline clear confirm, realistic quick-question tests (questions.ts fix only if needed).
+  Verify (mechanical): gates pass; `npm run eval` 26/26; `git diff core-v1 -- lib/scoring eval/messages` empty (or only a reviewed questions.ts fix); new tests for spottedSkills, tidyExplanation, quick questions (engine + UI render) pass.
+  Learner check: Upload a resume, check a made-up message without picking a source, and see the quick question; open the report at 320px wide.
+  Commit: `Slice 7: core polish`
+
+- [x] **8. Tailored resume PDF**
+  Becomes usable: from the profile chip or a report, pick a resume line, get an honest reworded version for the posting, accept it after a before/after diff, and download the resume as a PDF.
+  Why now: It reuses the resume already read in the browser and the last report's posting, so it's the most direct next step after a "real" result.
+  PRD ref: `prd.md > Deferred From the POC`, `scope.md > Later`
+  Spec ref: `tier2-spec.md > Slice 8`, `> Token budget`
+  Build: `lib/tiers/resumeGuard.ts`, `/api/rewrite` + `lib/server/rewrite.ts`, `components/tiers/ResumeTailor*`, `lib/tiers/pdf.ts`, App/chip entry, `TIER_FLAGS.resume = true`.
+  Verify (mechanical): gates pass; guard tests reject invented numbers/employers/titles/dates/tools; rewrite route tests (origin, caps, failure mapping) pass; pdf test output starts with `%PDF`.
+  Learner check: Tailor one bullet toward a made-up posting, try an instruction that invents a tool and see it refused, download the PDF.
+  Commit: `Slice 8: tailored resume PDF`
+
+- [x] **9. Application tracker board**
+  Becomes usable: Save a report to the tracker or add a card by hand, move it Saved → Applied → Interviewing with buttons or arrow keys, edit notes, delete; Clear my data wipes it.
+  Why now: Independent of AI and cheap; gives every checked offer a place to go.
+  PRD ref: `prd.md > Deferred From the POC`
+  Spec ref: `tier2-spec.md > Slice 9`
+  Build: `lib/tiers/tracker.ts`, `components/tiers/Tracker*`, Save to tracker on the report, chip entry, `TIER_FLAGS.tracker = true`.
+  Verify (mechanical): gates pass; tracker reducer + storage-validation tests pass; clearMyData test covers `is:tracker`.
+  Learner check: Save the real example to the tracker, move it to Interviewing with the keyboard, reload, then Clear my data.
+  Commit: `Slice 9: application tracker`
+
+- [x] **10. Message screenshot upload**
+  Becomes usable: Upload a screenshot on the check form; its text fills the message box for review, then the normal check runs.
+  Why now: Many scam messages arrive as texts/WhatsApp, which are easier to screenshot than copy.
+  PRD ref: `prd.md > Deferred From the POC`, `prd.md > Accessibility and Privacy`
+  Spec ref: `tier2-spec.md > Slice 10`, `> Token budget`
+  Build: `lib/tiers/image.ts`, `/api/transcribe` + `lib/server/transcribe.ts`, `components/tiers/ScreenshotUpload.tsx`, CheckForm hook, privacy line, `TIER_FLAGS.screenshot = true`.
+  Verify (mechanical): gates pass; transcribe route tests (body cap, bad prefix, think-strip, trim, caps, no logging) pass; one live call confirms the vision model (logged).
+  Learner check: Screenshot a made-up message, upload it, read the filled text, and run the check.
+  Commit: `Slice 10: screenshot upload`
+
 ## Hands-on Checkpoints
 
 - [ ] Early usable behavior explored — pending Himesh (morning): after Slice 5, try both examples live and give feedback

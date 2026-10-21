@@ -199,7 +199,7 @@ Every check should use as few tokens as possible, so the free daily budget cover
 - **Only the needed text:**
   - **Message:** the message is sent once, trimmed to 4,000 characters, with signatures' legal footers and repeated whitespace removed.
   - **Form fields:** the form fields (sender, company) are sent as one short line, not a second copy of anything.
-  - **Kept out of prompts:** profile, resume, and search results never go to Groq.
+  - **Kept out of prompts:** profile, resume, and search results never go to Groq. (Tier 2 exception: in resume tailoring, one line the user picks goes to the rewrite route; see `tier2-spec.md`.)
 - **Explanation prompt:** level plus at most 6 flags as compact `title | quote` lines. The system prompt is about 40 words. `max_completion_tokens` is set to about 250.
 - **Reasoning:** gpt-oss "thinks" before answering, and those tokens count. Use the lowest reasoning setting Groq accepts (day-one check).
 - **Target:** about **1,800 tokens** per extraction and about **600** per explanation, so roughly **2,400 per check**. Verify with the dev usage log on day one.

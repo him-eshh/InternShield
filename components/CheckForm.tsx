@@ -2,7 +2,9 @@
 import { useState } from "react";
 import { autofill } from "@/lib/autofill";
 import { EXAMPLES } from "@/lib/examples";
+import { TIER_FLAGS } from "@/lib/tiers/flags";
 import { MAX_MESSAGE_CHARS, type Source, type Stage } from "@/lib/types";
+import ScreenshotUpload from "./tiers/ScreenshotUpload";
 import { btnPrimary, linkClass, pillOff, pillOn } from "./ui";
 
 export interface CheckSubmit {
@@ -42,6 +44,7 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
   const [filled, setFilled] = useState<Record<Tracked, boolean>>({ sender: false, company: false });
   const [example, setExample] = useState<"scam" | "real" | null>(null);
   const [trimmed, setTrimmed] = useState(false);
+  const [fromShot, setFromShot] = useState(false);
   // Fields the user typed in themselves: auto-fill never overwrites these.
   const [touched, setTouched] = useState<Record<Tracked | "source" | "stage", boolean>>({
     sender: !!initial?.form.sender,
@@ -50,7 +53,8 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
     stage: !!initial?.stage,
   });
 
-  function onTextChange(raw: string) {
+  function onTextChange(raw: string, screenshot = false) {
+    setFromShot(screenshot);
     const over = raw.length > MAX_MESSAGE_CHARS;
     const next = over ? raw.slice(0, MAX_MESSAGE_CHARS) : raw;
     setTrimmed(over);
@@ -91,6 +95,7 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
     setStage(ex.stage);
     setExample(id);
     setTrimmed(false);
+    setFromShot(false);
     onSubmit({ text: ex.text, form: { sender: ex.form.sender, company: ex.form.company }, source: ex.source, stage: ex.stage, exampleId: id });
   }
 
@@ -107,10 +112,20 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
           submit();
         }}
       >
-        <label htmlFor="message" className="flex items-center text-[15px] font-medium">
-          The message
-          {example && <FilledTag label="Example" />}
-        </label>
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+          <label htmlFor="message" className="flex items-center text-[15px] font-medium">
+            The message
+            {example && <FilledTag label="Example" />}
+            {fromShot && !example && <FilledTag label="from screenshot, check it" />}
+          </label>
+          {TIER_FLAGS.screenshot && (
+            <ScreenshotUpload
+              onText={(t) => {
+                onTextChange(t, true);
+              }}
+            />
+          )}
+        </div>
         <textarea
           id="message"
           value={text}
@@ -169,7 +184,7 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
         </div>
 
         <fieldset className="mt-6">
-          <legend className="text-[15px] font-medium">Where did it come from?</legend>
+          <legend className="text-[15px] font-medium">Where did it come from? <span className="font-normal text-muted">(optional)</span></legend>
           <div className="mt-2 flex flex-wrap gap-2">
             {SOURCES.map((s) => (
               <button
@@ -188,7 +203,7 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
           </div>
         </fieldset>
         <fieldset className="mt-6">
-          <legend className="text-[15px] font-medium">Where are you with them?</legend>
+          <legend className="text-[15px] font-medium">Where are you with them? <span className="font-normal text-muted">(optional)</span></legend>
           <div className="mt-2 flex flex-wrap gap-2">
             {STAGES.map((s) => (
               <button
@@ -208,9 +223,14 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
         </fieldset>
 
         <div className="mt-10 flex flex-col items-center gap-4">
-          <button type="submit" className={`${btnPrimary} w-full sm:w-auto sm:min-w-56`} disabled={!text.trim()}>
+          <button type="submit" className={`${btnPrimary} w-full sm:w-auto sm:min-w-56`} disabled={!text.trim()} aria-describedby={text.trim() ? undefined : "check-hint"}>
             Check it
           </button>
+          {!text.trim() && (
+            <p id="check-hint" className="-mt-2 text-[14px] text-muted">
+              Paste a message to check it.
+            </p>
+          )}
           <p className="text-[15px] text-muted">
             Try an example:{" "}
             <button type="button" className={linkClass} onClick={() => tryExample("scam")}>

@@ -14,6 +14,8 @@ Next.js 16 App Router + TypeScript + Tailwind v4 (CSS-first config in `app/globa
 | ui-builder | `app/page.tsx`, `app/icon.svg`, `components/**`, `lib/client/**`, `lib/autofill.ts`, `public/**`, `tests/ui/**` |
 | chores | only files the orchestrator names (e.g. `README.md`) |
 
+Tier 2 (`devpost/tier2-spec.md > Ownership`): orchestrator also owns `lib/tiers/types.ts`, `lib/tiers/flags.ts`, `lib/server/guard.ts`, `lib/server/groq.ts`, `lib/client/storage.ts`, `components/App.tsx`, `.env.example`. engine-builder: `lib/tiers/resumeGuard.ts`, `lib/tiers/tracker.ts`, `tests/tiers/**`. api-builder: `app/api/rewrite/**`, `app/api/transcribe/**`, `lib/server/rewrite.ts`, `lib/server/transcribe.ts`. ui-builder: `components/tiers/**`, `lib/tiers/image.ts`, `lib/tiers/pdf.ts`, `lib/tiers/client.ts`. Tier features stay hidden behind `lib/tiers/flags.ts` until their slice passes the gates.
+
 Contracts in `lib/types.ts` are read-only to workers: report needed changes, don't edit. No new dependencies: everything is installed.
 
 ## Gates (all must pass before any merge)
