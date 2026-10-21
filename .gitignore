@@ -1,0 +1,19 @@
+.env*
+!.env.example
+node_modules
+.vercel
+devpost/learner-profile.md
+
+# next.js
+/.next/
+/out/
+/build
+/coverage
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+*.pem
+npm-debug.log*
+
+# local agent worktrees
+.claude/worktrees/

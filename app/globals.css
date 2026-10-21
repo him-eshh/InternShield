@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+/* Dark mode is class-based: the no-flash script in layout.tsx sets .dark on <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg: #ffffff;
+  --bg-soft: #f7f7f9;
+  --card: #ffffff;
+  --text: #1d1d1f;
+  --muted: #6e6e73;
+  --border: #e5e5ea;
+  --accent: #2f6fd6;
+  --accent-contrast: #ffffff;
+  --good: #2e7d4f;
+  --warn: #9a6200;
+  --bad: #b8382b;
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #111113;
+  --bg-soft: #161618;
+  --card: #1c1c1f;
+  --text: #ececf0;
+  --muted: #9a9aa2;
+  --border: #2c2c31;
+  --accent: #6ea0e6;
+  --accent-contrast: #111113;
+  --good: #5fae7f;
+  --warn: #d4a24c;
+  --bad: #d9776b;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-soft: var(--bg-soft);
+  --color-card: var(--card);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-good: var(--good);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-inter), system-ui, sans-serif;
+  --radius-card: 18px;
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html {
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Screen transition: fade + slight slide up (spec.md > Look and Feel > Motion). */
+@keyframes enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-enter {
+  animation: enter 320ms var(--ease-out-soft) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-enter {
+    animation: fade 200ms ease-out both;
+  }
+  *, *::before, *::after {
+    transition-property: opacity !important;
+    scroll-behavior: auto !important;
+  }
+}

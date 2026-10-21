@@ -1,0 +1,192 @@
+<!doctype html>
+<!-- Visual companion to spec.md. spec.md is canonical; regenerate this after revisions. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>InternShield · Spec</title>
+<style>
+  :root { --ink:#1d1d1f; --muted:#6e6e73; --line:#e5e5ea; --bg:#fbfbfd; --card:#fff; --good:#2e7d4f; --warn:#9a6200; --bad:#b8382b; --accent:#2f6fd6; --soft:#eef3fc; }
+  @media (prefers-color-scheme: dark) { :root { --ink:#ececf0; --muted:#9a9aa2; --line:#2c2c30; --bg:#111113; --card:#1c1c1f; --good:#5fae7f; --warn:#d4a24c; --bad:#d9776b; --accent:#6ea0e6; --soft:#1f2735; } }
+  * { box-sizing:border-box; }
+  body { margin:0; font:17px/1.6 -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif; color:var(--ink); background:var(--bg); }
+  main { max-width:960px; margin:0 auto; padding:72px 24px 96px; }
+  .eyebrow { color:var(--accent); font-weight:600; margin:0; }
+  h1 { font-size:clamp(40px,7vw,68px); line-height:1.05; letter-spacing:-.025em; margin:.15em 0 .3em; }
+  .lede { font-size:21px; color:var(--muted); margin:0 0 40px; max-width:740px; }
+  h2 { font-size:30px; letter-spacing:-.015em; margin:72px 0 16px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:22px 26px; }
+  svg { width:100%; height:auto; display:block; }
+  svg text { fill:var(--ink); } svg .m { fill:var(--muted); }
+  svg .box { fill:var(--card); stroke:var(--line); } svg .srv { fill:var(--soft); stroke:var(--accent); } svg .ext { fill:var(--card); stroke:var(--muted); stroke-dasharray:4 3; }
+  svg .zone { fill:none; stroke:var(--line); stroke-width:1.5; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
+  .row button { font:inherit; font-size:14px; border:1px solid var(--line); background:var(--card); color:var(--ink); border-radius:99px; padding:6px 14px; cursor:pointer; }
+  .row button[aria-pressed="true"] { background:var(--accent); color:#fff; border-color:var(--accent); }
+  button:focus-visible, summary:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
+  .steps { list-style:none; padding:0; margin:0; }
+  .steps li { display:flex; gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid var(--line); }
+  .dot { width:22px; height:22px; border-radius:50%; flex:none; display:grid; place-items:center; font-size:13px; font-weight:700; color:#fff; }
+  .done .dot { background:var(--good); } .failed .dot { background:var(--bad); } .skipped .dot { background:var(--muted); } .pending .dot { background:var(--line); color:var(--muted); }
+  .steps small { color:var(--muted); margin-left:auto; text-align:right; }
+  details { background:var(--card); border:1px solid var(--line); border-radius:14px; margin:10px 0; }
+  summary { cursor:pointer; padding:14px 22px; font-weight:600; list-style:none; display:flex; justify-content:space-between; gap:12px; }
+  summary::-webkit-details-marker { display:none; } summary::after { content:"+"; color:var(--muted); } details[open] summary::after { content:"–"; }
+  details > div { padding:0 22px 16px; } details ul { margin:0; padding-left:1.2em; }
+  code { font:14px ui-monospace, SFMono-Regular, Consolas, monospace; background:var(--soft); padding:1px 6px; border-radius:6px; }
+  .muted { color:var(--muted); } .note { font-size:15px; color:var(--muted); margin-top:12px; }
+  table { width:100%; border-collapse:collapse; font-size:15px; } td, th { text-align:left; padding:7px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:700px) { .grid2 { grid-template-columns:1fr; } main { padding-top:48px; } }
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">Spec · approved</p>
+  <h1>InternShield</h1>
+  <p class="lede">One Next.js site. The browser shows everything and runs the scoring rules; five small server routes do the outside calls and hold the keys. No database, no accounts, free plans only.</p>
+
+  <h2>The shape</h2>
+  <div class="card">
+    <svg viewBox="0 0 900 360" role="img" aria-label="Architecture: browser holds UI, scoring engine, and localStorage; it calls five server routes (extract, company, sender, posting, explain) on Vercel, which call Groq, Tavily, RDAP, DNS, and optionally Hunter. A usage guard sits in front of every route.">
+      <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8e8e93"/></marker></defs>
+      <g font-family="-apple-system, Segoe UI, sans-serif" font-size="13" text-anchor="middle">
+        <rect class="zone" x="5" y="5" width="250" height="350" rx="16"/><text x="130" y="28" font-weight="700">Browser</text>
+        <rect class="box" x="25" y="45" width="210" height="60" rx="12"/><text x="130" y="70" font-weight="600">Screens (React)</text><text x="130" y="88" class="m">intro · profile · check · report</text>
+        <rect class="box" x="25" y="120" width="210" height="60" rx="12"/><text x="130" y="145" font-weight="600">Pipeline runner</text><text x="130" y="163" class="m">order · timeouts · retry</text>
+        <rect class="srv" x="25" y="195" width="210" height="60" rx="12"/><text x="130" y="220" font-weight="600">Scoring engine (pure)</text><text x="130" y="238" class="m">also used by the test set</text>
+        <rect class="box" x="25" y="270" width="210" height="60" rx="12"/><text x="130" y="295" font-weight="600">localStorage</text><text x="130" y="313" class="m">profile · resume text · theme</text>
+
+        <rect class="zone" x="320" y="5" width="300" height="350" rx="16"/><text x="470" y="28" font-weight="700">Vercel server routes</text>
+        <rect class="box" x="340" y="40" width="260" height="34" rx="10"/><text x="470" y="62" font-weight="600">Usage guard (origin · size · limits)</text>
+        <rect class="srv" x="340" y="88" width="260" height="38" rx="10"/><text x="470" y="112">1 · /api/extract</text>
+        <rect class="srv" x="340" y="136" width="125" height="38" rx="10"/><text x="402" y="160">2 · /api/company</text>
+        <rect class="srv" x="475" y="136" width="125" height="38" rx="10"/><text x="537" y="160">3 · /api/sender</text>
+        <rect class="srv" x="340" y="184" width="260" height="38" rx="10"/><text x="470" y="208">4 · /api/posting</text>
+        <rect class="srv" x="340" y="232" width="260" height="38" rx="10"/><text x="470" y="256">5 · /api/explain</text>
+        <text x="470" y="300" class="m">in-memory cache + counters</text><text x="470" y="318" class="m">keys live only here</text>
+
+        <rect class="ext" x="690" y="70" width="200" height="40" rx="10"/><text x="790" y="95">Groq (20b ⇄ 120b fallback)</text>
+        <rect class="ext" x="690" y="130" width="200" height="40" rx="10"/><text x="790" y="155">Tavily (basic search)</text>
+        <rect class="ext" x="690" y="190" width="200" height="40" rx="10"/><text x="790" y="215">RDAP · DNS (MX)</text>
+        <rect class="ext" x="690" y="250" width="200" height="40" rx="10"/><text x="790" y="275">Hunter (optional)</text>
+        <g stroke="#8e8e93" stroke-width="1.5" fill="none" marker-end="url(#a)">
+          <path d="M235,150 H336"/><path d="M130,180 V191"/>
+          <path d="M600,107 L686,92"/><path d="M600,250 L686,96"/>
+          <path d="M465,155 L686,150"/><path d="M600,203 L686,155"/>
+          <path d="M600,155 L686,210"/><path d="M600,160 L686,268"/>
+        </g>
+      </g>
+    </svg>
+    <p class="note">Blue boxes are code you write. Dashed boxes are outside services on free plans with no card. Page text from searches never goes to Groq; only links and website names do.</p>
+  </div>
+
+  <h2>How the checklist steps run (and fail)</h2>
+  <div class="card">
+    <p style="margin-top:0">Pick a scenario to see what each step ends as. Every step returns exactly one of three shapes: <code>done</code>, <code>failed</code>, or <code>skipped</code>, so nothing can crash the run.</p>
+    <div class="row" role="group" aria-label="Scenarios" id="scen"></div>
+    <ol class="steps" id="steps" aria-live="polite"></ol>
+    <p class="note" id="story"></p>
+  </div>
+
+  <h2>Components, by PRD behavior</h2>
+  <div class="grid2">
+    <details><summary>Fact extraction &amp; safety</summary><div><ul>
+      <li><code>app/api/extract</code>: Groq strict JSON schema, one non-streamed call, retry once</li>
+      <li><code>lib/quotes.ts</code>: drops any fact whose quote isn't really in the message</li>
+      <li><code>lib/scoring/backstop.ts</code>: keyword scan of raw text, unioned with the facts</li>
+      <li><code>app/api/explain</code> + <code>explainFallback.ts</code>: flags only, banned words, fallback text</li>
+    </ul></div></details>
+    <details><summary>Risk scoring</summary><div><ul>
+      <li><code>lib/scoring/score.ts</code>: critical floor 85 → add points → good signs (max −20) → clamp → level</li>
+      <li><code>rules.ts</code>: every weight in one constant</li>
+      <li><code>domains.ts</code>: free email, hiring platforms, lookalikes, exact university match</li>
+      <li><code>patterns.ts</code>, <code>level.ts</code>, <code>coverage.ts</code></li>
+    </ul></div></details>
+    <details><summary>Model fallback &amp; token budget</summary><div><ul>
+      <li>Limits are per model: extract tries 20b → 120b, explain tries 120b → 20b</li>
+      <li>On 429 or near-zero remaining headers, mark the model "resting" and switch; show the limit message only when both are out</li>
+      <li>Tiny prompts: ~60-word extract instructions, tight schema (short names, fixed kinds, no descriptions), message sent once and trimmed</li>
+      <li>Explain gets level + ≤6 "title | quote" lines, ~250 max tokens. Target ~2,400 tokens per check, measured on day one</li>
+    </ul></div></details>
+    <details><summary>Quick questions</summary><div><ul>
+      <li><code>questions.ts</code>: asked only if unknown <em>and</em> score-changing</li>
+      <li>Outside the US? · Where did it come from? · Signed an offer? · Had an interview?</li>
+      <li>Answering re-runs <code>score()</code> in the browser, so there's no server trip</li>
+    </ul></div></details>
+    <details><summary>Sender &amp; website checks</summary><div><ul>
+      <li><code>/api/sender</code>: RDAP creation date (cached 7 days), MX via Google/Cloudflare DNS, Hunter Email Insight if a key exists</li>
+      <li>Phone → country with <code>libphonenumber-js</code></li>
+    </ul></div></details>
+    <details><summary>Real-posting lookup</summary><div><ul>
+      <li><code>/api/company</code>: Tavily "&lt;company&gt; careers" → official website (code picks, not AI)</li>
+      <li><code>/api/posting</code>: Tavily on official site + Greenhouse/Lever/Workday/Ashby</li>
+      <li>Details come from the result title and snippet; "not listed" if absent</li>
+    </ul></div></details>
+    <details><summary>Report &amp; outcomes</summary><div><ul>
+      <li><code>components/report/*</code>: ring, quick questions, explanation, 3 groups, cards, Couldn't check</li>
+      <li><code>ScamOutcome</code>: what to do now, FTC / IC3 / platform, Copy report</li>
+      <li><code>PostingSection</code>: expanding card, match table, apply button</li>
+    </ul></div></details>
+    <details><summary>Profile &amp; resume</summary><div><ul>
+      <li><code>ProfileSteps.tsx</code> + <code>storage.ts</code> (<code>is:profile</code>, <code>is:resume</code>, <code>is:theme</code>)</li>
+      <li><code>resume.ts</code>: PDF (pdf.js) or Word (mammoth) → text, in the browser only</li>
+    </ul></div></details>
+    <details><summary>Usage guard</summary><div><ul>
+      <li>Origin must match <code>ALLOWED_ORIGINS</code>; body &lt; 8 KB; message ≤ 4,000 characters</li>
+      <li>Per visitor 3 checks/min, 20/day; global 120 checks/day (both gpt-oss models ≈ 400K tokens/day at ~2,400 tokens/check)</li>
+      <li>Tavily cap 80 credits/day. Search credits are the tighter limit; when they're reached, the company and posting checks go to Couldn't check</li>
+      <li>In memory, per instance, best-effort; the free-plan no-card rule is the real net</li>
+      <li>Example snapshots keep both examples working if limits run out</li>
+    </ul></div></details>
+  </div>
+
+  <h2>Where data lives</h2>
+  <div class="card"><table>
+    <tr><th>Data</th><th>Lives in</th><th>Leave and come back</th></tr>
+    <tr><td>Profile, resume text, theme</td><td>localStorage</td><td>Kept</td></tr>
+    <tr><td>Message, step results, report, answers</td><td>React state</td><td>Gone (Copy report keeps text)</td></tr>
+    <tr><td>Caches, counters</td><td>Server memory</td><td>Gone on restart</td></tr>
+  </table></div>
+
+  <h2>Day-one checks &amp; build order</h2>
+  <div class="grid2">
+    <details open><summary>Verify on day one</summary><div><ul>
+      <li>Groq free limits for your org (console → Settings → Limits)</li>
+      <li>Real tokens per check from the dev usage log → recalculate the daily cap; does the schema count as input?</li>
+      <li>When Tavily credits reset each month</li>
+      <li>Whether gpt-oss accepts <code>reasoning_effort: "low"</code></li>
+      <li>Hunter: free API access and no card, otherwise drop it</li>
+      <li>DNS-over-HTTPS limits · Vercel Hobby function duration · installed versions</li>
+    </ul></div></details>
+    <details open><summary>Build order</summary><div><ol style="margin:0;padding-left:1.2em">
+      <li>Scoring + tests → extract → pipeline + checklist → sender/company/posting → report → examples <strong>(Thursday)</strong></li>
+      <li>Usage guard before first deploy</li>
+      <li>Polish: dark mode, accessibility, brand, Hunter, test set + README</li>
+    </ol></div></details>
+  </div>
+</main>
+<script>
+const LINES = ["Reading the message","Searching for the company's careers page","Checking the sender's email domain","Looking for the real job posting","Writing the explanation"];
+const S = {
+  "All good": { s:["done","done","done","done","done"], why:["","","","",""], story:"Steps 2 and 3 run together after step 1. Step 4 waits for step 2. Scoring runs in the browser, then the explanation fills in." },
+  "Step 2 times out": { s:["done","failed","done","skipped","done"], why:["","timeout (10s)","","needs step 2",""], story:"Website-match and posting checks move to Couldn't check and add no points. The report still shows. Retry re-runs only steps 2 and 4 and reuses steps 1 and 3, so there's no extra Groq call." },
+  "One model limited": { s:["done","done","done","done","done"], why:["20b limited → used 120b","","","",""], story:"The 20b model returned 429, so the server marked it resting and sent the same request to 120b. The user sees nothing different." },
+  "Both models out (step 1)": { s:["failed","done","done","done","failed"], why:["limit on both models","used form's company","used form's sender","",""], story:"No extracted facts, but the keyword backstop still scans the raw text in the browser, so critical flags are caught. Steps 2–4 use the form fields if filled. The explanation uses pre-written text." },
+  "Rate limited": { s:["done","done","failed","done","done"], why:["","","limit (429)","",""], story:"The line says 'busy, try again in a moment.' Sender checks go to Couldn't check. Retry waits for retryAfter." },
+  "No sender email": { s:["done","done","skipped","done","done"], why:["","","missing input","",""], story:"Step 3 is never tried. The sender field invites the user to add it; the sender checks sit in Couldn't check." },
+};
+const sc = document.getElementById("scen"), ol = document.getElementById("steps"), story = document.getElementById("story");
+function show(k){
+  [...sc.children].forEach(b=>b.setAttribute("aria-pressed", b.textContent===k));
+  ol.replaceChildren(...LINES.map((l,i)=>{ const st=S[k].s[i]; const li=document.createElement("li"); li.className=st;
+    const d=document.createElement("span"); d.className="dot"; d.textContent= st==="done"?"✓":st==="failed"?"!":st==="skipped"?"–":"…";
+    const t=document.createElement("span"); t.textContent=`${i+1}. ${l}`; const s=document.createElement("small"); s.textContent= st + (S[k].why[i]?` · ${S[k].why[i]}`:"");
+    li.append(d,t,s); return li; }));
+  story.textContent = S[k].story;
+}
+Object.keys(S).forEach(k=>{ const b=document.createElement("button"); b.textContent=k; b.onclick=()=>show(k); sc.append(b); });
+show("All good");
+</script>
+</body>
+</html>
