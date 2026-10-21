@@ -41,6 +41,20 @@ const areaCls = "mt-1.5 w-full rounded-[14px] border border-border bg-card p-4 t
 
 // ponytail: module helper so the React compiler's purity rule doesn't flag clock reads in event handlers.
 const now = () => Date.now();
+const randomSeed = () => Math.floor(Math.random() * 1_000_000_000);
+
+/** Renders a coding/design panel as a component, so the shell's callbacks aren't invoked during its own render. */
+function RoundSlot({ render, round, panel }: { render?: Props["renderRound"]; round: InterviewRound; panel: RoundPanelProps }) {
+  return render?.(round, panel) ?? <p className={`${cardCls} mt-6 p-5 text-[17px] text-muted`}>This round isn&apos;t available right now.</p>;
+}
+
+function BackLink({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} className={`${linkClass} inline-flex min-h-10 items-center gap-1.5 text-[15px]`}>
+      <ArrowLeftIcon size={16} /> {label}
+    </button>
+  );
+}
 
 function newId(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") return crypto.randomUUID();
@@ -102,6 +116,7 @@ export default function Interview({ profile, resume, target, onBack, renderRound
   }
 
   function leaveSession() {
+    setBusy(false);
     setSession(null);
     setError(null);
     setAnswer("");
@@ -116,7 +131,7 @@ export default function Interview({ profile, resume, target, onBack, renderRound
       resume: resume && useResume ? resume.text.slice(0, MAX_RESUME_CONTEXT_CHARS) : null,
       field: profile?.field ?? null,
     };
-    const s = newSession(activeRound, ctx, { id: newId(), now: Date.now(), seed: Math.floor(Math.random() * 1_000_000_000) });
+    const s = newSession(activeRound, ctx, { id: newId(), now: now(), seed: randomSeed() });
     saveSession(s);
     setError(null);
     setAnswer("");
@@ -131,7 +146,8 @@ export default function Interview({ profile, resume, target, onBack, renderRound
 
   function update(s: InterviewSession) {
     saveSession(s);
-    setSession(s);
+    // A reply that lands after Leave/another session is saved but never pulls the old session back on screen.
+    setSession((cur) => (cur && cur.id === s.id ? s : cur));
   }
 
   async function ask(s: InterviewSession, kind: InterviewAsk): Promise<InterviewSession | null> {
@@ -171,17 +187,12 @@ export default function Interview({ profile, resume, target, onBack, renderRound
 
   const panel: RoundPanelProps | null = session ? { session, onUpdate: update, ask, busy } : null;
 
-  const back = (label: string, fn: () => void) => (
-    <button type="button" onClick={fn} className={`${linkClass} inline-flex min-h-10 items-center gap-1.5 text-[15px]`}>
-      <ArrowLeftIcon size={16} /> {label}
-    </button>
-  );
 
   // ---------- Feedback ----------
   if (session && session.status === "done") {
     return (
       <section className="mx-auto max-w-[720px] px-6 py-10 sm:py-16">
-        {back("Back", leaveSession)}
+        <BackLink label="Past practice" onClick={leaveSession} />
         <div ref={feedbackRef} tabIndex={-1} className="mt-4 outline-none">
           <Feedback session={session} onAgain={leaveSession} onBack={onBack} />
         </div>
@@ -193,21 +204,20 @@ export default function Interview({ profile, resume, target, onBack, renderRound
   if (session && panel) {
     const total = QUESTIONS_PER_ROUND[session.round];
     const isPanelRound = session.round === "coding" || session.round === "design";
-    const custom = isPanelRound ? renderRound?.(session.round, panel) ?? null : null;
     const answered = session.turns.length;
     const needsRetry = !session.pending && !busy && !isPanelRound && nextStep(session) !== "done" && nextStep(session) !== "answer";
     // Coding/design panels have their own Finish (it saves the code/board first).
     const canFinish = answered >= 1 && !busy && !isPanelRound;
     return (
       <section className="mx-auto max-w-[720px] px-6 py-10 sm:py-16">
-        {back("Leave practice", leaveSession)}
+        <BackLink label="Leave practice" onClick={leaveSession} />
         <h1 className="mt-4 text-[clamp(26px,4.5vw,40px)] font-bold leading-[1.1] tracking-[-0.025em]">{roundLabel(session.round)}</h1>
         {session.context.company || session.context.role ? (
           <p className="mt-1 break-words text-[17px] text-muted">{[session.context.role, session.context.company].filter(Boolean).join(" at ")}</p>
         ) : null}
 
         {isPanelRound ? (
-          custom ?? <p className={`${cardCls} mt-6 p-5 text-[17px] text-muted`}>This round isn&apos;t available right now.</p>
+          <RoundSlot render={renderRound} round={session.round} panel={panel} />
         ) : (
           <>
             <p role="status" aria-live="polite" className="sr-only">
@@ -324,7 +334,7 @@ export default function Interview({ profile, resume, target, onBack, renderRound
 
   return (
     <section className="mx-auto max-w-[720px] px-6 py-10 sm:py-16">
-      {back("Back", onBack)}
+      <BackLink label="Back" onClick={onBack} />
       <h1 className="mt-4 text-[clamp(30px,5vw,48px)] font-bold leading-[1.1] tracking-[-0.025em]">Practice an interview</h1>
       <p className="mt-2 max-w-[560px] text-[17px] text-muted">
         Answer a few questions and get feedback on what worked. Your answers stay in this browser; only the text of the current practice is sent to write the questions and feedback.

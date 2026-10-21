@@ -84,6 +84,7 @@ export default function CodingRound({ session, onUpdate, ask, busy }: RoundPanel
       onLoading: setLoadingPy,
     });
     setRunning(null);
+    if (!res.ok && res.message === "Stopped.") return; // user pressed Stop: not an error
     if (!res.ok) {
       setRunError(res.message);
       setStatus(`Run failed. ${res.message}`);
@@ -111,6 +112,7 @@ export default function CodingRound({ session, onUpdate, ask, busy }: RoundPanel
       onLoading: setLoadingPy,
     });
     setRunning(null);
+    if (!res.ok && res.message === "Stopped.") return;
     if (!res.ok) {
       setRunError(res.message);
       setStatus(`Submit failed. ${res.message}`);

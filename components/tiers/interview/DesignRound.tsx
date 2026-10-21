@@ -51,8 +51,10 @@ export default function DesignRound({ session, onUpdate, ask, busy }: RoundPanel
   /** Records the typed answer (if a question is waiting) and the board. */
   function record(): InterviewSession {
     let s = withBoard(latest.current);
-    if (s.pending && text) s = answerPending(s, text, Date.now());
-    setAnswer("");
+    if (s.pending && text) {
+      s = answerPending(s, text, Date.now());
+      setAnswer(""); // only clear what was actually saved
+    }
     onUpdate(s);
     return s;
   }
@@ -100,7 +102,7 @@ export default function DesignRound({ session, onUpdate, ask, busy }: RoundPanel
           maxLength={MAX_ANSWER_CHARS}
           onChange={(e) => setAnswer(e.target.value)}
           rows={5}
-          disabled={busy}
+          disabled={busy || !session.pending}
           className="mt-1.5 w-full rounded-[14px] border border-border bg-card p-4 text-[17px]"
         />
         <p className="mt-1 text-[13px] text-muted">
@@ -119,6 +121,9 @@ export default function DesignRound({ session, onUpdate, ask, busy }: RoundPanel
         </button>
       </div>
       {!canFinish && <p className="text-[15px] text-muted">Answer the question first.</p>}
+      {!session.pending && !busy && moreToAsk && (
+        <p className="text-[15px] text-muted">Your answer is saved. Ask me a follow-up to continue, or finish.</p>
+      )}
     </div>
   );
 }

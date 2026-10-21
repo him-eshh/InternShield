@@ -205,7 +205,9 @@ export default function App() {
 
   const [practiceTarget, setPracticeTarget] = useState<PostingContext | null>(null);
   const [practiceFromTracker, setPracticeFromTracker] = useState(false);
+  const [practiceKey, setPracticeKey] = useState(0);
   const openPractice = (t: PostingContext | null, fromTracker = false) => {
+    setPracticeKey((k) => k + 1); // fresh setup even when reopened from the chip on the interview screen
     setPracticeTarget(t);
     setPracticeFromTracker(fromTracker);
     setScreen("interview");
@@ -283,6 +285,7 @@ export default function App() {
         )}
         {screen === "interview" && TIER_FLAGS.interview && (
           <Interview
+            key={practiceKey}
             profile={profile}
             resume={resume}
             target={practiceTarget}

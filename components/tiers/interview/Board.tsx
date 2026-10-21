@@ -8,6 +8,7 @@ import {
   BOARD_KINDS,
   BOARD_W,
   MAX_EDGE_LABEL,
+  MAX_EDGES,
   MAX_NODE_LABEL,
   NODE_H,
   NODE_W,
@@ -72,7 +73,9 @@ export default function Board({ board, onChange }: Props) {
     setNote(
       next.edges.length > had
         ? `Connected ${nameOf(from)} to ${nameOf(to)}.`
-        : `${nameOf(from)} is already connected to ${nameOf(to)}.`,
+        : had >= MAX_EDGES
+          ? "The board has the most arrows it can hold. Remove one to add another."
+          : `${nameOf(from)} is already connected to ${nameOf(to)}.`,
     );
     setConnectFrom(null);
   };
@@ -168,6 +171,10 @@ export default function Board({ board, onChange }: Props) {
 
   const add = () => {
     const r = addNode(board, kind);
+    if (!r.id) {
+      setNote("The board is full. Remove a box to add another.");
+      return;
+    }
     onChange(r.board);
     setSelected(r.id);
     setNote(`Added ${kindLabel(kind)} box.`);
