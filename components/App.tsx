@@ -17,6 +17,9 @@ import type { NewCard, PostingContext } from "@/lib/tiers/types";
 import ResumeTailor from "./tiers/ResumeTailor";
 import SaveToTracker from "./tiers/SaveToTracker";
 import Tracker from "./tiers/Tracker";
+import CodingRound from "./tiers/interview/CodingRound";
+import DesignRound from "./tiers/interview/DesignRound";
+import Interview from "./tiers/interview/Interview";
 import CheckForm, { type CheckSubmit } from "./CheckForm";
 import Checklist, { initialLines, type LineInfo } from "./Checklist";
 import Intro from "./Intro";
@@ -27,7 +30,7 @@ import ThemeToggle from "./ThemeToggle";
 import Report from "./report/Report";
 import { btnPrimary, btnSecondary, subhead } from "./ui";
 
-type Screen = "loading" | "intro" | "profile" | "check" | "checking" | "report" | "notjob" | "resume" | "tracker";
+type Screen = "loading" | "intro" | "profile" | "check" | "checking" | "report" | "notjob" | "resume" | "tracker" | "interview";
 
 /** Company/role/link the last report found: feeds "Save to tracker" and resume tailoring. */
 function reportTarget(outcome: PipelineOutcome, input: PipelineInput): NewCard {
@@ -200,14 +203,23 @@ export default function App() {
   };
   const back = () => setScreen(outcome?.report ? "report" : "check");
 
+  const [practiceTarget, setPracticeTarget] = useState<PostingContext | null>(null);
+  const [practiceFromTracker, setPracticeFromTracker] = useState(false);
+  const openPractice = (t: PostingContext | null, fromTracker = false) => {
+    setPracticeTarget(t);
+    setPracticeFromTracker(fromTracker);
+    setScreen("interview");
+  };
+
   const target = outcome?.report && runInput ? reportTarget(outcome, runInput) : null;
   const lastTarget = target && target.risk !== "high" ? { company: target.company, role: target.role, description: null } : null;
   const chipItems = [
     ...(TIER_FLAGS.resume ? [{ label: "Tailor my resume", onClick: () => openTailor(lastTarget) }] : []),
     ...(TIER_FLAGS.tracker ? [{ label: "My applications", onClick: () => setScreen("tracker") }] : []),
+    ...(TIER_FLAGS.interview ? [{ label: "Practice an interview", onClick: () => openPractice(lastTarget) }] : []),
   ];
   const reportExtras =
-    target && (TIER_FLAGS.tracker || TIER_FLAGS.resume) ? (
+    target && (TIER_FLAGS.tracker || TIER_FLAGS.resume || TIER_FLAGS.interview) ? (
       <div className="flex flex-wrap items-center justify-center gap-3">
         {TIER_FLAGS.tracker && <SaveToTracker key={reportKey} card={target} onOpen={() => setScreen("tracker")} />}
         {TIER_FLAGS.resume && target.risk !== "high" && (
@@ -219,11 +231,17 @@ export default function App() {
             Tailor my resume for this
           </button>
         )}
+        {/* No interview coaching on high-risk reports: we don't prep people for a likely scam. */}
+        {TIER_FLAGS.interview && target.risk !== "high" && (
+          <button type="button" className={btnSecondary} onClick={() => openPractice(lastTarget)}>
+            Practice an interview for this
+          </button>
+        )}
       </div>
     ) : null;
 
   const showChip =
-    profile && (screen === "check" || screen === "report" || screen === "notjob" || screen === "resume" || screen === "tracker");
+    profile && (screen === "check" || screen === "report" || screen === "notjob" || screen === "resume" || screen === "tracker" || screen === "interview");
 
   return (
     <div className="min-h-dvh">
@@ -257,7 +275,28 @@ export default function App() {
         {screen === "resume" && TIER_FLAGS.resume && (
           <ResumeTailor resume={resume} target={tailorTarget} onOpenProfile={() => setScreen("profile")} onBack={back} />
         )}
-        {screen === "tracker" && TIER_FLAGS.tracker && <Tracker onBack={back} />}
+        {screen === "tracker" && TIER_FLAGS.tracker && (
+          <Tracker
+            onBack={back}
+            onPractice={TIER_FLAGS.interview ? (c) => openPractice({ company: c.company, role: c.role, description: null }, true) : undefined}
+          />
+        )}
+        {screen === "interview" && TIER_FLAGS.interview && (
+          <Interview
+            profile={profile}
+            resume={resume}
+            target={practiceTarget}
+            onBack={practiceFromTracker ? () => setScreen("tracker") : back}
+            roundsEnabled={{ coding: TIER_FLAGS.coding, design: TIER_FLAGS.design }}
+            renderRound={(round, panel) =>
+              round === "coding" && TIER_FLAGS.coding ? (
+                <CodingRound {...panel} />
+              ) : round === "design" && TIER_FLAGS.design ? (
+                <DesignRound {...panel} />
+              ) : null
+            }
+          />
+        )}
       </main>
     </div>
   );

@@ -241,6 +241,8 @@ export async function handleInterview(body: Record<string, unknown>): Promise<Re
     maxTokens: feedback ? 900 : 150,
     ...(feedback ? { schema: FEEDBACK_SCHEMA } : {}),
   });
+  // Empty/unusable model output comes back as "error": show the calm interviewer message, not the generic one.
+  if (!r.ok && r.reason === "error") return failed("error", { message: feedback ? FEEDBACK_FAILED : INTERVIEW_FAILED });
   if (!r.ok) return fromOutcome(r);
 
   if (feedback) {

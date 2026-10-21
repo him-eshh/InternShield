@@ -39,6 +39,9 @@ const small =
 const fieldCls = "mt-1.5 min-h-12 w-full rounded-[14px] border border-border bg-card px-4 text-[17px] placeholder:text-muted";
 const areaCls = "mt-1.5 w-full rounded-[14px] border border-border bg-card p-4 text-[17px] placeholder:text-muted";
 
+// ponytail: module helper so the React compiler's purity rule doesn't flag clock reads in event handlers.
+const now = () => Date.now();
+
 function newId(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") return crypto.randomUUID();
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -145,7 +148,7 @@ export default function Interview({ profile, resume, target, onBack, renderRound
       setError(res.message ?? BUSY_MSG);
       return null;
     }
-    const next = applyReply(s, kind, res.data, Date.now());
+    const next = applyReply(s, kind, res.data, now());
     update(next);
     return next;
   }
@@ -160,7 +163,7 @@ export default function Interview({ profile, resume, target, onBack, renderRound
     if (!session || busy || !session.pending) return;
     const text = answer.trim();
     if (!text) return;
-    const next = answerPending(session, text.slice(0, MAX_ANSWER_CHARS), Date.now());
+    const next = answerPending(session, text.slice(0, MAX_ANSWER_CHARS), now());
     setAnswer("");
     update(next);
     await step(next);
@@ -193,7 +196,8 @@ export default function Interview({ profile, resume, target, onBack, renderRound
     const custom = isPanelRound ? renderRound?.(session.round, panel) ?? null : null;
     const answered = session.turns.length;
     const needsRetry = !session.pending && !busy && !isPanelRound && nextStep(session) !== "done" && nextStep(session) !== "answer";
-    const canFinish = answered >= 1 && !busy;
+    // Coding/design panels have their own Finish (it saves the code/board first).
+    const canFinish = answered >= 1 && !busy && !isPanelRound;
     return (
       <section className="mx-auto max-w-[720px] px-6 py-10 sm:py-16">
         {back("Leave practice", leaveSession)}
@@ -258,11 +262,16 @@ export default function Interview({ profile, resume, target, onBack, renderRound
           </>
         )}
 
-        {busy && (
-          <p role="status" className="mt-5 text-[16px] text-muted motion-safe:animate-pulse">
-            {waitingFor === "feedback" ? "Putting your feedback together…" : "Thinking of the next question…"}
-          </p>
-        )}
+        {/* Always rendered so screen readers hear the text change. */}
+        <p role="status" className={busy ? "mt-5 text-[16px] text-muted motion-safe:animate-pulse" : "sr-only"}>
+          {!busy
+            ? ""
+            : waitingFor === "feedback"
+              ? "Putting your feedback together…"
+              : waitingFor === "hint"
+                ? "Thinking of a hint…"
+                : "Thinking of the next question…"}
+        </p>
         {error && (
           <p role="alert" className="mt-5 text-[16px] font-medium">
             {error}
