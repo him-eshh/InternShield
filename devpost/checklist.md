@@ -9,7 +9,7 @@ Build mode: fast (chosen by Himesh; overnight parallel build per `devpost/build-
 
 ## Slices
 
-- [ ] **1. Scaffold, contracts, and a stub flow that shows a report**
+- [x] **1. Scaffold, contracts, and a stub flow that shows a report**
   Becomes usable: `npm run dev` opens a page where "Try an example: a scam / a real one" runs the five stub API routes in relay order and renders a report object.
   Why now: Every worker builds against the same contracts in parallel, so the shapes (facts, step results, flags, report, API bodies), theme tokens, examples, and dependencies have to exist and compile first.
   PRD ref: `prd.md > The Core Journey` (steps 3-5), `prd.md > Message Input and Auto-fill` (examples)
