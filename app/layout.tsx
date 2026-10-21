@@ -5,6 +5,8 @@ import "./globals.css";
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  // Vercel sets VERCEL_PROJECT_PRODUCTION_URL; locally the share image resolves against localhost.
+  metadataBase: new URL(process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000"),
   title: "InternShield: is this offer real?",
   description: "Paste a recruiter message and see the evidence in seconds.",
 };
