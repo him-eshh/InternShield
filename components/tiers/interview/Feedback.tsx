@@ -45,6 +45,12 @@ function CodeCheck({ turn, round }: { turn: InterviewTurn; round: InterviewRound
   );
 }
 
+/** True when the quote is just the whole answer again (ignoring spacing and case), so it isn't shown twice. */
+function sameText(a: string, b: string): boolean {
+  const norm = (s: string) => s.replace(/\s+/g, " ").trim().toLowerCase();
+  return norm(a) === norm(b);
+}
+
 /** Feedback for any finished round. Pure view: the shell passes the actions. */
 export default function Feedback({
   session,
@@ -73,7 +79,7 @@ export default function Feedback({
                   <p className="mt-1 break-words text-[17px] font-semibold leading-snug">{turn.question}</p>
                   <p className="mt-4 text-[14px] font-medium text-muted">Your answer</p>
                   <p className="mt-1 whitespace-pre-wrap break-words text-[16px]">{turn.answer}</p>
-                  {item?.quote && (
+                  {item?.quote && !sameText(item.quote, turn.answer) && (
                     <blockquote className="mt-4 break-words rounded-[12px] border-l-4 border-accent bg-accent/10 px-4 py-3 text-[16px]">
                       <span className="sr-only">Quote from your answer: </span>
                       {item.quote}

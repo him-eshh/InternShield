@@ -340,9 +340,9 @@ export default function Interview({ profile, resume, target, onBack, renderRound
   const jd = (
     <div className="mt-6">
       <label htmlFor="iv-desc" className="text-[15px] font-medium">
-        Paste the job description <span className="font-normal text-muted">(optional)</span>
+        Job description <span className="font-normal text-muted">(optional)</span>
       </label>
-      {!hadContext && <p className="mt-1 text-[15px] text-muted">Paste the job description so the questions fit the role.</p>}
+      {!hadContext && <p className="mt-1 text-[15px] text-muted">Paste it so the questions fit the role.</p>}
       <textarea
         id="iv-desc"
         value={description}

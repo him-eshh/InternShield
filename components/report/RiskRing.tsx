@@ -62,7 +62,7 @@ export default function RiskRing({ score, level }: { score: number; level: RiskL
           <span className="text-[28px] font-semibold leading-none tabular-nums" aria-hidden="true">{shown}</span>
         </div>
       </div>
-      <h2 className={`mt-6 flex max-w-[22ch] items-center justify-center gap-3 text-[clamp(32px,4.6vw,44px)] font-bold leading-[1.1] tracking-[-0.025em] ${COLOR[level]}`}>
+      <h2 className={`mt-6 flex max-w-[22ch] flex-col items-center justify-center gap-2 sm:flex-row sm:gap-3 text-[clamp(32px,4.6vw,44px)] font-bold leading-[1.1] tracking-[-0.025em] ${COLOR[level]}`}>
         <Icon size={32} className="shrink-0" />
         <span className="text-text">{LEVEL_LABELS[level]}</span>
       </h2>
