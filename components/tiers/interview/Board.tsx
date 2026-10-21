@@ -98,6 +98,10 @@ export default function Board({ board, onChange }: Props) {
 
   const remove = (id: string) => {
     const name = nameOf(id);
+    // Keep keyboard focus on the board: move it to a neighbouring box (if any) after the removal.
+    const idx = board.nodes.findIndex((n) => n.id === id);
+    const neighbour = board.nodes[idx + 1] ?? board.nodes[idx - 1];
+    if (neighbour) focusNode(neighbour.id);
     onChange(removeNode(board, id));
     setSelected(null);
     if (connectFrom === id) setConnectFrom(null);
@@ -117,7 +121,7 @@ export default function Board({ board, onChange }: Props) {
       const [dx, dy] = dirs[e.key];
       const next = moveNode(board, n.id, dx, dy);
       onChange(next);
-      const m = next.nodes.find((x) => x.id === n.id);
+      const m = next.nodes.find((x: BoardNode) => x.id === n.id);
       if (m) setNote(`${n.label || "Untitled"} moved to ${Math.round(m.x)}, ${Math.round(m.y)}.`);
     } else if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -250,7 +254,6 @@ export default function Board({ board, onChange }: Props) {
           ref={svgRef}
           viewBox={`0 0 ${BOARD_W} ${BOARD_H}`}
           width="100%"
-          height="auto"
           role="group"
           aria-label="System design board"
           aria-describedby={`${markerId}-hint`}

@@ -5,5 +5,5 @@ export const TIER_FLAGS = {
   screenshot: true, // Slice 10: message screenshot upload
   interview: true, // Slice 11: mock interview shell, recruiter screen, behavioral
   coding: true, // Slice 12: live coding round (tech; needs interview)
-  design: false, // Slice 13: system design board (tech; needs interview)
+  design: true, // Slice 13: system design board (tech; needs interview)
 } as const;

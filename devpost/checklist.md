@@ -113,7 +113,7 @@ Build mode: fast (chosen by Himesh; overnight parallel build per `devpost/build-
 
 ## Tier 3 Slices (`devpost/tier3-spec.md`)
 
-- [ ] **11. Mock interview shell: recruiter screen + behavioral**
+- [x] **11. Mock interview shell: recruiter screen + behavioral**
   Becomes usable: from the chip menu, a report, or an Interviewing tracker card, start a recruiter screen or behavioral practice fitted to the posting and resume, answer one question at a time, and get per-answer feedback with quotes from your own answers (STAR for behavioral); sessions are saved in this browser.
   Why now: It is the shell the coding and design rounds plug into, and it works for every field.
   PRD ref: `prd.md > Deferred From the POC`, `scope.md > Later`
@@ -123,7 +123,7 @@ Build mode: fast (chosen by Himesh; overnight parallel build per `devpost/build-
   Learner check: Practice a behavioral round for a made-up posting, give one weak and one strong STAR answer, and read the feedback quotes.
   Commit: `Slice 11: mock interview shell`
 
-- [ ] **12. Live coding round (tech)**
+- [x] **12. Live coding round (tech)**
   Becomes usable: tech profiles can solve a made-up problem in Python or JavaScript in a real editor, run the examples, submit against hidden tests graded in the browser, ask for a hint, and get feedback.
   Why now: Needs the interview shell; it is the most common intern tech round.
   PRD ref: `prd.md > Deferred From the POC`
@@ -133,7 +133,7 @@ Build mode: fast (chosen by Himesh; overnight parallel build per `devpost/build-
   Learner check: Solve one problem in Python and one in JavaScript, write an infinite loop and watch it get stopped.
   Commit: `Slice 12: live coding round`
 
-- [ ] **13. System design board (tech)**
+- [x] **13. System design board (tech)**
   Becomes usable: tech profiles can draw a design with labeled boxes and arrows (mouse or keyboard), export it as PNG, and get follow-up questions and feedback about the diagram.
   Why now: Last tech round; reuses the shell and route.
   PRD ref: `prd.md > Deferred From the POC`
