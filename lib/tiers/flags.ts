@@ -2,5 +2,5 @@
 export const TIER_FLAGS = {
   resume: true, // Slice 8: tailored resume PDF
   tracker: true, // Slice 9: application tracker board
-  screenshot: false, // Slice 10: message screenshot upload
+  screenshot: true, // Slice 10: message screenshot upload
 } as const;

@@ -101,7 +101,7 @@ Build mode: fast (chosen by Himesh; overnight parallel build per `devpost/build-
   Learner check: Save the real example to the tracker, move it to Interviewing with the keyboard, reload, then Clear my data.
   Commit: `Slice 9: application tracker`
 
-- [ ] **10. Message screenshot upload**
+- [x] **10. Message screenshot upload**
   Becomes usable: Upload a screenshot on the check form; its text fills the message box for review, then the normal check runs.
   Why now: Many scam messages arrive as texts/WhatsApp, which are easier to screenshot than copy.
   PRD ref: `prd.md > Deferred From the POC`, `prd.md > Accessibility and Privacy`

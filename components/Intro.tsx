@@ -1,3 +1,4 @@
+import { TIER_FLAGS } from "@/lib/tiers/flags";
 import { btnPrimary, headline } from "./ui";
 
 export default function Intro({ onStart }: { onStart: () => void }) {
@@ -23,6 +24,7 @@ export default function Intro({ onStart }: { onStart: () => void }) {
       </div>
       <p className="mt-14 max-w-[44ch] text-[14px] leading-relaxed text-muted">
         Your message is sent to an AI and a search service to run the check. Nothing is stored.
+        {TIER_FLAGS.screenshot && " Screenshots are read by an AI to copy the text, then thrown away."}
       </p>
     </section>
   );
