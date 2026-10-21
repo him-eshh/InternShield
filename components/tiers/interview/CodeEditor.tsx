@@ -31,10 +31,11 @@ export default function CodeEditor({ value, language, onChange, label }: Props) 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [{ basicSetup }, { EditorView }, { Compartment }, lang] = await Promise.all([
+      const [{ basicSetup }, { EditorView, keymap }, { Compartment }, { indentWithTab }, lang] = await Promise.all([
         import("codemirror"),
         import("@codemirror/view"),
         import("@codemirror/state"),
+        import("@codemirror/commands"),
         loadLanguage(initial.current.language),
       ]);
       if (cancelled || !host.current) return;
@@ -59,6 +60,8 @@ export default function CodeEditor({ value, language, onChange, label }: Props) 
         parent: host.current,
         extensions: [
           basicSetup,
+          // Tab indents while focused; Escape then Tab leaves the editor (CodeMirror's escape hatch).
+          keymap.of([indentWithTab]),
           comp.of(lang),
           theme,
           EditorView.contentAttributes.of({ "aria-label": initial.current.label }),

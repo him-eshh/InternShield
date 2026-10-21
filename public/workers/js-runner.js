@@ -34,6 +34,11 @@ self.onmessage = function (event) {
     return;
   }
   neutralize();
+  // Dynamic import() can't be removed from a worker, so refuse code that uses it.
+  if (/\bimport\s*\(/.test(code)) {
+    self.postMessage({ type: "error", message: "import() isn't available here. Write the function without loading code." });
+    return;
+  }
   var logs = "";
   var consoleShim = {};
   ["log", "info", "warn", "error", "debug"].forEach(function (k) {

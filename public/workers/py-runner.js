@@ -18,6 +18,14 @@ var ready = (async function () {
     pyodide = await loadPyodide({ indexURL: BASE });
     pyodide.setStdout({ batched: addLog });
     pyodide.setStderr({ batched: addLog });
+    // Pyodide is loaded; take network APIs away so user code (via `import js`) can't reach out.
+    ["fetch", "XMLHttpRequest", "WebSocket", "EventSource", "importScripts", "indexedDB", "caches"].forEach(function (n) {
+      try {
+        Object.defineProperty(self, n, { value: undefined, writable: false, configurable: false });
+      } catch (e) {
+        /* ignore */
+      }
+    });
     self.postMessage({ type: "ready" });
   } catch (err) {
     self.postMessage({ type: "error", message: "Could not load Python: " + (err && err.message ? err.message : String(err)) });

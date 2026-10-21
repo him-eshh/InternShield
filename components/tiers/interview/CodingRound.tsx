@@ -1,6 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   MAX_ANSWER_CHARS,
   MAX_CODE_CHARS,
@@ -53,7 +53,9 @@ export default function CodingRound({ session, onUpdate, ask, busy }: RoundPanel
   const [logs, setLogs] = useState("");
   const [status, setStatus] = useState("");
   const latest = useRef(session);
-  latest.current = session;
+  useEffect(() => {
+    latest.current = session;
+  }, [session]);
 
   if (!problem) {
     return (
@@ -141,7 +143,10 @@ export default function CodingRound({ session, onUpdate, ask, busy }: RoundPanel
       code: { problemId: problem!.id, language, code: code.slice(0, MAX_CODE_CHARS), passed: submitted?.passed ?? 0, total: submitted?.total ?? problem!.tests.length },
     };
     const next = await ask(withCode, "hint");
-    if (next) setStatus("A new hint is below.");
+    if (!next) return;
+    // The hint request carried the editor code; keep session.code as the last real Submit only.
+    onUpdate({ ...next, code: s.code });
+    setStatus("A new hint is below.");
   }
 
   async function finish() {
