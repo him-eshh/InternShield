@@ -34,7 +34,7 @@ const WHY = [
   "We use this to check whether a role fits what you'd really be applying for.",
   "A role that asks for far more or far less than your level can be a warning sign.",
   "Skills help us spot jobs that don't match what you do. Totally optional.",
-  "With a resume we can compare the role to your background. It stays on this device and is never uploaded.",
+  "With a resume we can compare the role to your background. The file stays on this device. Only a line you choose to reword is ever sent to an AI.",
 ];
 
 interface Props {

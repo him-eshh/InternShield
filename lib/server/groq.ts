@@ -13,7 +13,7 @@ export const MODEL_VISION = "qwen/qwen3.8-27b";
 const ORDER: Record<GroqTask, string[]> = {
   extract: [MODEL_20B, MODEL_120B],
   explain: [MODEL_120B, MODEL_20B],
-  rewrite: [MODEL_VISION, MODEL_20B],
+  rewrite: [MODEL_VISION], // no gpt-oss fallback: keeps Tier 2 off the core's budget
   transcribe: [MODEL_VISION], // the only vision model; no fallback model
 };
 
@@ -143,7 +143,8 @@ export async function callGroq(task: GroqTask, req: GroqRequest): Promise<Outcom
           });
         }
         const raw = data.choices?.[0]?.message?.content;
-        const text = typeof raw === "string" ? stripThinking(raw) : "";
+        // Only Qwen thinks in-band; never touch gpt-oss output (a message quoting "<think>" must not cut extract JSON).
+        const text = typeof raw === "string" ? (model === MODEL_VISION ? stripThinking(raw) : raw.trim()) : "";
         if (text) return { ok: true, data: text };
         hardError = true;
         break;

@@ -95,7 +95,9 @@ export default function Tracker({ onBack }: { onBack: () => void }) {
     const li = link.trim();
     if (!co || !ro) return setFormError("Add a company and a role.");
     if (li && !isHttp(li)) return setFormError("The link should start with http:// or https://.");
-    commit(addCard(cards, { company: co, role: ro, link: li || null, risk: null }));
+    const next = addCard(cards, { company: co, role: ro, link: li || null, risk: null });
+    if (next.length === cards.length) return setFormError("That one is already in your tracker.");
+    commit(next);
     setCompany("");
     setRole("");
     setLink("");
