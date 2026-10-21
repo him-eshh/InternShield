@@ -153,7 +153,7 @@ Build mode: fast (chosen by Himesh; overnight parallel build per `devpost/build-
   Learner check: Run a case as a business profile, give a wrong number once and a right one once, read the code check.
   Commit: `Slice 14: business case interview`
 
-- [ ] **15. Finance: technical questions**
+- [x] **15. Finance: technical questions**
   Becomes usable: finance profiles get 4 made-up accounting/valuation questions, numeric answers checked in code and the rest against a rubric, with feedback.
   Why now: Same scripted engine as Slice 14, different bank.
   PRD ref: `prd.md > Deferred From the POC`
