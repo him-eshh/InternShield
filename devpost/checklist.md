@@ -49,7 +49,7 @@ Build mode: fast (chosen by Himesh; overnight parallel build per `devpost/build-
   Learner check: Run `npm run dev`, go through the intro and profile, paste a made-up message, and look at the report in light and dark mode on a narrow window.
   Commit: `Slice 4: screens on fixtures`
 
-- [ ] **5. Both "Try an example" flows work live end to end**
+- [x] **5. Both "Try an example" flows work live end to end**
   Becomes usable: With real keys in `.env.local`, "a scam" lands on "Strong signs of a scam" (85+, Critical tags) and "a real one" lands on "No red flags found" with the real posting found and an official apply link.
   Why now: This is the Thursday target and the first time the kernel meets real AI and search output.
   PRD ref: `prd.md > The Core Journey`, `prd.md > Risk Scoring` (acceptance), `prd.md > Real-Posting Lookup`
@@ -103,3 +103,6 @@ Activity mode: pending
 - Explanation `max_completion_tokens` is 300, not ~250 — gpt-oss reasoning tokens count against the limit and 250 risked cut-off text.
 - `maxLength`/`maxItems` removed from the Groq strict schema; the 200-char quote and 3-concern caps are enforced in code — `api-facts.md` doesn't confirm Groq strict mode supports those keywords.
 - Backstop patterns tightened after review (fraud-warning footers, "moving forward", "driver's license required", "signal processing", "we'll pay for your laptop" no longer fire) — the first version forced ordinary real recruiter messages to 85+.
+- Live integration fixes — the first live runs showed: rdap.org returns 403 without a User-Agent (sender age never ran); the company picker matched "Brightline Data Solutions" to gobrightline.com (a train company) on one shared word; the posting picker accepted any page on the site and another company's Workday posting (Dow Jones for Stripe); the city parser read "Software Engineer, Intern" as a place. All fixed with regression tests.
+- Explanation gets red flags only, and "legit/legitimate" in AI output is rewritten to "real" instead of discarding the paragraph — good signs sent as "risk signals" made the AI contradict clean reports, and gpt-oss writes "a legitimate company would…" almost every time, so the filter threw away nearly every explanation. "safe" and "guaranteed" still reject outright.
+- `eval/live.ts` wraps its loop in `main()` — tsx compiles to CommonJS here, which rejects top-level await.

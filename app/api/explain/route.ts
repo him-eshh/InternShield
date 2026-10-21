@@ -7,7 +7,7 @@ import { done, failed, MESSAGES } from "@/lib/server/http";
 import type { ExplainRequest, RiskLevel } from "@/lib/types";
 
 const SYSTEM =
-  "Explain these risk signals from a recruiter message to a student in about 100 words, calm plain English. Add no new facts. Never say a message is safe, legit, legitimate or guaranteed. No markdown.";
+  "Explain these risk signals from a recruiter message to a student in about 100 words, calm plain English. Add no new facts. Never use the words safe, safety, safely, legit, legitimate or guaranteed. No markdown.";
 
 const LEVELS: RiskLevel[] = ["low", "medium", "high"];
 const cut = (v: unknown, max: number) => (typeof v === "string" ? v.replace(/\s+/g, " ").trim().slice(0, max) : "");
@@ -43,7 +43,9 @@ export async function POST(req: Request) {
       `Level: ${input.level}\n` + input.flags.map((f) => `${f.title} | ${f.quote ?? "-"}`).join("\n");
     const r = await callGroq("explain", { system: SYSTEM, user, maxTokens: 300 });
     if (!r.ok) return fallback();
-    const text = r.data.trim();
+    // gpt-oss keeps writing "a legitimate company would…"; swap to "real" rather than lose the whole paragraph.
+    // "safe"/"guaranteed" still reject outright.
+    const text = r.data.trim().replace(/\blegitimate\b/gi, "real").replace(/\blegit\b/gi, "real");
     if (!text || hasBannedWord(text)) return fallback();
     cacheSet(key, text, DAY);
     return done({ text, source: "ai" as const });

@@ -108,7 +108,7 @@ export const EXAMPLES: Record<Example["id"], Example> = {
           otherConcerns: [],
         },
       },
-      company: { status: "done", data: { officialDomain: "stripe.com", careersUrl: "https://stripe.com/jobs" } },
+      company: { status: "done", data: { officialDomain: "stripe.com", careersUrl: "https://stripe.com/careers" } },
       sender: {
         status: "done",
         data: {
@@ -120,13 +120,13 @@ export const EXAMPLES: Record<Example["id"], Example> = {
           hunter: null,
         },
       },
-      // ponytail: snapshot URL refreshed during live integration (Slice 5); re-check before the demo.
+      // Snapshot from the live run on Oct 21, 2026. Re-check the posting is still up before the demo.
       posting: {
         status: "done",
         data: {
           found: true,
-          url: "https://stripe.com/jobs/search?query=intern",
-          title: "Software Engineering Intern",
+          url: "https://stripe.com/careers/listing/software-engineer-intern/8031833",
+          title: "Stripe Careers | Software Engineer, Intern",
           location: null,
           pay: null,
           postedDate: null,

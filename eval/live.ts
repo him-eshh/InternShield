@@ -17,6 +17,7 @@ const limit = i > -1 ? Number(process.argv[i + 1]) : 3;
 const signature = (f: Facts | null) =>
   f ? [...f.asks.map((a) => a.kind), f.offPlatform ? "offPlatform" : "", f.interview.status].filter(Boolean).sort().join(",") : "-";
 
+async function main() {
 let misses = 0;
 for (const m of loadMessages().slice(0, limit)) {
   const saved = m.savedSteps.extract.status === "done" ? m.savedSteps.extract.data : null;
@@ -29,3 +30,5 @@ for (const m of loadMessages().slice(0, limit)) {
   console.log(`${ok ? "ok  " : "MISS"} ${m.name}: expected ${m.expectedLevel}, got ${report.level} (${report.score}) | saved [${signature(saved)}] live [${signature(live)}]`);
 }
 console.log(`\n${misses} message(s) differ from saved facts or expected level.`);
+}
+main();

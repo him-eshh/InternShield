@@ -157,7 +157,8 @@ export async function fetchExplanation(
 ): Promise<Explanation> {
   const req: ExplainRequest = {
     level: report.level,
-    flags: report.flags.slice(0, 6).map((f) => ({ title: f.title, quote: f.quote, why: f.why })),
+    // Red flags only: good signs read as "risk signals" made the explainer contradict a clean report.
+    flags: report.flags.filter((f) => f.kind === "red").slice(0, 6).map((f) => ({ title: f.title, quote: f.quote, why: f.why })),
   };
   const res = await call<{ text: string; source: "ai" | "fallback" }>("explain", "/api/explain", req, deps);
   if (res.status === "done" && res.data?.text) return { text: res.data.text, source: res.data.source };

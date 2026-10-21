@@ -12,7 +12,8 @@ export async function getRegistrationDate(domain: string): Promise<string | null
   try {
     const res = await fetch(
       `https://rdap.org/domain/${encodeURIComponent(domain)}`,
-      normalizeFetchInit({ headers: { accept: "application/rdap+json, application/json" } }),
+      // rdap.org answers 403 to clients without a User-Agent (found in live testing).
+      normalizeFetchInit({ headers: { accept: "application/rdap+json, application/json", "user-agent": "InternShield/0.1" } }),
     );
     if (res.status === 404) {
       cacheSet(key, { v: null }, TTL); // that ending has no RDAP: don't ask again

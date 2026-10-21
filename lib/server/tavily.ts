@@ -70,7 +70,8 @@ export function nameSimilarity(company: string, domain: string): number {
   if (label === compact) return 1;
   if (label.length >= 4 && compact.includes(label) && label.length / compact.length >= 0.5) return 0.8;
   if (compact.length >= 4 && label.includes(compact)) return 0.8;
-  if (tokens.some((t) => t.length >= 3 && label.includes(t))) return 0.6;
+  // A single word must carry at least half the name: "Brightline Data Solutions" must not match gobrightline.com.
+  if (tokens.some((t) => t.length >= 3 && label.includes(t) && t.length / compact.length >= 0.5)) return 0.6;
   return 0;
 }
 
@@ -86,7 +87,10 @@ export function pickOfficial(company: string, hits: Hit[]): CompanyData | null {
   }
   if (!best) return null;
   const officialDomain = best.domain;
-  const careers = hits.find((h) => registrable(h.url) === officialDomain && CAREERS_RE.test(h.url));
+  // Shortest matching URL is usually the careers home, not a sub-page.
+  const careers = hits
+    .filter((h) => registrable(h.url) === officialDomain && CAREERS_RE.test(h.url))
+    .sort((a, b) => a.url.length - b.url.length)[0];
   return { officialDomain, careersUrl: careers?.url ?? null };
 }
 
@@ -106,7 +110,8 @@ export async function findCompany(company: string): Promise<Outcome<CompanyData 
 const PAY_RE =
   /\$\s?\d[\d,]*(?:\.\d+)?\s?[kK]?(?:\s?(?:-|–|to)\s?\$?\s?\d[\d,]*(?:\.\d+)?\s?[kK]?)?(?:\s?(?:\/|per\s)\s?(?:hr|hour|year|yr|month|week))?/;
 const LOCATION_LABEL_RE = /\blocations?\s*[:\-]\s*([^\n.|]{2,60})/i;
-const CITY_RE = /\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)*,\s?(?:[A-Z]{2}|[A-Z][a-z]+))\b/;
+// "City, ST" only: "Software Engineer, Intern" in a title must not read as a place.
+const CITY_RE = /\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)*,\s?[A-Z]{2})\b/;
 const REMOTE_RE = /\b(remote|hybrid|on-?site)\b/i;
 
 export function readDetails(title: string, content: string): { location: string | null; pay: string | null } {
@@ -143,7 +148,11 @@ export function pickPosting(
     if (!official && !isHiringPlatform(h.url)) continue;
     const hay = new Set(words(`${h.title} ${h.url}`));
     const overlap = roleWords.filter((w) => hay.has(w)).length;
+    // A posting must look like this role (or, with no role, like a jobs page), not any page on the site.
+    if (roleWords.length ? overlap === 0 : !CAREERS_RE.test(h.url)) continue;
     const companyHit = nameTokens(company).some((t) => `${h.title} ${h.url}`.toLowerCase().includes(t)) ? 1 : 0;
+    // A hiring-platform posting must name this company (dowjones.myworkdayjobs.com isn't Stripe's).
+    if (!official && !companyHit) continue;
     const score = overlap * 2 + companyHit + (official ? 1 : 0);
     if (!best || score > best.score) best = { hit: h, score, official };
   }
