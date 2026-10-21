@@ -3,13 +3,21 @@ import { MAX_MESSAGE_CHARS } from "@/lib/types";
 import { MINUTE, takeCount } from "./cache";
 import { failed, MESSAGES } from "./http";
 
-export type RouteName = "extract" | "company" | "sender" | "posting" | "explain";
+export type RouteName = "extract" | "company" | "sender" | "posting" | "explain" | "rewrite" | "transcribe";
 
 export type GuardResult =
   | { ok: true; body: Record<string, unknown>; ip: string }
   | { ok: false; response: Response };
 
 const MAX_BODY_BYTES = 16 * 1024;
+/** Transcribe carries one browser-compressed screenshot as a data URL (Vercel's body limit is 4.5 MB). */
+export const MAX_IMAGE_BODY_BYTES = 3 * 1024 * 1024;
+
+// Per-visitor limits for the Tier 2 AI routes: [per minute, per day].
+const VISITOR_LIMITS: Partial<Record<RouteName, [number, number]>> = {
+  rewrite: [4, 15],
+  transcribe: [2, 6],
+};
 
 function envInt(name: string, fallback: number): number {
   const n = Number(process.env[name]);
@@ -56,8 +64,9 @@ export async function guard(req: Request, route: RouteName): Promise<GuardResult
   const origin = req.headers.get("origin")?.replace(/\/$/, "");
   if (!origin || !allowedOrigins().includes(origin)) return reject(403, MESSAGES.origin);
 
+  const maxBytes = route === "transcribe" ? MAX_IMAGE_BODY_BYTES : MAX_BODY_BYTES;
   const declared = Number(req.headers.get("content-length"));
-  if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) return reject(413, MESSAGES.big);
+  if (Number.isFinite(declared) && declared > maxBytes) return reject(413, MESSAGES.big);
 
   let text: string;
   try {
@@ -65,7 +74,7 @@ export async function guard(req: Request, route: RouteName): Promise<GuardResult
   } catch {
     return reject(400, MESSAGES.bad);
   }
-  if (new TextEncoder().encode(text).length > MAX_BODY_BYTES) return reject(413, MESSAGES.big);
+  if (new TextEncoder().encode(text).length > maxBytes) return reject(413, MESSAGES.big);
 
   let body: unknown;
   try {
@@ -78,7 +87,13 @@ export async function guard(req: Request, route: RouteName): Promise<GuardResult
   if (typeof b.message === "string" && b.message.length > MAX_MESSAGE_CHARS) return reject(413, MESSAGES.big);
 
   const ip = clientIp(req);
-  if (route === "extract") {
+  const visitor = VISITOR_LIMITS[route];
+  if (visitor) {
+    const m = takeCount(`ip:min:${route}:${ip}`, visitor[0], MINUTE);
+    if (!m.ok) return limited(m.retryAfter);
+    const d = takeCount(`ip:day:${route}:${ip}`, visitor[1], "day");
+    if (!d.ok) return limited(d.retryAfter);
+  } else if (route === "extract") {
     const m = takeCount(`ip:min:extract:${ip}`, 3, MINUTE);
     if (!m.ok) return limited(m.retryAfter);
     const d = takeCount(`ip:day:extract:${ip}`, 20, "day");
@@ -99,6 +114,18 @@ export function takeCheck(): { ok: true } | { ok: false; retryAfter: number } {
 /** Counts one live explain call against 2x DAILY_CHECK_CAP so tokens can't be drained. */
 export function takeExplain(): boolean {
   return takeCount("global:explain", envInt("DAILY_CHECK_CAP", 120) * 2, "day").ok;
+}
+
+/** Counts one live resume rewrite against REWRITE_DAILY_CAP (site-wide). */
+export function takeRewrite(): { ok: true } | { ok: false; retryAfter: number } {
+  const r = takeCount("global:rewrite", envInt("REWRITE_DAILY_CAP", 40), "day");
+  return r.ok ? { ok: true } : { ok: false, retryAfter: r.retryAfter };
+}
+
+/** Counts one live screenshot transcription against TRANSCRIBE_DAILY_CAP (site-wide). */
+export function takeTranscribe(): { ok: true } | { ok: false; retryAfter: number } {
+  const r = takeCount("global:transcribe", envInt("TRANSCRIBE_DAILY_CAP", 30), "day");
+  return r.ok ? { ok: true } : { ok: false, retryAfter: r.retryAfter };
 }
 
 /** Counts one Tavily call against TAVILY_DAILY_CAP. */
