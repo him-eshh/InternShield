@@ -1,9 +1,12 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+const { checkTurnMock } = vi.hoisted(() => ({ checkTurnMock: vi.fn() }));
+vi.mock("@/lib/tiers/scripted", () => ({ checkTurn: checkTurnMock, describeCheck: () => "" }));
 import Feedback from "@/components/tiers/interview/Feedback";
 import Interview from "@/components/tiers/interview/Interview";
 import Tracker from "@/components/tiers/Tracker";
-import type { InterviewSession, TrackerCard } from "@/lib/tiers/types";
+import type { InterviewRound, InterviewSession, TrackerCard } from "@/lib/tiers/types";
 import type { Profile } from "@/lib/types";
 
 const noop = () => {};
@@ -29,6 +32,76 @@ describe("Interview setup", () => {
     expect(on).not.toContain("System design");
     const off = renderToStaticMarkup(<Interview profile={tech} resume={null} target={null} onBack={noop} />);
     expect(off).not.toContain("Live coding");
+  });
+});
+
+const biz: Profile = { field: "business", level: "junior", skills: [] };
+const fin: Profile = { field: "finance", level: "junior", skills: [] };
+const des: Profile = { field: "design", level: "junior", skills: [] };
+const setup = (profile: Profile, roundsEnabled?: Partial<Record<InterviewRound, boolean>>) =>
+  renderToStaticMarkup(<Interview profile={profile} resume={null} target={null} onBack={noop} roundsEnabled={roundsEnabled} />);
+
+describe("Interview setup: Tier 4 rounds", () => {
+  it("business lists Case interview only", () => {
+    const html = setup(biz, { case: true });
+    expect(html).toContain("Case interview");
+    expect(html).not.toContain("Technical questions");
+    expect(html).not.toContain("Portfolio walkthrough");
+  });
+  it("finance lists Technical questions", () => {
+    expect(setup(fin, { finance: true })).toContain("Technical questions");
+  });
+  it("design lists both design rounds", () => {
+    const html = setup(des, { portfolio: true, challenge: true });
+    expect(html).toContain("Portfolio walkthrough");
+    expect(html).toContain("Design challenge");
+  });
+  it("lists none of them without roundsEnabled", () => {
+    for (const p of [biz, fin, des]) {
+      const html = setup(p);
+      for (const label of ["Case interview", "Technical questions", "Portfolio walkthrough", "Design challenge"]) {
+        expect(html).not.toContain(label);
+      }
+    }
+  });
+});
+
+describe("Feedback code check", () => {
+  const base: InterviewSession = {
+    id: "c",
+    round: "case",
+    context: { company: null, role: null, description: null, resume: null, field: null },
+    turns: [{ question: "Q", answer: "About $1,500" }],
+    pending: null,
+    used: 1,
+    seed: 1,
+    problemId: null,
+    code: null,
+    board: null,
+    hints: [],
+    feedback: { summary: "ok", items: [{ index: 0, strength: "s", improve: "i", quote: null, star: null }] },
+    status: "done",
+    createdAt: 1,
+    updatedAt: 1,
+  };
+  const render = () => renderToStaticMarkup(<Feedback session={base} onAgain={noop} onBack={noop} />);
+  it("shows a number check", () => {
+    checkTurnMock.mockReturnValue({ kind: "number", found: 1400, expected: 1500, correct: false, unit: "$" });
+    const html = render();
+    expect(html).toContain("Checked by code");
+    expect(html).toContain("$1,400");
+    expect(html).toContain("Expected: $1,500");
+    expect(html).toContain("not quite");
+  });
+  it("shows a rubric check", () => {
+    checkTurnMock.mockReturnValue({ kind: "rubric", covered: ["Segments"], missed: ["Risks"] });
+    const html = render();
+    expect(html).toContain("✓ covered");
+    expect(html).toContain("– missing");
+  });
+  it("shows nothing when there is no check", () => {
+    checkTurnMock.mockReturnValue(null);
+    expect(render()).not.toContain("Checked by code");
   });
 });
 

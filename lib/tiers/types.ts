@@ -1,4 +1,4 @@
-// Tier 2 + 3 shared contracts (devpost/tier2-spec.md, tier3-spec.md). Read-only to workers: report needed changes.
+// Tier 2-4 shared contracts (devpost/tier2-spec.md, tier3-spec.md, tier4-spec.md). Read-only to workers: report needed changes.
 import type { ApiResponse, Field, RiskLevel } from "../types";
 
 // ---------- Slice 8: tailored resume ----------
@@ -86,15 +86,33 @@ export type TranscribeResponse = ApiResponse<{ text: string }>;
 
 // ---------- Tier 3: mock interview ----------
 
-export type InterviewRound = "screen" | "behavioral" | "coding" | "design";
-export const INTERVIEW_ROUNDS: { id: InterviewRound; label: string; techOnly: boolean }[] = [
-  { id: "screen", label: "Recruiter screen", techOnly: false },
-  { id: "behavioral", label: "Behavioral", techOnly: false },
-  { id: "coding", label: "Live coding", techOnly: true },
-  { id: "design", label: "System design", techOnly: true },
+export type InterviewRound = "screen" | "behavioral" | "coding" | "design" | "case" | "finance" | "portfolio" | "challenge";
+/** field null = every profile; otherwise only that profile field (and only when the round's flag is on). */
+export const INTERVIEW_ROUNDS: { id: InterviewRound; label: string; field: Field | null }[] = [
+  { id: "screen", label: "Recruiter screen", field: null },
+  { id: "behavioral", label: "Behavioral", field: null },
+  { id: "coding", label: "Live coding", field: "tech" },
+  { id: "design", label: "System design", field: "tech" },
+  { id: "case", label: "Case interview", field: "business" },
+  { id: "finance", label: "Technical questions", field: "finance" },
+  { id: "portfolio", label: "Portfolio walkthrough", field: "design" },
+  { id: "challenge", label: "Design challenge", field: "design" },
 ];
 /** Questions per round, including the local first question. */
-export const QUESTIONS_PER_ROUND: Record<InterviewRound, number> = { screen: 4, behavioral: 4, coding: 1, design: 3 };
+export const QUESTIONS_PER_ROUND: Record<InterviewRound, number> = {
+  screen: 4,
+  behavioral: 4,
+  coding: 1,
+  design: 3,
+  case: 3,
+  finance: 4,
+  portfolio: 4,
+  challenge: 3,
+};
+/** Rounds whose questions all come from a local script (no AI questions; AI only for feedback). */
+export const SCRIPTED_ROUNDS: InterviewRound[] = ["case", "finance"];
+/** Rounds drawn on the board (DesignRound panel). */
+export const BOARD_ROUNDS: InterviewRound[] = ["design", "challenge"];
 /** AI calls per session (questions + hints + feedback); one is always kept for feedback. */
 export const MAX_SESSION_TURNS = 12;
 export const MAX_TURNS = 8;
@@ -112,7 +130,11 @@ export interface InterviewContext {
   description: string | null;
   resume: string | null;
   field: Field | null;
+  /** Portfolio round (Tier 4): http(s) links the user typed. Only shown and sent as text; never fetched. */
+  links?: string[];
 }
+export const MAX_LINKS = 5;
+export const MAX_LINK_CHARS = 200;
 
 export interface InterviewTurn {
   question: string;
@@ -190,6 +212,8 @@ export interface InterviewRequest {
   board: BoardJson | null;
   /** Coding round: the problem prompt (hint/feedback need it). */
   problem: string | null;
+  /** Challenge feedback only: the CHALLENGE_MINUTES timer had run out. */
+  timeUp?: boolean;
 }
 /** question/hint -> text; feedback -> feedback. */
 export type InterviewReply = { text: string; feedback: null } | { text: null; feedback: InterviewFeedback };
@@ -205,6 +229,39 @@ export type InterviewResponse = ApiResponse<InterviewReply>;
 //   applyReply(s, ask, reply, now): InterviewSession                // used+1; question -> pending; hint -> hints.push; feedback -> status done
 //   validateFeedback(raw: unknown, turns: InterviewTurn[], round): InterviewFeedback | null
 //   loadSessions(): InterviewSession[]; saveSession(s): void; removeSession(id): void   // KEYS.interviews, max MAX_SESSIONS
+// Tier 4 additions to lib/tiers/interview.ts:
+//   CHALLENGE_PROMPTS: string[]; PORTFOLIO_FIRST: string                // made up
+//   answerPending in a SCRIPTED round sets pending to the next scripted question (scriptFor) until the script ends
+//   canCall(s, "question") is false for SCRIPTED_ROUNDS and coding
+//   buildRequest sends board for BOARD_ROUNDS, context.links (capped MAX_LINKS x MAX_LINK_CHARS) when present
+//   challengeLeft(s, now): number   // ms left of CHALLENGE_MINUTES from s.createdAt, never below 0
+//   cleanLinks(raw: string): string[] // split on whitespace/newlines, keep http(s) URLs only, <= MAX_LINK_CHARS, dedupe, first MAX_LINKS
+
+// ---------- Tier 4: scripted rounds (case, finance) ----------
+
+export const CHALLENGE_MINUTES = 20;
+
+/** How an answer is checked in code. number: the LAST number in the answer vs expected (absolute tolerance). */
+export type AnswerCheck =
+  | { kind: "number"; expected: number; tolerance: number; unit: "$" | "%" | "" }
+  | { kind: "rubric"; points: { label: string; any: string[] }[] };
+export interface ScriptedQuestion {
+  id: string;
+  prompt: string;
+  check: AnswerCheck | null;
+}
+export type CheckResult =
+  | { kind: "number"; found: number | null; expected: number; correct: boolean; unit: "$" | "%" | "" }
+  | { kind: "rubric"; covered: string[]; missed: string[] };
+// lib/tiers/scripted.ts exports (engine-builder):
+//   CASES: { id: string; title: string; questions: ScriptedQuestion[] }[]   // >= 4 made-up cases, 3 questions each: structure (rubric), math (number), recommendation (rubric)
+//   FINANCE_BANK: ScriptedQuestion[]                                         // >= 12 made-up accounting/valuation questions, >= 5 numeric
+//   scriptFor(round, seed): ScriptedQuestion[] | null   // case -> one case's questions; finance -> 4 distinct bank questions; other rounds null. Deterministic.
+//   findQuestion(prompt: string): ScriptedQuestion | null   // exact prompt match across CASES and FINANCE_BANK
+//   extractNumber(answer: string): number | null   // last number; handles $, commas, %, k/m/million/billion, negatives, decimals
+//   checkAnswer(check: AnswerCheck, answer: string): CheckResult
+//   checkTurn(turn: InterviewTurn): CheckResult | null   // findQuestion(turn.question)?.check -> checkAnswer
+//   describeCheck(r: CheckResult): string   // one plain line for the AI prompt and the UI, e.g. "Final number 1500 vs expected 1500: correct (checked by code)"
 
 // ---------- Slice 12: coding ----------
 
@@ -246,7 +303,7 @@ export interface GradeResult {
 
 // ---------- Slice 13: system design board ----------
 
-export type BoardKind = "client" | "server" | "database" | "cache" | "queue" | "storage" | "service" | "other";
+export type BoardKind = "client" | "server" | "database" | "cache" | "queue" | "storage" | "service" | "screen" | "other";
 export const BOARD_KINDS: { id: BoardKind; label: string }[] = [
   { id: "client", label: "Client" },
   { id: "server", label: "Server" },
@@ -255,6 +312,7 @@ export const BOARD_KINDS: { id: BoardKind; label: string }[] = [
   { id: "queue", label: "Queue" },
   { id: "storage", label: "File storage" },
   { id: "service", label: "Service" },
+  { id: "screen", label: "Screen" }, // Tier 4 design challenge (user flows)
   { id: "other", label: "Other" },
 ];
 export const BOARD_W = 960;

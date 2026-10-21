@@ -1,12 +1,18 @@
-// Mock interview state machine (devpost/tier3-spec.md > Interview logic). Pure, plus is:interviews storage.
+// Mock interview state machine (devpost/tier3-spec.md > Interview logic, tier4-spec.md). Pure, plus is:interviews storage.
 // Every function returns a new session; the input is never changed. All prompts are made up.
 import type { Field } from "../types";
 import { quoteIsReal } from "../quotes";
 import { KEYS, readKey, writeKey } from "../client/storage";
 import { fromJson, toJson } from "./board";
 import { getProblem, pickProblem } from "./problems";
+import { scriptFor } from "./scripted";
 import {
+  BOARD_ROUNDS,
+  CHALLENGE_MINUTES,
   INTERVIEW_ROUNDS,
+  MAX_LINKS,
+  MAX_LINK_CHARS,
+  SCRIPTED_ROUNDS,
   MAX_ANSWER_CHARS,
   MAX_CODE_CHARS,
   MAX_CONTEXT_FIELD,
@@ -55,6 +61,19 @@ export const DESIGN_PROMPTS: string[] = [
   "Design a notification service that emails students when a class assignment is posted. Sketch the parts and explain what happens if the email provider is slow.",
 ];
 
+/** Made-up UX challenges for the Design challenge round, sketched as Screen boxes on the board. */
+export const CHALLENGE_PROMPTS: string[] = [
+  "Design the onboarding flow for a campus food-pantry app, from first open to reserving a pickup slot. Sketch each screen on the board and connect them in order, then walk me through it.",
+  "Design how a student finds and joins a study group for one class in a campus app. Sketch the screens as boxes, connect the flow, and explain the choices you made.",
+  "A library app's room-booking flow has many drop-offs at checkout. Sketch a simpler booking flow screen by screen on the board and explain what you changed and why.",
+  "Design a flow for a club treasurer to log an expense and attach a receipt photo on their phone. Sketch the screens on the board and walk me through the happy path and one error.",
+  "Design the first-time setup for a shared-chores app for roommates. Sketch the screens and the arrows between them, and explain how someone invites a roommate.",
+];
+
+/** Local first question for the Portfolio walkthrough round. Made up. */
+export const PORTFOLIO_FIRST =
+  "Pick one project you're proud of and walk me through it: what problem it solved, what your role was, how you got from first idea to final design, and how it turned out.";
+
 /** Same seed rule as pickProblem: non-finite -> 0, negative -> absolute value. */
 function pick<T>(list: T[], seed: number): T {
   const n = Number.isFinite(seed) ? Math.abs(Math.floor(seed)) : 0;
@@ -62,12 +81,17 @@ function pick<T>(list: T[], seed: number): T {
 }
 
 const cap = (s: string | null, max: number): string | null => (s === null ? null : s.slice(0, max));
+const isScripted = (round: InterviewRound) => SCRIPTED_ROUNDS.includes(round);
 
 /** The local first question for a round (no AI call). */
 export function firstQuestion(round: InterviewRound, context: InterviewContext, seed: number): string {
   if (round === "behavioral") return pick(BEHAVIORAL_PROMPTS, seed);
   if (round === "design") return pick(DESIGN_PROMPTS, seed);
   if (round === "coding") return pickProblem(seed).prompt;
+  if (round === "challenge") return pick(CHALLENGE_PROMPTS, seed);
+  if (round === "portfolio") return PORTFOLIO_FIRST;
+  const script = scriptFor(round, seed);
+  if (script && script.length) return script[0].prompt;
   const role = context.role?.trim().slice(0, MAX_CONTEXT_FIELD) || null;
   const company = context.company?.trim().slice(0, MAX_CONTEXT_FIELD) || null;
   const target = role && company ? `the ${role} role at ${company}` : role ? `the ${role} role` : company ? `this role at ${company}` : "this role";
@@ -98,15 +122,24 @@ export function newSession(
   };
 }
 
-/** Moves the pending question and the answer into turns. No pending or an empty answer leaves s as is. */
+/** Answers the round still wants, counting the local first question (scripted rounds: the script length). */
+function roundTotal(s: InterviewSession): number {
+  const script = isScripted(s.round) ? scriptFor(s.round, s.seed) : null;
+  return Math.min(QUESTIONS_PER_ROUND[s.round], MAX_TURNS, script ? script.length : Infinity);
+}
+
+/**
+ * Moves the pending question and the answer into turns. No pending or an empty answer leaves s as is.
+ * Scripted rounds (case, finance) then set the next local question until the script ends.
+ */
 export function answerPending(s: InterviewSession, answer: string, now: number): InterviewSession {
   const text = (answer ?? "").trim().slice(0, MAX_ANSWER_CHARS);
   if (!s.pending || !text || s.status === "done") return s;
-  return { ...s, turns: [...s.turns, { question: s.pending, answer: text }], pending: null, updatedAt: now };
+  const turns = [...s.turns, { question: s.pending, answer: text }];
+  const script = isScripted(s.round) ? scriptFor(s.round, s.seed) : null;
+  const pending = script && turns.length < roundTotal(s) ? (script[turns.length]?.prompt ?? null) : null;
+  return { ...s, turns, pending, updatedAt: now };
 }
-
-/** Answers the round still wants, counting the local first question. */
-const roundTotal = (round: InterviewRound) => Math.min(QUESTIONS_PER_ROUND[round], MAX_TURNS);
 
 /** Whether an AI call of this kind is allowed now. The last of MAX_SESSION_TURNS is kept for feedback. */
 export function canCall(s: InterviewSession, ask: InterviewAsk): boolean {
@@ -114,21 +147,45 @@ export function canCall(s: InterviewSession, ask: InterviewAsk): boolean {
   if (ask === "feedback") return s.turns.length >= 1;
   if (s.used >= MAX_SESSION_TURNS - 1) return false;
   if (ask === "hint") return s.round === "coding";
-  // The coding question is the local problem prompt; the route rejects AI questions there.
-  return s.round !== "coding" && !s.pending && s.turns.length < roundTotal(s.round);
+  // Coding and scripted questions are all local; the route rejects AI questions there.
+  if (s.round === "coding" || isScripted(s.round)) return false;
+  return !s.pending && s.turns.length < roundTotal(s);
+}
+
+/** ms left of the Design challenge's CHALLENGE_MINUTES, counted from s.createdAt. Never below 0. */
+export function challengeLeft(s: InterviewSession, now: number): number {
+  return Math.max(0, s.createdAt + CHALLENGE_MINUTES * 60_000 - now);
+}
+
+/** One portfolio link: http(s) only, at most MAX_LINK_CHARS. */
+function isLink(v: unknown): v is string {
+  if (typeof v !== "string" || !v || v.length > MAX_LINK_CHARS || !/^https?:\/\//i.test(v)) return false;
+  try {
+    const p = new URL(v).protocol;
+    return p === "http:" || p === "https:";
+  } catch {
+    return false;
+  }
+}
+
+const capLinks = (xs: unknown[]): string[] => [...new Set(xs.filter(isLink))].slice(0, MAX_LINKS);
+
+/** Typed links -> up to MAX_LINKS distinct http(s) URLs of <= MAX_LINK_CHARS. Anything else is dropped. */
+export function cleanLinks(raw: string): string[] {
+  return capLinks((raw ?? "").split(/\s+/));
 }
 
 /** answer: a question waits; ask: get an AI follow-up; feedback: time for feedback; done: finished. */
 export function nextStep(s: InterviewSession): "answer" | "ask" | "feedback" | "done" {
   if (s.status === "done") return "done";
   if (s.pending) return "answer";
-  if (s.turns.length >= roundTotal(s.round)) return "feedback";
+  if (s.turns.length >= roundTotal(s)) return "feedback";
   if (canCall(s, "question")) return "ask";
   return s.turns.length >= 1 ? "feedback" : "done";
 }
 
 /** The /api/interview body for this session, capped to what the route accepts. */
-export function buildRequest(s: InterviewSession, ask: InterviewAsk): InterviewRequest {
+export function buildRequest(s: InterviewSession, ask: InterviewAsk, now = Date.now()): InterviewRequest {
   const c = s.context;
   return {
     ask,
@@ -139,6 +196,7 @@ export function buildRequest(s: InterviewSession, ask: InterviewAsk): InterviewR
       description: cap(c.description, MAX_JOB_CHARS),
       resume: cap(c.resume, MAX_RESUME_CONTEXT_CHARS),
       field: c.field,
+      ...(Array.isArray(c.links) ? { links: capLinks(c.links) } : {}),
     },
     turns: s.turns.slice(0, MAX_TURNS).map((t) => ({
       question: t.question.slice(0, MAX_QUESTION_CHARS),
@@ -146,8 +204,9 @@ export function buildRequest(s: InterviewSession, ask: InterviewAsk): InterviewR
     })),
     used: s.used,
     code: s.round === "coding" && s.code ? { ...s.code, code: s.code.code.slice(0, MAX_CODE_CHARS) } : null,
-    board: s.round === "design" ? s.board : null,
+    board: BOARD_ROUNDS.includes(s.round) ? s.board : null,
     problem: s.round === "coding" ? (getProblem(s.problemId)?.prompt ?? null) : null,
+    ...(s.round === "challenge" && ask === "feedback" ? { timeUp: challengeLeft(s, now) === 0 } : {}),
   };
 }
 
@@ -210,7 +269,8 @@ function isContext(v: unknown): v is InterviewContext {
     isNullStr(v.role) &&
     isNullStr(v.description) &&
     isNullStr(v.resume) &&
-    (v.field === null || FIELDS.includes(v.field as Field))
+    (v.field === null || FIELDS.includes(v.field as Field)) &&
+    (v.links === undefined || (Array.isArray(v.links) && v.links.every((l) => typeof l === "string")))
   );
 }
 
@@ -251,7 +311,15 @@ function readSession(v: unknown): InterviewSession | null {
   return {
     id: v.id,
     round,
-    context: { company: c.company, role: c.role, description: c.description, resume: c.resume, field: c.field },
+    context: {
+      company: c.company,
+      role: c.role,
+      description: c.description,
+      resume: c.resume,
+      field: c.field,
+      // Optional (Tier 4): absent stays absent so older sessions round-trip unchanged.
+      ...(c.links ? { links: capLinks(c.links) } : {}),
+    },
     turns,
     pending: v.pending,
     used: v.used,

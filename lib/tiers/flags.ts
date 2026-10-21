@@ -6,4 +6,8 @@ export const TIER_FLAGS = {
   interview: true, // Slice 11: mock interview shell, recruiter screen, behavioral
   coding: true, // Slice 12: live coding round (tech; needs interview)
   design: true, // Slice 13: system design board (tech; needs interview)
+  case: true, // Slice 14: business case interview
+  finance: true, // Slice 15: finance technical questions
+  portfolio: true, // Slice 16: design portfolio walkthrough
+  challenge: true, // Slice 16: timed design challenge on the board
 } as const;

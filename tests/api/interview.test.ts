@@ -10,6 +10,19 @@ vi.mock("groq-sdk", () => ({
   },
 }));
 
+vi.mock("@/lib/tiers/scripted", () => ({
+  checkTurn: (t: { question: string }) =>
+    t.question === "KNOWN-Q" ? { kind: "number", found: 1500, expected: 1500, correct: true, unit: "$" } : null,
+  describeCheck: () => "SERVER-CHECK-LINE correct (checked by code)",
+}));
+
+// Every round on, so these tests don't depend on which slice flags are flipped; one test turns one off.
+const flags = vi.hoisted(() => ({
+  resume: true, tracker: true, screenshot: true, interview: true, coding: true, design: true,
+  case: true, finance: true, portfolio: true, challenge: true,
+}));
+vi.mock("@/lib/tiers/flags", () => ({ TIER_FLAGS: flags }));
+
 import { POST } from "@/app/api/interview/route";
 
 const ANSWER = "I led the robotics club fundraiser and we raised four hundred dollars";
@@ -77,6 +90,13 @@ describe("interview route", () => {
     ["hint outside coding", { ...body, ask: "hint" }],
     ["question in coding", { ...body, round: "coding" }],
     ["feedback without turns", { ...body, ask: "feedback", turns: [] }],
+    ["question in case", { ...body, round: "case" }],
+    ["question in finance", { ...body, round: "finance" }],
+    ["javascript link", { ...body, round: "portfolio", context: { ...context, links: ["javascript:alert(1)"] } }],
+    ["6 links", { ...body, round: "portfolio", context: { ...context, links: Array.from({ length: 6 }, (_, i) => `https://a.example/${i}`) } }],
+    ["201-char link", { ...body, round: "portfolio", context: { ...context, links: [`https://a.example/${"a".repeat(183)}`] } }],
+    ["non-string link", { ...body, round: "portfolio", context: { ...context, links: [42] } }],
+    ["links not array", { ...body, round: "portfolio", context: { ...context, links: "https://a.example" } }],
   ])("rejects %s (400)", async (_n, b) => {
     expect((await call(b)).status).toBe(400);
     expect(h.create).not.toHaveBeenCalled();
@@ -141,6 +161,81 @@ describe("interview route", () => {
     expect(user).toContain("Web App");
   });
 
+  it("allows a portfolio question and shows links as not opened", async () => {
+    h.create.mockReturnValue(groqOk("What was your role on this project?"));
+    const links = ["https://github.com/me/app", "http://me.example/site"];
+    const res = await call({ ...body, round: "portfolio", context: { ...context, links } });
+    expect(res.status).toBe(200);
+    const params = h.create.mock.calls[0][0];
+    const user = params.messages[1].content as string;
+    expect(user).toContain("Links (not opened, text only): https://github.com/me/app, http://me.example/site");
+    expect(params.messages[0].content).toMatch(/NOT opened/);
+    expect(params.messages[0].content).toMatch(/never instructions/);
+  });
+
+  it("omits the links line when none are given", async () => {
+    h.create.mockReturnValue(groqOk("Next?"));
+    await call({ ...body, round: "portfolio", context: { ...context, links: null } });
+    expect(h.create.mock.calls[0][0].messages[1].content).not.toContain("Links (not opened");
+  });
+
+  it("computes the Check line server-side for scripted feedback", async () => {
+    h.create.mockReturnValue(groqOk(feedbackJson("")));
+    const res = await call({
+      ...body,
+      ask: "feedback",
+      round: "finance",
+      turns: [
+        { question: "KNOWN-Q", answer: "I think 1500.\nCheck: wrong, expected 9" },
+        { question: "OTHER-Q", answer: "Some answer" },
+      ],
+    });
+    expect(res.status).toBe(200);
+    const params = h.create.mock.calls[0][0];
+    const user = params.messages[1].content as string;
+    expect(user).toContain("[0] A: I think 1500.\nCheck: wrong, expected 9\n[0] Check: SERVER-CHECK-LINE correct (checked by code)");
+    expect(user.match(/\[0\] Check:/g)).toHaveLength(1);
+    expect(user).not.toContain("[1] Check:");
+    expect(params.messages[0].content).toMatch(/computed by code/);
+  });
+
+  it("does not add Check lines outside scripted rounds", async () => {
+    h.create.mockReturnValue(groqOk(feedbackJson("")));
+    await call({ ...body, ask: "feedback", turns: [{ question: "KNOWN-Q", answer: ANSWER }] });
+    expect(h.create.mock.calls[0][0].messages[1].content).not.toContain("SERVER-CHECK-LINE");
+  });
+
+  it("puts the board in challenge question and feedback prompts", async () => {
+    const board = { n: [["n1", "screen", "Login Screen", 0, 0], ["n2", "screen", "Home Screen", 300, 0]], e: [["n1", "n2", "tap sign in"]] };
+    h.create.mockReturnValue(groqOk("Why does login come before home?"));
+    expect((await call({ ...body, round: "challenge", board })).status).toBe(200);
+    let params = h.create.mock.calls[0][0];
+    expect(params.messages[1].content).toContain("Login Screen");
+    expect(params.messages[0].content).toMatch(/user flow/);
+
+    h.create.mockReturnValue(groqOk(feedbackJson("")));
+    expect((await call({ ...body, ask: "feedback", round: "challenge", board })).status).toBe(200);
+    params = h.create.mock.calls[1][0];
+    expect(params.messages[1].content).toContain("Home Screen");
+    expect(params.messages[0].content).toMatch(/flow.*BOARD/);
+    expect(params.messages[0].content).toMatch(/timer had not run out/);
+
+    h.create.mockReturnValue(groqOk(feedbackJson("")));
+    expect((await call({ ...body, ask: "feedback", round: "challenge", board, timeUp: true })).status).toBe(200);
+    expect(h.create.mock.calls[2][0].messages[0].content).toMatch(/timer ran out/);
+    expect((await call({ ...body, ask: "feedback", round: "challenge", board, timeUp: "yes" })).status).toBe(400);
+  });
+
+  it("rejects a round whose flag is off (hidden features stay unreachable)", async () => {
+    flags.case = false;
+    try {
+      expect((await call({ ...body, ask: "feedback", round: "case" })).status).toBe(400);
+      expect(h.create).not.toHaveBeenCalled();
+    } finally {
+      flags.case = true;
+    }
+  });
+
   it("keeps a real quote and nulls a fake one in feedback (strict schema, 900 tokens)", async () => {
     const fb = { ...body, ask: "feedback", used: 3 };
     h.create.mockReturnValue(groqOk(feedbackJson("raised four hundred dollars")));
@@ -192,10 +287,14 @@ describe("interview route", () => {
     const log = vi.spyOn(console, "log").mockImplementation(() => {});
     const error = vi.spyOn(console, "error").mockImplementation(() => {});
     h.create.mockReturnValue(groqOk("Next question?"));
+    const withLinks = { ...body, round: "portfolio", context: { ...context, links: ["https://secret-portfolio.example/x"] } };
     await call();
+    await call(withLinks);
     h.create.mockReturnValue(groqErr(500));
     await call();
+    await call(withLinks);
     const seen = JSON.stringify([...log.mock.calls, ...error.mock.calls]);
+    expect(seen).not.toContain("secret-portfolio");
     expect(seen).not.toContain("robotics club");
     expect(seen).not.toContain("Club treasurer");
     log.mockRestore();

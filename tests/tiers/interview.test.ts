@@ -1,12 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { KEYS, clearMyData } from "@/lib/client/storage";
+import { fromJson, toJson } from "@/lib/tiers/board";
+import { scriptFor } from "@/lib/tiers/scripted";
 import {
   BEHAVIORAL_PROMPTS,
+  CHALLENGE_PROMPTS,
   DESIGN_PROMPTS,
+  PORTFOLIO_FIRST,
   answerPending,
   applyReply,
   buildRequest,
   canCall,
+  challengeLeft,
+  cleanLinks,
   firstQuestion,
   loadSessions,
   newSession,
@@ -17,7 +23,11 @@ import {
 } from "@/lib/tiers/interview";
 import { getProblem, pickProblem } from "@/lib/tiers/problems";
 import {
+  CHALLENGE_MINUTES,
   MAX_ANSWER_CHARS,
+  MAX_LINKS,
+  MAX_LINK_CHARS,
+  MAX_QUESTION_CHARS,
   MAX_SESSIONS,
   MAX_SESSION_TURNS,
   QUESTIONS_PER_ROUND,
@@ -232,6 +242,125 @@ describe("buildRequest", () => {
   });
 });
 
+describe("Tier 4 rounds", () => {
+  const biz: InterviewContext = { ...none, field: "business" };
+
+  it("case and finance start with their first scripted question", () => {
+    expect(firstQuestion("case", biz, 2)).toBe(scriptFor("case", 2)![0].prompt);
+    expect(firstQuestion("finance", biz, 9)).toBe(scriptFor("finance", 9)![0].prompt);
+    expect(make("case", 2).pending).toBe(scriptFor("case", 2)![0].prompt);
+  });
+
+  it("portfolio and challenge first questions are local and fit the question cap", () => {
+    expect(firstQuestion("portfolio", ctx, 7)).toBe(PORTFOLIO_FIRST);
+    expect(CHALLENGE_PROMPTS.length).toBeGreaterThanOrEqual(4);
+    expect(firstQuestion("challenge", ctx, 0)).toBe(CHALLENGE_PROMPTS[0]);
+    expect(firstQuestion("challenge", ctx, CHALLENGE_PROMPTS.length + 1)).toBe(CHALLENGE_PROMPTS[1]);
+    expect(firstQuestion("challenge", ctx, Number.NaN)).toBe(CHALLENGE_PROMPTS[0]);
+    for (const p of [PORTFOLIO_FIRST, ...CHALLENGE_PROMPTS]) expect(p.length).toBeLessThanOrEqual(MAX_QUESTION_CHARS);
+  });
+
+  it.each(["case", "finance"] as const)("%s advances locally through its script, then feedback, with zero AI calls", (round) => {
+    const script = scriptFor(round, 11)!;
+    expect(script).toHaveLength(QUESTIONS_PER_ROUND[round]);
+    let s = make(round, 11);
+    for (let i = 0; i < script.length; i++) {
+      expect(nextStep(s)).toBe("answer");
+      expect(s.pending).toBe(script[i].prompt);
+      expect(canCall(s, "question")).toBe(false);
+      s = answerPending(s, `My answer ${i}`, 10 + i);
+    }
+    expect(s.pending).toBeNull();
+    expect(s.used).toBe(0);
+    expect(s.turns.map((t) => t.question)).toEqual(script.map((q) => q.prompt));
+    expect(nextStep(s)).toBe("feedback");
+    expect(canCall(s, "question")).toBe(false);
+    expect(canCall(s, "hint")).toBe(false);
+    expect(canCall(s, "feedback")).toBe(true);
+    expect(answerPending(s, "extra", 99)).toBe(s);
+
+    const fb = { summary: "Solid.", items: [{ index: 0, strength: "Clear.", improve: "Be concise.", quote: null, star: null }] };
+    const done = applyReply(s, "feedback", { text: null, feedback: fb }, 50);
+    expect(done.used).toBe(1);
+    expect(nextStep(done)).toBe("done");
+  });
+
+  it("a scripted round mid-way can still get feedback, and never asks the AI", () => {
+    const s = answerPending(make("case", 0), "Revenue and costs.", 1);
+    expect(nextStep(s)).toBe("answer");
+    expect(canCall(s, "question")).toBe(false);
+    expect(canCall(s, "feedback")).toBe(true);
+  });
+
+  it.each(["portfolio", "challenge"] as const)("%s asks AI follow-ups until its question count", (round) => {
+    const total = QUESTIONS_PER_ROUND[round];
+    let s = make(round);
+    for (let i = 0; i < total; i++) {
+      s = answerPending(s, `Answer ${i}`, 10);
+      if (i < total - 1) {
+        expect(nextStep(s)).toBe("ask");
+        s = applyReply(s, "question", q(`Next ${i}?`), 11);
+      }
+    }
+    expect(s.used).toBe(total - 1);
+    expect(nextStep(s)).toBe("feedback");
+  });
+
+  it("buildRequest sends the board for challenge and links only when present", () => {
+    const board = toJson(fromJson({ n: [["n1", "screen", "Welcome", 0, 0], ["n2", "screen", "Pick a slot", 200, 0]], e: [["n1", "n2", "Next"]] })!);
+    const c = buildRequest({ ...answerPending(make("challenge"), "Two screens.", 1), board }, "question");
+    expect(c.board).toEqual(board);
+    expect(buildRequest({ ...make("screen"), board }, "question").board).toBeNull();
+    expect("links" in buildRequest(make("portfolio"), "question").context).toBe(false);
+
+    const links = ["https://example.com/a", "javascript:alert(1)", `https://example.com/${"x".repeat(MAX_LINK_CHARS)}`, ...Array.from({ length: 8 }, (_, i) => `https://example.com/p${i}`)];
+    const p = buildRequest(make("portfolio", 1, { ...ctx, field: "design", links }), "question");
+    expect(p.context.links).toEqual(["https://example.com/a", "https://example.com/p0", "https://example.com/p1", "https://example.com/p2", "https://example.com/p3"]);
+    expect(p.context.links).toHaveLength(MAX_LINKS);
+  });
+
+  it("challengeLeft counts down CHALLENGE_MINUTES from createdAt and stops at 0", () => {
+    const s = make("challenge"); // createdAt 100
+    const full = CHALLENGE_MINUTES * 60_000;
+    expect(challengeLeft(s, 100)).toBe(full);
+    expect(challengeLeft(s, 100 + 60_000)).toBe(full - 60_000);
+    expect(challengeLeft(s, 100 + full)).toBe(0);
+    expect(challengeLeft(s, 100 + full + 5_000)).toBe(0);
+    // Feedback tells the coach whether time ran out; other asks/rounds don't carry it.
+    expect(buildRequest(s, "feedback", 100 + full).timeUp).toBe(true);
+    expect(buildRequest(s, "feedback", 100 + 60_000).timeUp).toBe(false);
+    expect("timeUp" in buildRequest(s, "question", 100 + full)).toBe(false);
+    expect("timeUp" in buildRequest(make("design"), "feedback", 100 + full)).toBe(false);
+  });
+});
+
+describe("cleanLinks", () => {
+  it("keeps http(s) links split on whitespace, deduped, first MAX_LINKS", () => {
+    expect(cleanLinks("https://a.example/work\n\n  http://b.example  https://a.example/work")).toEqual(["https://a.example/work", "http://b.example"]);
+    const many = Array.from({ length: 9 }, (_, i) => `https://site.example/${i}`).join("\n");
+    expect(cleanLinks(many)).toEqual(Array.from({ length: MAX_LINKS }, (_, i) => `https://site.example/${i}`));
+  });
+
+  it("rejects other protocols, bare text and over-long links", () => {
+    expect(cleanLinks("javascript:alert(1) data:text/html,hi ftp://files.example/x file:///etc/passwd mailto:a@b.example")).toEqual([]);
+    expect(cleanLinks("my portfolio example.com www.example.com http:/broken https://")).toEqual([]);
+    const long = `https://example.com/${"y".repeat(MAX_LINK_CHARS)}`;
+    const edge = `https://example.com/${"z".repeat(MAX_LINK_CHARS - "https://example.com/".length)}`;
+    expect(edge).toHaveLength(MAX_LINK_CHARS);
+    expect(cleanLinks(`${long} ${edge}`)).toEqual([edge]);
+    expect(cleanLinks("")).toEqual([]);
+  });
+});
+
+describe("board screen kind", () => {
+  it("round-trips through toJson / fromJson", () => {
+    const raw = { n: [["n1", "screen", "Sign up", 20, 20]], e: [] };
+    const b = fromJson(raw);
+    expect(b?.nodes[0].kind).toBe("screen");
+    expect(toJson(b!)).toEqual(raw);
+  });
+});
+
 describe("validateFeedback", () => {
   const turns: InterviewTurn[] = [
     { question: "Tell me about a time you led.", answer: "I led the chess club fundraiser and we raised three hundred dollars." },
@@ -403,6 +532,30 @@ describe("loadSessions / saveSession / removeSession", () => {
     expect(s.hints).toEqual([]);
     expect(s.feedback).toBeNull();
     expect(s.status).toBe("done");
+  });
+
+  it("Tier 3 sessions without links still load unchanged", () => {
+    const old = sess("t3", { round: "design", board: { n: [["n1", "client", "Web app", 20, 20]], e: [] } });
+    store.set(KEYS.interviews, JSON.stringify([old]));
+    const [s] = loadSessions();
+    expect(s).toEqual(old);
+    expect("links" in s.context).toBe(false);
+  });
+
+  it("new-round sessions with links round-trip; links are capped on load and junk links reject the session", () => {
+    const links = ["https://example.com/case-study", "http://example.org/work"];
+    const portfolio = sess("p", { round: "portfolio", context: { ...ctx, field: "design", links } });
+    const cased = sess("c", { round: "case", pending: scriptFor("case", 3)![0].prompt });
+    const fin = sess("f", { round: "finance" });
+    const challenge = sess("ch", { round: "challenge", board: { n: [["n1", "screen", "Home", 20, 20]], e: [] } });
+    for (const x of [portfolio, cased, fin, challenge]) saveSession(x);
+    expect(loadSessions()).toEqual([challenge, fin, cased, portfolio]);
+
+    const dirty = { ...portfolio, id: "d", context: { ...portfolio.context, links: [...links, "javascript:alert(1)", ...Array.from({ length: 6 }, (_, i) => `https://example.net/${i}`)] } };
+    store.set(KEYS.interviews, JSON.stringify([dirty, { ...portfolio, id: "bad", context: { ...portfolio.context, links: [1] } }, { ...portfolio, id: "bad2", context: { ...portfolio.context, links: "https://x.example" } }]));
+    const loaded = loadSessions();
+    expect(loaded.map((s) => s.id)).toEqual(["d"]);
+    expect(loaded[0].context.links).toEqual([...links, "https://example.net/0", "https://example.net/1", "https://example.net/2"]);
   });
 
   it("Clear my data removes is:interviews", () => {

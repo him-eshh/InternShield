@@ -21,6 +21,8 @@ import { btnSecondary, card } from "@/components/ui";
 interface Props {
   board: BoardData;
   onChange: (board: BoardData) => void;
+  /** Box type picked at start: "screen" for the design challenge. */
+  defaultKind?: BoardKind;
 }
 
 const kindLabel = (k: BoardKind) => BOARD_KINDS.find((x) => x.id === k)?.label ?? k;
@@ -41,11 +43,11 @@ const small = "min-h-10 px-4 py-2 text-[15px] max-sm:w-auto";
 const field =
   "min-h-10 rounded-[10px] border border-border bg-card px-3 py-1.5 text-[15px] text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
-export default function Board({ board, onChange }: Props) {
+export default function Board({ board, onChange, defaultKind = "server" }: Props) {
   const markerId = `arrow-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   const svgRef = useRef<SVGSVGElement>(null);
   const drag = useRef<{ id: string; dx: number; dy: number; moved: boolean } | null>(null);
-  const [kind, setKind] = useState<BoardKind>("server");
+  const [kind, setKind] = useState<BoardKind>(defaultKind);
   const [selected, setSelected] = useState<string | null>(null);
   const [connectFrom, setConnectFrom] = useState<string | null>(null);
   const [renaming, setRenaming] = useState<string | null>(null);

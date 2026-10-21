@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { answerPending } from "@/lib/tiers/interview";
+import { answerPending, challengeLeft } from "@/lib/tiers/interview";
 import { emptyBoard, fromJson, toJson } from "@/lib/tiers/board";
 import {
   MAX_ANSWER_CHARS,
@@ -12,6 +12,41 @@ import {
 import { Spinner } from "../../icons";
 import { btnPrimary, btnSecondary, card as cardCls } from "../../ui";
 import Board from "./Board";
+
+// Module helper so the React compiler's purity rule doesn't flag clock reads.
+const now = () => Date.now();
+
+function mmss(ms: number): string {
+  const s = Math.ceil(ms / 1000);
+  return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+}
+
+/** 20-minute timer for the design challenge. Informational only: nothing locks at zero. */
+function ChallengeTimer({ session }: { session: InterviewSession }) {
+  const [left, setLeft] = useState(() => challengeLeft(session, now()));
+  const over = left <= 0;
+  useEffect(() => {
+    if (over) return; // stops ticking at 00:00
+    const t = setInterval(() => setLeft(challengeLeft(session, now())), 1000);
+    return () => clearInterval(t);
+  }, [session, over]);
+  const note = left <= 0 ? "Time's up. Finish when you're ready." : left <= 5 * 60_000 ? "Under 5 minutes left" : "";
+  return (
+    <div>
+      <p role="timer" className="text-[15px] font-medium tabular-nums">
+        {mmss(left)} left
+      </p>
+      <p role="status" aria-live="polite" className="sr-only">
+        {note}
+      </p>
+      {note && (
+        <p aria-hidden="true" className="text-[15px] text-muted">
+          {note}
+        </p>
+      )}
+    </div>
+  );
+}
 
 export default function DesignRound({ session, onUpdate, ask, busy }: RoundPanelProps) {
   const [board, setBoard] = useState<BoardData>(() => fromJson(session.board) ?? emptyBoard());
@@ -34,7 +69,7 @@ export default function DesignRound({ session, onUpdate, ask, busy }: RoundPanel
     return () => clearTimeout(t);
   }, [board, onUpdate]);
 
-  const total = QUESTIONS_PER_ROUND.design;
+  const total = QUESTIONS_PER_ROUND[session.round];
   const prompt = session.pending ?? session.turns[0]?.question ?? "";
   const text = answer.trim().slice(0, MAX_ANSWER_CHARS);
   const answeredAfter = session.turns.length + (session.pending && text ? 1 : 0);
@@ -75,6 +110,7 @@ export default function DesignRound({ session, onUpdate, ask, busy }: RoundPanel
 
   return (
     <div className="space-y-5">
+      {session.round === "challenge" && <ChallengeTimer session={session} />}
       <section className={`${cardCls} p-5 sm:p-6`}>
         <p className="text-[15px] text-muted">
           Question {questionNo} of {total}
@@ -86,6 +122,7 @@ export default function DesignRound({ session, onUpdate, ask, busy }: RoundPanel
 
       <Board
         board={board}
+        defaultKind={session.round === "challenge" ? "screen" : "server"}
         onChange={(b) => {
           dirty.current = true;
           setBoard(b);
