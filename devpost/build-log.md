@@ -17,3 +17,4 @@
 - 2026-10-21 06:38 Live call 1/4 (Tier 2): /api/transcribe on the app's own share image -> 200, qwen/qwen3.8-27b read the text; 836 prompt + 23 completion tokens. Vision path usable; tesseract.js not needed.
 - 2026-10-21 06:41 Live call 2/4 (Tier 2): /api/rewrite with a made-up bullet + made-up posting -> 200 on qwen, honest rewording (did not add the posting's SQL/Tableau); 155 prompt + 15 completion tokens.
 - 2026-10-21 06:49 Slices 8-10 committed (6b727b0, 5647708, cc70754) after review. Merge-gate review: no blockers; should-fixes applied (stripThinking only on qwen, rewrite has no gpt-oss fallback, resume privacy copy, spec.md note, tracker duplicate message). Gates green: 290 tests, eval 26/26, scoring diff empty, example flows test (saved results) passes. 2 live calls used.
+- 2026-10-21 06:52 Tier 2 merged to main (27a8fc8), gates green on main (290 tests, eval 26/26). Summary committed. Tier 2 session ended.
