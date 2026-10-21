@@ -15,12 +15,17 @@ export default function QuickQuestions({ questions, answers, change, onAnswer }:
   if (questions.length === 0) return null;
   const open = questions.filter((q) => answers[q.id] === undefined).length;
   const answered = questions.some((q) => answers[q.id] !== undefined);
-  const status = change ?? (answered ? "Your answer didn't change the score." : "");
+  // The confirmation sits under the answered questions, so the thanks reads after the answer, not before it.
+  const status = change
+    ? `Thanks, we updated the score. ${/[.!?]$/.test(change) ? change : `${change}.`}`
+    : answered
+      ? "Thanks, your answer didn't change the score."
+      : "";
   return (
     <section aria-labelledby="qq-title" className="rounded-[18px] border border-border bg-bg-soft p-6">
       <h3 id="qq-title" className="flex items-center gap-2 text-[19px] font-semibold">
         <span className="text-accent"><InfoIcon size={20} /></span>
-        {open > 0 ? `Answer ${open} quick question${open === 1 ? "" : "s"} to make this more accurate` : change ? "Thanks, we updated the result" : "Thanks for answering"}
+        {open > 0 ? `Answer ${open} quick question${open === 1 ? "" : "s"} to make this more accurate` : "A few quick questions"}
       </h3>
       <div className="mt-5 space-y-6">
         {questions.map((q) => (

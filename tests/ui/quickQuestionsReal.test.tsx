@@ -41,8 +41,26 @@ describe("QuickQuestions with real engine output", () => {
   it("shows the thanks line once everything is answered", () => {
     const answers = Object.fromEntries(questions.map((q) => [q.id, q.options[0].value])) as Answers;
     const html = renderToStaticMarkup(<QuickQuestions questions={questions} answers={answers} change="Score went down" onAnswer={() => {}} />);
-    expect(html).toContain("Thanks, we updated the result");
+    expect(html).toContain("A few quick questions");
+    expect(html).not.toContain("Thanks for answering");
     expect(html).toContain('aria-pressed="true"');
-    expect(html).toContain("Score went down");
+    expect(html).toContain("Thanks, we updated the score. Score went down.");
+    // The thanks comes after the questions and their answers, not above them.
+    const lastQuestion = html.lastIndexOf(escape(questions[questions.length - 1].text));
+    expect(html.indexOf("Thanks, we updated the score.")).toBeGreaterThan(lastQuestion);
+  });
+
+  it("says so when an answer didn't move the score, below the answered question", () => {
+    const answers = { [questions[0].id]: questions[0].options[0].value } as Answers;
+    const html = renderToStaticMarkup(<QuickQuestions questions={questions} answers={answers} change={null} onAnswer={() => {}} />);
+    const msg = escape("Thanks, your answer didn't change the score.");
+    expect(html).toContain(msg);
+    expect(html.indexOf(msg)).toBeGreaterThan(html.lastIndexOf(escape(questions[questions.length - 1].text)));
+  });
+
+  it("keeps the status line hidden and empty before any answer", () => {
+    const html = renderToStaticMarkup(<QuickQuestions questions={questions} answers={{}} change={null} onAnswer={() => {}} />);
+    expect(html).not.toContain("Thanks,");
+    expect(html).toContain('class="sr-only"');
   });
 });
