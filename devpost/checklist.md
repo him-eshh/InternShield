@@ -91,7 +91,7 @@ Build mode: fast (chosen by Himesh; overnight parallel build per `devpost/build-
   Learner check: Tailor one bullet toward a made-up posting, try an instruction that invents a tool and see it refused, download the PDF.
   Commit: `Slice 8: tailored resume PDF`
 
-- [ ] **9. Application tracker board**
+- [x] **9. Application tracker board**
   Becomes usable: Save a report to the tracker or add a card by hand, move it Saved → Applied → Interviewing with buttons or arrow keys, edit notes, delete; Clear my data wipes it.
   Why now: Independent of AI and cheap; gives every checked offer a place to go.
   PRD ref: `prd.md > Deferred From the POC`
