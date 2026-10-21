@@ -9,7 +9,7 @@ export type GuardResult =
   | { ok: true; body: Record<string, unknown>; ip: string }
   | { ok: false; response: Response };
 
-const MAX_BODY_BYTES = 8 * 1024;
+const MAX_BODY_BYTES = 16 * 1024;
 
 function envInt(name: string, fallback: number): number {
   const n = Number(process.env[name]);

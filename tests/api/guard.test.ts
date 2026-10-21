@@ -43,7 +43,7 @@ describe("usage guard", () => {
   });
 
   it("rejects an oversize body (413)", async () => {
-    const res = await explain(req("explain", { level: "low", flags: [], pad: "x".repeat(9000) }));
+    const res = await explain(req("explain", { level: "low", flags: [], pad: "x".repeat(17000) }));
     expect(res.status).toBe(413);
   });
 

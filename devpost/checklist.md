@@ -59,7 +59,7 @@ Build mode: fast (chosen by Himesh; overnight parallel build per `devpost/build-
   Learner check: Run `npm run dev`, click "Try an example: a scam", then "a real one", and say whether each report convinces you and why.
   Commit: `Slice 5: live integration of both examples`
 
-- [ ] **6. Review fixes and README**
+- [x] **6. Review fixes and README**
   Becomes usable: A reviewed app with blockers fixed, plus a README with setup, the eval results table, and the privacy line.
   Why now: Last, because it reviews and documents the finished whole.
   PRD ref: `prd.md > Test Set`, `prd.md > Accessibility and Privacy`
@@ -105,4 +105,7 @@ Activity mode: pending
 - Backstop patterns tightened after review (fraud-warning footers, "moving forward", "driver's license required", "signal processing", "we'll pay for your laptop" no longer fire) — the first version forced ordinary real recruiter messages to 85+.
 - Live integration fixes — the first live runs showed: rdap.org returns 403 without a User-Agent (sender age never ran); the company picker matched "Brightline Data Solutions" to gobrightline.com (a train company) on one shared word; the posting picker accepted any page on the site and another company's Workday posting (Dow Jones for Stripe); the city parser read "Software Engineer, Intern" as a place. All fixed with regression tests.
 - Explanation gets red flags only, and "legit/legitimate" in AI output is rewritten to "real" instead of discarding the paragraph — good signs sent as "risk signals" made the AI contradict clean reports, and gpt-oss writes "a legitimate company would…" almost every time, so the filter threw away nearly every explanation. "safe" and "guaranteed" still reject outright.
+- Light accent token is `#2A5FB8` instead of `#2F6FD6` — final review measured blue text on the 10% blue tint at about 4.2:1, under AA.
+- Auto-fill no longer guesses the source pill from WhatsApp/Telegram/Handshake mentions in the body — scams say "we found you on Handshake" / "add us on WhatsApp", which granted false "applied first" credit or double-counted the off-platform flag. Only "thanks for applying" pre-selects a source; otherwise the quick question asks.
+- The report appears before the explanation finishes (it fills in afterwards), matching spec step 6; the first build waited up to 10s for it.
 - `eval/live.ts` wraps its loop in `main()` — tsx compiles to CommonJS here, which rejects top-level await.

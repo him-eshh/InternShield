@@ -86,7 +86,9 @@ describe("runPipeline", () => {
     }) as typeof fetch;
     const out = await runPipeline(input, { ...opts, fetch: fn });
     expect(out.steps.extract).toEqual({ status: "failed", reason: "error" });
-    expect(out.explanation?.source).toBe("fallback");
+    expect(out.report).not.toBeNull();
+    expect(out.explanation).toBeNull(); // the report doesn't wait for it
+    expect((await out.pendingExplanation)?.source).toBe("fallback");
   });
 
   it("stops on a message that is not a job message", async () => {
@@ -121,7 +123,8 @@ describe("runPipeline", () => {
   it("falls back to the pre-written explanation when explain fails", async () => {
     const f = makeFetch({ "/api/extract": () => done(scamFacts), "/api/explain": () => json({ status: "failed", reason: "error" }, 500) });
     const out = await runPipeline(input, { ...opts, fetch: f.fn });
-    expect(out.explanation?.source).toBe("fallback");
-    expect(out.explanation?.text.length).toBeGreaterThan(0);
+    const ex = await out.pendingExplanation;
+    expect(ex?.source).toBe("fallback");
+    expect(ex?.text.length).toBeGreaterThan(0);
   });
 });

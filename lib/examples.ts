@@ -126,7 +126,7 @@ export const EXAMPLES: Record<Example["id"], Example> = {
         data: {
           found: true,
           url: "https://stripe.com/careers/listing/software-engineer-intern/8031833",
-          title: "Stripe Careers | Software Engineer, Intern",
+          title: "Software Engineer, Intern",
           location: null,
           pay: null,
           postedDate: null,

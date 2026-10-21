@@ -135,6 +135,20 @@ function words(s: string): string[] {
   return s.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length >= 3);
 }
 
+/** "Stripe Careers | Software Intern" / "Software Intern | Stripe" -> "Software Intern". */
+export function cleanTitle(title: string | undefined, company: string): string | null {
+  const t = title?.trim();
+  if (!t) return null;
+  const tokens = nameTokens(company);
+  const parts = t.split(/\s+[|–—-]\s+/).map((p) => p.trim()).filter(Boolean);
+  if (parts.length < 2) return t;
+  const keep = parts.filter((p) => {
+    const l = p.toLowerCase();
+    return !(/\b(careers?|jobs)\b/.test(l) || tokens.some((tk) => l.includes(tk)));
+  });
+  return keep[0] ?? t;
+}
+
 export function pickPosting(
   company: string,
   role: string | null,
@@ -163,7 +177,7 @@ export function pickPosting(
   return {
     found: true,
     url: best.hit.url,
-    title: best.hit.title?.trim() || null,
+    title: cleanTitle(best.hit.title, company),
     location,
     pay,
     postedDate: best.hit.publishedDate || null,

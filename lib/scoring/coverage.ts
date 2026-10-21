@@ -36,7 +36,7 @@ function failedOf<T>(step: StepResult<T>): FailReason | null {
 
 export function buildCoverage(
   input: ScoreInput,
-  derived: { senderEmailKnown: boolean },
+  derived: { senderEmailKnown: boolean; thinMessage: boolean },
 ): { couldntCheck: Gap[]; coverage: Report["coverage"] } {
   const { steps } = input;
   const gaps: Gap[] = [];
@@ -107,13 +107,17 @@ export function buildCoverage(
     gaps.push({ check: CHECKS.level.name, reason: "Add your profile to add this check." });
   }
 
+  // A very short message was read, but there was little in it: count reading it as 1 of its 3.
+  const credit = (k: CheckKey) => (!ran[k] ? 0 : k === "message" && derived.thinMessage ? 1 : CHECKS[k].weight);
   const keys = Object.keys(CHECKS) as CheckKey[];
+  const missingImportant = keys.filter((k) => CHECKS[k].important && !ran[k]).map((k) => CHECKS[k].short);
+  if (derived.thinMessage) missingImportant.push("not much to check");
   return {
     couldntCheck: gaps,
     coverage: {
-      ran: keys.reduce((n, k) => n + (ran[k] ? CHECKS[k].weight : 0), 0),
+      ran: keys.reduce((n, k) => n + credit(k), 0),
       total: keys.reduce((n, k) => n + CHECKS[k].weight, 0),
-      missingImportant: keys.filter((k) => CHECKS[k].important && !ran[k]).map((k) => CHECKS[k].short),
+      missingImportant,
     },
   };
 }

@@ -10,7 +10,7 @@
   --text: #1d1d1f;
   --muted: #6e6e73;
   --border: #e5e5ea;
-  --accent: #2f6fd6;
+  --accent: #2a5fb8; /* darker than spec's #2F6FD6: blue text on the 10% blue tint must pass 4.5:1 */
   --accent-contrast: #ffffff;
   --good: #2e7d4f;
   --warn: #9a6200;

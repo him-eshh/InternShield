@@ -5,7 +5,7 @@ import type { AskKind, Facts, Flag, FlagGroup, Quoted, Report, RiskLevel, ScoreI
 import { quoteIsReal } from "../quotes";
 import { backstop, type BackstopId } from "./backstop";
 import { buildCoverage } from "./coverage";
-import { emailDomain, isFreeEmail, isHiringPlatform, lookalike, type LookalikeKind } from "./domains";
+import { emailDomain, isFreeEmail, isHiringPlatform, lookalike, registrableDomain, type LookalikeKind } from "./domains";
 import { roleAboveLevel } from "./level";
 import { matchFieldPattern } from "./patterns";
 import { matchRows, payMatch, rolesMatch } from "./posting";
@@ -126,6 +126,29 @@ function verifyFacts(f: Facts, text: string): Facts {
     noExperienceNeeded: real(f.noExperienceNeeded),
     otherConcerns: f.otherConcerns.filter((c) => quoteIsReal(c.quote, text)).slice(0, 3),
   };
+}
+
+const COMPANY_STOPWORDS = new Set([
+  "inc", "llc", "ltd", "the", "and", "group", "company", "corp", "corporation", "co", "partners", "solutions", "services",
+  "technologies", "systems", "team", "recruiting", "careers", "jobs", "hr", "no", "reply", "noreply",
+]);
+
+/** "myworkdayjobs.com" / "workday.com" -> "workday", "greenhouse-mail.io" -> "greenhouse". */
+function platformKey(domain: string | null): string | null {
+  if (!domain) return null;
+  return domain.split(/[.-]/)[0].replace(/^my/, "").replace(/jobs$/, "") || null;
+}
+
+/** Does a hiring-platform address belong to this company? Its name in the address, or a posting on that platform. */
+function platformFits(email: string, platformDomain: string, company: string, posting: ScoreInput["steps"]["posting"]): boolean {
+  const [local = "", host = ""] = email.toLowerCase().split("@");
+  const sub = host.endsWith(`.${platformDomain}`) ? host.slice(0, -(platformDomain.length + 1)) : "";
+  const hay = `${local}.${sub}`.replace(/[^a-z0-9]/g, "");
+  const words = company.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length >= 3 && !COMPANY_STOPWORDS.has(w));
+  const whole = company.toLowerCase().replace(/[^a-z0-9]/g, "");
+  if ((whole.length >= 3 && hay.includes(whole)) || words.some((w) => hay.includes(w))) return true;
+  if (posting.status !== "done" || !posting.data.found || !posting.data.url) return false;
+  return platformKey(registrableDomain(posting.data.url)) === platformKey(platformDomain);
 }
 
 function lookalikeWhy(kind: LookalikeKind, sender: string, official: string): string {
@@ -315,8 +338,10 @@ function evaluate(input: ScoreInput): Evaluated {
       );
     }
   } else if (senderDomain && platform) {
-    contactOk = official ? true : null;
-    if (company) good("hiring_platform", "sender", W.hiringPlatform, "Sent through a hiring platform", `${domainLabel} is a hiring system many real companies use to email applicants.`, emailQuote);
+    // Never a mismatch flag. The good sign needs the address or a posting to tie it to this company.
+    const fits = Boolean(company && senderEmail && platformFits(senderEmail, senderDomain, company, input.steps.posting));
+    contactOk = fits ? true : null;
+    if (fits) good("hiring_platform", "sender", W.hiringPlatform, "Sent through a hiring platform", `${domainLabel} is a hiring system many real companies use to email applicants, and this address matches ${companyLabel}.`, emailQuote);
   } else if (senderDomain && official) {
     if (senderDomain === official) {
       contactOk = true;
@@ -326,6 +351,10 @@ function evaluate(input: ScoreInput): Evaluated {
       contactOk = kind ? false : null;
       if (kind) red("lookalike_domain", "sender", W.lookalike, `The email's website looks like ${officialLabel}, but isn't`, lookalikeWhy(kind, domainLabel, officialLabel), emailQuote);
     }
+  }
+
+  if (senderStep?.hunter?.disposable) {
+    red("throwaway_email", "sender", W.throwawayEmail, "This email address is a throwaway one", "Throwaway addresses stop working after a short time. Real recruiters don't use them.", emailQuote);
   }
 
   if (senderStep && !free && senderStep.hasMx === false) {
@@ -375,7 +404,8 @@ function evaluate(input: ScoreInput): Evaluated {
     had_interview: interviewUnclear && impliesHired,
   };
 
-  const { couldntCheck, coverage } = buildCoverage(input, { senderEmailKnown: Boolean(senderEmail) });
+  const thinMessage = text.trim().split(/\s+/).filter(Boolean).length < 20;
+  const { couldntCheck, coverage } = buildCoverage(input, { senderEmailKnown: Boolean(senderEmail), thinMessage });
 
   return {
     relevant,
@@ -387,7 +417,7 @@ function evaluate(input: ScoreInput): Evaluated {
       couldntCheck,
       coverage,
       postingMatch,
-      thinMessage: text.trim().split(/\s+/).filter(Boolean).length < 20,
+      thinMessage,
     },
   };
 }

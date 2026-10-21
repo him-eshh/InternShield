@@ -20,6 +20,11 @@ export function buildReportText(report: Report, careersUrl?: string | null): str
     }
     lines.push("");
   }
+  if (report.couldntCheck.length) {
+    lines.push("Couldn't check:");
+    for (const c of report.couldntCheck) lines.push(`- ${c.check}: ${c.reason}`);
+    lines.push("");
+  }
   lines.push(`${report.coverage.ran} of ${report.coverage.total} checks ran.`, "");
   lines.push(`Report fraud (FTC): ${FTC_URL}`, `FBI Internet Crime Complaint Center: ${IC3_URL}`);
   if (careersUrl) lines.push(`Official careers page: ${careersUrl}`);

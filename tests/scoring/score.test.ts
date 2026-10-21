@@ -73,12 +73,35 @@ describe("score rules", () => {
   });
 
   it("hiring-platform email for the company isn't a domain mismatch", () => {
-    for (const email of ["no-reply@greenhouse.io", "no-reply@hire.lever.co", "acme@myworkdayjobs.com"]) {
-      const r = score(input({ text: MILD, facts: acmeFacts, steps: { company: company("acme.com"), sender: sender(email, { domain: email.endsWith("lever.co") ? "lever.co" : email.split("@")[1] }) } }));
+    const cases: [string, string, boolean][] = [
+      ["no-reply@acme.greenhouse.io", "greenhouse.io", true], // company in the subdomain
+      ["acme@myworkdayjobs.com", "myworkdayjobs.com", true], // company in the local part
+      ["no-reply@greenhouse.io", "greenhouse.io", false], // nothing ties it to Acme
+    ];
+    for (const [email, domain, fits] of cases) {
+      const r = score(input({ text: MILD, facts: acmeFacts, steps: { company: company("acme.com"), sender: sender(email, { domain }) } }));
       expect(ids(r)).not.toContain("lookalike_domain");
-      expect(ids(r)).toContain("hiring_platform");
+      expect(ids(r).includes("hiring_platform"), email).toBe(fits);
+      expect(r.flags.filter((f) => f.kind === "red")).toEqual([]);
       expect(r.level).toBe("low");
     }
+    const viaPosting = score(
+      input({
+        text: MILD,
+        facts: acmeFacts,
+        steps: { company: company("acme.com"), sender: sender("no-reply@hire.lever.co", { domain: "lever.co" }), posting: posting({ url: "https://jobs.lever.co/acme/123", onOfficialDomain: false }) },
+      }),
+    );
+    expect(ids(viaPosting)).toContain("hiring_platform");
+  });
+
+  it("Hunter: a throwaway address adds +15; no Hunter result means no check at all", () => {
+    const hunter = { pattern: null, webmail: false, disposable: true };
+    const r = score(input({ text: MILD, facts: acmeFacts, steps: { sender: sender("dana@tempmail.dev", { hunter }) } }));
+    expect(r.flags.find((f) => f.id === "throwaway_email")?.points).toBe(15);
+    const none = score(input({ text: MILD, facts: acmeFacts, steps: { sender: sender("dana@tempmail.dev") } }));
+    expect(ids(none)).not.toContain("throwaway_email");
+    expect(none.couldntCheck.map((c) => c.check.toLowerCase()).join(" ")).not.toMatch(/hunter|throwaway/);
   });
 
   it("staffing agency on an unrelated domain isn't flagged", () => {
@@ -188,7 +211,12 @@ describe("score rules", () => {
   });
 
   it("thin messages are marked", () => {
-    expect(score(input({ text: "Hi! Quick call about an internship?" })).thinMessage).toBe(true);
+    const thin = score(input({ text: "Hi! Quick call about an internship?" }));
+    const full = score(input({ text: MILD }));
+    expect(thin.thinMessage).toBe(true);
+    expect(thin.coverage.missingImportant).toContain("not much to check");
+    expect(thin.coverage.ran).toBe(full.coverage.ran - 2);
+    expect(full.coverage.missingImportant).not.toContain("not much to check");
     expect(score(fromExample(EXAMPLES.real)).thinMessage).toBe(false);
   });
 });

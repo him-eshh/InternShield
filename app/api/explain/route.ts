@@ -7,7 +7,7 @@ import { done, failed, MESSAGES } from "@/lib/server/http";
 import type { ExplainRequest, RiskLevel } from "@/lib/types";
 
 const SYSTEM =
-  "Explain these risk signals from a recruiter message to a student in about 100 words, calm plain English. Add no new facts. Never use the words safe, safety, safely, legit, legitimate or guaranteed. No markdown.";
+  "Explain these risk signals from a recruiter message to a student in about 100 words, calm plain English. Repeat each given quote word for word inside double quotes. Add no new facts. Never use the words safe, safety, safely, legit, legitimate or guaranteed. No markdown.";
 
 const LEVELS: RiskLevel[] = ["low", "medium", "high"];
 const cut = (v: unknown, max: number) => (typeof v === "string" ? v.replace(/\s+/g, " ").trim().slice(0, max) : "");

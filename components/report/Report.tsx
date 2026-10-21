@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { fetchExplanation, type Explanation as ExplanationData, type PipelineInput, type PipelineOutcome } from "@/lib/client/pipeline";
+import { fetchExplanation, type Explanation as ExplanationData, type PipelineInput, type PipelineOutcome, type StepKey } from "@/lib/client/pipeline";
 import { FTC_URL } from "@/lib/client/copyReport";
 import { describeChange, score } from "@/lib/scoring/score";
 import { LEVEL_LABELS, type Answers, type FlagGroup, type QuestionId, type Report as ReportData } from "@/lib/types";
@@ -40,11 +40,30 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl }: 
   const [explanation, setExplanation] = useState<ExplanationData | null>(outcome.explanation);
   const [explaining, setExplaining] = useState(false);
   const [announce, setAnnounce] = useState("");
-  const [wait, setWait] = useState(outcome.retryAfter ?? 0);
+  // Per step: a limited step with a long retryAfter hit a daily cap; the others can still be retried.
+  const limitOf = (k: StepKey) => {
+    const r = k === "explain" ? null : outcome.steps[k];
+    return r && r.status === "failed" && r.reason === "limit" ? (r.retryAfter ?? 0) : null;
+  };
+  const cappedSteps = outcome.retryable.filter((k) => (limitOf(k) ?? 0) >= RESTING_AFTER_SECONDS);
+  const openSteps = outcome.retryable.filter((k) => !cappedSteps.includes(k));
+  const canRetry = openSteps.length > 0;
+  const resting = cappedSteps.length > 0 && !canRetry;
+  const [wait, setWait] = useState(Math.max(0, ...openSteps.map((k) => limitOf(k) ?? 0)));
   const req = useRef(0);
 
-  const resting = outcome.limited && (outcome.retryAfter ?? 0) >= RESTING_AFTER_SECONDS;
-  const canRetry = outcome.retryable.length > 0 && !resting;
+  // The explanation arrives after the report; fill it in when it does.
+  const pending = outcome.pendingExplanation;
+  useEffect(() => {
+    if (!pending) return;
+    let live = true;
+    void pending.then((ex) => {
+      if (live && req.current === 0) setExplanation(ex);
+    });
+    return () => {
+      live = false;
+    };
+  }, [pending]);
 
   // Announce the result once it's on screen, and again if a quick question changes it.
   const spoken = announcement(report);
@@ -131,7 +150,9 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl }: 
               <span className="mt-0.5 text-muted"><InfoIcon size={18} /></span>
               {resting
                 ? "InternShield is resting for today. The checks that finished are below."
-                : outcome.limited
+                : cappedSteps.length > 0
+                  ? "Some checks are resting for today. You can retry the others."
+                  : outcome.limited
                   ? "We're busy right now. Try again in a moment. The checks that finished are below."
                   : "Some checks didn't finish. They're listed under Couldn't check. Retry runs only those."}
             </p>
@@ -151,7 +172,11 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl }: 
 
         <QuickQuestions questions={questions} answers={answers} change={change} onAnswer={onAnswer} />
 
-        {explanation && <Explanation text={explanation.text} quotes={quotes} loading={explaining} />}
+        {explanation ? (
+          <Explanation text={explanation.text} quotes={quotes} loading={explaining} />
+        ) : (
+          pending && <p className="text-[17px] text-muted" aria-busy="true">Writing the explanation...</p>
+        )}
 
         <div className="space-y-10">
           {GROUPS.map((g) => (
@@ -164,7 +189,7 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl }: 
         {report.level === "low" ? (
           <PostingSection posting={postingData} match={report.postingMatch} company={companyName} careersUrl={careersUrl} />
         ) : (
-          <ScamOutcome report={report} source={input.source} careersUrl={careersUrl} />
+          <ScamOutcome report={report} source={answers.source && answers.source !== "unknown" ? answers.source : input.source} careersUrl={careersUrl} />
         )}
 
         <footer className="flex flex-col items-center gap-5 border-t border-border pt-10 text-center">

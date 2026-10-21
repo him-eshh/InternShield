@@ -34,7 +34,10 @@ const SENTENCES: [RegExp, string][] = [
 function sentenceFor(f: ExplainRequest["flags"][number]): string {
   const hit = SENTENCES.find(([re]) => re.test(f.title));
   const s = (hit ? hit[1] : f.why).trim();
-  return s.endsWith(".") ? s : `${s}.`;
+  const base = s.endsWith(".") ? s : `${s}.`;
+  const q = f.quote?.trim();
+  if (!q || hasBannedWord(q)) return base;
+  return `${base} They wrote: "${q.replace(/"/g, "'")}".`;
 }
 
 export function fallbackExplanation({ level, flags }: ExplainRequest): string {

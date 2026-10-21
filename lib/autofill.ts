@@ -53,11 +53,10 @@ function guessCompany(text: string, sender: string | null): string | null {
 
 function guessSource(text: string): Source | null {
   const t = text.toLowerCase();
-  if (/(thank you for|thanks for) (your )?appl|you applied|your application|careers (site|page)/.test(t)) return "company_site";
-  if (/handshake/.test(t)) return "handshake";
-  if (/linkedin/.test(t)) return "linkedin";
-  if (/whatsapp|telegram|text message|\bsms\b|imessage/.test(t)) return "text_whatsapp";
-  if (/^\s*(subject|from):/m.test(t)) return "email";
+  // Only clear "you applied to us" cues. Mentions of Handshake, LinkedIn or WhatsApp inside the body are
+  // what scams say too ("we found your resume on Handshake", "add us on WhatsApp"), so they never pick a source.
+  // Everything else stays null and the quick question asks.
+  if (/(thank you for|thanks for) (your )?appl(ying|ication)/.test(t)) return "company_site";
   return null;
 }
 

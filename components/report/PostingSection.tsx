@@ -119,7 +119,12 @@ export default function PostingSection({ posting, match, company, careersUrl }: 
                       <td className="py-3">
                         {r.ok === true && <span className="text-good"><CheckCircleIcon size={20} /><span className="sr-only">Matches</span></span>}
                         {r.ok === false && <span className="text-warn"><WarningIcon size={20} /><span className="sr-only">Doesn&apos;t match</span></span>}
-                        {r.ok === null && <span className="text-muted" aria-hidden="true">·</span>}
+                        {r.ok === null && (
+                          <span className="text-muted">
+                            <span aria-hidden="true">·</span>
+                            <span className="sr-only">Not listed</span>
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}

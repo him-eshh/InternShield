@@ -67,6 +67,7 @@ async function fixtureOutcome(name: string): Promise<{ outcome: PipelineOutcome;
       text: fallbackExplanation({ level: report.level, flags: report.flags.slice(0, 6).map((f) => ({ title: f.title, quote: f.quote, why: f.why })) }),
       source: "fallback",
     },
+    pendingExplanation: null,
     usedSaved: false,
     retryable: retryableSteps(steps),
     retryAfter: name === "medium" ? 20 : null,

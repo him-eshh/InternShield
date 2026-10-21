@@ -77,6 +77,8 @@ export interface PipelineOutcome {
   scoreInput: ScoreInput;
   report: Report | null;
   explanation: Explanation | null;
+  /** Resolves with the explanation (never rejects). The report doesn't wait for it. */
+  pendingExplanation: Promise<Explanation> | null;
   /** Example run where at least one live step failed and a saved result was used. */
   usedSaved: boolean;
   /** Steps a Retry could still help with. */
@@ -217,6 +219,7 @@ export async function runPipeline(
       scoreInput: buildScoreInput(input, text, facts, steps),
       report: null,
       explanation: null,
+      pendingExplanation: null,
       usedSaved: false,
       retryable: [],
       retryAfter: null,
@@ -292,9 +295,12 @@ export async function runPipeline(
   const scoreInput = buildScoreInput(input, text, finalFacts, steps);
   const report = score({ ...scoreInput, answers: {} });
 
-  // Step 5: explanation (falls back to pre-written sentences)
-  line("explain", "running");
-  const explanation = await fetchExplanation(report, deps);
+  // Step 5: explanation. Not awaited: the report shows first and the text fills in when it arrives
+  // (falls back to pre-written sentences). Await `pendingExplanation` to get it.
+  const pendingExplanation = fetchExplanation(report, deps).then((explanation) => {
+    logTable(deps, steps, explanation);
+    return explanation;
+  });
   line("explain", "done");
 
   const limits = (["extract", "company", "sender", "posting"] as const)
@@ -302,32 +308,36 @@ export async function runPipeline(
     .filter((r): r is Extract<StepResult<unknown>, { status: "failed" }> => r.status === "failed" && r.reason === "limit");
   const retryAfter = limits.length ? Math.max(0, ...limits.map((r) => r.retryAfter ?? 0)) : null;
 
-  if (deps.log ?? isDev()) {
-    try {
-      console.table(
-        (["extract", "company", "sender", "posting"] as const).map((k): { step: string; status: string; detail: string } => ({
-          step: k,
-          status: steps[k].status,
-          detail: steps[k].status === "done" ? "ok" : (steps[k] as { reason: string }).reason,
-        })).concat([{ step: "explain", status: "done", detail: explanation.source }]),
-      );
-    } catch {
-      /* console.table unavailable */
-    }
-  }
-
   return {
     notJob: false,
     steps,
     facts: finalFacts,
     scoreInput,
     report,
-    explanation,
+    explanation: null,
+    pendingExplanation,
     usedSaved,
     retryable: retryableSteps(steps),
     retryAfter,
     limited: limits.length > 0,
   };
+}
+
+function logTable(deps: PipelineDeps, steps: StepResults, explanation: Explanation) {
+  if (!(deps.log ?? isDev())) return;
+  try {
+    console.table(
+      (["extract", "company", "sender", "posting"] as const)
+        .map((k): { step: string; status: string; detail: string } => ({
+          step: k,
+          status: steps[k].status,
+          detail: steps[k].status === "done" ? "ok" : (steps[k] as { reason: string }).reason,
+        }))
+        .concat([{ step: "explain", status: "done", detail: explanation.source }]),
+    );
+  } catch {
+    /* console.table unavailable */
+  }
 }
 
 function buildScoreInput(input: PipelineInput, text: string, facts: Facts | null, steps: StepResults): ScoreInput {

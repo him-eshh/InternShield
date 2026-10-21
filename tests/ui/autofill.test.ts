@@ -7,7 +7,7 @@ describe("autofill", () => {
     const g = autofill(EXAMPLES.scam.text);
     expect(g.sender).toBe("brightline.datasolutions.hr@gmail.com");
     expect(g.company).toBe("Brightline Data Solutions");
-    expect(g.source).toBe("handshake");
+    expect(g.source).toBeNull(); // mentions Handshake and WhatsApp in the body: not a cue
     expect(g.stage).toBe("offer");
   });
 
@@ -22,7 +22,7 @@ describe("autofill", () => {
   it("falls back to a phone number when there is no email", () => {
     const g = autofill("Hi! Text me at +1 (213) 555-0147 about the job on WhatsApp.");
     expect(g.sender).toBe("+1 (213) 555-0147");
-    expect(g.source).toBe("text_whatsapp");
+    expect(g.source).toBeNull();
   });
 
   it("guesses the company from a work email website", () => {

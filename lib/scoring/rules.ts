@@ -23,6 +23,7 @@ export const WEIGHTS = {
   roleAboveLevel: 5,
   fieldPattern: 8,
   noMx: 5,
+  throwawayEmail: 15, // Hunter says the address is disposable; only when Hunter ran
   genericGreeting: 3,
   otherConcernEach: 2,
   otherConcernsMax: 5,
