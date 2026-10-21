@@ -12,6 +12,11 @@ import {
 } from "@/lib/client/pipeline";
 import { clearMyData, loadProfile, loadResume } from "@/lib/client/storage";
 import type { Profile, ResumeData, StepResult, StepResults } from "@/lib/types";
+import { TIER_FLAGS } from "@/lib/tiers/flags";
+import type { NewCard, PostingContext } from "@/lib/tiers/types";
+import ResumeTailor from "./tiers/ResumeTailor";
+import SaveToTracker from "./tiers/SaveToTracker";
+import Tracker from "./tiers/Tracker";
 import CheckForm, { type CheckSubmit } from "./CheckForm";
 import Checklist, { initialLines, type LineInfo } from "./Checklist";
 import Intro from "./Intro";
@@ -20,9 +25,20 @@ import ProfileChip from "./ProfileChip";
 import ProfileSteps from "./ProfileSteps";
 import ThemeToggle from "./ThemeToggle";
 import Report from "./report/Report";
-import { btnPrimary, subhead } from "./ui";
+import { btnPrimary, btnSecondary, subhead } from "./ui";
 
-type Screen = "loading" | "intro" | "profile" | "check" | "checking" | "report" | "notjob";
+type Screen = "loading" | "intro" | "profile" | "check" | "checking" | "report" | "notjob" | "resume" | "tracker";
+
+/** Company/role/link the last report found: feeds "Save to tracker" and resume tailoring. */
+function reportTarget(outcome: PipelineOutcome, input: PipelineInput): NewCard {
+  const posting = outcome.steps.posting.status === "done" ? outcome.steps.posting.data : null;
+  return {
+    company: outcome.facts?.company?.value ?? input.form.company ?? "Unknown company",
+    role: outcome.facts?.role?.value ?? posting?.title ?? "Role not listed",
+    link: posting?.found && posting.onOfficialDomain ? posting.url : null,
+    risk: outcome.report?.level ?? null,
+  };
+}
 
 function NotJob({ onBack }: { onBack: () => void }) {
   return (
@@ -177,14 +193,44 @@ export default function App() {
     }
   }, [screen, reportKey]);
 
-  const showChip = profile && (screen === "check" || screen === "report" || screen === "notjob");
+  const [tailorTarget, setTailorTarget] = useState<PostingContext | null>(null);
+  const openTailor = (t: PostingContext | null) => {
+    setTailorTarget(t);
+    setScreen("resume");
+  };
+  const back = () => setScreen(outcome?.report ? "report" : "check");
+
+  const target = outcome?.report && runInput ? reportTarget(outcome, runInput) : null;
+  const lastTarget = target && target.risk !== "high" ? { company: target.company, role: target.role, description: null } : null;
+  const chipItems = [
+    ...(TIER_FLAGS.resume ? [{ label: "Tailor my resume", onClick: () => openTailor(lastTarget) }] : []),
+    ...(TIER_FLAGS.tracker ? [{ label: "My applications", onClick: () => setScreen("tracker") }] : []),
+  ];
+  const reportExtras =
+    target && (TIER_FLAGS.tracker || TIER_FLAGS.resume) ? (
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        {TIER_FLAGS.tracker && <SaveToTracker key={reportKey} card={target} onOpen={() => setScreen("tracker")} />}
+        {TIER_FLAGS.resume && target.risk !== "high" && (
+          <button
+            type="button"
+            className={btnSecondary}
+            onClick={() => openTailor(lastTarget)}
+          >
+            Tailor my resume for this
+          </button>
+        )}
+      </div>
+    ) : null;
+
+  const showChip =
+    profile && (screen === "check" || screen === "report" || screen === "notjob" || screen === "resume" || screen === "tracker");
 
   return (
     <div className="min-h-dvh">
       <header className="mx-auto flex max-w-[960px] items-center justify-between gap-3 px-6 pt-6">
         <Logo />
         <div className="flex items-center gap-2">
-          {showChip && <ProfileChip profile={profile} onEdit={() => setScreen("profile")} onClear={onClear} />}
+          {showChip && <ProfileChip profile={profile} items={chipItems} onEdit={() => setScreen("profile")} onClear={onClear} />}
           <ThemeToggle />
         </div>
       </header>
@@ -206,8 +252,12 @@ export default function App() {
         {screen === "checking" && <Checklist lines={lines} example={isExample} />}
         {screen === "notjob" && <NotJob onBack={() => setScreen("check")} />}
         {screen === "report" && outcome?.report && runInput && (
-          <Report outcome={outcome} input={runInput} onRetry={onRetry} onAgain={() => { setLast(null); setScreen("check"); }} />
+          <Report outcome={outcome} input={runInput} onRetry={onRetry} onAgain={() => { setLast(null); setScreen("check"); }} extras={reportExtras} />
         )}
+        {screen === "resume" && TIER_FLAGS.resume && (
+          <ResumeTailor resume={resume} target={tailorTarget} onOpenProfile={() => setScreen("profile")} onBack={back} />
+        )}
+        {screen === "tracker" && TIER_FLAGS.tracker && <Tracker onBack={back} />}
       </main>
     </div>
   );

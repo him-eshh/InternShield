@@ -81,7 +81,7 @@ Build mode: fast (chosen by Himesh; overnight parallel build per `devpost/build-
   Learner check: Upload a resume, check a made-up message without picking a source, and see the quick question; open the report at 320px wide.
   Commit: `Slice 7: core polish`
 
-- [ ] **8. Tailored resume PDF**
+- [x] **8. Tailored resume PDF**
   Becomes usable: from the profile chip or a report, pick a resume line, get an honest reworded version for the posting, accept it after a before/after diff, and download the resume as a PDF.
   Why now: It reuses the resume already read in the browser and the last report's posting, so it's the most direct next step after a "real" result.
   PRD ref: `prd.md > Deferred From the POC`, `scope.md > Later`
