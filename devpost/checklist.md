@@ -19,7 +19,7 @@ Build mode: fast (chosen by Himesh; overnight parallel build per `devpost/build-
   Learner check: Run `npm run dev`, open http://localhost:3000, click "Try an example: a scam", and see a report appear (raw data at this stage).
   Commit: `Slice 1: scaffold and contracts`
 
-- [ ] **2. The scoring engine decides the risk level, proven by a labeled test set**
+- [x] **2. The scoring engine decides the risk level, proven by a labeled test set**
   Becomes usable: `score()` turns facts and step results into a 0-100 risk score, level, grouped flags, Couldn't-check list, coverage, and quick questions; `npm run eval` prints the results table for ~25 labeled messages.
   Why now: This is the unique kernel ("fixed rules score them"). Building it first means the UI and routes plug into the real thing, and bad weights show up early.
   PRD ref: `prd.md > Risk Scoring`, `prd.md > Finding Missing Details and Quick Questions`, `prd.md > Fact Extraction and Safety Rules`, `prd.md > Test Set`
@@ -29,7 +29,7 @@ Build mode: fast (chosen by Himesh; overnight parallel build per `devpost/build-
   Learner check: Run `npm run eval` and read the table: do the expected and got columns agree, and do the top flags make sense?
   Commit: `Slice 2: scoring engine and test set`
 
-- [ ] **3. Server routes do the outside checks safely (mocked)**
+- [x] **3. Server routes do the outside checks safely (mocked)**
   Becomes usable: The five API routes call Groq, Tavily, RDAP, DNS and Hunter through `lib/server`, with origin/size/per-visitor/daily caps, caching, timeouts, and model fallback, all proven against mocks.
   Why now: The routes are the only place keys live and the main cost/abuse risk; locking the guard and failure mapping down before live keys touch them keeps the free tiers safe.
   PRD ref: `prd.md > Fact Extraction and Safety Rules`, `prd.md > Sender and Website Checks`, `prd.md > Real-Posting Lookup`, `prd.md > States and Boundaries`
@@ -39,7 +39,7 @@ Build mode: fast (chosen by Himesh; overnight parallel build per `devpost/build-
   Learner check: Read `lib/server/guard.ts` and confirm the limits match what you agreed (3/min, 20/day, 120 checks/day, 80 searches/day).
   Commit: `Slice 3: server routes with limits and caps`
 
-- [ ] **4. Every screen works on fixtures**
+- [x] **4. Every screen works on fixtures**
   Becomes usable: Intro → profile steps → check form with auto-fill → live checklist → full report (ring, quick questions, explanation, grouped evidence cards, Couldn't check, scam outcome or posting section), theme toggle, profile chip with Clear my data.
   Why now: With contracts fixed, the UI can be built in parallel with the engine and routes and then pointed at them.
   PRD ref: `prd.md > The Core Journey`, `prd.md > Screens and Layout`, `prd.md > Look and Feel`, `prd.md > The Report`, `prd.md > Scam Outcome`, `prd.md > Profile and Resume`, `prd.md > Accessibility and Privacy`
@@ -92,8 +92,14 @@ Activity mode: pending
 
 ## Revisions
 
-- Slices 2-4 built in parallel by separate agents in git worktrees (engine, api, ui), merged in order engine → api → ui after review — a deliberate deviation from one-slice-at-a-time, approved by Himesh in `devpost/build-orchestration.md` to fit an overnight build.
+- Slices 2-4 built in parallel by separate agents (engine, api, ui), reviewed and committed in order engine → api → ui — a deliberate deviation from one-slice-at-a-time, approved by Himesh in `devpost/build-orchestration.md` to fit an overnight build.
+- Workers write into the main tree (disjoint file ownership) instead of separate git worktrees, and the orchestrator runs every gate and commit — background agents in worktrees had no shell access overnight (permission prompts can't be answered while Himesh sleeps), so they couldn't link node_modules, run gates, or commit.
 - Learner checks and hands-on checkpoints are deferred to the morning — Himesh was asleep during the build; recorded as pending, not done.
 - No animation or icon library installed — `spec.md > Stack` rules them out (CSS motion + inline SVG); the orchestration brief only listed them as examples. Spec wins.
 - Shared helpers `lib/constants.ts` (domain lists) and `lib/quotes.ts` written in Slice 1 by the orchestrator — both the engine and the routes need them, and parallel workers can't wait on each other.
 - `lib/types.ts` adds `Report.postingMatch`, `Report.thinMessage`, `ScoreInput.form`, and `describeChange()` — the PRD's match table, "not much to check" note, form fallback, and "why it changed" line needed a home in the contract.
+- Coverage line counts weighted checks (weights sum to 14, e.g. "11 of 14 checks ran") instead of a flat "8 of 10" — the PRD asks that important checks count for more, and the weighted total is what the line shows.
+- Each critical flag adds +40 with a floor of 85, and good-sign flags are hidden (not just unscored) when a critical fires — the engine needed concrete numbers for "pushes the score to 85 or higher" and "good signs never apply".
+- Explanation `max_completion_tokens` is 300, not ~250 — gpt-oss reasoning tokens count against the limit and 250 risked cut-off text.
+- `maxLength`/`maxItems` removed from the Groq strict schema; the 200-char quote and 3-concern caps are enforced in code — `api-facts.md` doesn't confirm Groq strict mode supports those keywords.
+- Backstop patterns tightened after review (fraud-warning footers, "moving forward", "driver's license required", "signal processing", "we'll pay for your laptop" no longer fire) — the first version forced ordinary real recruiter messages to 85+.
