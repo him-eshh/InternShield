@@ -253,7 +253,9 @@ export default function Interview({ profile, resume, target, onBack, renderRound
         )}
 
         {isPanelRound ? (
-          <RoundSlot render={renderRound} round={session.round} panel={panel} />
+          <div className="mt-6">
+            <RoundSlot render={renderRound} round={session.round} panel={panel} />
+          </div>
         ) : (
           <>
             <p role="status" aria-live="polite" className="sr-only">
