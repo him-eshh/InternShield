@@ -167,6 +167,8 @@ export interface InterviewSession {
   code: CodeAttempt | null;
   /** Design round: latest board. */
   board: BoardJson | null;
+  /** Coding round: hints received, oldest first (applyReply pushes hint text here). */
+  hints: string[];
   feedback: InterviewFeedback | null;
   status: "active" | "done";
   createdAt: number;
@@ -200,7 +202,7 @@ export type InterviewResponse = ApiResponse<InterviewReply>;
 //   nextStep(s): "answer" | "ask" | "feedback" | "done"            // answer: pending set; ask: AI follow-up allowed; feedback: time to get feedback
 //   canCall(s, ask): boolean                                        // respects MAX_SESSION_TURNS, keeps 1 for feedback; hint only coding
 //   buildRequest(s, ask): InterviewRequest                         // problem = getProblem(s.problemId)?.prompt
-//   applyReply(s, ask, reply, now): InterviewSession                // used+1; question -> pending; feedback -> status done
+//   applyReply(s, ask, reply, now): InterviewSession                // used+1; question -> pending; hint -> hints.push; feedback -> status done
 //   validateFeedback(raw: unknown, turns: InterviewTurn[], round): InterviewFeedback | null
 //   loadSessions(): InterviewSession[]; saveSession(s): void; removeSession(id): void   // KEYS.interviews, max MAX_SESSIONS
 

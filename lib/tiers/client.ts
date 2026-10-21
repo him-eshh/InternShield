@@ -1,5 +1,5 @@
 // Browser-side calls to the Tier 2 routes. Network errors become a failed body, never a throw.
-import type { RewriteRequest, RewriteResponse, TranscribeResponse } from "./types";
+import type { InterviewRequest, InterviewResponse, RewriteRequest, RewriteResponse, TranscribeResponse } from "./types";
 
 async function post<T extends { status: string }>(url: string, body: unknown): Promise<T> {
   try {
@@ -17,6 +17,9 @@ async function post<T extends { status: string }>(url: string, body: unknown): P
 }
 
 export const postRewrite = (req: RewriteRequest): Promise<RewriteResponse> => post<RewriteResponse>("/api/rewrite", req);
+
+export const askInterview = (req: InterviewRequest): Promise<InterviewResponse> =>
+  post<InterviewResponse>("/api/interview", req);
 
 export const postTranscribe = (image: string): Promise<TranscribeResponse> =>
   post<TranscribeResponse>("/api/transcribe", { image });

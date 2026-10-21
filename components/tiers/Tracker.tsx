@@ -25,8 +25,17 @@ function isHttp(s: string): boolean {
   }
 }
 
-export default function Tracker({ onBack }: { onBack: () => void }) {
-  const [cards, setCards] = useState<TrackerCard[]>([]);
+export default function Tracker({
+  onBack,
+  onPractice,
+  initialCards,
+}: {
+  onBack: () => void;
+  onPractice?: (card: TrackerCard) => void;
+  /** Seed cards (used by render tests); the saved cards replace them after mount. */
+  initialCards?: TrackerCard[];
+}) {
+  const [cards, setCards] = useState<TrackerCard[]>(initialCards ?? []);
   const [ready, setReady] = useState(false);
   const [announce, setAnnounceRaw] = useState("");
   const notesRef = useRef<HTMLTextAreaElement>(null);
@@ -209,6 +218,11 @@ export default function Tracker({ onBack }: { onBack: () => void }) {
                         {next && (
                           <button type="button" className={small} onClick={() => move(c, 1)}>
                             Move to {next.label}
+                          </button>
+                        )}
+                        {onPractice && c.column === "interviewing" && (
+                          <button type="button" className={`${small} border-accent text-accent`} onClick={() => onPractice(c)}>
+                            Practice interview
                           </button>
                         )}
                         {editing !== c.id && (

@@ -18,3 +18,5 @@
 - 2026-10-21 06:41 Live call 2/4 (Tier 2): /api/rewrite with a made-up bullet + made-up posting -> 200 on qwen, honest rewording (did not add the posting's SQL/Tableau); 155 prompt + 15 completion tokens.
 - 2026-10-21 06:49 Slices 8-10 committed (6b727b0, 5647708, cc70754) after review. Merge-gate review: no blockers; should-fixes applied (stripThinking only on qwen, rewrite has no gpt-oss fallback, resume privacy copy, spec.md note, tracker duplicate message). Gates green: 290 tests, eval 26/26, scoring diff empty, example flows test (saved results) passes. 2 live calls used.
 - 2026-10-21 06:52 Tier 2 merged to main (27a8fc8), gates green on main (290 tests, eval 26/26). Summary committed. Tier 2 session ended.
+- 2026-10-21 06:52 Tier 3 session started (no tier3 branch existed). Main gates green (290 tests, eval 26/26). Vault profile unreachable; continued without it.
+- 2026-10-21 07:05 Phase A committed (6da7cc8): tier3-spec.md, contracts, hidden flags, interview guard/cap, CodeMirror 6 (MIT; @emnapi lockfile entries re-added by hand), Pyodide 314.0.7 on jsDelivr confirmed (HEAD 200, not a Groq call). Tier 2 qwen caps lowered to fit the budget.
