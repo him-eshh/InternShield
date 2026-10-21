@@ -1,0 +1,108 @@
+// Usage Guard (spec.md > Usage Guard). Called first in every route.
+import { MAX_MESSAGE_CHARS } from "@/lib/types";
+import { MINUTE, takeCount } from "./cache";
+import { failed, MESSAGES } from "./http";
+
+export type RouteName = "extract" | "company" | "sender" | "posting" | "explain";
+
+export type GuardResult =
+  | { ok: true; body: Record<string, unknown>; ip: string }
+  | { ok: false; response: Response };
+
+const MAX_BODY_BYTES = 8 * 1024;
+
+function envInt(name: string, fallback: number): number {
+  const n = Number(process.env[name]);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
+function allowedOrigins(): string[] {
+  const raw = process.env.ALLOWED_ORIGINS?.trim();
+  return (raw ? raw.split(",") : ["http://localhost:3000"]).map((s) => s.trim().replace(/\/$/, "")).filter(Boolean);
+}
+
+export function clientIp(req: Request): string {
+  const first = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  return first || "local";
+}
+
+function reject(status: number, message: string): GuardResult {
+  return { ok: false, response: failed("error", { status, message }) };
+}
+
+function limited(retryAfter: number): GuardResult {
+  return {
+    ok: false,
+    response: failed("limit", {
+      status: 429,
+      retryAfter,
+      message: retryAfter > 3600 ? MESSAGES.daily : MESSAGES.busy,
+    }),
+  };
+}
+
+export async function guard(req: Request, route: RouteName): Promise<GuardResult> {
+  // Dev-only failure switch: ?fail=1 acts like a timed-out step.
+  if (process.env.NODE_ENV !== "production") {
+    try {
+      if (new URL(req.url).searchParams.get("fail") === "1") {
+        return { ok: false, response: failed("timeout", { status: 504 }) };
+      }
+    } catch {
+      /* bad URL: fall through */
+    }
+  }
+
+  const origin = req.headers.get("origin")?.replace(/\/$/, "");
+  if (!origin || !allowedOrigins().includes(origin)) return reject(403, MESSAGES.origin);
+
+  const declared = Number(req.headers.get("content-length"));
+  if (Number.isFinite(declared) && declared > MAX_BODY_BYTES) return reject(413, MESSAGES.big);
+
+  let text: string;
+  try {
+    text = await req.text();
+  } catch {
+    return reject(400, MESSAGES.bad);
+  }
+  if (new TextEncoder().encode(text).length > MAX_BODY_BYTES) return reject(413, MESSAGES.big);
+
+  let body: unknown;
+  try {
+    body = JSON.parse(text);
+  } catch {
+    return reject(400, MESSAGES.bad);
+  }
+  if (!body || typeof body !== "object" || Array.isArray(body)) return reject(400, MESSAGES.bad);
+  const b = body as Record<string, unknown>;
+  if (typeof b.message === "string" && b.message.length > MAX_MESSAGE_CHARS) return reject(413, MESSAGES.big);
+
+  const ip = clientIp(req);
+  if (route === "extract") {
+    const m = takeCount(`ip:min:extract:${ip}`, 3, MINUTE);
+    if (!m.ok) return limited(m.retryAfter);
+    const d = takeCount(`ip:day:extract:${ip}`, 20, "day");
+    if (!d.ok) return limited(d.retryAfter);
+  } else {
+    const m = takeCount(`ip:min:other:${ip}`, 20, MINUTE);
+    if (!m.ok) return limited(m.retryAfter);
+  }
+  return { ok: true, body: b, ip };
+}
+
+/** Counts one live (uncached, non-example) check against DAILY_CHECK_CAP. */
+export function takeCheck(): { ok: true } | { ok: false; retryAfter: number } {
+  const r = takeCount("global:checks", envInt("DAILY_CHECK_CAP", 120), "day");
+  return r.ok ? { ok: true } : { ok: false, retryAfter: r.retryAfter };
+}
+
+/** Counts one live explain call against 2x DAILY_CHECK_CAP so tokens can't be drained. */
+export function takeExplain(): boolean {
+  return takeCount("global:explain", envInt("DAILY_CHECK_CAP", 120) * 2, "day").ok;
+}
+
+/** Counts one Tavily call against TAVILY_DAILY_CAP. */
+export function takeTavily(): { ok: true } | { ok: false; retryAfter: number } {
+  const r = takeCount("global:tavily", envInt("TAVILY_DAILY_CAP", 80), "day");
+  return r.ok ? { ok: true } : { ok: false, retryAfter: r.retryAfter };
+}

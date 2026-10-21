@@ -1,9 +1,50 @@
-// STUB (Slice 1): returns saved example facts. api-builder replaces with Groq + Quote Check.
-import { EXAMPLES } from "@/lib/examples";
-import type { ExtractRequest, ExtractResponse } from "@/lib/types";
+import { cacheGet, cacheSet, DAY } from "@/lib/server/cache";
+import { EXTRACT_SYSTEM, fingerprint, formLine, isExampleText, prepareMessage, quoteCheck } from "@/lib/server/extract";
+import { EXTRACT_SCHEMA } from "@/lib/server/extractSchema";
+import { callGroq } from "@/lib/server/groq";
+import { guard, takeCheck } from "@/lib/server/guard";
+import { classify, done, failed, fromOutcome, MESSAGES } from "@/lib/server/http";
+import type { Facts } from "@/lib/types";
 
 export async function POST(req: Request) {
-  const body = (await req.json()) as ExtractRequest;
-  const ex = body.message?.includes("Stripe") ? EXAMPLES.real : EXAMPLES.scam;
-  return Response.json(ex.savedSteps.extract as ExtractResponse);
+  try {
+    const g = await guard(req, "extract");
+    if (!g.ok) return g.response;
+    const { message, sender, company } = g.body;
+    if (typeof message !== "string" || !message.trim()) {
+      return failed("error", { status: 400, message: MESSAGES.bad });
+    }
+
+    const text = prepareMessage(message);
+    const prompt = formLine(sender, company) + text;
+    const key = `extract:${fingerprint(prompt)}`;
+    const cached = cacheGet<Facts>(key);
+    if (cached) return done(cached);
+
+    if (!isExampleText(text)) {
+      const cap = takeCheck();
+      if (!cap.ok) return failed("limit", { status: 429, retryAfter: cap.retryAfter, message: MESSAGES.daily });
+    }
+
+    const r = await callGroq("extract", {
+      system: EXTRACT_SYSTEM,
+      user: prompt,
+      schema: EXTRACT_SCHEMA,
+      maxTokens: 1500,
+    });
+    if (!r.ok) return fromOutcome(r);
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(r.data);
+    } catch {
+      return failed("error");
+    }
+    const facts = quoteCheck(parsed, text);
+    if (!facts) return failed("error");
+    cacheSet(key, facts, DAY);
+    return done(facts);
+  } catch (err) {
+    return failed(classify(err));
+  }
 }
