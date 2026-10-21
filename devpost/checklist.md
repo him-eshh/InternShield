@@ -143,7 +143,7 @@ Build mode: fast (chosen by Himesh; overnight parallel build per `devpost/build-
   Learner check: Draw client → server → database + cache with only the keyboard, export the PNG, ask for a follow-up.
   Commit: `Slice 13: system design board`
 
-- [ ] **14. Business: case interview**
+- [x] **14. Business: case interview**
   Becomes usable: business profiles can run a made-up, interviewer-led case (structure, one calculation, recommendation) and get feedback with the math and structure checked in code.
   Why now: Reuses the Tier 3 shell and route; adds the scripted-round engine the finance round also needs.
   PRD ref: `prd.md > Deferred From the POC`

@@ -9,7 +9,7 @@ const num = (expected: number, unit: "$" | "%" | "", tolerance = 0.5): AnswerChe
 
 const RECOMMEND: Point = {
   label: "a clear recommendation",
-  any: ["recommend", "suggest", "should", "propose", "advise", "i would", "i'd", "go ahead", "don't", "do not"],
+  any: ["recommend", "suggest", "propose", "advise", "i would", "i'd", "go ahead"],
 };
 const NEXT_STEP: Point = {
   label: "a risk or next step",
@@ -21,7 +21,8 @@ const recommendation = (dataWords: string[]): AnswerCheck =>
 
 const COSTS: Point = { label: "costs", any: ["cost", "expense", "spend", "rent", "wage", "labor", "labour", "staff", "supplies", "ingredient"] };
 
-/** Made-up business cases: structure (rubric), one calculation (number), recommendation (rubric). */
+/** Made-up business cases: structure (rubric), one calculation (number), recommendation (rubric).
+ *  Append only: scriptFor picks by seed index, so reordering CASES or FINANCE_BANK moves in-progress sessions. */
 export const CASES: { id: string; title: string; questions: ScriptedQuestion[] }[] = [
   {
     id: "coffee-cart",
@@ -47,7 +48,7 @@ export const CASES: { id: string; title: string; questions: ScriptedQuestion[] }
       {
         id: "coffee-cart-3",
         prompt: "What would you recommend the coffee cart owner do, and why?",
-        check: recommendation(["4,000", "4000", "400 more", "cups", "per cup", "contribution", "break even", "breakeven", "profit", "$2"]),
+        check: recommendation(["4,000", "4000", "400 more", "cups", "per cup", "contribution", "break even", "breakeven"]),
       },
     ],
   },
@@ -103,7 +104,7 @@ export const CASES: { id: string; title: string; questions: ScriptedQuestion[] }
       {
         id: "bookstore-3",
         prompt: "What would you recommend the bookstore owner do about the second location, and why?",
-        check: recommendation(["30 months", "two and a half years", "2.5 years", "payback", "pay back", "earn back", "$2,000", "2,000 a month", "profit", "margin"]),
+        check: recommendation(["30 months", "two and a half years", "2.5 years", "payback", "pay back", "earn back", "$2,000", "2,000 a month", "margin"]),
       },
     ],
   },
@@ -146,7 +147,7 @@ export const FINANCE_BANK: ScriptedQuestion[] = [
       { label: "income statement", any: ["income statement", "p&l", "profit and loss", "profit & loss"] },
       { label: "balance sheet", any: ["balance sheet", "assets", "liabilit"] },
       { label: "cash flow statement", any: ["cash flow statement", "statement of cash flows", "cash flow"] },
-      { label: "how they link", any: ["net income flows", "net income goes", "starts with net income", "retained earnings", "ending cash", "cash balance", "links", "flows into", "flows to"] },
+      { label: "how they link", any: ["net income flows", "net income goes", "starts with net income", "retained earnings", "ending cash", "cash balance", "flows into", "flows to"] },
     ]),
   },
   {
@@ -164,7 +165,7 @@ export const FINANCE_BANK: ScriptedQuestion[] = [
     check: rubric([
       { label: "enterprise value covers all investors", any: ["all investors", "whole business", "entire business", "debt and equity", "all capital", "core operations", "operating business", "whole company", "entire company"] },
       { label: "equity value is for shareholders", any: ["shareholder", "stockholder", "equity holder", "owners", "market cap"] },
-      { label: "the bridge: debt and cash", any: ["net debt", "minus cash", "less cash", "subtract cash", "plus debt", "add debt", "debt"] },
+      { label: "the bridge: debt and cash", any: ["net debt", "minus cash", "less cash", "subtract cash", "plus debt", "add debt", "debt minus cash", "debt less cash"] },
     ]),
   },
   {
@@ -270,18 +271,19 @@ export function findQuestion(prompt: string): ScriptedQuestion | null {
 }
 
 // A number not glued to a letter, digit or dot on its left (so "Q4" and the "20" in "10-20" stay positive),
-// with an optional minus and $, thousands commas, decimals, and a k/m/bn/thousand/million/billion or % suffix.
+// with an optional minus and $, thousands commas, decimals, and a k/m/b/bn/thousand/million/billion or % suffix
+// (a space before the suffix is fine: "1.2 M").
 const NUMBER_RE =
-  /(?<![A-Za-z0-9.])(-)?\$?(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d+))?(?:\s*(thousand|million|billion)\b|(k|m|bn)\b|\s*%)?/gi;
-const SCALE: Record<string, number> = { k: 1e3, thousand: 1e3, m: 1e6, million: 1e6, bn: 1e9, billion: 1e9 };
+  /(?<![A-Za-z0-9.])(-)?\$?(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d+))?(?:\s*(thousand|million|billion|k|m|bn|b)\b|\s*%)?/gi;
+const SCALE: Record<string, number> = { k: 1e3, thousand: 1e3, m: 1e6, million: 1e6, b: 1e9, bn: 1e9, billion: 1e9 };
 
 /** The last number in the answer, e.g. "$1,500" -> 1500, "1.5k" -> 1500, "12%" -> 12. None -> null. */
 export function extractNumber(answer: string): number | null {
   let last: number | null = null;
   for (const m of (answer ?? "").matchAll(NUMBER_RE)) {
-    const [, minus, whole, frac, word, short] = m;
+    const [, minus, whole, frac, word] = m;
     const base = Number(`${whole.replace(/,/g, "")}${frac ? `.${frac}` : ""}`);
-    const scale = SCALE[(word ?? short ?? "").toLowerCase()] ?? 1;
+    const scale = SCALE[(word ?? "").toLowerCase()] ?? 1;
     const v = Math.round(base * scale * 1e6) / 1e6;
     last = minus ? -v : v;
   }
@@ -298,7 +300,7 @@ export function checkAnswer(check: AnswerCheck, answer: string): CheckResult {
     const correct = found !== null && Math.abs(found - check.expected) <= check.tolerance + 1e-9;
     return { kind: "number", found, expected: check.expected, correct, unit: check.unit };
   }
-  const text = (answer ?? "").toLowerCase();
+  const text = (answer ?? "").toLowerCase().replace(/[‘’]/g, "'");
   const covered: string[] = [];
   const missed: string[] = [];
   for (const p of check.points) (p.any.some((k) => mentions(text, k)) ? covered : missed).push(p.label);

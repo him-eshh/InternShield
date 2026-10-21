@@ -110,6 +110,10 @@ describe("extractNumber", () => {
     ["", null],
     ["0.25", 0.25],
     ["it's 3 km away", 3],
+    ["$1.2 M", 1200000],
+    ["1.2B", 1200000000],
+    ["about 1.2 bn", 1200000000],
+    ["3 bikes", 3],
   ] as const)("%s -> %s", (text, want) => {
     expect(extractNumber(text)).toBe(want);
   });
@@ -146,6 +150,12 @@ describe("checkAnswer", () => {
     const q = CASES[0].questions[0];
     const r = checkAnswer(q.check!, "I'd split profit into revenue and costs, then look at customers and competitors nearby.");
     expect(r).toEqual({ kind: "rubric", covered: ["revenue", "costs", "customers", "competition"], missed: [] });
+  });
+
+  it("recommendation: a bare 'should' isn't a call; a curly I’d is", () => {
+    const q = CASES[0].questions[2];
+    expect(checkAnswer(q.check!, "It should be fine.")).toMatchObject({ covered: [] });
+    expect(checkAnswer(q.check!, "I’d raise volume to 4,000 cups and pilot a loyalty card.")).toMatchObject({ missed: [] });
   });
 });
 

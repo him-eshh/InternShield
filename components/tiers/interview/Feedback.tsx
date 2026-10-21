@@ -23,8 +23,13 @@ function CodeCheck({ turn }: { turn: InterviewTurn }) {
       <h2 className="text-[15px] font-semibold">Checked by code</h2>
       {r.kind === "number" ? (
         <p className="mt-1 break-words text-[16px]">
-          Your final number: {r.found === null ? "none found" : fmt(r.found, r.unit)} · Expected: {fmt(r.expected, r.unit)}{" "}
-          <span className={`font-medium ${r.correct ? "text-good" : "text-muted"}`}>{r.correct ? "✓ correct" : "– not quite"}</span>
+          {r.found === null ? "No final number found" : `Your final number: ${fmt(r.found, r.unit)}`} · Expected: {fmt(r.expected, r.unit)}
+          {r.found !== null && (
+            <>
+              {" · "}
+              <span className={`font-medium ${r.correct ? "text-good" : "text-muted"}`}>{r.correct ? "✓ correct" : "– not quite"}</span>
+            </>
+          )}
         </p>
       ) : (
         <ul className="mt-2 grid gap-2 sm:grid-cols-2">
@@ -58,27 +63,32 @@ export default function Feedback({
         <>
           <p className="mt-4 max-w-[600px] break-words text-[17px] leading-relaxed">{fb.summary}</p>
           <ol className="mt-8 space-y-5">
-            {fb.items.map((item) => {
-              const turn = session.turns[item.index];
-              if (!turn) return null;
+            {session.turns.map((turn, index) => {
+              // A turn the AI skipped still shows when code checked it.
+              const item = fb.items.find((x) => x.index === index);
+              if (!item && !checkTurn(turn)) return null;
               return (
-                <li key={item.index} className={`${cardCls} animate-enter p-5 sm:p-6`}>
-                  <p className="text-[14px] font-medium text-muted">Question {item.index + 1}</p>
+                <li key={index} className={`${cardCls} animate-enter p-5 sm:p-6`}>
+                  <p className="text-[14px] font-medium text-muted">Question {index + 1}</p>
                   <p className="mt-1 break-words text-[17px] font-semibold leading-snug">{turn.question}</p>
                   <p className="mt-4 text-[14px] font-medium text-muted">Your answer</p>
                   <p className="mt-1 whitespace-pre-wrap break-words text-[16px]">{turn.answer}</p>
-                  {item.quote && (
+                  {item?.quote && (
                     <blockquote className="mt-4 break-words rounded-[12px] border-l-4 border-accent bg-accent/10 px-4 py-3 text-[16px]">
                       <span className="sr-only">Quote from your answer: </span>
                       {item.quote}
                     </blockquote>
                   )}
                   <CodeCheck turn={turn} />
-                  <h2 className="mt-5 text-[15px] font-semibold">What worked</h2>
-                  <p className="mt-1 break-words text-[16px]">{item.strength}</p>
-                  <h2 className="mt-4 text-[15px] font-semibold">Try next time</h2>
-                  <p className="mt-1 break-words text-[16px]">{item.improve}</p>
-                  {session.round === "behavioral" && item.star && (
+                  {item && (
+                    <>
+                      <h2 className="mt-5 text-[15px] font-semibold">What worked</h2>
+                      <p className="mt-1 break-words text-[16px]">{item.strength}</p>
+                      <h2 className="mt-4 text-[15px] font-semibold">Try next time</h2>
+                      <p className="mt-1 break-words text-[16px]">{item.improve}</p>
+                    </>
+                  )}
+                  {session.round === "behavioral" && item?.star && (
                     <div className="mt-5">
                       <h2 className="text-[15px] font-semibold">STAR check</h2>
                       <ul className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
