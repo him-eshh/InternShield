@@ -15,6 +15,7 @@ import {
 import { askInterview } from "@/lib/tiers/client";
 import {
   BOARD_ROUNDS,
+  CHALLENGE_MINUTES,
   INTERVIEW_ROUNDS,
   MAX_ANSWER_CHARS,
   MAX_CONTEXT_FIELD,
@@ -71,7 +72,7 @@ const ROUND_BLURB: Record<InterviewRound, string> = {
   case: "A short made-up business case: structure it, do one calculation (checked by code), then recommend.",
   finance: "Four made-up accounting and valuation questions. Numbers are checked by code.",
   portfolio: "Walk through your work: the problem, your role, your choices and what you learned.",
-  challenge: "A 20-minute design challenge on a drawing board.",
+  challenge: `A ${CHALLENGE_MINUTES}-minute design challenge on a drawing board.`,
 };
 
 const LINK_CLS = `${linkClass} break-all`;

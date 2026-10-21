@@ -114,6 +114,8 @@ describe("extractNumber", () => {
     ["1.2B", 1200000000],
     ["about 1.2 bn", 1200000000],
     ["3 bikes", 3],
+    ["$1,600,000 b/c debt is added", 1600000],
+    ["30 b/c", 30],
   ] as const)("%s -> %s", (text, want) => {
     expect(extractNumber(text)).toBe(want);
   });

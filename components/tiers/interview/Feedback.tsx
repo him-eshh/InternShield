@@ -1,5 +1,5 @@
 import { checkTurn } from "@/lib/tiers/scripted";
-import type { InterviewSession, InterviewTurn, StarCheck } from "@/lib/tiers/types";
+import { SCRIPTED_ROUNDS, type InterviewRound, type InterviewSession, type InterviewTurn, type StarCheck } from "@/lib/tiers/types";
 import { btnPrimary, btnSecondary, card as cardCls } from "../../ui";
 
 const STAR: { key: keyof StarCheck; label: string }[] = [
@@ -15,8 +15,8 @@ function fmt(n: number, unit: "$" | "%" | ""): string {
   return unit === "$" ? `${sign}$${s}` : unit === "%" ? `${sign}${s}%` : `${sign}${s}`;
 }
 
-function CodeCheck({ turn }: { turn: InterviewTurn }) {
-  const r = checkTurn(turn);
+function CodeCheck({ turn, round }: { turn: InterviewTurn; round: InterviewRound }) {
+  const r = SCRIPTED_ROUNDS.includes(round) ? checkTurn(turn) : null;
   if (!r) return null;
   return (
     <div className="mt-5 rounded-[12px] border border-border px-4 py-3">
@@ -66,7 +66,7 @@ export default function Feedback({
             {session.turns.map((turn, index) => {
               // A turn the AI skipped still shows when code checked it.
               const item = fb.items.find((x) => x.index === index);
-              if (!item && !checkTurn(turn)) return null;
+              if (!item && !(SCRIPTED_ROUNDS.includes(session.round) && checkTurn(turn))) return null;
               return (
                 <li key={index} className={`${cardCls} animate-enter p-5 sm:p-6`}>
                   <p className="text-[14px] font-medium text-muted">Question {index + 1}</p>
@@ -79,7 +79,7 @@ export default function Feedback({
                       {item.quote}
                     </blockquote>
                   )}
-                  <CodeCheck turn={turn} />
+                  <CodeCheck turn={turn} round={session.round} />
                   {item && (
                     <>
                       <h2 className="mt-5 text-[15px] font-semibold">What worked</h2>

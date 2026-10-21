@@ -30,7 +30,7 @@ function ChallengeTimer({ session }: { session: InterviewSession }) {
     const t = setInterval(() => setLeft(challengeLeft(session, now())), 1000);
     return () => clearInterval(t);
   }, [session, over]);
-  const note = left <= 0 ? "Time's up. Finish when you're ready." : left <= 5 * 60_000 ? "5 minutes left" : "";
+  const note = left <= 0 ? "Time's up. Finish when you're ready." : left <= 5 * 60_000 ? "Under 5 minutes left" : "";
   return (
     <div>
       <p role="timer" className="text-[15px] font-medium tabular-nums">
@@ -39,7 +39,11 @@ function ChallengeTimer({ session }: { session: InterviewSession }) {
       <p role="status" aria-live="polite" className="sr-only">
         {note}
       </p>
-      {note && <p className="text-[15px] text-muted">{note}</p>}
+      {note && (
+        <p aria-hidden="true" className="text-[15px] text-muted">
+          {note}
+        </p>
+      )}
     </div>
   );
 }

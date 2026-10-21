@@ -175,7 +175,7 @@ export const FINANCE_BANK: ScriptedQuestion[] = [
       { label: "project free cash flows", any: ["free cash flow", "fcf", "project", "forecast", "cash flows"] },
       { label: "discount rate", any: ["discount rate", "wacc", "cost of capital"] },
       { label: "terminal value", any: ["terminal", "exit multiple", "perpetuity", "gordon"] },
-      { label: "present value to enterprise value", any: ["present value", "pv", "discount back", "sum", "add up", "enterprise value"] },
+      { label: "present value to enterprise value", any: ["present value", "pv", "discount back", "sum of", "sum up", "add up", "enterprise value"] },
     ]),
   },
   {
@@ -272,9 +272,9 @@ export function findQuestion(prompt: string): ScriptedQuestion | null {
 
 // A number not glued to a letter, digit or dot on its left (so "Q4" and the "20" in "10-20" stay positive),
 // with an optional minus and $, thousands commas, decimals, and a k/m/b/bn/thousand/million/billion or % suffix
-// (a space before the suffix is fine: "1.2 M").
+// (a space before the suffix is fine: "1.2 M"; shorthand like "b/c" or "m&a" is not a suffix).
 const NUMBER_RE =
-  /(?<![A-Za-z0-9.])(-)?\$?(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d+))?(?:\s*(thousand|million|billion|k|m|bn|b)\b|\s*%)?/gi;
+  /(?<![A-Za-z0-9.])(-)?\$?(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d+))?(?:\s*(thousand|million|billion|k|m|bn|b)\b(?![/&])|\s*%)?/gi;
 const SCALE: Record<string, number> = { k: 1e3, thousand: 1e3, m: 1e6, million: 1e6, b: 1e9, bn: 1e9, billion: 1e9 };
 
 /** The last number in the answer, e.g. "$1,500" -> 1500, "1.5k" -> 1500, "12%" -> 12. None -> null. */
