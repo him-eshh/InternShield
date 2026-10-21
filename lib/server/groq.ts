@@ -3,7 +3,7 @@ import Groq from "groq-sdk";
 import { cacheGet, cacheSet } from "./cache";
 import { classify, OUTSIDE_TIMEOUT_MS, type Outcome } from "./http";
 
-export type GroqTask = "extract" | "explain" | "rewrite" | "transcribe";
+export type GroqTask = "extract" | "explain" | "rewrite" | "transcribe" | "interview";
 
 export const MODEL_20B = "openai/gpt-oss-20b";
 export const MODEL_120B = "openai/gpt-oss-120b";
@@ -15,6 +15,7 @@ const ORDER: Record<GroqTask, string[]> = {
   explain: [MODEL_120B, MODEL_20B],
   rewrite: [MODEL_VISION], // no gpt-oss fallback: keeps Tier 2 off the core's budget
   transcribe: [MODEL_VISION], // the only vision model; no fallback model
+  interview: [MODEL_VISION], // Tier 3: same qwen budget as Tier 2, never the core's gpt-oss
 };
 
 export interface GroqRequest {

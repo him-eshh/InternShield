@@ -1,5 +1,5 @@
-// Tier 2 shared contracts (devpost/tier2-spec.md). Read-only to workers: report needed changes.
-import type { ApiResponse, RiskLevel } from "../types";
+// Tier 2 + 3 shared contracts (devpost/tier2-spec.md, tier3-spec.md). Read-only to workers: report needed changes.
+import type { ApiResponse, Field, RiskLevel } from "../types";
 
 // ---------- Slice 8: tailored resume ----------
 
@@ -83,3 +83,227 @@ export interface TranscribeRequest {
   image: string;
 }
 export type TranscribeResponse = ApiResponse<{ text: string }>;
+
+// ---------- Tier 3: mock interview ----------
+
+export type InterviewRound = "screen" | "behavioral" | "coding" | "design";
+export const INTERVIEW_ROUNDS: { id: InterviewRound; label: string; techOnly: boolean }[] = [
+  { id: "screen", label: "Recruiter screen", techOnly: false },
+  { id: "behavioral", label: "Behavioral", techOnly: false },
+  { id: "coding", label: "Live coding", techOnly: true },
+  { id: "design", label: "System design", techOnly: true },
+];
+/** Questions per round, including the local first question. */
+export const QUESTIONS_PER_ROUND: Record<InterviewRound, number> = { screen: 4, behavioral: 4, coding: 1, design: 3 };
+/** AI calls per session (questions + hints + feedback); one is always kept for feedback. */
+export const MAX_SESSION_TURNS = 12;
+export const MAX_TURNS = 8;
+export const MAX_QUESTION_CHARS = 400;
+export const MAX_ANSWER_CHARS = 1200;
+export const MAX_CODE_CHARS = 4000;
+export const MAX_RESUME_CONTEXT_CHARS = 1500;
+export const MAX_CONTEXT_FIELD = 120; // company, role
+export const MAX_SESSIONS = 20;
+
+/** What the interviewer knows. description capped at MAX_JOB_CHARS, resume at MAX_RESUME_CONTEXT_CHARS. */
+export interface InterviewContext {
+  company: string | null;
+  role: string | null;
+  description: string | null;
+  resume: string | null;
+  field: Field | null;
+}
+
+export interface InterviewTurn {
+  question: string;
+  answer: string;
+}
+
+export type CodeLanguage = "python" | "javascript";
+/** Latest coding attempt; passed/total come from local deterministic grading only. */
+export interface CodeAttempt {
+  problemId: string;
+  language: CodeLanguage;
+  code: string;
+  passed: number;
+  total: number;
+}
+
+export interface StarCheck {
+  situation: boolean;
+  task: boolean;
+  action: boolean;
+  result: boolean;
+}
+export interface AnswerFeedback {
+  /** Index into session.turns. */
+  index: number;
+  strength: string;
+  improve: string;
+  /** Verbatim from that turn's answer (quoteIsReal), else null. */
+  quote: string | null;
+  /** Behavioral only; null for other rounds. */
+  star: StarCheck | null;
+}
+export interface InterviewFeedback {
+  summary: string;
+  items: AnswerFeedback[];
+}
+
+export interface InterviewSession {
+  id: string;
+  round: InterviewRound;
+  context: InterviewContext;
+  /** Answered questions, in order. */
+  turns: InterviewTurn[];
+  /** The question waiting for an answer, or null. */
+  pending: string | null;
+  /** AI calls made so far in this session. */
+  used: number;
+  /** Seed for the local first question / problem / design prompt pick. */
+  seed: number;
+  /** Coding round: problem id (set at creation) and latest attempt. */
+  problemId: string | null;
+  code: CodeAttempt | null;
+  /** Design round: latest board. */
+  board: BoardJson | null;
+  /** Coding round: hints received, oldest first (applyReply pushes hint text here). */
+  hints: string[];
+  feedback: InterviewFeedback | null;
+  status: "active" | "done";
+  createdAt: number;
+  updatedAt: number;
+}
+
+export type InterviewAsk = "question" | "hint" | "feedback";
+
+/** POST /api/interview. */
+export interface InterviewRequest {
+  ask: InterviewAsk;
+  round: InterviewRound;
+  context: InterviewContext;
+  /** Answered turns (<= MAX_TURNS). For "question", the next question follows the last answer. */
+  turns: InterviewTurn[];
+  /** session.used before this call; server rejects >= MAX_SESSION_TURNS. */
+  used: number;
+  code: CodeAttempt | null;
+  board: BoardJson | null;
+  /** Coding round: the problem prompt (hint/feedback need it). */
+  problem: string | null;
+}
+/** question/hint -> text; feedback -> feedback. */
+export type InterviewReply = { text: string; feedback: null } | { text: null; feedback: InterviewFeedback };
+export type InterviewResponse = ApiResponse<InterviewReply>;
+
+// lib/tiers/interview.ts exports (engine-builder):
+//   newSession(round, context, opts: { id: string; now: number; seed: number }): InterviewSession  // pending = firstQuestion(...)
+//   firstQuestion(round, context, seed): string                     // local, no AI
+//   answerPending(s, answer, now): InterviewSession                 // pending -> turns, pending = null
+//   nextStep(s): "answer" | "ask" | "feedback" | "done"            // answer: pending set; ask: AI follow-up allowed; feedback: time to get feedback
+//   canCall(s, ask): boolean                                        // respects MAX_SESSION_TURNS, keeps 1 for feedback; hint only coding
+//   buildRequest(s, ask): InterviewRequest                         // problem = getProblem(s.problemId)?.prompt
+//   applyReply(s, ask, reply, now): InterviewSession                // used+1; question -> pending; hint -> hints.push; feedback -> status done
+//   validateFeedback(raw: unknown, turns: InterviewTurn[], round): InterviewFeedback | null
+//   loadSessions(): InterviewSession[]; saveSession(s): void; removeSession(id): void   // KEYS.interviews, max MAX_SESSIONS
+
+// ---------- Slice 12: coding ----------
+
+export interface CodeTest {
+  args: unknown[];
+  expected: unknown;
+}
+export interface CodingProblem {
+  id: string;
+  title: string;
+  /** Shown to the user; also the interview question. */
+  prompt: string;
+  functionName: string;
+  starter: Record<CodeLanguage, string>;
+  /** Shown with input/expected/got. */
+  examples: CodeTest[];
+  /** Never shown: only the pass count. */
+  tests: CodeTest[];
+}
+/** One case's outcome from a runner worker. */
+export type CaseOutput = { ok: true; value: unknown } | { ok: false; error: string };
+export type RunResult =
+  | { ok: true; outputs: CaseOutput[]; logs: string }
+  | { ok: false; reason: "timeout" | "load" | "error"; message: string };
+export interface GradeResult {
+  passed: number;
+  total: number;
+  /** Per case pass/fail, same order as the cases. */
+  results: boolean[];
+}
+// lib/tiers/problems.ts exports (engine-builder):
+//   PROBLEMS: CodingProblem[]; getProblem(id): CodingProblem | null; pickProblem(seed): CodingProblem
+//   sameValue(a, b): boolean; gradeOutputs(cases: CodeTest[], outputs: CaseOutput[]): GradeResult
+// lib/tiers/runner.ts exports (ui-builder):
+//   runCode(language, code, functionName, cases: unknown[][]): Promise<RunResult>; stopRunners(): void
+// Worker protocol (public/workers/{js,py}-runner.js):
+//   in  { code: string, functionName: string, cases: unknown[][] }
+//   out { type: "ready" } (python, after load) | { type: "result", outputs: CaseOutput[], logs: string } | { type: "error", message: string }
+
+// ---------- Slice 13: system design board ----------
+
+export type BoardKind = "client" | "server" | "database" | "cache" | "queue" | "storage" | "service" | "other";
+export const BOARD_KINDS: { id: BoardKind; label: string }[] = [
+  { id: "client", label: "Client" },
+  { id: "server", label: "Server" },
+  { id: "database", label: "Database" },
+  { id: "cache", label: "Cache" },
+  { id: "queue", label: "Queue" },
+  { id: "storage", label: "File storage" },
+  { id: "service", label: "Service" },
+  { id: "other", label: "Other" },
+];
+export const BOARD_W = 960;
+export const BOARD_H = 600;
+export const NODE_W = 140;
+export const NODE_H = 56;
+export const MAX_NODES = 30;
+export const MAX_EDGES = 60;
+export const MAX_NODE_LABEL = 40;
+export const MAX_EDGE_LABEL = 30;
+
+export interface BoardNode {
+  id: string;
+  kind: BoardKind;
+  label: string;
+  /** Top-left corner, clamped to [0, BOARD_W - NODE_W] x [0, BOARD_H - NODE_H]. */
+  x: number;
+  y: number;
+}
+export interface BoardEdge {
+  id: string;
+  from: string;
+  to: string;
+  label: string;
+}
+export interface Board {
+  nodes: BoardNode[];
+  edges: BoardEdge[];
+}
+/** Compact wire/storage form. */
+export interface BoardJson {
+  n: [id: string, kind: BoardKind, label: string, x: number, y: number][];
+  e: [from: string, to: string, label: string][];
+}
+// lib/tiers/board.ts exports (engine-builder):
+//   emptyBoard(): Board
+//   addNode(b, kind, label?): { board: Board; id: string }   // ids n1, n2...; placed on a free grid slot
+//   moveNode(b, id, dx, dy): Board; setNodePosition(b, id, x, y): Board; renameNode(b, id, label): Board
+//   removeNode(b, id): Board; connect(b, from, to, label?): Board; removeEdge(b, id): Board
+//   toJson(b): BoardJson; fromJson(raw: unknown): Board | null; describe(b): string
+
+// ---------- Round panels (components/tiers/interview/CodingRound.tsx, DesignRound.tsx) ----------
+
+export interface RoundPanelProps {
+  session: InterviewSession;
+  /** Persist an updated session (the shell saves it to is:interviews). */
+  onUpdate: (s: InterviewSession) => void;
+  /** Calls /api/interview for `s` (buildRequest + applyReply + save are done by the shell). Null = failed; the shell shows the message. */
+  ask: (s: InterviewSession, ask: InterviewAsk) => Promise<InterviewSession | null>;
+  /** True while a call is in flight. */
+  busy: boolean;
+}

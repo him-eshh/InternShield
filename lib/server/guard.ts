@@ -3,7 +3,7 @@ import { MAX_MESSAGE_CHARS } from "@/lib/types";
 import { MINUTE, takeCount } from "./cache";
 import { failed, MESSAGES } from "./http";
 
-export type RouteName = "extract" | "company" | "sender" | "posting" | "explain" | "rewrite" | "transcribe";
+export type RouteName = "extract" | "company" | "sender" | "posting" | "explain" | "rewrite" | "transcribe" | "interview";
 
 export type GuardResult =
   | { ok: true; body: Record<string, unknown>; ip: string }
@@ -13,10 +13,11 @@ const MAX_BODY_BYTES = 16 * 1024;
 /** Transcribe carries one browser-compressed screenshot as a data URL (Vercel's body limit is 4.5 MB). */
 export const MAX_IMAGE_BODY_BYTES = 3 * 1024 * 1024;
 
-// Per-visitor limits for the Tier 2 AI routes: [per minute, per day].
+// Per-visitor limits for the tier AI routes: [per minute, per day].
 const VISITOR_LIMITS: Partial<Record<RouteName, [number, number]>> = {
   rewrite: [4, 15],
   transcribe: [2, 6],
+  interview: [6, 30],
 };
 
 function envInt(name: string, fallback: number): number {
@@ -118,13 +119,19 @@ export function takeExplain(): boolean {
 
 /** Counts one live resume rewrite against REWRITE_DAILY_CAP (site-wide). */
 export function takeRewrite(): { ok: true } | { ok: false; retryAfter: number } {
-  const r = takeCount("global:rewrite", envInt("REWRITE_DAILY_CAP", 40), "day");
+  const r = takeCount("global:rewrite", envInt("REWRITE_DAILY_CAP", 30), "day");
   return r.ok ? { ok: true } : { ok: false, retryAfter: r.retryAfter };
 }
 
 /** Counts one live screenshot transcription against TRANSCRIBE_DAILY_CAP (site-wide). */
 export function takeTranscribe(): { ok: true } | { ok: false; retryAfter: number } {
-  const r = takeCount("global:transcribe", envInt("TRANSCRIBE_DAILY_CAP", 30), "day");
+  const r = takeCount("global:transcribe", envInt("TRANSCRIBE_DAILY_CAP", 20), "day");
+  return r.ok ? { ok: true } : { ok: false, retryAfter: r.retryAfter };
+}
+
+/** Counts one live interview call (question, hint or feedback) against INTERVIEW_DAILY_CAP (site-wide). */
+export function takeInterview(): { ok: true } | { ok: false; retryAfter: number } {
+  const r = takeCount("global:interview", envInt("INTERVIEW_DAILY_CAP", 50), "day");
   return r.ok ? { ok: true } : { ok: false, retryAfter: r.retryAfter };
 }
 

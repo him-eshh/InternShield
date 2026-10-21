@@ -111,6 +111,38 @@ Build mode: fast (chosen by Himesh; overnight parallel build per `devpost/build-
   Learner check: Screenshot a made-up message, upload it, read the filled text, and run the check.
   Commit: `Slice 10: screenshot upload`
 
+## Tier 3 Slices (`devpost/tier3-spec.md`)
+
+- [x] **11. Mock interview shell: recruiter screen + behavioral**
+  Becomes usable: from the chip menu, a report, or an Interviewing tracker card, start a recruiter screen or behavioral practice fitted to the posting and resume, answer one question at a time, and get per-answer feedback with quotes from your own answers (STAR for behavioral); sessions are saved in this browser.
+  Why now: It is the shell the coding and design rounds plug into, and it works for every field.
+  PRD ref: `prd.md > Deferred From the POC`, `scope.md > Later`
+  Spec ref: `tier3-spec.md > Screens`, `> Interview logic`, `> Route`, `> Token budget`
+  Build: `lib/tiers/interview.ts`, `/api/interview` + `lib/server/interview.ts`, `components/tiers/interview/**` shell, `askInterview`, Tracker `onPractice`, App/chip/report entries, `TIER_FLAGS.interview = true`.
+  Verify (mechanical): gates pass; `npm run eval` 26/26; state-machine + validateFeedback + storage tests pass; interview route tests (origin, body, session cap, daily cap, cleaning, feedback validation, no logging) pass; UI render tests pass; clearMyData test covers `is:interviews`.
+  Learner check: Practice a behavioral round for a made-up posting, give one weak and one strong STAR answer, and read the feedback quotes.
+  Commit: `Slice 11: mock interview shell`
+
+- [x] **12. Live coding round (tech)**
+  Becomes usable: tech profiles can solve a made-up problem in Python or JavaScript in a real editor, run the examples, submit against hidden tests graded in the browser, ask for a hint, and get feedback.
+  Why now: Needs the interview shell; it is the most common intern tech round.
+  PRD ref: `prd.md > Deferred From the POC`
+  Spec ref: `tier3-spec.md > Slice 12`
+  Build: `lib/tiers/problems.ts`, `public/workers/{js,py}-runner.js`, `lib/tiers/runner.ts`, `CodingRound.tsx` + `CodeEditor.tsx`, shell wiring, `TIER_FLAGS.coding = true`.
+  Verify (mechanical): gates pass; every problem's reference solution passes its tests; gradeOutputs equality tests pass; route hint/feedback-with-code tests pass; build shows CodeMirror only in a lazy chunk; Pyodide URL returns 200 from jsDelivr.
+  Learner check: Solve one problem in Python and one in JavaScript, write an infinite loop and watch it get stopped.
+  Commit: `Slice 12: live coding round`
+
+- [x] **13. System design board (tech)**
+  Becomes usable: tech profiles can draw a design with labeled boxes and arrows (mouse or keyboard), export it as PNG, and get follow-up questions and feedback about the diagram.
+  Why now: Last tech round; reuses the shell and route.
+  PRD ref: `prd.md > Deferred From the POC`
+  Spec ref: `tier3-spec.md > Slice 13`
+  Build: `lib/tiers/board.ts`, `Board.tsx` + `DesignRound.tsx`, shell wiring, `TIER_FLAGS.design = true`.
+  Verify (mechanical): gates pass; board reducer/clamp/cap/JSON round-trip/describe tests pass; route test shows the board description in the prompt.
+  Learner check: Draw client → server → database + cache with only the keyboard, export the PNG, ask for a follow-up.
+  Commit: `Slice 13: system design board`
+
 ## Hands-on Checkpoints
 
 - [ ] Early usable behavior explored — pending Himesh (morning): after Slice 5, try both examples live and give feedback

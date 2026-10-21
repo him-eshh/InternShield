@@ -8,6 +8,7 @@ export const KEYS = {
   theme: "is:theme",
   tracker: "is:tracker", // Tier 2: TrackerCard[]
   tailored: "is:tailored", // Tier 2: TailoredResume (accepted rewrites)
+  interviews: "is:interviews", // Tier 3: InterviewSession[] (newest first)
 } as const;
 
 function read<T>(key: string): T | null {
@@ -62,10 +63,11 @@ export const saveTheme = (t: Theme) => write(KEYS.theme, t);
 export const readKey = <T>(key: string): T | null => read<T>(key);
 export const writeKey = (key: string, value: unknown): void => write(key, value);
 
-/** Removes profile, resume and every Tier 2 store (not theme). The caller returns to the intro. */
+/** Removes profile, resume and every tier store (not theme). The caller returns to the intro. */
 export function clearMyData(): void {
   remove(KEYS.profile);
   remove(KEYS.resume);
   remove(KEYS.tracker);
   remove(KEYS.tailored);
+  remove(KEYS.interviews);
 }
