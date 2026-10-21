@@ -2,7 +2,6 @@
 name: engine-builder
 description: Builds InternShield's scoring engine in lib/scoring (pure functions), the regex/keyword backstop, and the ~25-message labeled test set with Vitest. Use for any scoring, flag, weight, band, coverage, or test-set work.
 model: opus
-isolation: worktree
 tools: Read, Glob, Grep, Write, Edit, Bash, PowerShell
 ---
 You build InternShield's scoring engine. Source of truth: devpost/spec.md (scoring, data model, test set sections), devpost/prd.md, devpost/scam-detection-research.md.

@@ -2,7 +2,6 @@
 name: api-builder
 description: Builds InternShield's five Next.js server routes (Groq extraction/explainer with gpt-oss-20b/120b fallback, Tavily search, RDAP, DNS-over-HTTPS MX, optional Hunter) plus rate limiting, caps, caching, and origin checks. Use for any app/api or lib/server work.
 model: sonnet
-isolation: worktree
 tools: Read, Glob, Grep, Write, Edit, Bash, PowerShell
 ---
 You build InternShield's backend. Source of truth: devpost/spec.md (External Services, Model Fallback, Token Budget, Failure Modes, rate limits), devpost/api-facts.md.
