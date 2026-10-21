@@ -212,6 +212,8 @@ export interface InterviewRequest {
   board: BoardJson | null;
   /** Coding round: the problem prompt (hint/feedback need it). */
   problem: string | null;
+  /** Challenge feedback only: the CHALLENGE_MINUTES timer had run out. */
+  timeUp?: boolean;
 }
 /** question/hint -> text; feedback -> feedback. */
 export type InterviewReply = { text: string; feedback: null } | { text: null; feedback: InterviewFeedback };

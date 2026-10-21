@@ -16,6 +16,13 @@ vi.mock("@/lib/tiers/scripted", () => ({
   describeCheck: () => "SERVER-CHECK-LINE correct (checked by code)",
 }));
 
+// Every round on, so these tests don't depend on which slice flags are flipped; one test turns one off.
+const flags = vi.hoisted(() => ({
+  resume: true, tracker: true, screenshot: true, interview: true, coding: true, design: true,
+  case: true, finance: true, portfolio: true, challenge: true,
+}));
+vi.mock("@/lib/tiers/flags", () => ({ TIER_FLAGS: flags }));
+
 import { POST } from "@/app/api/interview/route";
 
 const ANSWER = "I led the robotics club fundraiser and we raised four hundred dollars";
@@ -211,6 +218,22 @@ describe("interview route", () => {
     params = h.create.mock.calls[1][0];
     expect(params.messages[1].content).toContain("Home Screen");
     expect(params.messages[0].content).toMatch(/flow.*BOARD/);
+    expect(params.messages[0].content).toMatch(/timer had not run out/);
+
+    h.create.mockReturnValue(groqOk(feedbackJson("")));
+    expect((await call({ ...body, ask: "feedback", round: "challenge", board, timeUp: true })).status).toBe(200);
+    expect(h.create.mock.calls[2][0].messages[0].content).toMatch(/timer ran out/);
+    expect((await call({ ...body, ask: "feedback", round: "challenge", board, timeUp: "yes" })).status).toBe(400);
+  });
+
+  it("rejects a round whose flag is off (hidden features stay unreachable)", async () => {
+    flags.case = false;
+    try {
+      expect((await call({ ...body, ask: "feedback", round: "case" })).status).toBe(400);
+      expect(h.create).not.toHaveBeenCalled();
+    } finally {
+      flags.case = true;
+    }
   });
 
   it("keeps a real quote and nulls a fake one in feedback (strict schema, 900 tokens)", async () => {

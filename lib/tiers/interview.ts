@@ -185,7 +185,7 @@ export function nextStep(s: InterviewSession): "answer" | "ask" | "feedback" | "
 }
 
 /** The /api/interview body for this session, capped to what the route accepts. */
-export function buildRequest(s: InterviewSession, ask: InterviewAsk): InterviewRequest {
+export function buildRequest(s: InterviewSession, ask: InterviewAsk, now = Date.now()): InterviewRequest {
   const c = s.context;
   return {
     ask,
@@ -206,6 +206,7 @@ export function buildRequest(s: InterviewSession, ask: InterviewAsk): InterviewR
     code: s.round === "coding" && s.code ? { ...s.code, code: s.code.code.slice(0, MAX_CODE_CHARS) } : null,
     board: BOARD_ROUNDS.includes(s.round) ? s.board : null,
     problem: s.round === "coding" ? (getProblem(s.problemId)?.prompt ?? null) : null,
+    ...(s.round === "challenge" && ask === "feedback" ? { timeUp: challengeLeft(s, now) === 0 } : {}),
   };
 }
 

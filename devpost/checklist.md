@@ -163,7 +163,7 @@ Build mode: fast (chosen by Himesh; overnight parallel build per `devpost/build-
   Learner check: Run the finance round, answer one numeric question with "$1.2 million" style text, check it's read right.
   Commit: `Slice 15: finance technical questions`
 
-- [ ] **16. Design and arts: portfolio walkthrough + design challenge**
+- [x] **16. Design and arts: portfolio walkthrough + design challenge**
   Becomes usable: design profiles can talk through their portfolio (links shown, never fetched) and do a 20-minute design challenge on the board, each with follow-ups and feedback.
   Why now: Last field; reuses the board and shell.
   PRD ref: `prd.md > Deferred From the POC`

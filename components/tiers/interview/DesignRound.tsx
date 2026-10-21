@@ -24,10 +24,12 @@ function mmss(ms: number): string {
 /** 20-minute timer for the design challenge. Informational only: nothing locks at zero. */
 function ChallengeTimer({ session }: { session: InterviewSession }) {
   const [left, setLeft] = useState(() => challengeLeft(session, now()));
+  const over = left <= 0;
   useEffect(() => {
+    if (over) return; // stops ticking at 00:00
     const t = setInterval(() => setLeft(challengeLeft(session, now())), 1000);
     return () => clearInterval(t);
-  }, [session]);
+  }, [session, over]);
   const note = left <= 0 ? "Time's up. Finish when you're ready." : left <= 5 * 60_000 ? "5 minutes left" : "";
   return (
     <div>
@@ -116,6 +118,7 @@ export default function DesignRound({ session, onUpdate, ask, busy }: RoundPanel
 
       <Board
         board={board}
+        defaultKind={session.round === "challenge" ? "screen" : "server"}
         onChange={(b) => {
           dirty.current = true;
           setBoard(b);

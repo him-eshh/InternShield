@@ -103,6 +103,7 @@ export default function Interview({ profile, resume, target, onBack, renderRound
   const [error, setError] = useState<string | null>(null);
   const [answer, setAnswer] = useState("");
   const [linksText, setLinksText] = useState("");
+  const keptLinks = cleanLinks(linksText).length;
 
   const questionRef = useRef<HTMLDivElement>(null);
   const feedbackRef = useRef<HTMLDivElement>(null);
@@ -414,7 +415,7 @@ export default function Interview({ profile, resume, target, onBack, renderRound
             Portfolio links <span className="font-normal text-muted">(optional)</span>
           </label>
           <p id="iv-links-help" className="mt-1 text-[15px] text-muted">
-            We only show these. Nothing opens them; the interviewer only sees the text of the link.
+            Start each with https:// (up to 5). We only show these. Nothing opens them; the interviewer only sees the text of the link.
           </p>
           <textarea
             id="iv-links"
@@ -422,9 +423,12 @@ export default function Interview({ profile, resume, target, onBack, renderRound
             onChange={(e) => setLinksText(e.target.value)}
             rows={3}
             placeholder="One link per line"
-            aria-describedby="iv-links-help"
+            aria-describedby="iv-links-help iv-links-kept"
             className={areaCls}
           />
+          <p id="iv-links-kept" className="mt-1 text-[15px] text-muted">
+            {linksText.trim() ? `${keptLinks} ${keptLinks === 1 ? "link" : "links"} kept` : ""}
+          </p>
         </div>
       )}
 

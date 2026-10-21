@@ -326,6 +326,11 @@ describe("Tier 4 rounds", () => {
     expect(challengeLeft(s, 100 + 60_000)).toBe(full - 60_000);
     expect(challengeLeft(s, 100 + full)).toBe(0);
     expect(challengeLeft(s, 100 + full + 5_000)).toBe(0);
+    // Feedback tells the coach whether time ran out; other asks/rounds don't carry it.
+    expect(buildRequest(s, "feedback", 100 + full).timeUp).toBe(true);
+    expect(buildRequest(s, "feedback", 100 + 60_000).timeUp).toBe(false);
+    expect("timeUp" in buildRequest(s, "question", 100 + full)).toBe(false);
+    expect("timeUp" in buildRequest(make("design"), "feedback", 100 + full)).toBe(false);
   });
 });
 
