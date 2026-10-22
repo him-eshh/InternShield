@@ -9,9 +9,9 @@ Branch `v2-tools` from `v2-base` 36ad123. Brief: `devpost/v2-brief-tools.md`. Pr
 ### T0 Start
 - [x] baseline gates
 ### T1 Data bugs
-- [ ] Bug E resume line breaks (pdf rows, mammoth HTML, parse preview, PDF/DOCX fixture tests)
-- [ ] Bug C unit-aware number reader (19-case table + extras, unit mismatch copy, "We read your final number as X")
-- [ ] Bug A1 screenshot route codes, partial on `length`, reasoning_effort none, 2,500 tokens, UI copy per code
+- [x] Bug E resume line breaks (pdf rows, mammoth HTML, parse preview, PDF/DOCX fixture tests)
+- [x] Bug C unit-aware number reader (19-case table + extras, unit mismatch copy, "We read your final number as X")
+- [x] Bug A1 screenshot route codes, partial on `length`, reasoning_effort none, 2,500 tokens, UI copy per code
 ### T2 Tall screenshots + model resilience
 - [ ] Bug A2 tiling (planTiles, findSeam, mergeTiles, 2 strips/request, <= 3.5 MB)
 - [ ] groq.ts env model ids, interview fallback 20b, 429 retry-after one retry, RATE_LIMITED, 404 test
@@ -40,8 +40,12 @@ Branch `v2-tools` from `v2-base` 36ad123. Brief: `devpost/v2-brief-tools.md`. Pr
 - [ ] reviewer pass, screenshot pass, gates, summary
 
 ## Bugs
+- E: pdf text joined with spaces, DOCX raw text, early whitespace collapse -> y-grouped lines + hasEOL, mammoth HTML -> lines, normalize last. Tests: tests/tiers/v2-resumeLines.test.ts. QA 01-resume-*.
+- C: answer reader took first number, no units -> "1,200,000%". lib/tiers/numbers.ts {value, unit}, final cue, unit-mismatch note, editable read. Tests: numbers.test.ts (19-case table), interview-numbers.test.tsx. QA 03-finance-*.
+- A1: generic error on truncation -> typed codes, `length` = partial, ScreenshotUpload copy per code. Tests: tests/api/transcribe.test.ts. QA 02-screenshot-*.
 
 ## Decisions
+- Per-phase reviewer passes folded into the T9 full reviewer pass to save usage (orchestrator self-reviews each phase diff).
 
 ## Needs integration
 
