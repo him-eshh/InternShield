@@ -2,6 +2,7 @@
 import { useRef, useState } from "react";
 import { readResume, spottedSkills } from "@/lib/client/resume";
 import { saveProfile, saveResume } from "@/lib/client/storage";
+import { layoutLost, lineKind } from "@/lib/tiers/resumeLines";
 import type { Field, Profile, ResumeData, UserLevel } from "@/lib/types";
 import { ArrowLeftIcon, CheckCircleIcon, CloseIcon, UploadIcon } from "./icons";
 import { btnPrimary, card, linkClass, pillOff, subhead } from "./ui";
@@ -227,6 +228,32 @@ export default function ProfileSteps({ initial, initialResume, onDone, onCancel 
                     })()}
                   </p>
                   <p className="text-[14px] text-muted">Saved on this device.</p>
+                  {(() => {
+                    const lines = resume.text.split("\n").filter((l) => l.trim());
+                    if (layoutLost(resume.text)) {
+                      return (
+                        <p className="max-w-md text-[14px] text-muted">
+                          We couldn&apos;t keep this resume&apos;s layout. Paste the text instead for best results.
+                        </p>
+                      );
+                    }
+                    const TAGS = { heading: "Heading", bullet: "Bullet", contact: "Contact", text: "Text" } as const;
+                    return (
+                      <details className="w-full max-w-md text-left text-[14px]">
+                        <summary className="cursor-pointer text-center font-medium text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+                          Read {lines.length} {lines.length === 1 ? "line" : "lines"}
+                        </summary>
+                        <ul className="mt-3 flex flex-col gap-1.5">
+                          {lines.slice(0, 8).map((l, i) => (
+                            <li key={i} className="flex items-baseline gap-2">
+                              <span className="w-[4.5rem] shrink-0 text-[12px] uppercase tracking-wide text-muted">{TAGS[lineKind(l)]}</span>
+                              <span className="min-w-0 truncate">{l}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    );
+                  })()}
                 </>
               ) : (
                 <>

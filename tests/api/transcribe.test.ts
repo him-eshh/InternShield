@@ -65,7 +65,9 @@ describe("transcribe route", () => {
     expect(json).toEqual({ status: "done", data: { text: "Hi, this is Pat from Acme." } });
     const params = h.create.mock.calls[0][0];
     expect(params.model).toBe("qwen/qwen3.8-27b");
-    expect(params.max_completion_tokens).toBe(1200);
+    expect(params.max_completion_tokens).toBe(2500);
+    expect(params.temperature).toBe(0);
+    expect(params.reasoning_effort).toBe("none");
     const parts = params.messages[1].content as { type: string; image_url?: { url: string } }[];
     expect(parts[1]).toEqual({ type: "image_url", image_url: { url: IMG } });
   });
@@ -98,6 +100,60 @@ describe("transcribe route", () => {
     const l = await call();
     expect(l.status).toBe(429);
     expect((await l.json()).reason).toBe("limit");
+  });
+
+  it("length cutoff returns 200 partial and drops the last (likely cut) line", async () => {
+    h.create.mockReturnValue({
+      withResponse: () =>
+        Promise.resolve({
+          data: {
+            choices: [{ finish_reason: "length", message: { content: "Line one of the message.\nLine two of the message.\nLine thr" } }],
+          },
+          response: { headers: { get: () => null } },
+        }),
+    });
+    const res = await call();
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({
+      status: "done",
+      data: { text: "Line one of the message.\nLine two of the message.", partial: true },
+    });
+  });
+
+  it("maps errors to typed codes, never the generic message", async () => {
+    const generic = "Something went wrong on our side. Please try again.";
+    const cases: [unknown, number, string][] = [
+      [groqErr(429, { "retry-after": "20" }), 429, "RATE_LIMITED"],
+      [groqErr(413), 413, "TOO_LARGE"],
+      [groqErr(404), 502, "MODEL_UNAVAILABLE"],
+      [groqErr(500), 502, "TRANSCRIBE_FAILED"],
+    ];
+    for (const [mock, status, code] of cases) {
+      resetServerState(); // a 429 rests the model; start each case clean
+      h.create.mockReturnValue(mock);
+      const res = await call();
+      const json = await res.json();
+      expect(res.status).toBe(status);
+      expect(json.code).toBe(code);
+      expect(json.message).not.toBe(generic);
+      if (code === "RATE_LIMITED") expect(json.retryAfter).toBe(20);
+    }
+  });
+
+  it("a thrown error becomes TRANSCRIBE_FAILED", async () => {
+    h.create.mockImplementation(() => {
+      throw new Error("boom");
+    });
+    const json = await (await call()).json();
+    expect(json.code).toBe("TRANSCRIBE_FAILED");
+    expect(json.message).not.toMatch(/Something went wrong/);
+  });
+
+  it("daily cap carries DAILY_CAP", async () => {
+    vi.stubEnv("TRANSCRIBE_DAILY_CAP", "1");
+    h.create.mockReturnValue(groqOk("Some text"));
+    await call();
+    expect((await (await call()).json()).code).toBe("DAILY_CAP");
   });
 
   it("never logs the image or the transcript", async () => {

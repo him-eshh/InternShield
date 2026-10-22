@@ -1,7 +1,7 @@
 // Groq calls with per-model fallback (spec.md > Model Fallback, Token Budget).
 import Groq from "groq-sdk";
 import { cacheGet, cacheSet } from "./cache";
-import { classify, OUTSIDE_TIMEOUT_MS, type Outcome } from "./http";
+import { classify, OUTSIDE_TIMEOUT_MS } from "./http";
 
 export type GroqTask = "extract" | "explain" | "rewrite" | "transcribe" | "interview";
 
@@ -27,7 +27,14 @@ export interface GroqRequest {
   maxTokens: number;
   /** Image data URLs sent with the user turn (vision model only, max 3). */
   images?: string[];
+  /** On finish_reason "length", return the text so far with partial: true instead of failing. */
+  allowTruncated?: boolean;
 }
+
+/** Outcome<string> plus what transcribe needs: partial output and the upstream HTTP status of a failure. */
+export type GroqOutcome =
+  | { ok: true; data: string; partial?: boolean }
+  | { ok: false; reason: "timeout" | "limit" | "error"; retryAfter?: number; status?: number; modelMissing?: boolean };
 
 /** Qwen 3 may still emit a <think> block in content; drop it. */
 export function stripThinking(s: string): string {
@@ -79,7 +86,7 @@ function restingFor(model: string): boolean {
   return cacheGet<boolean>(`rest:${model}`) === true;
 }
 
-export async function callGroq(task: GroqTask, req: GroqRequest): Promise<Outcome<string>> {
+export async function callGroq(task: GroqTask, req: GroqRequest): Promise<GroqOutcome> {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) return { ok: false, reason: "error" };
   const client = new Groq({ apiKey, maxRetries: 0 }) as unknown as Client;
@@ -87,6 +94,7 @@ export async function callGroq(task: GroqTask, req: GroqRequest): Promise<Outcom
   let limited = false;
   let retryAfter: number | undefined;
   let hardError = false;
+  let errStatus: number | undefined;
   const deadline = Date.now() + TOTAL_DEADLINE_MS; // shared across models and retries
 
   for (const model of ORDER[task]) {
@@ -131,7 +139,8 @@ export async function callGroq(task: GroqTask, req: GroqRequest): Promise<Outcom
             : header(response?.headers, "x-ratelimit-reset-tokens");
           rest(model, parseSeconds(reset, 20));
         }
-        if (data.choices?.[0]?.finish_reason === "length") {
+        const truncated = data.choices?.[0]?.finish_reason === "length";
+        if (truncated && !req.allowTruncated) {
           hardError = true; // truncated output is unusable
           break;
         }
@@ -147,7 +156,7 @@ export async function callGroq(task: GroqTask, req: GroqRequest): Promise<Outcom
         const raw = data.choices?.[0]?.message?.content;
         // Only Qwen thinks in-band; never touch gpt-oss output (a message quoting "<think>" must not cut extract JSON).
         const text = typeof raw === "string" ? (model === MODEL_VISION ? stripThinking(raw) : raw.trim()) : "";
-        if (text) return { ok: true, data: text };
+        if (text) return truncated ? { ok: true, data: text, partial: true } : { ok: true, data: text };
         hardError = true;
         break;
       } catch (err) {
@@ -166,6 +175,7 @@ export async function callGroq(task: GroqTask, req: GroqRequest): Promise<Outcom
           continue;
         }
         if (classify(err) === "timeout") return { ok: false, reason: "timeout" };
+        if (typeof e?.status === "number") errStatus = e.status;
         hardError = true;
         break;
       }
@@ -176,5 +186,10 @@ export async function callGroq(task: GroqTask, req: GroqRequest): Promise<Outcom
     // Every model was out or resting: the user-facing "limit" case.
     return { ok: false, reason: "limit", retryAfter: retryAfter ?? 30 };
   }
-  return { ok: false, reason: "error" };
+  return {
+    ok: false,
+    reason: "error",
+    ...(errStatus ? { status: errStatus } : {}),
+    ...(errStatus === 404 ? { modelMissing: true } : {}),
+  };
 }

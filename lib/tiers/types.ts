@@ -118,7 +118,7 @@ export const IMAGE_MAX_SIDE = 1600;
 export interface TranscribeRequest {
   image: string;
 }
-export type TranscribeResponse = ApiResponse<{ text: string }>;
+export type TranscribeResponse = ApiResponse<{ text: string; partial?: boolean }>;
 
 // ---------- Tier 3: mock interview ----------
 
@@ -302,7 +302,20 @@ export interface ScriptedQuestion {
   check: AnswerCheck | null;
 }
 export type CheckResult =
-  | { kind: "number"; found: number | null; expected: number; correct: boolean; unit: "$" | "%" | "" }
+  | {
+      kind: "number";
+      found: number | null; // in `foundUnit` (0.075 for a percent question reads as 7.5 "%", bps as percent)
+      expected: number;
+      correct: boolean;
+      unit: "$" | "%" | ""; // the question's unit
+      // Added for Bug C (all optional so older results still type-check):
+      foundUnit?: "$" | "%" | "bps" | "x" | ""; // the unit the user's own number is in
+      unitMismatch?: boolean; // the user gave an explicit unit the question does not ask for
+      note?: string; // "We read 0.075 as 7.5%", "We used the midpoint of your range ..."
+      message?: string; // why it is not correct when unitMismatch
+      read?: string; // the user's number in the user's unit, e.g. "$1,200,000"
+      range?: [number, number]; // the ends of a range answer
+    }
   | { kind: "rubric"; covered: string[]; missed: string[] };
 // lib/tiers/scripted.ts exports (engine-builder):
 //   CASES: { id: string; title: string; questions: ScriptedQuestion[] }[]   // >= 4 made-up cases, 3 questions each: structure (rubric), math (number), recommendation (rubric)
