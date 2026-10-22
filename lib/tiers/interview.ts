@@ -10,6 +10,7 @@ import { pickSqlProblem } from "./sql";
 import { scriptFor } from "./scripted";
 import {
   BOARD_ROUNDS,
+  CODE_ROUNDS,
   CHALLENGE_MINUTES,
   INTERVIEW_ROUNDS,
   MAX_LINKS,
@@ -158,9 +159,9 @@ export function canCall(s: InterviewSession, ask: InterviewAsk): boolean {
   if (s.status === "done" || s.used >= MAX_SESSION_TURNS) return false;
   if (ask === "feedback") return s.turns.length >= 1;
   if (s.used >= MAX_SESSION_TURNS - 1) return false;
-  if (ask === "hint") return s.round === "coding";
+  if (ask === "hint") return CODE_ROUNDS.includes(s.round);
   // Coding and scripted questions are all local; the route rejects AI questions there.
-  if (s.round === "coding" || isScripted(s.round)) return false;
+  if (CODE_ROUNDS.includes(s.round) || isScripted(s.round)) return false;
   return !s.pending && s.turns.length < roundTotal(s);
 }
 
@@ -215,9 +216,9 @@ export function buildRequest(s: InterviewSession, ask: InterviewAsk, now = Date.
       answer: t.answer.slice(0, MAX_ANSWER_CHARS),
     })),
     used: s.used,
-    code: s.round === "coding" && s.code ? { ...s.code, code: s.code.code.slice(0, MAX_CODE_CHARS) } : null,
+    code: CODE_ROUNDS.includes(s.round) && s.code ? { ...s.code, code: s.code.code.slice(0, MAX_CODE_CHARS) } : null,
     board: BOARD_ROUNDS.includes(s.round) ? s.board : null,
-    problem: s.round === "coding" ? (getProblem(s.problemId)?.prompt ?? null) : null,
+    problem: CODE_ROUNDS.includes(s.round) ? (getProblem(s.problemId)?.prompt ?? null) : null,
     ...(s.round === "challenge" && ask === "feedback" ? { timeUp: challengeLeft(s, now) === 0 } : {}),
   };
 }

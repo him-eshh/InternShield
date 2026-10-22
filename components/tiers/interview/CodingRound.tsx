@@ -46,6 +46,7 @@ const showOut = (o: CaseOutput) => (o.ok ? show(o.value) : `Error: ${o.error}`);
 
 export default function CodingRound({ session, onUpdate, ask, busy }: RoundPanelProps) {
   const problem = getProblem(session.problemId ?? "");
+  const debug = session.round === "debugging";
   const [language, setLanguage] = useState<CodeLanguage>(session.code?.language ?? "python");
   const [codes, setCodes] = useState<Partial<Record<CodeLanguage, string>>>(() =>
     session.code ? { [session.code.language]: session.code.code } : {},
@@ -186,13 +187,13 @@ export default function CodingRound({ session, onUpdate, ask, busy }: RoundPanel
         <h2 className="text-[22px] font-semibold tracking-[-0.01em]">{problem.title}</h2>
         <p className="mt-2 whitespace-pre-line break-words text-[17px] leading-relaxed">{problem.prompt}</p>
         <p className="mt-2 text-[15px] text-muted">
-          Write a function named <code className="font-mono">{problem.functionName}</code>.
+          {debug ? "Fix" : "Write a function named"} <code className="font-mono">{problem.functionName}</code>.
         </p>
       </section>
 
       <section>
         <label htmlFor="coding-approach" className="text-[17px] font-semibold">
-          Explain your approach
+          {debug ? "What was the bug?" : "Explain your approach"}
         </label>
         <textarea
           id="coding-approach"

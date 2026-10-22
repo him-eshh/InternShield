@@ -35,6 +35,7 @@ import { ArrowLeftIcon } from "../../icons";
 import { btnPrimary, btnSecondary, card as cardCls, linkClass, pillOff, pillOn } from "../../ui";
 import Feedback from "./Feedback";
 import SqlRound from "./SqlRound";
+import CodingRound from "./CodingRound";
 import { v2RoundOn } from "@/lib/tiers/flags";
 
 const BUSY_MSG = "The interviewer is busy right now. Your answers are saved; try again in a minute.";
@@ -262,7 +263,13 @@ export default function Interview({ profile, resume, target, onBack, renderRound
 
         {isPanelRound ? (
           <div className="mt-6">
-            {session.round === "sql" && v2RoundOn("sql") ? <SqlRound {...panel} /> : <RoundSlot render={renderRound} round={session.round} panel={panel} />}
+            {session.round === "sql" && v2RoundOn("sql") ? (
+              <SqlRound {...panel} />
+            ) : session.round === "debugging" && v2RoundOn("debugging") ? (
+              <CodingRound {...panel} />
+            ) : (
+              <RoundSlot render={renderRound} round={session.round} panel={panel} />
+            )}
           </div>
         ) : (
           <>

@@ -13,7 +13,7 @@ export const TIER_FLAGS = {
   // v2 (tools stream flips each in the commit where it passes gates)
   tsRunner: true, // TypeScript in the JS worker
   sqlRound: true, // SQL problems on sql.js
-  debugRound: false, // "debugging" interview round
+  debugRound: true, // "debugging" interview round
   presets: false, // company-style round presets
   scorecard: true, // per-axis interview scorecard
   keywordGap: false, // posting keywords vs resume
