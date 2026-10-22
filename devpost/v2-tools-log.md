@@ -16,9 +16,9 @@ Branch `v2-tools` from `v2-base` 36ad123. Brief: `devpost/v2-brief-tools.md`. Pr
 - [x] Bug A2 tiling (planTiles, findSeam, mergeTiles, 2 strips/request, <= 3 MB, see Decisions)
 - [x] groq.ts env model ids, interview fallback 20b, 429 retry-after one retry, RATE_LIMITED, 404 test
 ### T3 Interview core
-- [ ] duplicated "6 of 6 hidden tests passed"
-- [ ] wide coding layout, dark code theme (no purple), CodeMirror aria-label Compartment
-- [ ] 4-area scorecard + feedback screen, flip `scorecard`
+- [x] duplicated "6 of 6 hidden tests passed"
+- [x] wide coding layout, dark code theme (no purple), CodeMirror aria-label Compartment
+- [x] 4-area scorecard + feedback screen, flip `scorecard` (QA 05-coding-*, 06-scorecard-*, qa/v2-tools-t3.mjs)
 ### T4 Runners
 - [ ] TypeScript runner, flip `tsRunner`
 - [ ] SQL round (sql.js worker, multiset grader, 6 questions), flip `sqlRound`
