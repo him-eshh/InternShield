@@ -22,7 +22,13 @@ export interface RewriteRequest {
   posting: PostingContext;
   /** How to tailor. Fixed choices only; the server turns them into its own wording. Missing = DEFAULT_TAILOR. */
   options?: TailorOptions;
+  /** v2: 3 = three options in one strict-JSON call plus heldBack. Missing = one plain rewrite. */
+  count?: 1 | 3;
+  /** v2: terms the user confirmed ("I have this"), at most MAX_FACTS of MAX_FACT_CHARS each. */
+  facts?: string[];
 }
+export const MAX_FACTS = 12;
+export const MAX_FACT_CHARS = 60;
 
 // ---------- Tailoring options (fixed choices, never free text) ----------
 export const EMPHASES = ["skills", "impact", "leadership", "technical"] as const;
@@ -40,10 +46,22 @@ export interface TailorOptions {
   strength: Strength;
   /** Keep about the same length as the original line. */
   keepLength: boolean;
+  // v2 (all optional; missing = not sent, the server adds no line)
+  level?: TargetLevel;
+  region?: Region;
+  /** Prefer the posting's word for a concept the line already covers. */
+  postingWords?: boolean;
+  noBuzzwords?: boolean;
 }
+export const TARGET_LEVELS = ["internship", "newgrad", "changer", "experienced"] as const;
+export type TargetLevel = (typeof TARGET_LEVELS)[number];
+export const REGIONS = ["us", "uk", "canada", "europe", "other"] as const;
+export type Region = (typeof REGIONS)[number];
 
 export const DEFAULT_TAILOR: TailorOptions = { emphasis: [], tone: "confident", strength: "light", keepLength: true };
-/** options: up to 3 alternative rewrites; heldBack: options the guard rejected (shown as "held back"). */
+/** v2 defaults (findings 03 section 3): posting's words and no buzzwords on. */
+export const DEFAULT_TAILOR_V2: TailorOptions = { ...DEFAULT_TAILOR, level: "internship", region: "us", postingWords: true, noBuzzwords: true };
+/** options: up to 3 alternative rewrites; heldBack: posting terms the model left out because the line doesn't support them. */
 export type RewriteResponse = ApiResponse<{ text: string; options?: string[]; heldBack?: string[] }>;
 
 // ---------- v2: keyword gap (job posting terms vs resume) ----------
@@ -66,6 +84,21 @@ export interface GuardIssue {
 /** tier (v2): "block" = never show, "check" = show with a warning, "ok" = clean. */
 export type GuardTier = "block" | "check" | "ok";
 export type GuardResult = { ok: true; tier?: GuardTier } | { ok: false; issues: GuardIssue[]; tier?: GuardTier };
+/** v2 soft warnings (Check tier): stronger verb, dropped qualifier, new scope/seniority word, buzzword. */
+export type GuardWarningKind = "inflated" | "qualifier" | "scope" | "seniority" | "buzzword";
+export interface GuardWarning {
+  kind: GuardWarningKind;
+  token: string;
+  /** inflated: the original's weaker verb, when there was one. */
+  was?: string;
+}
+export interface GuardV2 {
+  tier: GuardTier;
+  issues: GuardIssue[];
+  warnings: GuardWarning[];
+  /** Blocked terms that came from the posting, not the resume. */
+  fromPosting: string[];
+}
 // lib/tiers/resumeGuard.ts exports:
 //   checkRewrite(resumeText: string, original: string, rewrite: string): GuardResult
 //   wordDiff(before: string, after: string): DiffPart[]
