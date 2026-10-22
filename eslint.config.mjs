@@ -16,6 +16,7 @@ const eslintConfig = defineConfig([
     "public/**",
     ".agents/**",
     "agent/**",
+    "devpost/**",
   ]),
 ]);
 
