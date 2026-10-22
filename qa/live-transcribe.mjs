@@ -11,7 +11,8 @@ await page.getByRole("heading", { name: "Is this offer real?" }).waitFor();
 await page.waitForTimeout(1000);
 for (const k of which) {
   await page.locator("#screenshot-file").setInputFiles(files[k]);
-  await page.waitForFunction(() => !document.body.innerText.includes("Reading your screenshot"), null, { timeout: 60000 });
+  await page.waitForTimeout(500);
+  await page.waitForFunction(() => !/Reading (your )?screenshot/.test(document.body.innerText), null, { timeout: 60000 });
   await page.waitForTimeout(300);
   const v = await page.locator("#message").inputValue();
   const status = await page.locator("[role=status]").allInnerTexts();

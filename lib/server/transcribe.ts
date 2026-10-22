@@ -22,8 +22,9 @@ const norm = (s: string) =>
     .replace(/\s+/g, " ")
     .replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, "");
 
-const MIN_REPEAT_LINE = 12; // exact repeats shorter than this stay: chats repeat "OK" and "Thanks!"
-const MIN_FRAGMENT = 8;
+// Chats repeat short lines ("OK", "Thanks!") and sender headers ("Jordan Blake (HR Team)"): those always stay.
+const MIN_REPEAT_LINE = 40; // an exact repeat this long is the model looping, not the sender
+const MIN_FRAGMENT = 20; // a broken piece of a line already kept
 
 /**
  * The vision model sometimes transcribes the whole message, then starts over as broken tile-sized
@@ -33,7 +34,7 @@ const MIN_FRAGMENT = 8;
 export function dedupeTranscript(text: string): string {
   let lines = text.replace(/\r\n?/g, "\n").split("\n");
 
-  // (a) Restart: the first non-empty line (or the first two, in order) shows up again.
+  // (a) Restart: the first two non-empty lines show up again, in order. One repeated line (a sender header) is not enough.
   const ne: number[] = [];
   lines.forEach((l, i) => {
     if (l.trim()) ne.push(i);
@@ -44,7 +45,7 @@ export function dedupeTranscript(text: string): string {
     for (let k = 1; k < ne.length; k++) {
       if (norm(lines[ne[k]]) !== first) continue;
       const twoInOrder = k + 1 < ne.length && norm(lines[ne[k + 1]]) === second;
-      if (first.length >= MIN_REPEAT_LINE || twoInOrder) {
+      if (twoInOrder) {
         lines = lines.slice(0, ne[k]);
         break;
       }
@@ -61,7 +62,8 @@ export function dedupeTranscript(text: string): string {
       out.push("");
       continue;
     }
-    if ((n.length >= MIN_REPEAT_LINE && seen.has(n)) || (n.length >= MIN_FRAGMENT && kept.includes(n))) continue;
+    const repeat = seen.has(n);
+    if ((repeat && n.length >= MIN_REPEAT_LINE) || (!repeat && n.length >= MIN_FRAGMENT && kept.includes(n))) continue;
     seen.add(n);
     kept += ` ${n}`;
     out.push(line.trimEnd());

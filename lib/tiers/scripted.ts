@@ -375,11 +375,11 @@ export function extractNumber(answer: string): number | null {
   if (!nums.length) return null;
   const signed = (n: Found) => (n.neg && n.value ? -n.value : n.value);
 
-  const after = (cueEnd: number, allowRate: boolean): Found | null => {
+  const after = (cueEnd: number, allowRate: boolean, maxGap = 30): Found | null => {
     const n = nums.find((x) => x.start >= cueEnd);
     if (!n) return null;
     const between = text.slice(cueEnd, n.start);
-    if (between.length > 30 || /[!?\n]|\.(?:\s|$)/.test(between)) return null;
+    if (between.length > maxGap || /[!?\n]|\.(?:\s|$)/.test(between)) return null;
     if (n.rate && (!allowRate || HEDGE_WORD.test(between))) return null;
     return n;
   };
@@ -387,7 +387,8 @@ export function extractNumber(answer: string): number | null {
   let pick: Found | null = null;
   for (const m of text.matchAll(STRONG_CUE)) pick = after((m.index ?? 0) + m[0].length, true) ?? pick;
   if (pick) return signed(pick);
-  for (const m of text.matchAll(CUE)) if (m[1]) pick = after((m.index ?? 0) + m[0].length, true) ?? pick;
+  // "so"/"total" are weak cues: only a number right after them ("so 4,000"), not "so my first guess was 4,000".
+  for (const m of text.matchAll(CUE)) if (m[1]) pick = after((m.index ?? 0) + m[0].length, true, /^[=]|equals|comes to/i.test(m[1]) ? 30 : 16) ?? pick;
   if (pick) return signed(pick);
   for (const m of text.matchAll(CUE)) if (m[2]) pick = after((m.index ?? 0) + m[0].length, false) ?? pick;
   if (pick) return signed(pick);
@@ -398,16 +399,16 @@ export function extractNumber(answer: string): number | null {
 /** Extra wording per rubric keyword: any point listing the key also accepts these. Data only; keys are lowercase bank keywords. */
 export const SYNONYMS: Record<string, string[]> = {
   revenue: ["top line", "turnover", "money coming in", "earnings"],
-  sales: ["sold", "units", "cups", "orders", "transactions", "purchases", "how many cups", "per day", "per week", "how often", "frequency"],
+  sales: ["sold", "cups sold", "orders", "transactions", "purchases", "how many cups", "cups per day", "cups a day"],
   price: ["charge", "fee", "willingness to pay"],
-  cost: ["overhead", "cogs", "fixed", "variable", "bills", "utilities", "beans", "milk"],
-  customer: ["client", "consumer", "buyer", "user", "visitor", "population", "audience", "segment", "drink", "drinker", "who buy", "how many people", "number of people", "market size"],
+  cost: ["overhead", "cogs", "fixed cost", "variable cost", "bills", "utilities", "beans", "milk"],
+  customer: ["client", "consumer", "buyer", "visitor", "population", "audience", "segment", "drinker", "how many drink", "who buy", "how many people", "number of people", "market size"],
   student: ["undergrad", "faculty", "campus population", "enrollment", "enrolment", "classmate"],
-  demand: ["interest", "willingness to pay", "elasticity", "sensitiv", "how many want"],
+  demand: ["willingness to pay", "elasticity", "sensitiv", "how many want"],
   compet: ["other shop", "other store", "other cart", "new cart", "new cafe", "market share", "dining hall", "vending", "substitute", "new entrant"],
-  rider: ["commuter", "passenger", "cyclist", "user"],
-  invest: ["capex", "setup", "set up", "fit out", "renovat", "lease"],
-  risk: ["uncertain", "concern", "worry", "what could go wrong", "backfire"],
+  rider: ["commuter", "passenger", "cyclist"],
+  invest: ["capex", "setup cost", "fit out", "renovat", "lease"],
+  risk: ["uncertain", "worry", "what could go wrong", "backfire"],
   recommend: ["my advice", "they should", "we should", "the owner should", "the board should"],
   test: ["experiment", "a/b"],
   "flows into": ["feeds into", "links to", "carries over", "carry over"],

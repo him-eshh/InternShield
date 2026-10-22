@@ -98,7 +98,7 @@ if (!only || only === "challenge") {
 }
 
 if (!only || only === "tracker") {
-  const cards = [{ id: "a1", company: "Northwind", role: "Data Intern", link: null, risk: "low", status: "saved", notes: "", addedAt: 1 }];
+  const cards = [{ id: "a1", company: "Northwind", role: "Data Intern", link: null, risk: "low", column: "saved", notes: "", createdAt: 1 }];
   const { browser, page, log } = await open({ width, theme, storage: { "is:tracker": JSON.stringify(cards) } });
   await mockApi(page);
   await page.goto(BASE);
@@ -108,8 +108,7 @@ if (!only || only === "tracker") {
   await page.getByRole("button", { name: "My applications" }).click();
   await page.waitForTimeout(500);
   await say(page, "tracker");
-  const card = page.locator("li", { hasText: "Northwind" }).first();
-  await card.focus().catch(() => {});
+  await page.locator("li[tabindex='0']", { hasText: "Northwind" }).first().focus();
   console.log("focused: " + (await page.evaluate(() => document.activeElement?.outerHTML.slice(0, 160))));
   await page.keyboard.press("ArrowRight");
   await page.waitForTimeout(300);

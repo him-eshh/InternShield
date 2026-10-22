@@ -87,6 +87,17 @@ describe("B11 checkAnswer number: tolerance unchanged", () => {
   });
 });
 
+describe("review: weak cues and generic synonyms", () => {
+  it("'so' only picks a number right after it", () => {
+    expect(extractNumber("So my first guess was 4,000 but I now think 2,500")).toBe(2500);
+    expect(extractNumber("so 4,000 cups")).toBe(4000);
+  });
+  it("generic words don't cover unrelated rubric points", () => {
+    const r = checkAnswer(byId("coffee-cart-1").check!, "I had a fixed idea per day, user friendly");
+    expect(r).toMatchObject({ covered: [] });
+  });
+});
+
 describe("B10 rubric: stems and synonyms", () => {
   const one = (any: string[]): AnswerCheck => ({ kind: "rubric", points: [{ label: "p", any }] });
 

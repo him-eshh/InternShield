@@ -14,6 +14,20 @@ vi.mock("groq-sdk", () => ({
 
 import { POST } from "@/app/api/transcribe/route";
 
+describe("review: repeated sender headers keep the message", () => {
+  it("never cuts at a repeated sender header, so a later payment ask survives", () => {
+    const chat = [
+      "Jordan Blake (HR Team)",
+      "Hi! Congrats, you got the remote assistant role.",
+      "Jordan Blake (HR Team)",
+      "Before you start, please buy a $300 equipment kit via Zelle.",
+      "Jordan Blake (HR Team)",
+      "We'll refund it with your first paycheck.",
+    ].join("\n");
+    expect(dedupeTranscript(chat)).toBe(chat);
+  });
+});
+
 const fixture = (name: string) => readFileSync(join(__dirname, "..", "fixtures", "transcripts", `${name}.txt`), "utf8");
 const IMG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB";
 
@@ -51,8 +65,14 @@ describe("dedupeTranscript", () => {
   });
 
   it("also cleans fragments when the restart is not at a clean line", () => {
-    const text = "Offer details for the role\nPay is $20 an hour\nStart date is June 3rd\nPay is $20 an hour\nStart date";
-    expect(dedupeTranscript(text)).toBe("Offer details for the role\nPay is $20 an hour\nStart date is June 3rd");
+    const text =
+      "Offer details for the role\nPay is $20 an hour for twenty hours every week\nStart date is June 3rd at the main office\nPay is $20 an hour for twenty hours every week\nStart date is June 3rd";
+    expect(dedupeTranscript(text)).toBe("Offer details for the role\nPay is $20 an hour for twenty hours every week\nStart date is June 3rd at the main office");
+  });
+
+  it("keeps short repeats on purpose: dropping them could hide evidence", () => {
+    const text = "Offer details for the role\nPay is $20 an hour\nStart date is June 3rd\nPay is $20 an hour";
+    expect(dedupeTranscript(text)).toBe(text);
   });
 
   it("leaves a short 2-line chat unchanged", () => {

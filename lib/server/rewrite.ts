@@ -153,7 +153,8 @@ export async function handleRewrite(body: Record<string, unknown>): Promise<Resp
   const r = await callGroq("rewrite", { system: SYSTEM, user: buildUser(input), maxTokens: 700 });
   // 700: the gpt-oss fallback counts reasoning tokens in the cap. The client guard checks the output whichever model wrote it.
   if (!r.ok) {
-    if (r.reason === "limit" && (r.retryAfter ?? 0) > 3600) return fromOutcome(r);
+    // Longer than a minute: "try again in a minute" would be wrong, so use the busy / resting wording.
+    if (r.reason === "limit" && (r.retryAfter ?? 0) > 60) return fromOutcome(r);
     return failed(r.reason, { retryAfter: r.retryAfter, message: REWRITE_FAILED });
   }
   const text = cleanRewrite(r.data);

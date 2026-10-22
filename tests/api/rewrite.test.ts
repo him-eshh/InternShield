@@ -136,6 +136,13 @@ describe("rewrite route", () => {
     expect(json.message).toBe("Couldn't reword that right now. Try again in a minute.");
   });
 
+  it("doesn't promise 'a minute' when both models must wait longer", async () => {
+    h.create.mockReturnValue(groqErr(429, { "retry-after": "1800" }));
+    const json = await (await call()).json();
+    expect(json.reason).toBe("limit");
+    expect(json.message).not.toContain("minute");
+  });
+
   it("does not log the resume text", async () => {
     const log = vi.spyOn(console, "log").mockImplementation(() => {});
     h.create.mockReturnValue(groqOk("Reworded."));
