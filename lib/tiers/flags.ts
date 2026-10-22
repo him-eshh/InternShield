@@ -10,4 +10,12 @@ export const TIER_FLAGS = {
   finance: true, // Slice 15: finance technical questions
   portfolio: true, // Slice 16: design portfolio walkthrough
   challenge: true, // Slice 16: timed design challenge on the board
+  // v2 (tools stream flips each in the commit where it passes gates)
+  tsRunner: false, // TypeScript in the JS worker
+  sqlRound: false, // SQL problems on sql.js
+  debugRound: false, // "debugging" interview round
+  presets: false, // company-style round presets
+  scorecard: false, // per-axis interview scorecard
+  keywordGap: false, // posting keywords vs resume
+  rewriteOptions: false, // up to 3 rewrite options
 } as const;

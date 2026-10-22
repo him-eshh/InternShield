@@ -65,7 +65,7 @@ export default function CodingRound({ session, onUpdate, ask, busy }: RoundPanel
     );
   }
 
-  const code = codes[language] ?? problem.starter[language];
+  const code = codes[language] ?? problem.starter[language] ?? "";
   const submitted = session.code && session.code.problemId === problem.id ? session.code : null;
   const disabled = running !== null || busy;
 

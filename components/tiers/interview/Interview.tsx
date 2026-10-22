@@ -73,6 +73,7 @@ const ROUND_BLURB: Record<InterviewRound, string> = {
   finance: "Four made-up accounting and valuation questions.",
   portfolio: "Walk through your work and what you learned.",
   challenge: `A ${CHALLENGE_MINUTES}-minute design challenge.`,
+  debugging: "Find and fix the bug. Tests run on your device.",
 };
 
 const LINK_CLS = `${linkClass} break-all`;

@@ -42,6 +42,7 @@ export type InterviewStatus = "mentioned" | "none_hired_directly" | "unclear";
 export interface Facts {
   isJobMessage: boolean;
   company: Quoted | null;
+  department?: string | null; // team/office name ("Campus Recruiting"), never the company
   role: Quoted | null;
   pay: Quoted | null;
   sender: { name: string | null; email: string | null; phone: string | null };
@@ -109,7 +110,9 @@ export interface Answers {
 export interface Question {
   id: QuestionId;
   text: string;
-  options: { value: string; label: string }[]; // always includes { value: "unknown", label: "I don't know" }
+  options: { value: string; label: string }[]; // always includes { value: "unknown", label: "I don't know" } (the "Not sure" value)
+  kind?: "single" | "multi"; // default "single"
+  couldChange?: { level?: boolean; critical?: boolean; advice?: boolean }; // what an answer could move
 }
 
 // ---------- Scoring ----------
@@ -137,6 +140,17 @@ export interface Flag {
   points: number; // positive for red, negative for good
   critical: boolean;
   sourceUrl?: string;
+  severity?: "critical" | "high" | "medium" | "low";
+  action?: string; // one verification step the user can take
+  learnMore?: { label: string; url: string };
+}
+
+export type LinkIssue = "lookalike" | "punycode" | "shortener" | "google-form" | "raw-ip" | "new-domain" | "brand-careers-offsite";
+/** One link found in the message and what's wrong with it (empty issues = nothing found). */
+export interface LinkCheck {
+  url: string;
+  host: string;
+  issues: LinkIssue[];
 }
 
 export type RiskLevel = "low" | "medium" | "high"; // 0-24 / 25-59 / 60-100
@@ -163,14 +177,30 @@ export interface Report {
   questions: Question[];
   postingMatch: MatchRow[] | null; // null when no posting found
   thinMessage: boolean; // "there wasn't much to check"
+  confidence?: { level: "high" | "medium" | "low"; checked: number; total: number }; // "How sure"
+  links?: LinkCheck[];
+  questionHint?: string; // one line on why answering the questions helps
 }
 
 // ---------- API request/response shapes ----------
 // Every route returns a StepResult-shaped body (never "skipped"):
-//   200 { status: "done", data }  |  4xx/5xx { status: "failed", reason, retryAfter?, message? }
+//   200 { status: "done", data }  |  4xx/5xx { status: "failed", reason, retryAfter?, message?, code? }
+/** Machine-readable failure cause; the UI picks its copy from this (routes adopt it in v2). */
+export type ApiErrorCode =
+  | "RATE_LIMITED"
+  | "DAILY_CAP"
+  | "TIMEOUT"
+  | "UPSTREAM"
+  | "BAD_INPUT"
+  | "TOO_LARGE"
+  | "TRANSCRIBE_PARTIAL"
+  | "TRANSCRIBE_FAILED"
+  | "MODEL_UNAVAILABLE"
+  | "NOT_FOUND"
+  | "UNKNOWN";
 export type ApiResponse<T> =
   | { status: "done"; data: T }
-  | { status: "failed"; reason: FailReason; retryAfter?: number; message?: string };
+  | { status: "failed"; reason: FailReason; retryAfter?: number; message?: string; code?: ApiErrorCode };
 
 export interface ExtractRequest {
   message: string; // <= 4,000 chars

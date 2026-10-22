@@ -43,7 +43,19 @@ export interface TailorOptions {
 }
 
 export const DEFAULT_TAILOR: TailorOptions = { emphasis: [], tone: "confident", strength: "light", keepLength: true };
-export type RewriteResponse = ApiResponse<{ text: string }>;
+/** options: up to 3 alternative rewrites; heldBack: options the guard rejected (shown as "held back"). */
+export type RewriteResponse = ApiResponse<{ text: string; options?: string[]; heldBack?: string[] }>;
+
+// ---------- v2: keyword gap (job posting terms vs resume) ----------
+export interface GapTerm {
+  term: string;
+  bucket: "found" | "alias" | "missing"; // alias = resume has a synonym
+  alias?: string; // the resume's wording when bucket is "alias"
+}
+export interface KeywordGap {
+  required: GapTerm[];
+  preferred: GapTerm[];
+}
 
 /** What the guard found that isn't in the original resume. Empty = allowed. */
 export type GuardIssueKind = "number" | "proper_noun" | "skill";
@@ -51,7 +63,9 @@ export interface GuardIssue {
   kind: GuardIssueKind;
   token: string;
 }
-export type GuardResult = { ok: true } | { ok: false; issues: GuardIssue[] };
+/** tier (v2): "block" = never show, "check" = show with a warning, "ok" = clean. */
+export type GuardTier = "block" | "check" | "ok";
+export type GuardResult = { ok: true; tier?: GuardTier } | { ok: false; issues: GuardIssue[]; tier?: GuardTier };
 // lib/tiers/resumeGuard.ts exports:
 //   checkRewrite(resumeText: string, original: string, rewrite: string): GuardResult
 //   wordDiff(before: string, after: string): DiffPart[]
@@ -108,7 +122,21 @@ export type TranscribeResponse = ApiResponse<{ text: string }>;
 
 // ---------- Tier 3: mock interview ----------
 
-export type InterviewRound = "screen" | "behavioral" | "coding" | "design" | "case" | "finance" | "portfolio" | "challenge";
+export type InterviewRound = "screen" | "behavioral" | "coding" | "design" | "case" | "finance" | "portfolio" | "challenge" | "debugging";
+
+// ---------- v2: scorecard and company-style presets ----------
+export type ScoreBand = "Strong" | "Solid" | "Developing" | "Not yet";
+export interface Scorecard {
+  axes: { id: string; label: string; band: ScoreBand; evidence: string[]; byCode: boolean }[]; // byCode = graded by rules, not AI
+  nextDrill?: string;
+}
+/** Labels say "-style" (e.g. "Big-tech-style loop"); never imply affiliation with a company. */
+export interface CompanyPreset {
+  id: string;
+  label: string;
+  source?: { label: string; url: string };
+  rounds: string[];
+}
 /** field null = every profile; otherwise only that profile field (and only when the round's flag is on). */
 export const INTERVIEW_ROUNDS: { id: InterviewRound; label: string; field: Field | null }[] = [
   { id: "screen", label: "Recruiter screen", field: null },
@@ -130,6 +158,7 @@ export const QUESTIONS_PER_ROUND: Record<InterviewRound, number> = {
   finance: 4,
   portfolio: 4,
   challenge: 3,
+  debugging: 1,
 };
 /** Rounds whose questions all come from a local script (no AI questions; AI only for feedback). */
 export const SCRIPTED_ROUNDS: InterviewRound[] = ["case", "finance"];
@@ -163,7 +192,7 @@ export interface InterviewTurn {
   answer: string;
 }
 
-export type CodeLanguage = "python" | "javascript";
+export type CodeLanguage = "python" | "javascript" | "typescript" | "sql";
 /** Latest coding attempt; passed/total come from local deterministic grading only. */
 export interface CodeAttempt {
   problemId: string;
@@ -297,7 +326,7 @@ export interface CodingProblem {
   /** Shown to the user; also the interview question. */
   prompt: string;
   functionName: string;
-  starter: Record<CodeLanguage, string>;
+  starter: Record<"python" | "javascript", string> & Partial<Record<CodeLanguage, string>>; // v2 languages are optional
   /** Shown with input/expected/got. */
   examples: CodeTest[];
   /** Never shown: only the pass count. */
