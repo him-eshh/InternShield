@@ -1,7 +1,7 @@
 // The scoring engine (spec.md > Scoring Engine). Pure: no network, env, or React.
 // AI facts and the raw-text backstop are combined; fixed rules decide the score.
 import { parsePhoneNumberFromString } from "libphonenumber-js/min";
-import type { AskKind, Facts, Flag, FlagGroup, Quoted, Report, RiskLevel, ScoreInput } from "../types";
+import type { AskKind, Facts, Flag, FlagGroup, LinkIssue, Quoted, Report, RiskLevel, ScoreInput } from "../types";
 import { quoteIsReal, visibleQuote } from "../quotes";
 import { backstop, type BackstopId } from "./backstop";
 import { buildCoverage } from "./coverage";
@@ -13,6 +13,7 @@ import { matchRows, payMatch, rolesMatch } from "./posting";
 import { pickQuestions, questionGaps, type Relevance } from "./questions";
 import { BANNED_WORDS, CHANGE_REASONS, WEIGHTS as W } from "./rules";
 import { cleanText } from "./unicode";
+import { checkLinks } from "./links";
 
 const DAY_MS = 86_400_000;
 const FTC_JOB_SCAMS = "https://consumer.ftc.gov/articles/job-scams";
@@ -446,6 +447,35 @@ function evaluate(input: ScoreInput): Evaluated {
     }
   }
 
+  // ----- Links (local checks only; the link is never opened) -----
+  const links = checkLinks(text, { company, officialDomain: official });
+  const firstWith = (issue: LinkIssue) => links.find((l) => l.issues.includes(issue))?.url ?? null;
+  const fakeSite = firstWith("lookalike") ?? firstWith("brand-careers-offsite");
+  // A look-alike sender already covers the same trick; don't count it twice.
+  if (fakeSite && !flags.some((f) => f.id === "lookalike_domain")) {
+    red("link_lookalike", "message", W.linkLookalike, "A link copies the company's website", `This link isn't on ${officialLabel}, but it's made to look like it.`, fakeSite);
+  }
+  const puny = firstWith("punycode");
+  if (puny) red("link_punycode", "message", W.linkPunycode, "A link uses disguised letters", "The web address uses special characters that can make a fake site look like a real one.", puny);
+  const ip = firstWith("raw-ip");
+  if (ip) red("link_raw_ip", "message", W.linkRawIp, "A link is a bare number address", "Real companies link to their named website, not a string of numbers.", ip);
+  const form = firstWith("google-form");
+  if (form) {
+    red(
+      "link_google_form",
+      "message",
+      sensitiveAsked ? W.critical : W.linkGoogleForm,
+      "They use a Google Form for hiring",
+      sensitiveAsked
+        ? "Real employers never collect your SSN or bank details through a Google Form."
+        : "Real companies collect applications through their own careers site, not a free form anyone can make.",
+      form,
+      { critical: sensitiveAsked },
+    );
+  }
+  const short = firstWith("shortener");
+  if (short) red("link_shortener", "message", W.linkShortener, "A link hides where it goes", "Short links hide the real address until you click.", short);
+
   // ----- Score -----
   const anyCritical = flags.some((f) => f.critical);
   // Quotes read from the cleaned text are shown as the user's own wording; every flag gets severity, a step, and a link.
@@ -494,6 +524,7 @@ function evaluate(input: ScoreInput): Evaluated {
       postingMatch,
       thinMessage,
       confidence,
+      links,
     },
   };
 }

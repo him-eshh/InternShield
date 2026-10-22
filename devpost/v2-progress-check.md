@@ -3,31 +3,28 @@
 ## Done
 - C0 baseline: all gates green (645 tests, eval 26/26). Log: `devpost/v2-check-log.md`.
 - C1 (Bug D 989718c, Wikidata 8633079, Bug B + error codes in the "V2 check 1" commit). 688 tests.
+- WIP 3d3d104 reportView/recovery/rerunWithCompany; 9d65c5a eval matrix + annotate.ts + lib/scoring/links.ts (not wired);
+  ea8f1b2 held-out (23/27); 7ca2901 C3+C8 worker output; d007189 C2 scoring code (unicode, reimbursement, wrong-way money,
+  run-code split, task vocab, flagInfo severity/action/learnMore, confidence) + RecoveryCard/CompanyChip (C4 partial).
+  Gates at d007189: tsc ok, 750/751 tests (tests/tiers/pdf.test.ts flaky under load, passes alone), eval 26/26.
 
-## Current
-- WIP 3d3d104: lib/reportView.ts, lib/recovery.ts, rerunWithCompany in pipeline.ts (+ chip test) from the killed workers.
-- Session 3 relaunched the same 3 workers (C2/C3/C7 below); me: eval/run.ts heldout + confusion matrix.
-- Workers (uncommitted output may be in the tree after a rotation; review + commit as WIP):
-  - engine-builder C2: lib/scoring/**, tests/scoring/v2-*, new eval/messages, lib/server/extract*.ts, lib/quotes.ts, lib/explainFallback.ts, lib/types.ts (additive)
-  - ui-builder C3: components/report/**, app/v2-check.css, lib/reportView.ts, tests/ui/v2-check-report*/ring*
-  - general-purpose C7 held-out: eval/heldout/*.json (blind to lib/scoring). eval/run.ts heldout + matrix DONE (9d65c5a).
-  - ui-builder C8: components/CheckForm.tsx, Checklist.tsx, tests/ui/v2-check-form/checklist.test.tsx
-- C3 + C8 worker output committed WIP 7ca2901 (screens checked: qa/v2-check-report.mjs [scam|real]). Held-out ea8f1b2.
-  Still waiting on C2 engine-builder. Then: C2 gates+commit, C3/C8 reviewer pass, wire links into score.ts, C4.
-  Gotcha: app wraps in strict LazyMotion -> use `m.*` not `motion.*` (workers forget).
-- Done by me (9d65c5a): lib/client/annotate.ts (+test), lib/scoring/links.ts checkLinks (+test, NOT wired into score.ts yet: wire after C2 lands; lookalike+brand-careers on one link = count once).
-- Dev server running on 3100 (`node qa/serve.mjs stop 3100` when done).
+## Current (session 4)
+- engine-builder (background): tests/scoring/v2-rules.test.ts + eval/messages/v2-*.json (C2 tests/eval). No lib edits.
+- Me: wire links.ts into score.ts (C5), then C2 gates + commit "V2 check 2", reviewer pass C3/C8, "V2 check 3"/"8".
 
 ## Next
-- C3 report redesign, C4 questions/recovery/chip, C5 links + rules 7-10, C6 annotated view, C7 eval (parallel during C4-C6)
+- C4 finish: question picking + new question set (check what's in lib/scoring/questions*), hint line, wire RecoveryCard/CompanyChip.
+- C5 rules 7-10, C6 annotated view (annotate.ts exists), C7 grow eval to ~90, C9 intro/logo, C10 final.
 
 ## Gotchas
 - Shell: chained/compound bash commands and `sh script` need approval; run gates one per call:
   `cd /c/my_projects/projects/InternShield-v2-check && npm run lint 2>&1 | tail -n 5` (same for `npx tsc --noEmit`,
   `npx vitest run --reporter=dot 2>&1 | grep -E 'FAIL|Test Files|Tests '`, `npm run build 2>&1 | grep -iE 'error|compiled|failed'`, `npm run eval 2>&1 | tail -n 3`).
-  PowerShell rejects `$()`, `(...)`, script blocks and `$env:X=` assignments; Bash `VAR=x cmd` needs approval.
+  `$(...)` in bash is rejected. PowerShell rejects `$()`, `(...)`, script blocks and `$env:X=` assignments.
 - QA: `node qa/serve.mjs start 3100` / `stop 3100` (PowerShell). QA scripts: `import "./v2-check-env.mjs"` first, then
   `await import("./lib.mjs")` (sets QA_BASE/QA_SHOTS defaults). Run `node qa/v2-check-x.mjs; Get-Content qa/out-v2-check.txt`.
   Mocked explain returns 503 by default (console error is expected, pre-existing).
 - To get the tracker form: paste a message with no company (see `qa/v2-check-tracker.mjs`).
 - `App.tsx` is frozen: work around via component props/wrappers, log "Needs integration".
+- App wraps in strict LazyMotion -> use `m.*` not `motion.*` (workers forget).
+- links.ts: lookalike + brand-careers on one link = count once; don't double count with existing domain flags.

@@ -56,6 +56,11 @@ export const FLAG_INFO: Record<string, Info> = {
   generic_greeting: { action: "Look the recruiter up on LinkedIn and on the company's staff page.", learnMore: L.recruiters },
   hidden_characters: { action: "Treat the sender with extra care and check the company on its own website.", learnMore: L.jobs },
   other_concern: { action: "Ask the company about this using contact details from its own website.", learnMore: L.jobs },
+  link_lookalike: { action: "Don't click it. Type the company's website yourself and find the job there.", learnMore: L.recruiters },
+  link_punycode: { action: "Don't click it. Type the company's website yourself.", learnMore: L.recruiters },
+  link_raw_ip: { action: "Don't click it. Type the company's website yourself.", learnMore: L.recruiters },
+  link_google_form: { action: "Don't fill it in. Apply through the company's own careers page.", learnMore: L.jobs },
+  link_shortener: { action: "Don't click it. Find the job on the company's careers page instead.", learnMore: L.jobs },
 
   // Sender
   free_email: { action: "Find this recruiter on the company's careers page or LinkedIn, then email them at the company's domain.", learnMore: L.recruiters },

@@ -28,6 +28,12 @@ export const WEIGHTS = {
   untrustedCode: 15, // clone/npm/run with nothing else suspicious: a normal take-home can look like this
   hiddenCharacters: 10, // invisible or look-alike characters hid text
   hiddenCharactersMin: 3, // how many altered characters it takes
+  // Links in the message (checked locally, never opened). Each kind counts once per message.
+  linkLookalike: 30, // look-alike host or "<brand>-careers" off the official site; same weight as a look-alike sender
+  linkPunycode: 20,
+  linkRawIp: 15,
+  linkGoogleForm: 10, // critical instead when the message also asks for SSN/bank data
+  linkShortener: 5,
   noMx: 5,
   throwawayEmail: 15, // Hunter says the address is disposable; only when Hunter ran
   genericGreeting: 3,
