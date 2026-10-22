@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { RingMark } from "@/components/Logo";
 
 export const alt = "InternShield: is this offer real?";
 export const size = { width: 1200, height: 630 };
@@ -24,12 +25,7 @@ export default function Image() {
             gap: 48,
           }}
         >
-          <svg width="200" height="200" viewBox="0 0 24 24">
-            <path
-              fill="#2F6FD6"
-              d="M12 2 L20 5 V11 C20 16 16.5 20.5 12 22 C7.5 20.5 4 16 4 11 V5 Z"
-            />
-          </svg>
+          <RingMark size={200} color="#2F6FD6" />
           <div
             style={{
               display: "flex",
