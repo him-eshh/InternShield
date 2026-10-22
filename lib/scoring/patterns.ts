@@ -82,13 +82,15 @@ const TASK_TERMS: RegExp[] = [
   /\b(?:boost|optimi[sz]e)\w*\s+(?:\w+\s+){0,1}?(?:products?|apps?|orders?|ratings?|rankings?|sales)\b/gi,
   // sets of tasks
   /\bsets?\s+of\s+\d+\s+tasks?\b/gi,
-  /\b(?:complete|finish|do)\s+\d+\s+tasks?\b/gi,
+  // 20+ tasks: "complete 3 tasks this week" is normal onboarding.
+  /\b(?:complete|finish|do)\s+(?:[2-9]\d|\d{3,})\s+tasks?\b/gi,
   /\b\d+\s+tasks?\s+(?:a|per|each|every)\s+day\b/gi,
   // commission per task
   /\bcommissions?\s+(?:per|for each|for every|on each)\s+(?:task|order|job)\b/gi,
   /\b(?:earn|get)\s+(?:a\s+)?commissions?\b[^.!?\n]{0,40}\btasks?\b/gi,
-  // coach / mentor groups
-  /\b(?:your|our)\s+(?:personal\s+)?(?:coach|mentor|trainer)\b/gi,
+  // coach / mentor groups: a "personal coach", or a mentor next to task/payout talk ("your mentor" alone is a normal internship line)
+  /\b(?:your|our)\s+personal\s+(?:coach|mentor|trainer)\b/gi,
+  /\b(?:your|our)\s+(?:coach|mentor|trainer)\b[^.!?\n]{0,50}\b(?:tasks?|orders?|telegram|whatsapp|deposits?|commissions?|withdraw\w*)\b/gi,
 ];
 
 /** How many different task-scam terms the message uses, with a real snippet around the first. */

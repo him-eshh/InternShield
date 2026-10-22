@@ -8,12 +8,11 @@
   run-code split, task vocab, flagInfo severity/action/learnMore, confidence) + RecoveryCard/CompanyChip (C4 partial).
   Gates at d007189: tsc ok, 750/751 tests (tests/tiers/pdf.test.ts flaky under load, passes alone), eval 26/26.
 
-## Current (session 4)
-- engine-builder (background): tests/scoring/v2-rules.test.ts + eval/messages/v2-*.json (C2 tests/eval). No lib edits.
-- Me: wire links.ts into score.ts (C5), then C2 gates + commit "V2 check 2", reviewer pass C3/C8, "V2 check 3"/"8".
-
-- Me: C4 question set v2 IN PROGRESS: lib/types.ts (QuestionId/Answers new), lib/scoring/questions.ts rewritten (pickQuestions
-  takes outcomeOf -> {level,critical}; questionHint), then score.ts answers wiring, QuickQuestions.tsx multi + "+N more", Report.tsx.
+## Current (session 5)
+- 2d3e634 committed session-4 leftovers. C4 code is wired (questions v2, hint, RecoveryCard, CompanyChip). Old question tests
+  updated (score.test.ts, questionsReal.test.ts, ui/quickQuestionsReal.test.tsx; log them as changed assertions).
+  Tests 812/814 (pdf flaky), eval 36/36.
+- Me now: reviewer fixes below -> gates -> commits "V2 check 2", "V2 check 3", "V2 check 4" (+ screenshots).
 - Reviewer fixes TODO (C2/C3 review, session 4): backstop "driver's license" false critical + `\b\.exe`; money_wrong_way bare
   "mobile deposit"/"e-check" too broad; TASK_TERMS coach/mentor + "complete N tasks" too generic; unicode hidden chars count
   soft hyphen/LRM/U+034F (newsletter false +10); CompanyChip Edit button missing data-company-edit (focus blocker);

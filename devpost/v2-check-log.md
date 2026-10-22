@@ -14,13 +14,14 @@ Branch `v2-check` from `v2-base` 36ad123. Brief: `devpost/v2-brief-check.md`.
 - [x] Bug B Save-to-tracker form row + focus (C1 commit)
 - [x] Typed error codes in routes + `lib/client/errorCopy.ts` (C1 commit)
 ### C2 Scoring rules
-- [ ] Unicode cleanup (rule 4) + index map
-- [ ] Reimbursement trap (rule 1)
-- [ ] Money the wrong way (rule 2)
-- [ ] Split run-code (rule 3)
-- [ ] Task-scam vocabulary (rule 6)
-- [ ] severity / action / learnMore on every flag
-- [ ] confidence ("How sure")
+- [x] Unicode cleanup (rule 4) + index map (soft hyphen/LRM/RLM/U+034F stripped but not counted)
+- [x] Reimbursement trap (rule 1)
+- [x] Money the wrong way (rule 2) (bare "mobile deposit"/"e-check" only with money going back out or equipment)
+- [x] Split run-code (rule 3) ("driver's license" no longer a driver install; `.exe` without a word before it)
+- [x] Task-scam vocabulary (rule 6) ("complete N tasks" needs N >= 20; mentor only near task/payout talk, or "personal coach")
+- [x] severity / action / learnMore on every flag
+- [x] confidence ("How sure")
+- Near-miss tests: `tests/scoring/v2-rules.test.ts`, `tests/scoring/v2-nearmiss.test.ts`; 10 eval cases `eval/messages/v2-*.json`.
 ### C3 Report redesign
 - [ ] Ring v2 (number, 14 ticks, score-0 state, reveal <1.2 s, delta chip + aria-live)
 - [ ] Order: ring, verdict, action line, top 3 reasons, explanation, severity list, questions, recovery, posting, footer
@@ -58,9 +59,15 @@ Branch `v2-check` from `v2-base` 36ad123. Brief: `devpost/v2-brief-check.md`.
 
 ## Assertions changed (test, old, new, why)
 - `tests/ui/pipeline.test.ts` 3 `toEqual` on failed steps: added `code` (`TIMEOUT`, `RATE_LIMITED`, `UNKNOWN`). Why: failed StepResults now carry the typed code.
+- C4 question set v2 (findings 02 > 3.2, 4.1; `source`/`outside_us`/`had_interview` ids are gone):
+  - `tests/scoring/score.test.ts` "asks where the message came from" -> "asks what they've asked you to do" (ticking deposit_check -> high); "I don't know" test -> "Not sure" on `asked_to_do`; "outside the US" test -> never asked, `who_first: yes` softens the WhatsApp move; "asks about an interview" -> `talked_live` not shown (0 -> 20 stays low, so no level flip) but `not_yet` still adds no_interview +20; "never asks when the source is known" (`[]`) -> only `["asked_to_do"]` (a ticked ask can switch on a critical).
+  - `tests/scoring/questionsReal.test.ts`: source tests -> channel/who_first; "asks about the interview" -> answer still adds no_interview (not shown: no level flip).
+  - `tests/ui/quickQuestionsReal.test.tsx` "renders every question" -> top question open + "+N more" (brief C4 UI); escape `"` too.
 
 ## Needs integration
 - `components/App.tsx` line ~103 `onLine`: pass the code too: `setLines((l) => ({ ...l, [key]: { state, reason, code: r && r.status === "failed" ? r.code : undefined } }))`. Why: Checklist can then say "resting for today" for DAILY_CAP (today it falls back on reason).
+- `components/App.tsx` `reportExtras`: Tailor/Practice are gated on `target.risk` (the first level). If a quick-question answer
+  raises the report to high, they stay. Fix: let `Report` pass its live level to a render-prop `extras={(level) => ...}`.
 - Bug B: if `App.tsx` lifts the tracker open state into the footer later, the `contents` wrapper in SaveToTracker can go.
 
 ## Pending Himesh

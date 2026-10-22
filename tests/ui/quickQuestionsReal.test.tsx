@@ -22,19 +22,19 @@ const report = score(
   }),
 );
 
-const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/'/g, "&#x27;");
+const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/'/g, "&#x27;").replace(/"/g, "&quot;");
 
 describe("QuickQuestions with real engine output", () => {
   const { questions } = report;
 
-  it("renders every question the engine asked, with its options", () => {
-    expect(questions.length).toBeGreaterThan(0);
+  // v2: the top question is open with its options; the rest wait behind "+N more".
+  it("renders the top question the engine asked, with its options, and '+N more'", () => {
+    expect(questions.length).toBeGreaterThan(1);
     const html = renderToStaticMarkup(<QuickQuestions questions={questions} answers={{}} change={null} onAnswer={() => {}} />);
-    for (const q of questions) {
-      expect(html).toContain(escape(q.text));
-      for (const o of q.options) expect(html).toContain(escape(o.label));
-    }
-    expect(html).toContain("Where did this message come from?");
+    expect(html).toContain(escape(questions[0].text));
+    for (const o of questions[0].options) expect(html).toContain(escape(o.label));
+    expect(html).not.toContain(escape(questions[1].text));
+    expect(html).toContain(`+${questions.length - 1} more`);
     expect(html).toContain("A few quick questions");
     expect(html).not.toContain("Answer ");
   });

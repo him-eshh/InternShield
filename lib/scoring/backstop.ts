@@ -88,7 +88,7 @@ const PATTERNS: Record<BackstopId, Pattern[]> = {
     /\bpip\s+install\b/gi,
     /\bgit\s+clone\b/gi,
     /\bclone\s+(?:this|the|our|my)\s+(?:repo|repository|project|codebase)\b/gi,
-    /\b(?:install|download|run|execute)\b[^.!?\n]{0,40}\b(?:drivers?|\.exe|\.dmg|\.msi|\.bat|script|npm package|browser extension|this file|the attached (?:file|project|zip)|zip file|the project locally)\b/gi,
+    /\b(?:install|download|run|execute)\b[^.!?\n]{0,40}(?:\b(?:drivers?(?!['’])|script|npm package|browser extension|this file|the attached (?:file|project|zip)|zip file|the project locally)\b|\.(?:exe|dmg|msi|bat)\b)/gi,
     /\b(?:disable|turn off|deactivate)\b[^.!?\n]{0,30}\b(?:antivirus|sandbox|docker|defender|firewall|security software)\b/gi,
     /\brun this\s+(?:command|code|script|file|program)\b/gi,
   ],
@@ -110,15 +110,16 @@ const PATTERNS: Record<BackstopId, Pattern[]> = {
     /\b(?:fix|resolve|repair|update|install)\w*\b[^.!?\n]{0,30}\b(?:camera|microphone|webcam|mic|audio)\b[^.!?\n]{0,20}\b(?:driver|error|issue|problem)s?\b[^.!?\n]{0,80}\b(?:command|terminal|script|run\w*|paste|copy|download\w*|install\w*|link)\b/gi,
     // Switching off protection, and installers.
     /\b(?:disable|turn off|deactivate)\b[^.!?\n]{0,30}\b(?:antivirus|anti-virus|virus protection|sandbox|defender|firewall|security software|windows security)\b/gi,
-    /\b(?:install|download|run|execute)\w*\b[^.!?\n]{0,40}\b(?:drivers?|\.exe|\.dmg|\.msi|\.bat|\.pkg|browser extension|chrome extension)\b/gi,
+    /\b(?:install|download|run|execute)\w*\b[^.!?\n]{0,40}(?:\b(?:drivers?(?!['’])|browser extension|chrome extension)\b|\.(?:exe|dmg|msi|bat|pkg)\b)/gi,
   ],
   money_wrong_way: [
     // "send the remaining balance to our supplier via Zelle"
     new RegExp(String.raw`${NOT_EMPLOYER_SENDING}\b(?:send|transfer|wire|forward|return|remit)\w*\b[^.!?\n]{0,100}?\b${REST}\b[^.!?\n]{0,100}?\b${P2P}\b`, "gi"),
     new RegExp(String.raw`\b(?:zelle|venmo|cash\s?app|cashapp|wire)\s+(?:us\s+|them\s+|the\s+)?${REST}\b`, "gi"),
-    // Mobile deposits and e-checks
-    /\bmobile[- ](?:check[- ])?deposit\b/gi,
-    /\be-?checks?\b/gi,
+    // Mobile deposits and e-checks, only with money going back out (a bare "mobile deposit" is normal banking).
+    new RegExp(String.raw`\b(?:mobile[- ](?:check[- ])?deposit|e-?checks?)\b[^.!?\n]{0,100}\b(?:send|buy|purchase|transfer|wire|forward|${P2P}|vendor|supplier|${REST})\b`, "gi"),
+    // ... or paying for equipment/supplies that way (the fake-check equipment setup).
+    /\b(?:equipment|supplies|office setup)\b[^.!?\n]{0,80}\b(?:mobile[- ](?:check[- ])?deposit|e-?checks?)\b/gi,
     // Money mule setups
     /\buse\s+your\s+(?:own\s+|personal\s+)?(?:bank|checking|savings)\s+account\b(?![^.!?\n]{0,60}\b(?:direct deposit|payroll|paycheck|portal|workday|set up)\b)/gi,
     /\buse\s+your\s+(?:own\s+|personal\s+)account\b[^.!?\n]{0,60}\b(?:receive|transfer|forward|send|move|payments?|funds|money)\b/gi,

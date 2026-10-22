@@ -36,39 +36,37 @@ const offerInput = () =>
   });
 
 describe("quick questions on realistic messages", () => {
-  it("asks where a recruiter message came from when no source was picked", () => {
+  // v2 (findings 02 > 3.2): a question shows only when an answer can change the level or switch on a critical.
+  it("asks something useful on a plain recruiter message, at most 3", () => {
     const r = score(recruiterInput());
-    expect(r.questions.map((q) => q.id)).toContain("source");
-    expect(r.couldntCheck.map((c) => c.check)).toContain("Where the message came from");
+    expect(r.questions.length).toBeGreaterThan(0);
+    expect(r.questions.length).toBeLessThanOrEqual(3);
+    for (const q of r.questions) expect(q.couldChange?.level || q.couldChange?.critical).toBe(true);
   });
 
-  it("the source answer really moves the score both ways", () => {
+  it("the channel answer moves the score both ways", () => {
     const base = score(recruiterInput()).score;
-    const text = score({ ...recruiterInput(), answers: { source: "text_whatsapp" } });
-    const applied = score({ ...recruiterInput(), answers: { source: "company_site" } });
+    const text = score({ ...recruiterInput(), answers: { channel: "text_whatsapp" } });
+    const applied = score({ ...recruiterInput(), answers: { who_first: "yes" } });
     expect(text.score).toBeGreaterThan(base);
     expect(applied.score).toBeLessThanOrEqual(base);
-    expect(text.questions.map((q) => q.id)).not.toContain("source");
+    expect(text.questions.map((q) => q.id)).not.toContain("channel");
   });
 
-  it("asks about the interview on a 'you've been selected' message", () => {
+  it("a 'not yet' to talking live adds the no-interview flag on a 'you've been selected' message", () => {
     const r = score(offerInput());
-    const ids = r.questions.map((q) => q.id);
-    expect(ids).toContain("had_interview");
-    expect(ids).toContain("source");
-    const noInterview = score({ ...offerInput(), answers: { had_interview: "no" } });
+    const noInterview = score({ ...offerInput(), answers: { talked_live: "not_yet" } });
     expect(noInterview.score).toBeGreaterThan(r.score);
     expect(noInterview.flags.map((f) => f.id)).toContain("no_interview");
   });
 
-  it("'I don't know' counts as answered and stays a couldn't-check line", () => {
-    const r = score({ ...recruiterInput(), answers: { source: "unknown" } });
-    expect(r.questions.map((q) => q.id)).not.toContain("source");
-    expect(r.couldntCheck.map((c) => c.check)).toContain("Where the message came from");
+  it("'Not sure' counts as answered", () => {
+    const r = score({ ...recruiterInput(), answers: { who_first: "unknown" } });
+    expect(r.questions.map((q) => q.id)).not.toContain("who_first");
   });
 
-  it("no source question once the user picked one on the form", () => {
+  it("no channel question once the user picked one on the form", () => {
     const r = score({ ...recruiterInput(), source: "linkedin" });
-    expect(r.questions.map((q) => q.id)).not.toContain("source");
+    expect(r.questions.map((q) => q.id)).not.toContain("channel");
   });
 });

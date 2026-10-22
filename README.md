@@ -39,13 +39,13 @@ Every outside service is on a free plan with no card. Per visitor: 3 checks a mi
 ## Test-set results
 
 <!-- eval:start -->
-26/26 made-up messages land in their expected level; false positives on low: 0/10 (0%). `*` marks a critical flag.
+36/36 made-up messages land in their expected level; false positives on low: 0/13 (0%). `*` marks a critical flag.
 
 | expected \ got | low | medium | high |
 |---|---|---|---|
-| low | 10 | 0 | 0 |
+| low | 13 | 0 | 0 |
 | medium | 0 | 5 | 0 |
-| high | 0 | 0 | 11 |
+| high | 0 | 0 | 18 |
 
 Held-out set (27 cases written without seeing the rules, not gating): 23/27; false positives on low: 1/9 (11%).
 
@@ -83,6 +83,16 @@ Held-out set (27 cases written without seeing the rules, not gating): 23/27; fal
 | scam-ssn-telegram | high | high | 85 | sensitive_data*, off_platform, generic_greeting |
 | scam-task-usdt | high | high | 100 | crypto_or_task_deposit*, surprise_text, off_platform |
 | scam-training-fee | high | high | 90 | pay_fee*, lookalike_domain, new_domain |
+| v2-anydesk-install | high | high | 85 | run_code_or_install* |
+| v2-applied-takehome | low | low | 0 | untrusted_code |
+| v2-camera-terminal | high | high | 85 | run_code_or_install* |
+| v2-legit-company-laptop | low | low | 0 | - |
+| v2-legit-direct-deposit | low | low | 0 | - |
+| v2-reimburse-laptop | high | high | 85 | buy_equipment*, new_domain |
+| v2-task-no-crypto | high | high | 73 | surprise_text, field_pattern, vague_easy_pay |
+| v2-unicode-whatsapp-fee | high | high | 95 | pay_fee*, surprise_text, off_platform |
+| v2-withdraw-fee | high | high | 85 | money_wrong_way*, surprise_text |
+| v2-zelle-balance | high | high | 85 | money_wrong_way* |
 <!-- eval:end -->
 
 ## Privacy

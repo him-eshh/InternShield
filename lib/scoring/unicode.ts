@@ -29,7 +29,8 @@ const CONFUSABLES = new Map<string, string>([
 // Format characters (\p{Cf}: zero-width, bidi, tag characters, soft hyphen), variation selectors,
 // and a few invisible fillers.
 const INVISIBLE = new RegExp("^[\\p{Cf}\\u034F\\u115F\\u1160\\u180E\\u3164\\uFFA0\\uFE00-\\uFE0F\\u{E0100}-\\u{E01EF}]$", "u");
-const PICTOGRAPHIC = new RegExp("\\p{Extended_Pictographic}", "u");
+const BENIGN = new Set([0x00ad, 0x200e, 0x200f, 0x034f]);
+const PICTOGRAPHIC =new RegExp("\\p{Extended_Pictographic}", "u");
 const WORD_CHAR = new RegExp("[\\p{L}\\p{M}\\p{N}]", "u");
 const LATIN = /[A-Za-z]/;
 
@@ -59,7 +60,8 @@ export function cleanText(raw: string): CleanResult {
       // Emoji sequences use these legitimately; only count them elsewhere.
       const nextCp = next < raw.length ? raw.codePointAt(next)! : -1;
       const emoji = isEmojiJoiner(cp) && (prevPictographic || (cp === 0x200d && nextCp >= 0 && PICTOGRAPHIC.test(String.fromCodePoint(nextCp))));
-      if (!emoji) stripped++;
+      // Soft hyphens, LRM/RLM and U+034F show up in ordinary newsletters and RTL names: strip, don't count.
+      if (!emoji && !BENIGN.has(cp)) stripped++;
       i = next;
       continue;
     }
