@@ -243,6 +243,8 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, recov
 
         <EvidenceList flags={report.flags} level={report.level} />
 
+        <CouldntCheck items={report.couldntCheck} />
+
         <QuickQuestions questions={shownQuestions} answers={answers} change={change} lastId={lastId} onAnswer={onAnswer} />
 
         {recovery ?? <RecoveryCard level={report.level} />}
@@ -250,8 +252,6 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, recov
         {report.level !== "high" && (
           <PostingSection checked={steps.posting.status === "done"} posting={postingData} match={report.postingMatch} company={companyName} careersUrl={careersUrl} />
         )}
-
-        <CouldntCheck items={report.couldntCheck} />
 
         <ReportFooter
           report={report}
