@@ -16,6 +16,7 @@ import { askInterview } from "@/lib/tiers/client";
 import {
   BOARD_ROUNDS,
   CHALLENGE_MINUTES,
+  CODE_ROUNDS,
   INTERVIEW_ROUNDS,
   MAX_ANSWER_CHARS,
   MAX_CONTEXT_FIELD,
@@ -33,6 +34,8 @@ import type { Profile, ResumeData } from "@/lib/types";
 import { ArrowLeftIcon } from "../../icons";
 import { btnPrimary, btnSecondary, card as cardCls, linkClass, pillOff, pillOn } from "../../ui";
 import Feedback from "./Feedback";
+import SqlRound from "./SqlRound";
+import { v2RoundOn } from "@/lib/tiers/flags";
 
 const BUSY_MSG = "The interviewer is busy right now. Your answers are saved; try again in a minute.";
 const CAP_MSG = "This practice session reached its limit. Get your feedback or start a new one.";
@@ -74,7 +77,10 @@ const ROUND_BLURB: Record<InterviewRound, string> = {
   portfolio: "Walk through your work and what you learned.",
   challenge: `A ${CHALLENGE_MINUTES}-minute design challenge.`,
   debugging: "Find and fix the bug. Tests run on your device.",
+  sql: "One SQL question on made-up data. Runs on your device.",
 };
+// v2 rounds App.tsx (frozen) doesn't know: enabled by their own flags, rendered here.
+const V2_ROUNDS: InterviewRound[] = ["sql", "debugging"];
 
 const LINK_CLS = `${linkClass} break-all`;
 
@@ -111,7 +117,7 @@ export default function Interview({ profile, resume, target, onBack, renderRound
   const feedbackRef = useRef<HTMLDivElement>(null);
   const hadContext = Boolean(target?.company || target?.role);
 
-  const rounds = INTERVIEW_ROUNDS.filter((r) => r.field === null || (profile?.field === r.field && roundsEnabled?.[r.id] === true));
+  const rounds = INTERVIEW_ROUNDS.filter((r) => r.field === null || (profile?.field === r.field && (V2_ROUNDS.includes(r.id) ? v2RoundOn(r.id) : roundsEnabled?.[r.id] === true)));
   const activeRound = rounds.some((r) => r.id === round) ? round : "screen";
 
   useEffect(() => {
@@ -226,12 +232,12 @@ export default function Interview({ profile, resume, target, onBack, renderRound
   // ---------- Session ----------
   if (session && panel) {
     const total = QUESTIONS_PER_ROUND[session.round];
-    const isPanelRound = session.round === "coding" || BOARD_ROUNDS.includes(session.round);
+    const isPanelRound = CODE_ROUNDS.includes(session.round) || BOARD_ROUNDS.includes(session.round);
     const answered = session.turns.length;
     const needsRetry = !session.pending && !busy && !isPanelRound && nextStep(session) !== "done" && nextStep(session) !== "answer";
     // Coding/design panels have their own Finish (it saves the code/board first).
     const canFinish = answered >= 1 && !busy && !isPanelRound;
-    const wide = session.round === "coding" || session.round === "debugging"; // split pane at >= 1024 px
+    const wide = CODE_ROUNDS.includes(session.round); // split pane at >= 1024 px
     return (
       <section className={`mx-auto px-6 py-10 sm:py-16 ${wide ? "max-w-[720px] lg:max-w-[1200px]" : "max-w-[720px]"}`}>
         <BackLink label="Leave practice" onClick={leaveSession} />
@@ -256,7 +262,7 @@ export default function Interview({ profile, resume, target, onBack, renderRound
 
         {isPanelRound ? (
           <div className="mt-6">
-            <RoundSlot render={renderRound} round={session.round} panel={panel} />
+            {session.round === "sql" && v2RoundOn("sql") ? <SqlRound {...panel} /> : <RoundSlot render={renderRound} round={session.round} panel={panel} />}
           </div>
         ) : (
           <>

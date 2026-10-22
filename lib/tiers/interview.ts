@@ -5,7 +5,7 @@ import { quoteIsReal } from "../quotes";
 import { KEYS, readKey, writeKey } from "../client/storage";
 import { fromJson, toJson } from "./board";
 import { getProblem, pickProblem } from "./problems";
-import { getSqlProblem, pickSqlProblem } from "./sql";
+import { pickSqlProblem } from "./sql";
 import { scriptFor } from "./scripted";
 import {
   BOARD_ROUNDS,

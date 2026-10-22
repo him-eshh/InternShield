@@ -11,8 +11,8 @@ export const TIER_FLAGS = {
   portfolio: true, // Slice 16: design portfolio walkthrough
   challenge: true, // Slice 16: timed design challenge on the board
   // v2 (tools stream flips each in the commit where it passes gates)
-  tsRunner: false, // TypeScript in the JS worker
-  sqlRound: false, // SQL problems on sql.js
+  tsRunner: true, // TypeScript in the JS worker
+  sqlRound: true, // SQL problems on sql.js
   debugRound: false, // "debugging" interview round
   presets: false, // company-style round presets
   scorecard: true, // per-axis interview scorecard

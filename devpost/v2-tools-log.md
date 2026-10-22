@@ -20,9 +20,9 @@ Branch `v2-tools` from `v2-base` 36ad123. Brief: `devpost/v2-brief-tools.md`. Pr
 - [x] wide coding layout, dark code theme (no purple), CodeMirror aria-label Compartment
 - [x] 4-area scorecard + feedback screen, flip `scorecard` (QA 05-coding-*, 06-scorecard-*, qa/v2-tools-t3.mjs)
 ### T4 Runners
-- [ ] TypeScript runner, flip `tsRunner`
-- [ ] SQL round (sql.js worker, multiset grader, 6 questions), flip `sqlRound`
-- [ ] worker hardening (prototype deletes, timeout, output cap) + tests
+- [x] TypeScript runner (CDN typescript.js in js-runner, transpile only, load cap 30 s then 3 s run cap), flip `tsRunner` (QA 07-ts-*: run, endless loop -> timeout -> editor reruns, syntax error line)
+- [x] SQL round (sql.js worker, multiset grader, 6 questions, reference queries in vitest), `SqlRound.tsx`, flip `sqlRound` (QA 08-sql-*)
+- [x] worker hardening (prototype deletes incl. Worker/SharedWorker/WebTransport, import() refused, output/log/row caps, kill on timeout) + tests (tests/tiers/v2-workers.test.ts). CSP header already in next.config.ts from setup.
 ### T5 Debugging + presets + round cards
 - [ ] debugging round (5 programs), flip `debugRound`
 - [ ] company-style presets + Amazon STAR signals, flip `presets`
@@ -53,6 +53,7 @@ Branch `v2-tools` from `v2-base` 36ad123. Brief: `devpost/v2-brief-tools.md`. Pr
 - Interview question cap raised 150 -> 400 tokens: gpt-oss counts reasoning in max_completion_tokens.
 
 ## Needs integration
+- `components/App.tsx`: v2 rounds (sql, debugging) are enabled by `v2RoundOn()` and rendered inside `Interview.tsx` (App's `roundsEnabled`/`renderRound` don't know them). Optional: move them into App's maps at integration.
 - `.env.example`: add optional `VISION_MODEL=qwen/qwen3.8-27b`, `INTERVIEW_MODEL=qwen/qwen3.8-27b`, `REWRITE_MODEL=qwen/qwen3.8-27b` (lib/server/groq.ts reads them; defaults shown).
 - `lib/server/guard.ts`: optionally raise MAX_IMAGE_BODY_BYTES to 3.6 MB (findings A2 allow 3.5 MB of strips) and lower TRANSCRIBE_DAILY_CAP default 20 -> 12 (findings A2: 2-strip calls share qwen TPD). Not required for correctness.
 

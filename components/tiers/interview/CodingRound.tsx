@@ -11,6 +11,7 @@ import {
 } from "@/lib/tiers/types";
 import { getProblem, gradeOutputs } from "@/lib/tiers/problems";
 import { runCode, stopRunners } from "@/lib/tiers/runner";
+import { TIER_FLAGS } from "@/lib/tiers/flags";
 import { Spinner } from "../../icons";
 import { btnPrimary, btnSecondary, card as cardCls, pillOff, pillOn } from "../../ui";
 
@@ -22,7 +23,9 @@ const CodeEditor = dynamic(() => import("./CodeEditor"), {
 const LANGS: { id: CodeLanguage; label: string }[] = [
   { id: "python", label: "Python" },
   { id: "javascript", label: "JavaScript" },
+  ...(TIER_FLAGS.tsRunner ? [{ id: "typescript" as const, label: "TypeScript" }] : []),
 ];
+const langLabel = (l: CodeLanguage) => LANGS.find((x) => x.id === l)?.label ?? l;
 
 interface ExampleRow {
   input: string;
@@ -67,7 +70,8 @@ export default function CodingRound({ session, onUpdate, ask, busy }: RoundPanel
     );
   }
 
-  const code = codes[language] ?? problem.starter[language] ?? "";
+  // TypeScript is only transpiled (no type check), so the JS starter is valid TS.
+  const code = codes[language] ?? problem.starter[language] ?? (language === "typescript" ? problem.starter.javascript : "");
   const submitted = session.code && session.code.problemId === problem.id ? session.code : null;
   const disabled = running !== null || busy;
 
@@ -89,7 +93,7 @@ export default function CodingRound({ session, onUpdate, ask, busy }: RoundPanel
     if (!res.ok && res.message === "Stopped.") return; // user pressed Stop: not an error
     if (!res.ok) {
       setRunError(res.message);
-      setStatus(`Run failed. ${res.message}`);
+      setStatus(""); // the error card below is the announcement
       return;
     }
     const graded = gradeOutputs(problem.examples, res.outputs);
@@ -119,7 +123,7 @@ export default function CodingRound({ session, onUpdate, ask, busy }: RoundPanel
     if (!res.ok && res.message === "Stopped.") return;
     if (!res.ok) {
       setRunError(res.message);
-      setStatus(`Submit failed. ${res.message}`);
+      setStatus("");
       return;
     }
     const graded = gradeOutputs(problem.tests, res.outputs);
@@ -239,8 +243,9 @@ export default function CodingRound({ session, onUpdate, ask, busy }: RoundPanel
           </button>
         ))}
       </div>
+      <p className="-mt-3 text-[13px] text-muted">Java, C++, Go and Rust don&apos;t run here; explain them in your approach.</p>
 
-      <CodeEditor value={code} language={language} onChange={setCode} label={`${problem.title} code editor, ${language === "python" ? "Python" : "JavaScript"}`} />
+      <CodeEditor value={code} language={language} onChange={setCode} label={`${problem.title} code editor, ${langLabel(language)}`} />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <button type="button" className={btnSecondary} disabled={disabled} onClick={runExamples}>
@@ -267,12 +272,12 @@ export default function CodingRound({ session, onUpdate, ask, busy }: RoundPanel
         }
       >
         {loadingPy
-          ? "Loading Python… (first time takes a few seconds)"
+          ? `Loading ${langLabel(language)}… (first time takes a few seconds)`
           : status || (submitted ? `${submitted.passed} of ${submitted.total} hidden tests passed` : "")}
       </p>
 
       {runError && (
-        <p className="rounded-[14px] border border-border bg-bg-soft p-4 text-[15px] text-bad">
+        <p role="alert" className="rounded-[14px] border border-border bg-bg-soft p-4 text-[15px] text-bad">
           <strong>Could not run.</strong> {runError}
         </p>
       )}

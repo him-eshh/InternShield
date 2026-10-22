@@ -21,7 +21,7 @@ const flags = vi.hoisted(() => ({
   resume: true, tracker: true, screenshot: true, interview: true, coding: true, design: true,
   case: true, finance: true, portfolio: true, challenge: true,
 }));
-vi.mock("@/lib/tiers/flags", () => ({ TIER_FLAGS: flags }));
+vi.mock("@/lib/tiers/flags", () => ({ TIER_FLAGS: flags, v2RoundOn: () => true }));
 
 import { POST } from "@/app/api/interview/route";
 
@@ -159,6 +159,14 @@ describe("interview route", () => {
     expect(user).toContain("BOARD:");
     expect(user).toContain("Users DB");
     expect(user).toContain("Web App");
+  });
+
+  it("allows SQL hints, refuses SQL questions", async () => {
+    h.create.mockReturnValue(groqOk("Try a LEFT JOIN and look for NULLs."));
+    const code = { problemId: "sql-not-enrolled", language: "sql", code: "SELECT name FROM students;", passed: 0, total: 1 };
+    expect((await call({ ...body, ask: "hint", round: "sql", problem: "Find students.", turns: [], code })).status).toBe(200);
+    expect(h.create.mock.calls[0][0].messages[1].content).toContain("CODE (sql):");
+    expect((await call({ ...body, round: "sql" })).status).toBe(400);
   });
 
   it("allows a portfolio question and shows links as not opened", async () => {

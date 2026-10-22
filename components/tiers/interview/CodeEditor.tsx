@@ -13,7 +13,11 @@ interface Props {
 
 async function loadLanguage(language: CodeLanguage) {
   if (language === "python") return (await import("@codemirror/lang-python")).python();
-  return (await import("@codemirror/lang-javascript")).javascript();
+  if (language === "sql") {
+    const { sql, SQLite } = await import("@codemirror/lang-sql");
+    return sql({ dialect: SQLite });
+  }
+  return (await import("@codemirror/lang-javascript")).javascript({ typescript: language === "typescript" });
 }
 
 export default function CodeEditor({ value, language, onChange, label }: Props) {

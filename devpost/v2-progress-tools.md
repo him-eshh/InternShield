@@ -6,11 +6,12 @@
 - T2 A2 tiling + groq env/fallback/429 (e8858d8)
 - T3 interview core (commit "V2 tools 3")
 
+- T4 TS + SQL runners, worker hardening (commit "V2 tools 4")
+
 ## Current
-- T4 runners: start by reading tier spec + 04 section 3d, lib/tiers/runner.ts, public/workers/**.
+- T5 debugging round: start with 04 section 4; new lib/tiers/debugging.ts (programs + reference fixes + tests), DebugRound panel rendered in Interview.tsx like SqlRound (V2_ROUNDS + v2RoundOn already include "debugging").
 
 ## Next
-- T4 TS + SQL runners, worker hardening
 - T5 debugging round, presets, round cards
 - T6 resume tailoring
 - T7 diff, T8 polish, T9 final
