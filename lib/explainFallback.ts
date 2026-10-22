@@ -10,6 +10,10 @@ export function hasBannedWord(text: string): boolean {
 
 // Calm sentences matched on the flag title (the request carries no flag id).
 const SENTENCES: [RegExp, string][] = [
+  [/send money back out|money back out/i, "You're asked to pass money on, keep a cut, or pay to withdraw, which is how scammers move money through students."],
+  [/run their code$/i,"You're asked to run their code, so confirm it with the company and only run it somewhere disposable."],
+  [/hides characters/i, "Hidden or look-alike characters were mixed into the message, which scammers use to slip past filters."],
+  [/task scam/i, "The work described (liking, boosting, or finishing sets of tasks for commission) matches a known task scam."],
   [/deposit|fake check|cashier|mailed (?:a )?check/i, "You're asked to deposit a check and send money on, which is a common way scammers pull cash from students before the check bounces."],
   [/equipment|laptop|software|vendor/i, "You're asked to buy equipment yourself, and real employers don't ask new hires to front that cost."],
   [/gift ?card/i, "Gift cards are requested, and no real employer is paid back that way."],

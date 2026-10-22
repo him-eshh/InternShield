@@ -12,6 +12,9 @@
   - ui-builder C3: components/report/**, app/v2-check.css, lib/reportView.ts, tests/ui/v2-check-report*/ring*
   - general-purpose C7 held-out: eval/heldout/*.json (blind to lib/scoring). eval/run.ts heldout + matrix DONE (9d65c5a).
   - ui-builder C8: components/CheckForm.tsx, Checklist.tsx, tests/ui/v2-check-form/checklist.test.tsx
+- C3 + C8 worker output committed WIP 7ca2901 (screens checked: qa/v2-check-report.mjs [scam|real]). Held-out ea8f1b2.
+  Still waiting on C2 engine-builder. Then: C2 gates+commit, C3/C8 reviewer pass, wire links into score.ts, C4.
+  Gotcha: app wraps in strict LazyMotion -> use `m.*` not `motion.*` (workers forget).
 - Done by me (9d65c5a): lib/client/annotate.ts (+test), lib/scoring/links.ts checkLinks (+test, NOT wired into score.ts yet: wire after C2 lands; lookalike+brand-careers on one link = count once).
 - Dev server running on 3100 (`node qa/serve.mjs stop 3100` when done).
 

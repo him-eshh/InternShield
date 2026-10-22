@@ -2,15 +2,17 @@
 // AI facts and the raw-text backstop are combined; fixed rules decide the score.
 import { parsePhoneNumberFromString } from "libphonenumber-js/min";
 import type { AskKind, Facts, Flag, FlagGroup, Quoted, Report, RiskLevel, ScoreInput } from "../types";
-import { quoteIsReal } from "../quotes";
+import { quoteIsReal, visibleQuote } from "../quotes";
 import { backstop, type BackstopId } from "./backstop";
 import { buildCoverage } from "./coverage";
 import { emailDomain, isFreeEmail, isHiringPlatform, lookalike, registrableDomain, type LookalikeKind } from "./domains";
+import { withFlagInfo } from "./flagInfo";
 import { roleAboveLevel } from "./level";
-import { matchFieldPattern } from "./patterns";
+import { matchFieldPattern, taskVocab } from "./patterns";
 import { matchRows, payMatch, rolesMatch } from "./posting";
 import { pickQuestions, questionGaps, type Relevance } from "./questions";
 import { BANNED_WORDS, CHANGE_REASONS, WEIGHTS as W } from "./rules";
+import { cleanText } from "./unicode";
 
 const DAY_MS = 86_400_000;
 const FTC_JOB_SCAMS = "https://consumer.ftc.gov/articles/job-scams";
@@ -51,10 +53,23 @@ const CRITICAL_COPY: Record<CriticalAsk, { title: string; why: string; sourceUrl
   },
   run_code_or_install: {
     title: "They want you to run their code or install something",
-    why: "Fake coding tests and \"drivers\" from recruiters are used to put malware on your computer.",
+    why: "Fake coding tests, remote-access tools, and \"driver fixes\" from recruiters are used to put malware on your computer or take it over.",
+  },
+  money_wrong_way: {
+    title: "They want you to send money back out",
+    why: "Real employers don't ask you to pass money on, keep a cut, use your own account, or pay a fee to withdraw. That is how scammers move money through you.",
+    sourceUrl: "https://www.fdicoig.gov/alerts/public-service-alert-money-mules",
   },
 };
-const CRITICAL_ASKS = Object.keys(CRITICAL_COPY) as CriticalAsk[];
+// run_code_or_install and money_wrong_way have their own rules below.
+const CRITICAL_ASKS = (Object.keys(CRITICAL_COPY) as CriticalAsk[]).filter((k) => k !== "run_code_or_install" && k !== "money_wrong_way");
+const MONEY_FAMILY = ["deposit_check", "crypto_or_task_deposit", "reship_or_forward"];
+
+const CRYPTO_THEME =
+  /\b(?:crypto(?:currency)?|blockchain|web3|dapps?|nfts?|defi|smart contracts?|solidity|metamask|binance|usdt|bitcoin|ethereum)\b/i;
+/** The recruiter found you; you didn't apply. "reviewed your resume" is deliberately not here. */
+const UNSOLICITED =
+  /\b(?:came across|found|saw|noticed|stumbled (?:up)?on|impressed by|loved)\s+(?:your|you on)\b[^.!?\n]{0,30}\b(?:profile|github|gitlab|r[eé]sum[eé]|portfolio|linkedin|repos?|projects?|work)\b/i;
 
 const STARTUP_WORDS =
   /\b(?:start-?up|small business|small team|small company|early[- ]stage|pre-seed|seed[- ]stage|family[- ]owned|stealth|just launched|co-?founder|founder)\b/i;
@@ -165,9 +180,12 @@ interface Evaluated {
 }
 
 function evaluate(input: ScoreInput): Evaluated {
-  const text = input.text ?? "";
+  // `raw` is what the user sees (quotes must match it); `text` is the cleaned copy every rule reads.
+  const raw = input.text ?? "";
+  const cleaned = cleanText(raw);
+  const text = cleaned.text;
   const answers = input.answers ?? {};
-  const facts = input.facts ? verifyFacts(input.facts, text) : null;
+  const facts = input.facts ? verifyFacts(input.facts, raw) : null;
   const hits = backstop(text);
   const hit = (id: BackstopId) => hits.find((h) => h.id === id) ?? null;
   const ask = (kind: AskKind) => facts?.asks.find((a) => a.kind === kind) ?? null;
@@ -186,6 +204,17 @@ function evaluate(input: ScoreInput): Evaluated {
   const company = facts?.company?.value ?? (input.form.company?.trim() || null);
   const companyLabel = named(company, "this company");
 
+  // Off-platform and the sender's address are read first: the run-code rule depends on them.
+  const offFact = facts?.offPlatform ?? null;
+  const offHit = hit("off_platform");
+  const offPlatform = offFact || offHit;
+  const chatChannel = source === "text_whatsapp" || Boolean(offPlatform);
+
+  const senderStep = input.steps.sender.status === "done" ? input.steps.sender.data : null;
+  const senderEmail = senderStep?.email ?? facts?.sender.email ?? (input.form.sender?.includes("@") ? input.form.sender.trim() : null);
+  const senderDomain = senderStep?.domain ?? emailDomain(senderEmail);
+  const free = senderDomain ? Boolean(senderStep?.freeEmail) || isFreeEmail(senderDomain) : false;
+
   // ----- Offer: critical asks (facts ∪ backstop) -----
   for (const kind of CRITICAL_ASKS) {
     const fact = ask(kind);
@@ -195,11 +224,49 @@ function evaluate(input: ScoreInput): Evaluated {
     red(kind, "offer", W.critical, c.title, c.why, fact?.quote ?? h!.snippet, { critical: true, sourceUrl: c.sourceUrl });
   }
 
-  // ----- Off-platform (needed for sensitive-data channel and the abroad rule) -----
-  const offFact = facts?.offPlatform ?? null;
-  const offHit = hit("off_platform");
-  const offPlatform = offFact || offHit;
-  const chatChannel = source === "text_whatsapp" || Boolean(offPlatform);
+  // Money flowing the wrong way. One critical in the money family is enough; no double count.
+  const wayFact = ask("money_wrong_way");
+  const wayHit = hit("money_wrong_way");
+  if ((wayFact || wayHit) && !flags.some((f) => MONEY_FAMILY.includes(f.id))) {
+    const c = CRITICAL_COPY.money_wrong_way;
+    red("money_wrong_way", "offer", W.critical, c.title, c.why, wayFact?.quote ?? wayHit!.snippet, { critical: true, sourceUrl: c.sourceUrl });
+  }
+
+  // Run their code: critical for remote-access tools, terminal pastes, switching off protection, and installers,
+  // or when the ask comes with something else suspicious. A plain take-home from a company you applied to is +15.
+  const codeFact = ask("run_code_or_install");
+  const codeHit = hit("run_code_or_install");
+  const riskyRun = hit("risky_run");
+  if (codeFact || codeHit || riskyRun) {
+    const appliedFirst = source === "company_site" || source === "handshake";
+    const suspicious = chatChannel || free || CRYPTO_THEME.test(text) || (!appliedFirst && UNSOLICITED.test(text));
+    const quote = codeFact?.quote ?? riskyRun?.snippet ?? codeHit!.snippet;
+    if (riskyRun || suspicious) {
+      const c = CRITICAL_COPY.run_code_or_install;
+      red("run_code_or_install", "offer", W.critical, c.title, c.why, quote, { critical: true });
+    } else {
+      red(
+        "untrusted_code",
+        "offer",
+        W.untrustedCode,
+        "They want you to run their code",
+        "Take-home projects are normal, but code from a recruiter can hide malware. Confirm it with the company first and run it somewhere disposable.",
+        quote,
+      );
+    }
+  }
+
+  // Invisible or look-alike characters were mixed into the message.
+  if (cleaned.stripped + cleaned.replaced >= W.hiddenCharactersMin) {
+    red(
+      "hidden_characters",
+      "message",
+      W.hiddenCharacters,
+      "The message hides characters",
+      "Invisible or look-alike letters were mixed into the text. Scammers do this to slip past filters, so we read it with them removed.",
+      null,
+    );
+  }
 
   const sensFact = ask("sensitive_data");
   const sensHit = hit("sensitive_data");
@@ -285,8 +352,11 @@ function evaluate(input: ScoreInput): Evaluated {
     red("vague_easy_pay", "offer", W.vagueEasyPayCombo, "Vague duties, easy pay, no experience needed", "This mix of unclear work, easy money, and no experience needed is a classic scam pattern.", facts.dutiesVague.quote);
   }
 
-  const pattern = matchFieldPattern(text, input.profile?.field ?? null, source);
-  if (pattern) {
+  const tasks = taskVocab(text);
+  const pattern = tasks ? null : matchFieldPattern(text, input.profile?.field ?? null, source);
+  if (tasks) {
+    red("field_pattern", "offer", W.taskVocab, "This looks like a task scam", "Liking videos, boosting products, or finishing sets of tasks for commission is a known task scam. The money you see is bait for a deposit later.", tasks.quote, { sourceUrl: "https://consumer.ftc.gov/consumer-alerts/2025/08/how-spot-avoid-task-scams" });
+  } else if (pattern) {
     red("field_pattern", "offer", W.fieldPattern, `This looks like ${pattern.label}`, pattern.why, pattern.quote);
   }
 
@@ -302,12 +372,8 @@ function evaluate(input: ScoreInput): Evaluated {
     good("applied_first", "sender", W.appliedFirst, "You applied first", source === "handshake" ? "You started this on Handshake, so this isn't a surprise message out of nowhere." : "You applied on the company's own site, so this isn't a surprise message out of nowhere.");
   }
 
-  const senderStep = input.steps.sender.status === "done" ? input.steps.sender.data : null;
-  const senderEmail = senderStep?.email ?? facts?.sender.email ?? (input.form.sender?.includes("@") ? input.form.sender.trim() : null);
-  const senderDomain = senderStep?.domain ?? emailDomain(senderEmail);
   const official = input.steps.company.status === "done" ? input.steps.company.data?.officialDomain ?? null : null;
-  const emailQuote = senderEmail && quoteIsReal(senderEmail, text) ? senderEmail : null;
-  const free = senderDomain ? Boolean(senderStep?.freeEmail) || isFreeEmail(senderDomain) : false;
+  const emailQuote = senderEmail && quoteIsReal(senderEmail, raw) ? senderEmail : null;
   const platform = senderDomain ? isHiringPlatform(senderDomain) : false;
   const domainLabel = named(senderDomain, "this email's website");
   const officialLabel = named(official, "the company's website");
@@ -382,7 +448,8 @@ function evaluate(input: ScoreInput): Evaluated {
 
   // ----- Score -----
   const anyCritical = flags.some((f) => f.critical);
-  const kept = anyCritical ? flags.filter((f) => f.kind === "red") : flags;
+  // Quotes read from the cleaned text are shown as the user's own wording; every flag gets severity, a step, and a link.
+  const kept = (anyCritical ? flags.filter((f) => f.kind === "red") : flags).map((f) => withFlagInfo({ ...f, quote: visibleQuote(f.quote, raw) }));
   const redSum = kept.filter((f) => f.kind === "red").reduce((n, f) => n + f.points, 0);
   const goodSum = anyCritical ? 0 : Math.max(W.goodSignCap, kept.filter((f) => f.kind === "good").reduce((n, f) => n + f.points, 0));
   let total = redSum + goodSum;
@@ -407,6 +474,14 @@ function evaluate(input: ScoreInput): Evaluated {
   const thinMessage = text.trim().split(/\s+/).filter(Boolean).length < 20;
   const { couldntCheck, coverage } = buildCoverage(input, { senderEmailKnown: Boolean(senderEmail), thinMessage });
 
+  // "How sure": separate from the risk itself (research 01 > 3.4). A critical flag is enough on its own;
+  // otherwise it depends on how many of the weighted checks could run.
+  const confidence: NonNullable<Report["confidence"]> = {
+    level: anyCritical ? "high" : thinMessage ? "low" : coverage.ran >= W.sureFrom ? "high" : coverage.ran >= W.fairlySureFrom ? "medium" : "low",
+    checked: coverage.ran,
+    total: coverage.total,
+  };
+
   return {
     relevant,
     report: {
@@ -418,6 +493,7 @@ function evaluate(input: ScoreInput): Evaluated {
       coverage,
       postingMatch,
       thinMessage,
+      confidence,
     },
   };
 }

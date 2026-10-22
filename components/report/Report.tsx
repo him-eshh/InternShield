@@ -1,17 +1,19 @@
 "use client";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import "@/app/v2-check.css";
-import { fetchExplanation, type Explanation as ExplanationData, type PipelineInput, type PipelineOutcome, type StepKey } from "@/lib/client/pipeline";
+import { fetchExplanation, rerunWithCompany, type Explanation as ExplanationData, type PipelineInput, type PipelineOutcome, type StepKey } from "@/lib/client/pipeline";
 import { actionLine } from "@/lib/reportView";
 import { describeChange, score } from "@/lib/scoring/score";
 import { LEVEL_LABELS, type Answers, type QuestionId, type Report as ReportData } from "@/lib/types";
 import { InfoIcon } from "../icons";
 import { btnSecondary } from "../ui";
+import CompanyChip from "./CompanyChip";
 import CouldntCheck, { COULDNT_CHECK_ID } from "./CouldntCheck";
 import EvidenceList from "./EvidenceList";
 import Explanation from "./Explanation";
 import PostingSection from "./PostingSection";
 import QuickQuestions from "./QuickQuestions";
+import RecoveryCard from "./RecoveryCard";
 import ReportFooter from "./ReportFooter";
 import RiskRing from "./RiskRing";
 import TopReasons from "./TopReasons";
@@ -36,7 +38,48 @@ export function announcement(report: ReportData): string {
   return `${LEVEL_LABELS[report.level]}, risk ${report.score}, ${red} red flag${red === 1 ? "" : "s"}`;
 }
 
-export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, extras, recovery }: Props) {
+/**
+ * The report App renders. Editing the company re-runs only the company + posting lookups and swaps in
+ * the new outcome here (App.tsx is frozen), remounting the body so its state starts from the new report.
+ */
+export default function Report(props: Props) {
+  const [base, setBase] = useState(props.outcome);
+  const [rerun, setRerun] = useState<{ outcome: PipelineOutcome; input: PipelineInput; n: number } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  if (base !== props.outcome) {
+    setBase(props.outcome);
+    setRerun(null);
+    setNote(null);
+  }
+  const outcome = rerun?.outcome ?? props.outcome;
+  const input = rerun?.input ?? props.input;
+
+  async function onCompany(name: string) {
+    setBusy(true);
+    setNote(null);
+    const nextInput = { ...input, form: { ...input.form, company: name } };
+    const next = await rerunWithCompany(input, outcome.steps, name, { fetch: props.fetchImpl });
+    setRerun((r) => ({ outcome: next, input: nextInput, n: (r?.n ?? 0) + 1 }));
+    setBusy(false);
+    setNote(`Rechecked with ${name}`);
+    // The body remounts; put focus back on the chip so keyboard users stay in place.
+    requestAnimationFrame(() => document.querySelector<HTMLElement>("[data-company-edit]")?.focus());
+  }
+
+  if (!outcome.report) return null;
+  return (
+    <ReportBody
+      key={rerun?.n ?? 0}
+      {...props}
+      outcome={outcome}
+      input={input}
+      company={{ busy, note, onSave: (n) => void onCompany(n) }}
+    />
+  );
+}
+
+function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, recovery, company }: Props & { company?: { busy: boolean; note: string | null; onSave: (name: string) => void } }) {
   const initial = outcome.report as ReportData;
   const [report, setReport] = useState<ReportData>(initial);
   const [questions] = useState(initial.questions);
@@ -143,6 +186,7 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, ex
         )}
         <RiskRing score={report.score} level={report.level} coverage={report.coverage} />
         <p className="mt-3 max-w-[46ch] text-[17px] leading-snug text-fg-2">{actionLine(report.level)}</p>
+        {company && !incomplete && <CompanyChip name={companyName} busy={company.busy} note={company.note} onSave={company.onSave} />}
         <button
           type="button"
           onClick={jumpToCouldntCheck}
@@ -197,8 +241,7 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, ex
 
         <QuickQuestions questions={questions} answers={answers} change={change} lastId={lastId} onAnswer={onAnswer} />
 
-        {/* Recovery card (C4) goes here. */}
-        {recovery}
+        {recovery ?? <RecoveryCard level={report.level} />}
 
         {report.level !== "high" && (
           <PostingSection checked={steps.posting.status === "done"} posting={postingData} match={report.postingMatch} company={companyName} careersUrl={careersUrl} />

@@ -34,6 +34,7 @@ export type AskKind =
   | "crypto_or_task_deposit"
   | "reship_or_forward"
   | "run_code_or_install"
+  | "money_wrong_way" // candidate sends money onward, keeps a cut, uses their own account, or pays to withdraw
   | "sensitive_data"
   | "reply_yes"
   | "other";

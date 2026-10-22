@@ -47,6 +47,14 @@ Every outside service is on a free plan with no card. Per visitor: 3 checks a mi
 | medium | 0 | 5 | 0 |
 | high | 0 | 0 | 11 |
 
+Held-out set (27 cases written without seeing the rules, not gating): 23/27; false positives on low: 1/9 (11%).
+
+| expected \ got | low | medium | high |
+|---|---|---|---|
+| low | 8 | 1 | 0 |
+| medium | 2 | 5 | 1 |
+| high | 0 | 0 | 10 |
+
 | Message | Expected | Got | Score | Top flags |
 |---|---|---|---|---|
 | mid-caregiver-whatsapp | medium | medium | 43 | surprise_text, off_platform, field_pattern |

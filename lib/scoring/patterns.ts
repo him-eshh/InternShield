@@ -70,6 +70,43 @@ export const FIELD_PATTERNS: FieldPattern[] = [
   },
 ];
 
+/** Task-scam vocabulary (research 01 > rule 6). Each entry is one term; 2+ different terms is the pattern. */
+const TASK_TERMS: RegExp[] = [
+  // like / subscribe / follow
+  /\b(?:like|subscribe|follow)\s*(?:,|and|&|\/)\s*(?:like|subscribe|follow|share|comment)\b/gi,
+  /\b(?:subscribe|follow)\s+(?:to\s+)?(?:\w+\s+){0,2}?(?:videos?|channels?|accounts?|pages?)\b/gi,
+  // rate / review apps and products
+  /\b(?:rate|rating|review|reviewing)\s+(?:\w+\s+){0,2}?(?:apps?|products?|hotels?|movies?|merchants?)\b/gi,
+  // boosting and optimizing
+  /\b(?:product|app|movie|ticket|hotel|order)\s+(?:boosting|optimi[sz]ation)\b/gi,
+  /\b(?:boost|optimi[sz]e)\w*\s+(?:\w+\s+){0,1}?(?:products?|apps?|orders?|ratings?|rankings?|sales)\b/gi,
+  // sets of tasks
+  /\bsets?\s+of\s+\d+\s+tasks?\b/gi,
+  /\b(?:complete|finish|do)\s+\d+\s+tasks?\b/gi,
+  /\b\d+\s+tasks?\s+(?:a|per|each|every)\s+day\b/gi,
+  // commission per task
+  /\bcommissions?\s+(?:per|for each|for every|on each)\s+(?:task|order|job)\b/gi,
+  /\b(?:earn|get)\s+(?:a\s+)?commissions?\b[^.!?\n]{0,40}\btasks?\b/gi,
+  // coach / mentor groups
+  /\b(?:your|our)\s+(?:personal\s+)?(?:coach|mentor|trainer)\b/gi,
+];
+
+/** How many different task-scam terms the message uses, with a real snippet around the first. */
+export function taskVocab(text: string): { count: number; quote: string } | null {
+  const used: [number, number][] = [];
+  for (const re of TASK_TERMS) {
+    const m = firstMatch(text, [re], true);
+    if (!m) continue;
+    const range: [number, number] = [m.index, m.index + m.match.length];
+    // One phrase that fits two patterns ("like and subscribe to partner videos") counts once.
+    if (used.some(([a, b]) => range[0] < b && a < range[1])) continue;
+    used.push(range);
+  }
+  if (used.length < 2) return null;
+  const first = used.reduce((a, b) => (b[0] < a[0] ? b : a));
+  return { count: used.length, quote: snippetAround(text, first[0], first[1]) };
+}
+
 /** The first field pattern that applies. With no profile, every field's patterns apply. */
 export function matchFieldPattern(
   text: string,
