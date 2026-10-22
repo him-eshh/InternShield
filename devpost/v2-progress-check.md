@@ -7,17 +7,19 @@
 - WIP 8cb5e17 (session 6): CompanyChip data-company-edit + tokens, Couldn't check above questions.
 - C3/C4 code: 7ca2901, d007189, 2d3e634 (+ session 6 fixes below). links.ts wired in 60d1136 (C5 link part).
 
-## Current (session 6)
-- C3+C4 verification. QA shots done: 11-report-*, 30-33 questions, 20-22 chip/recovery (all overflow 0, no new console errors).
-- Session 6 fixes (uncommitted -> commit with C3/C4): footer `data-level` + `app/v2-check.css` hides Tailor/Practice when an
-  answer raises to high; thanks copy "Thanks. <change>" (assertion logged); chip refocus via useEffect after remount
-  (`Report.tsx`), `qa/v2-check-chip.mjs` focus print.
-- Reviewer (read-only) running on C3/C4 diff -> fix blockers -> gates -> commit "V2 check 3" + "V2 check 4" (can be one
-  commit each: C3 files already committed in WIP, so "V2 check 3" may be an empty-diff marker: use the fix commit for C3, then C4).
+- C3 "V2 check 3" a9f20d1, C4 "V2 check 4" 34a5cb4 (reviewer: no blockers; fixes in).
+
+## Current (session 6) — 3 background workers (if rotated, they're gone: check files and finish by hand)
+- C5 engine-builder: rules 7-10 in lib/scoring/**, tests/scoring/v2-rules7-10.test.ts, eval/messages/v2-*.json (new).
+  My uncommitted score.ts/rules.ts edit (off_platform soft only when applied first; phoneCountry removed) rides in the C5 commit.
+- C6 ui-builder: components/report/AnnotatedMessage.tsx (new), Report.tsx wiring, EvidenceList/Card ids `ev-<id>`, marks `mk-<id>`,
+  app/v2-check.css, tests/ui/v2-check-annotate.test.tsx.
+- C7 engine-builder: ~45 new eval/messages/c7-*.json (originals untouched).
+- After each: gates, QA shots (C6: annotated desktop+mobile, light/dark, reduced motion), commit "V2 check 5/6/7".
 
 ## Next
-- C5: rules 7-10 (secrecy, impersonation, paperwork, platforms/reply YES), check report.links filled; eval cases each.
-- C6 annotated view (annotate.ts exists, view not built), C7 eval to ~90 (heldout exists, 27 cases), C8 verify, C9 intro/logo, C10.
+- C7 README eval table (npm run eval updates it), C8 verify vs brief (form validate-on-click, Add context, checking state),
+  C9 intro/logo, C10 final (reviewer, full shots, summary).
 
 ## Gotchas
 - Shell: chained/compound bash commands and `sh script` need approval; run gates one per call:
