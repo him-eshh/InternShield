@@ -9,10 +9,9 @@
 - T4 TS + SQL runners, worker hardening (commit "V2 tools 4")
 
 ## Current
-- T5 debugging round: start with 04 section 4; new lib/tiers/debugging.ts (programs + reference fixes + tests), DebugRound panel rendered in Interview.tsx like SqlRound (V2_ROUNDS + v2RoundOn already include "debugging").
+- T5 code done (WIP commits): debugging round reuses CodingRound (lib/tiers/debugging.ts, tests/tiers/v2-debugging.test.ts), presets (lib/tiers/presets.ts, context.preset, server style line, LP tags on scorecard; tests/tiers/v2-presets.test.ts), round cards in Interview.tsx. Flags debugRound + presets ON. Left: build, screenshots (qa/v2-tools-t5.mjs), phase reviewer, commit "V2 tools 5: ...".
 
 ## Next
-- T5 debugging round, presets, round cards
 - T6 resume tailoring
 - T7 diff, T8 polish, T9 final
 

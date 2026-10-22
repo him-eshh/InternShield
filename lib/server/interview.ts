@@ -25,6 +25,7 @@ import {
 import { describe, fromJson } from "@/lib/tiers/board";
 import { TIER_FLAGS, v2RoundOn } from "@/lib/tiers/flags";
 import { validateFeedback } from "@/lib/tiers/interview";
+import { getPreset } from "@/lib/tiers/presets";
 import { checkTurn, describeCheck } from "@/lib/tiers/scripted";
 import type { Field } from "@/lib/types";
 import { callGroq } from "./groq";
@@ -69,6 +70,10 @@ function parseContext(v: unknown): InterviewContext | null {
     field = v.field as Field;
   }
   const base: InterviewContext = { company, role, description, resume, field };
+  if (v.preset !== null && v.preset !== undefined) {
+    if (!getPreset(v.preset)) return null;
+    base.preset = v.preset as InterviewContext["preset"];
+  }
   if (v.links === null || v.links === undefined) return base;
   if (!Array.isArray(v.links) || v.links.length > MAX_LINKS) return null;
   const links: string[] = [];
@@ -141,6 +146,8 @@ function roundLabel(round: InterviewRound): string {
 
 function systemFor(r: InterviewRequest): string {
   const label = roundLabel(r.round);
+  const preset = getPreset(r.context.preset);
+  const style = preset ? ` ${preset.style} Never claim to work for or speak for the company.` : "";
   if (r.ask === "hint") {
     return `You are a friendly interviewer in a live coding interview with a student or early-career candidate. Give one short nudge under 50 words toward the coding PROBLEM, based on their CODE so far. No code, no full solution, no preamble. ${SAFETY}`;
   }
@@ -160,6 +167,7 @@ function systemFor(r: InterviewRequest): string {
       tests += ` Comment on the user flow shown on the BOARD. The ${CHALLENGE_MINUTES}-minute timer ${r.timeUp ? "ran out before they finished; mention time management kindly" : "had not run out"}.`;
     }
     if (r.round === "portfolio") tests += " The links were NOT opened; never claim to have seen the work.";
+    tests += style;
     return `You are a kind, honest coach reviewing a ${label} mock interview for a student or early-career candidate. Return JSON only: a short summary and one item per answer, with index (0-based), one strength, one concrete improvement, and a quote. The quote must be copied exactly from that answer, or "" if none fits. ${star}${tests} Be specific and encouraging; do not claim to know hiring outcomes. ${SAFETY}`;
   }
   const extra: Partial<Record<InterviewRound, string>> = {
@@ -172,7 +180,7 @@ function systemFor(r: InterviewRequest): string {
     finance: " Ask a follow-up about accounting or valuation.",
   };
   const design = extra[r.round] ?? "";
-  return `You are a friendly interviewer for a student or early-career candidate in a ${label} interview. Ask exactly one next question, under 60 words, plain text, no preamble. Do not repeat earlier questions.${design} Fit the role, posting and resume when given. ${SAFETY}`;
+  return `You are a friendly interviewer for a student or early-career candidate in a ${label} interview. Ask exactly one next question, under 60 words, plain text, no preamble. Do not repeat earlier questions.${design}${style} Fit the role, posting and resume when given. ${SAFETY}`;
 }
 
 function buildUser(r: InterviewRequest): string {

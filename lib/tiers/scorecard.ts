@@ -1,6 +1,7 @@
 // v2 interview scorecard (findings 04 sections 0, 2b, (c) #1). Pure.
 // Bands come from code-measured signals; the AI only adds quotes (already checked word for word by validateFeedback).
 // Evidence-or-cap: an AI-judged axis without a quote is capped at "Developing".
+import { lpTags } from "./presets";
 import { checkTurn } from "./scripted";
 import { QUESTIONS_PER_ROUND, type InterviewSession, type ScoreBand, type Scorecard } from "./types";
 
@@ -124,11 +125,15 @@ function behavioralAxes(s: InterviewSession, quotes: string[]): Axis[] {
   const text = s.turns.map((t) => t.answer).join(" ");
   const i = (text.match(/\bI\b|\b[Mm]y\b/g) ?? []).length;
   const we = (text.match(/\b(?:we|our|us)\b/gi) ?? []).length;
+  const done = completeness(s);
+  // Amazon-style: name the Leadership Principles the bank questions practiced.
+  const lps = s.context.preset === "amazon" ? lpTags(s.turns.map((t) => t.question)) : [];
+  if (lps.length) done.evidence.push(`Leadership Principles: ${lps.join(", ")}`);
   return [
     quoted("star", "Structure (STAR)", ratioBand(avg / 4, 1, 0.75, 0.5), quotes, [stars.length ? `About ${Math.round(avg)} of 4 STAR parts per answer` : "STAR not checked"]),
     axis("ownership", "Ownership", i + we ? ratioBand(i / (i + we), 0.6, 0.4, 0) : "Not yet", [`“I/my” ${plural(i, "time")}, “we/our” ${plural(we, "time")}`]),
     numbers(s),
-    completeness(s),
+    done,
   ];
 }
 

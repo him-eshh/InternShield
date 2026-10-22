@@ -190,6 +190,8 @@ export interface InterviewContext {
   field: Field | null;
   /** Portfolio round (Tier 4): http(s) links the user typed. Only shown and sent as text; never fetched. */
   links?: string[];
+  /** v2 company-style preset (lib/tiers/presets.ts). Absent on older sessions. */
+  preset?: import("./presets").PresetId;
 }
 export const MAX_LINKS = 5;
 export const MAX_LINK_CHARS = 200;

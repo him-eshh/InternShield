@@ -6,6 +6,7 @@ import { KEYS, readKey, writeKey } from "../client/storage";
 import { fromJson, toJson } from "./board";
 import { getProblem, pickProblem } from "./problems";
 import { pickDebugProblem } from "./debugging";
+import { LP_PROMPTS } from "./presets";
 import { pickSqlProblem } from "./sql";
 import { scriptFor } from "./scripted";
 import {
@@ -89,7 +90,7 @@ const isScripted = (round: InterviewRound) => SCRIPTED_ROUNDS.includes(round);
 
 /** The local first question for a round (no AI call). */
 export function firstQuestion(round: InterviewRound, context: InterviewContext, seed: number): string {
-  if (round === "behavioral") return pick(BEHAVIORAL_PROMPTS, seed);
+  if (round === "behavioral") return context.preset === "amazon" ? pick(LP_PROMPTS, seed).prompt : pick(BEHAVIORAL_PROMPTS, seed);
   if (round === "design") return pick(DESIGN_PROMPTS, seed);
   if (round === "coding") return pickProblem(seed).prompt;
   if (round === "sql") return pickSqlProblem(seed).prompt;
@@ -210,6 +211,7 @@ export function buildRequest(s: InterviewSession, ask: InterviewAsk, now = Date.
       resume: cap(c.resume, MAX_RESUME_CONTEXT_CHARS),
       field: c.field,
       ...(Array.isArray(c.links) ? { links: capLinks(c.links) } : {}),
+      ...(c.preset ? { preset: c.preset } : {}),
     },
     turns: s.turns.slice(0, MAX_TURNS).map((t) => ({
       question: t.question.slice(0, MAX_QUESTION_CHARS),

@@ -14,7 +14,7 @@ export const TIER_FLAGS = {
   tsRunner: true, // TypeScript in the JS worker
   sqlRound: true, // SQL problems on sql.js
   debugRound: true, // "debugging" interview round
-  presets: false, // company-style round presets
+  presets: true, // company-style round presets
   scorecard: true, // per-axis interview scorecard
   keywordGap: false, // posting keywords vs resume
   rewriteOptions: false, // up to 3 rewrite options
