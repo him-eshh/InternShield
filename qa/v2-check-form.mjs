@@ -12,7 +12,7 @@ for (const v of variants) {
   await mockApi(page, {
     extract: async () => {
       if (mode === "fail") return fail("limit", 429, { code: "RATE_LIMITED", retryAfter: 30 });
-      await wait(5500);
+      await wait(9000);
       return done(EX.scam.savedSteps.extract.data);
     },
   });
@@ -32,7 +32,8 @@ for (const v of variants) {
   await page.getByRole("button", { name: "Check it" }).click();
   await page.waitForTimeout(2500);
   await shot(page, `42-extract-error-${tag(v)}`, { fullPage: true });
-  const kept = await page.locator("textarea").first().inputValue().catch(() => "(no textarea)");
-  console.log(`${tag(v)} keptText=${kept.startsWith(EX.scam.text.slice(0, 20))} overflow=${await overflowX(page)} console=${log.filter((l) => !/503|429|cache/i.test(l)).join(" | ").slice(0, 300) || "none"}`);
+  // Extract failure falls back to the backstop report: the pasted text stays visible under "Your message", with a retry card.
+  const kept = await page.locator("section[aria-labelledby='annotated-title']").innerText().catch(() => "");
+  console.log(`${tag(v)} keptText=${kept.includes("Sarah Mitchell")} retry=${await page.getByText(/Retry/).count()} overflow=${await overflowX(page)} console=${log.filter((l) => !/503|429|cache/i.test(l)).join(" | ").slice(0, 300) || "none"}`);
   await browser.close();
 }

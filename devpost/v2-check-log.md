@@ -60,7 +60,9 @@ Branch `v2-check` from `v2-base` 36ad123. Brief: `devpost/v2-brief-check.md`.
   interview + easy pay, three FTC signs); `c7-mid-new-domain-interview`, `c7-mid-pressure-two-hours`,
   `c7-mid-unpaid-trial-project` medium->low (one weak signal each, no strong sign).
 ### C8 Check form + checking screen
-- [ ] validate on click, Add context, Add details, checking state, errorCopy
+- [x] validate on click, Add context, Add details, checking state (300 ms show-delay, "Still checking…" after 4 s), errorCopy
+  (code in 7ca2901/5538676). Extract failure keeps the text: backstop report + retry card + "Your message".
+  QA `qa/v2-check-form.mjs`, shots `40-form-filled-context-*`, `41-checking-slow-*`, `42-extract-error-*`, `10-form-empty-hint-*`.
 ### C9 Intro + logo
 - [ ] intro hero, ring logo, icons, OG
 ### C10 Final
