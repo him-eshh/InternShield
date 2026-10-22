@@ -1,0 +1,22 @@
+{
+  "note": "Applied candidate is sent to an online assessment inside the company careers portal.",
+  "text": "Hi Nia,\n\nThanks for applying to the Analyst Intern role at Corvid Finance. The next step is a 45 minute online assessment in your candidate portal at https://corvidfinance.example/careers/portal. It must be done within 5 days.\n\nCorvid Finance Talent\ntalent@corvidfinance.example",
+  "expectedLevel": "low",
+  "profile": { "field": "business", "level": "junior", "skills": ["Excel"] },
+  "source": "email",
+  "stage": "interviewing",
+  "answers": { "who_first": "yes" },
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Corvid Finance", "quote": "Corvid Finance" },
+        "role": { "value": "Analyst Intern", "quote": "Analyst Intern role" },
+        "sender": { "name": null, "email": "talent@corvidfinance.example", "phone": null }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "corvidfinance.example", "careersUrl": "https://corvidfinance.example/careers" } },
+    "sender": { "status": "done", "data": { "email": "talent@corvidfinance.example", "domain": "corvidfinance.example", "freeEmail": false, "registeredAt": "2008-01-01T00:00:00Z", "hasMx": true } },
+    "posting": { "status": "done", "data": { "found": true, "url": "https://corvidfinance.example/careers/analyst-intern", "title": "Analyst Intern", "location": null, "pay": null, "postedDate": null, "onOfficialDomain": true } }
+  }
+}

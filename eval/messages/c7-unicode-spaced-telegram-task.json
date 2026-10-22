@@ -1,0 +1,9 @@
+{
+  "note": "Spaced letters hide Telegram and USDT in a task scam.",
+  "text": "Earn $300 a day with simple tasks. No experience. To start, add our coach on T e l e g r a m @tasks_coach_88 and deposit 40 U S D T to unlock your account.",
+  "expectedLevel": "high",
+  "profile": { "field": "business", "level": "sophomore", "skills": [] },
+  "source": "text_whatsapp",
+  "stage": "message",
+  "savedSteps": { "extract": { "status": "done", "data": {} } }
+}

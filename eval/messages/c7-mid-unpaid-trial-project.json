@@ -1,0 +1,20 @@
+{
+  "note": "Asks for hours of free trial work before hiring; user never applied.",
+  "text": "Hi Lee,\n\nWe're Halcyon Creative. Before we move forward, please complete a 6-hour trial project: design our new campaign poster set. It's unpaid, but strong work gets the Design Intern job.\n\nHalcyon Creative\nhello@halcyoncreative.example",
+  "expectedLevel": "low",
+  "profile": { "field": "design", "level": "junior", "skills": ["Figma"] },
+  "source": "linkedin",
+  "stage": "message",
+  "answers": { "who_first": "no" },
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Halcyon Creative", "quote": "Halcyon Creative" },
+        "sender": { "name": null, "email": "hello@halcyoncreative.example", "phone": null },
+        "asks": [{ "kind": "other", "quote": "complete a 6-hour trial project" }]
+      }
+    },
+    "sender": { "status": "done", "data": { "email": "hello@halcyoncreative.example", "domain": "halcyoncreative.example", "freeEmail": false, "registeredAt": "-400d", "hasMx": true } }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "note": "Full-width letters in WhatsApp plus a registration fee.",
+  "text": "You are selected for a remote customer support internship. Message our manager on ＷｈａｔｓＡｐｐ at +1 555 010 2290. A $75 registration fee is required before training.",
+  "expectedLevel": "high",
+  "profile": { "field": "business", "level": "sophomore", "skills": [] },
+  "source": "text_whatsapp",
+  "stage": "message",
+  "savedSteps": { "extract": { "status": "done", "data": {} } }
+}

@@ -1,0 +1,20 @@
+{
+  "note": "After a signed offer, a background check paid by the employer.",
+  "text": "Hi Jamie,\n\nCongratulations again on accepting the Finance Intern offer at Stonebridge Insurance. You will get a separate email from our background check partner ClearCheck. The check is paid by Stonebridge. Please complete it by Friday.\n\nStonebridge Recruiting\nrecruiting@stonebridgeinsurance.example",
+  "expectedLevel": "low",
+  "profile": { "field": "business", "level": "junior", "skills": ["Excel"] },
+  "source": "email",
+  "stage": "signed",
+  "answers": { "signed_offer": "yes", "who_first": "yes" },
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Stonebridge Insurance", "quote": "Stonebridge Insurance" },
+        "sender": { "name": null, "email": "recruiting@stonebridgeinsurance.example", "phone": null }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "stonebridgeinsurance.example", "careersUrl": null } },
+    "sender": { "status": "done", "data": { "email": "recruiting@stonebridgeinsurance.example", "domain": "stonebridgeinsurance.example", "freeEmail": false, "registeredAt": "2001-01-01T00:00:00Z", "hasMx": true } }
+  }
+}

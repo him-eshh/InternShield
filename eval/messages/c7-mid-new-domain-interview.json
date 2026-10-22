@@ -1,0 +1,22 @@
+{
+  "note": "Video interview offered from a 50-day-old domain, no posting found, no money asks.",
+  "text": "Hi Robin,\n\nThanks for your interest in the Operations Intern role at Foxglove Supply. We would like a 20 minute video call on Friday. Reply with your availability.\n\nPeter Lang\npeter@foxglovesupply.example",
+  "expectedLevel": "low",
+  "profile": { "field": "business", "level": "sophomore", "skills": ["Excel"] },
+  "source": "email",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Foxglove Supply", "quote": "Foxglove Supply" },
+        "role": { "value": "Operations Intern", "quote": "Operations Intern role" },
+        "sender": { "name": "Peter Lang", "email": "peter@foxglovesupply.example", "phone": null },
+        "interview": { "status": "mentioned", "quote": "We would like a 20 minute video call on Friday" }
+      }
+    },
+    "company": { "status": "done", "data": null },
+    "sender": { "status": "done", "data": { "email": "peter@foxglovesupply.example", "domain": "foxglovesupply.example", "freeEmail": false, "registeredAt": "-50d", "hasMx": true } },
+    "posting": { "status": "done", "data": { "found": false, "url": null, "title": null, "location": null, "pay": null, "postedDate": null, "onOfficialDomain": false } }
+  }
+}

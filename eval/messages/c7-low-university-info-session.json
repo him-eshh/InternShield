@@ -1,0 +1,19 @@
+{
+  "note": "University employer relations announcing an info session.",
+  "text": "Hello students,\n\nEmployer Relations at Lakeshore University invites you to meet Delta Freight's intern recruiters on Wednesday at noon in the Student Union. RSVP in Handshake.\n\nEmployer Relations\nemployers@lakeshore.edu",
+  "expectedLevel": "low",
+  "profile": { "field": "business", "level": "sophomore", "skills": ["Excel"] },
+  "source": "email",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Lakeshore University", "quote": "Lakeshore University" },
+        "sender": { "name": null, "email": "employers@lakeshore.edu", "phone": null }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "lakeshore.edu", "careersUrl": null } },
+    "sender": { "status": "done", "data": { "email": "employers@lakeshore.edu", "domain": "lakeshore.edu", "freeEmail": false, "registeredAt": "1992-01-01T00:00:00Z", "hasMx": true } }
+  }
+}

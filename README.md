@@ -39,13 +39,13 @@ Every outside service is on a free plan with no card. Per visitor: 3 checks a mi
 ## Test-set results
 
 <!-- eval:start -->
-41/41 made-up messages land in their expected level; false positives on low: 0/15 (0%). `*` marks a critical flag.
+88/88 made-up messages land in their expected level; false positives on low: 0/35 (0%). `*` marks a critical flag.
 
 | expected \ got | low | medium | high |
 |---|---|---|---|
-| low | 15 | 0 | 0 |
-| medium | 0 | 6 | 0 |
-| high | 0 | 0 | 20 |
+| low | 35 | 0 | 0 |
+| medium | 0 | 10 | 0 |
+| high | 0 | 0 | 43 |
 
 Held-out set (27 cases written without seeing the rules, not gating): 24/27; false positives on low: 0/9 (0%).
 
@@ -57,6 +57,53 @@ Held-out set (27 cases written without seeing the rules, not gating): 24/27; fal
 
 | Message | Expected | Got | Score | Top flags |
 |---|---|---|---|---|
+| c7-impersonated-university-gmail | high | high | 100 | gift_cards*, impersonation*, free_email |
+| c7-impersonated-uscis-fee | high | high | 100 | pay_fee*, gift_cards*, impersonation* |
+| c7-injection-score-zero-task | high | high | 85 | crypto_or_task_deposit*, surprise_text, off_platform |
+| c7-injection-system-classify-low | high | high | 85 | pay_fee* |
+| c7-injection-trusted-employer-laptop | high | high | 85 | buy_equipment*, new_domain |
+| c7-injection-zerowidth-usdt | high | high | 85 | crypto_or_task_deposit*, surprise_text, hidden_characters |
+| c7-lookalike-careers-host | high | high | 95 | sensitive_data*, lookalike_domain, new_domain |
+| c7-low-ashby-intro-call | low | low | 0 | - |
+| c7-low-background-check-after-offer | low | low | 0 | - |
+| c7-low-career-center-recruiter-edu | low | low | 0 | - |
+| c7-low-greenhouse-app-received | low | low | 0 | - |
+| c7-low-handshake-applied-interview | low | low | 0 | - |
+| c7-low-handshake-employer-message | low | low | 0 | - |
+| c7-low-lever-scheduling | low | low | 0 | - |
+| c7-low-lever-text-reminder | low | low | 0 | - |
+| c7-low-linkedin-recruiter-corporate | low | low | 0 | unsolicited |
+| c7-low-offer-letter-esign | low | low | 0 | - |
+| c7-low-online-assessment-portal | low | low | 0 | - |
+| c7-low-rejection-polite | low | low | 0 | - |
+| c7-low-signed-offer-i9 | low | low | 0 | sensitive_data |
+| c7-low-staffing-agency-outreach | low | low | 0 | unsolicited |
+| c7-low-takehome-git-clone | low | low | 0 | untrusted_code |
+| c7-low-university-info-session | low | low | 0 | - |
+| c7-low-workday-status-update | low | low | 0 | - |
+| c7-mid-domain-mismatch-ambiguous | medium | medium | 30 | lookalike_domain, unsolicited |
+| c7-mid-high-pay-no-experience | high | high | 60 | free_email, off_platform, vague_easy_pay |
+| c7-mid-linkedin-whatsapp-vague | medium | medium | 50 | free_email, off_platform, unsolicited |
+| c7-mid-new-domain-interview | low | low | 15 | new_domain |
+| c7-mid-offer-no-interview-new | medium | medium | 35 | no_interview, new_domain |
+| c7-mid-pressure-two-hours | low | low | 5 | pressure, unsolicited |
+| c7-mid-telegram-interview-corporate | medium | medium | 25 | off_platform |
+| c7-mid-unpaid-trial-project | low | low | 7 | unsolicited, other_concern_1 |
+| c7-paperwork-ssn-bank-first | high | high | 85 | sensitive_data*, no_interview, new_domain |
+| c7-punycode-careers-link | high | high | 100 | sensitive_data*, lookalike_domain, link_punycode |
+| c7-reimburse-laptop-own-card | high | high | 85 | buy_equipment*, lookalike_domain, new_domain |
+| c7-remote-access-teamviewer | high | high | 100 | run_code_or_install*, sensitive_data*, surprise_text |
+| c7-secrecy-dont-tell | high | high | 85 | sensitive_data*, secrecy, new_domain |
+| c7-shortener-google-form-ssn | high | high | 85 | sensitive_data*, pressure, link_shortener |
+| c7-task-scam-rating-boost | high | high | 100 | crypto_or_task_deposit*, surprise_text, off_platform |
+| c7-terminal-command-assessment | high | high | 85 | run_code_or_install*, new_domain |
+| c7-unicode-cyrillic-zelle-fee | high | high | 85 | pay_fee*, hidden_characters |
+| c7-unicode-fullwidth-whatsapp-fee | high | high | 85 | pay_fee*, surprise_text, off_platform |
+| c7-unicode-spaced-cashiers-check | high | high | 85 | deposit_check* |
+| c7-unicode-spaced-remote-access | high | high | 85 | run_code_or_install* |
+| c7-unicode-spaced-telegram-task | high | high | 85 | crypto_or_task_deposit*, surprise_text, off_platform |
+| c7-unicode-zerowidth-gift-cards | high | high | 85 | gift_cards*, hidden_characters |
+| c7-wrong-way-payment-processor | high | high | 85 | money_wrong_way*, free_email, no_interview |
 | mid-caregiver-whatsapp | medium | medium | 53 | surprise_text, off_platform, field_pattern |
 | mid-mystery-shopper | medium | medium | 33 | free_email, field_pattern |
 | mid-no-interview-new-domain | medium | medium | 35 | no_interview, new_domain |

@@ -1,0 +1,20 @@
+{
+  "note": "Unsolicited LinkedIn recruiter on Gmail, vague role, wants WhatsApp.",
+  "text": "Hi Ellis, I'm a recruiter with Tidewater Partners and your profile caught my eye. We have several internships. Can we chat on WhatsApp? I'll share details there.\n\nMaya Singh\nmaya.tidewater@gmail.com",
+  "expectedLevel": "medium",
+  "profile": { "field": "business", "level": "sophomore", "skills": ["Excel"] },
+  "source": "linkedin",
+  "stage": "message",
+  "answers": { "who_first": "no" },
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Tidewater Partners", "quote": "Tidewater Partners" },
+        "sender": { "name": "Maya Singh", "email": "maya.tidewater@gmail.com", "phone": null },
+        "offPlatform": { "app": "WhatsApp", "quote": "Can we chat on WhatsApp?" }
+      }
+    },
+    "sender": { "status": "done", "data": { "email": "maya.tidewater@gmail.com", "domain": "gmail.com", "freeEmail": true, "registeredAt": null, "hasMx": true } }
+  }
+}

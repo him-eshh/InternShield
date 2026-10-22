@@ -1,0 +1,21 @@
+{
+  "note": "Greenhouse auto-reply confirming an application.",
+  "text": "Hi Avery,\n\nThank you for applying to the Product Design Intern role at Opal Studios. Our team will review your application and be in touch if there is a match.\n\nOpal Studios Recruiting\nno-reply@greenhouse.io",
+  "expectedLevel": "low",
+  "profile": { "field": "design", "level": "junior", "skills": ["Figma"] },
+  "source": "email",
+  "stage": "message",
+  "answers": { "who_first": "yes" },
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Opal Studios", "quote": "Opal Studios" },
+        "role": { "value": "Product Design Intern", "quote": "Product Design Intern role" },
+        "sender": { "name": null, "email": "no-reply@greenhouse.io", "phone": null }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "opalstudios.example", "careersUrl": null } },
+    "sender": { "status": "done", "data": { "email": "no-reply@greenhouse.io", "domain": "greenhouse.io", "freeEmail": false, "registeredAt": "2012-02-01T00:00:00Z", "hasMx": true } }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "note": "Shortened link to a form that asks for SSN and an ID photo.",
+  "text": "Hi Sam, we loved your profile! To apply for the Remote Admin Intern role at Greystone Group, fill out this form: https://bit.ly/3xGrey-intern . It asks for your SSN, mother's maiden name and a photo of your ID. Hiring closes today.",
+  "expectedLevel": "high",
+  "profile": { "field": "business", "level": "sophomore", "skills": ["Excel"] },
+  "source": "linkedin",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Greystone Group", "quote": "Greystone Group" },
+        "asks": [{ "kind": "sensitive_data", "quote": "It asks for your SSN, mother's maiden name and a photo of your ID" }],
+        "pressure": [{ "quote": "Hiring closes today" }]
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "note": "Recruiter outreach from the real company domain with a matching careers posting.",
+  "text": "Hi Ellis,\n\nI'm Marcus Hale, a recruiter at Juniper Devices. I saw your profile and we have a Hardware Intern opening listed on our careers page: https://junipercdevices.example/careers/hardware-intern. Would you like to chat for 20 minutes this week?\n\nMarcus Hale\nmarcus.hale@junipercdevices.example",
+  "expectedLevel": "low",
+  "profile": { "field": "tech", "level": "junior", "skills": ["C++"] },
+  "source": "linkedin",
+  "stage": "message",
+  "answers": { "who_first": "no" },
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Juniper Devices", "quote": "Juniper Devices" },
+        "sender": { "name": "Marcus Hale", "email": "marcus.hale@junipercdevices.example", "phone": null },
+        "interview": { "status": "mentioned", "quote": "Would you like to chat for 20 minutes this week?" }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "junipercdevices.example", "careersUrl": "https://junipercdevices.example/careers" } },
+    "sender": { "status": "done", "data": { "email": "marcus.hale@junipercdevices.example", "domain": "junipercdevices.example", "freeEmail": false, "registeredAt": "2009-01-01T00:00:00Z", "hasMx": true } },
+    "posting": { "status": "done", "data": { "found": true, "url": "https://junipercdevices.example/careers/hardware-intern", "title": "Hardware Intern", "location": null, "pay": null, "postedDate": null, "onOfficialDomain": true } }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "note": "Signed offer; onboarding asks for I-9 and W-4 in the HR portal before the start date.",
+  "text": "Hi Casey,\n\nWelcome to Granite Bank! Now that you've signed your offer letter, please complete your I-9 and W-4 in the HR portal before your start date on June 3. Bring your original ID documents on day one.\n\nGranite Bank People Operations\nonboarding@granitebank.example",
+  "expectedLevel": "low",
+  "profile": { "field": "business", "level": "junior", "skills": ["Excel"] },
+  "source": "email",
+  "stage": "signed",
+  "answers": { "signed_offer": "yes", "who_first": "yes" },
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Granite Bank", "quote": "Granite Bank" },
+        "sender": { "name": null, "email": "onboarding@granitebank.example", "phone": null },
+        "asks": [{ "kind": "sensitive_data", "quote": "complete your I-9 and W-4 in the HR portal" }]
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "granitebank.example", "careersUrl": null } },
+    "sender": { "status": "done", "data": { "email": "onboarding@granitebank.example", "domain": "granitebank.example", "freeEmail": false, "registeredAt": "1998-07-01T00:00:00Z", "hasMx": true } }
+  }
+}

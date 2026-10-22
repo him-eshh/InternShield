@@ -1,0 +1,22 @@
+{
+  "note": "Pretends to be USCIS and asks a gift-card fee to verify work authorization.",
+  "text": "OFFICIAL NOTICE from USCIS Student Employment Unit\n\nYour internship with Harborview Tech requires work authorization verification. Pay the $180 processing fee by gift card within 24 hours or your offer will be cancelled. Send the card codes to uscis.verification.unit@outlook.com.",
+  "expectedLevel": "high",
+  "profile": { "field": "tech", "level": "junior", "skills": ["Python"] },
+  "source": "email",
+  "stage": "offer",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "sender": { "name": null, "email": "uscis.verification.unit@outlook.com", "phone": null },
+        "asks": [
+          { "kind": "pay_fee", "quote": "Pay the $180 processing fee by gift card within 24 hours" },
+          { "kind": "gift_cards", "quote": "Send the card codes" }
+        ],
+        "pressure": [{ "quote": "within 24 hours or your offer will be cancelled" }]
+      }
+    },
+    "sender": { "status": "done", "data": { "email": "uscis.verification.unit@outlook.com", "domain": "outlook.com", "freeEmail": true, "registeredAt": null, "hasMx": true } }
+  }
+}

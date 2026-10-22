@@ -1,0 +1,19 @@
+{
+  "note": "Employer message inside Handshake after the user applied.",
+  "text": "Hi Jordan, thanks for applying to the Operations Intern posting at Beacon Foods through Handshake. Our team would like to schedule a phone screen. Please share a few times that work for you.",
+  "expectedLevel": "low",
+  "profile": { "field": "business", "level": "sophomore", "skills": ["Excel"] },
+  "source": "handshake",
+  "stage": "interviewing",
+  "answers": { "who_first": "yes", "channel": "handshake" },
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Beacon Foods", "quote": "Beacon Foods" },
+        "role": { "value": "Operations Intern", "quote": "Operations Intern posting" },
+        "interview": { "status": "mentioned", "quote": "schedule a phone screen" }
+      }
+    }
+  }
+}

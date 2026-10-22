@@ -1,0 +1,21 @@
+{
+  "note": "Polite rejection from the company domain after an interview.",
+  "text": "Hi Riley,\n\nThank you for interviewing for the Research Intern role at Alder Labs. We've decided to move forward with other candidates, but we'll keep your resume on file. Best of luck.\n\nAlder Labs Recruiting\nrecruiting@alderlabs.example",
+  "expectedLevel": "low",
+  "profile": { "field": "tech", "level": "junior", "skills": ["Python"] },
+  "source": "email",
+  "stage": "interviewing",
+  "answers": { "who_first": "yes" },
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Alder Labs", "quote": "Alder Labs" },
+        "role": { "value": "Research Intern", "quote": "Research Intern role" },
+        "sender": { "name": null, "email": "recruiting@alderlabs.example", "phone": null }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "alderlabs.example", "careersUrl": null } },
+    "sender": { "status": "done", "data": { "email": "recruiting@alderlabs.example", "domain": "alderlabs.example", "freeEmail": false, "registeredAt": "2010-01-01T00:00:00Z", "hasMx": true } }
+  }
+}

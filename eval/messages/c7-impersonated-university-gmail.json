@@ -1,0 +1,20 @@
+{
+  "note": "Claims to be a university dean's office from a free email and wants gift cards.",
+  "text": "Hello Taylor,\n\nThis is the Dean's Office of Eastfield University. A paid research internship is reserved for you, but the stipend release needs a $100 verification. Please buy two $50 Apple gift cards and email the codes to this address today.\n\nDean's Office, Eastfield University\neastfield.dean.office@gmail.com",
+  "expectedLevel": "high",
+  "profile": { "field": "business", "level": "sophomore", "skills": ["Excel"] },
+  "source": "email",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Eastfield University", "quote": "Eastfield University" },
+        "sender": { "name": null, "email": "eastfield.dean.office@gmail.com", "phone": null },
+        "asks": [{ "kind": "gift_cards", "quote": "buy two $50 Apple gift cards and email the codes" }]
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "eastfield.edu", "careersUrl": null } },
+    "sender": { "status": "done", "data": { "email": "eastfield.dean.office@gmail.com", "domain": "gmail.com", "freeEmail": true, "registeredAt": null, "hasMx": true } }
+  }
+}
