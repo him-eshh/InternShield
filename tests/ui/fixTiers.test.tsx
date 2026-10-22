@@ -90,7 +90,7 @@ describe("Feedback wording", () => {
   it("says 'not mentioned' instead of 'missing'", () => {
     checkTurnMock.mockReturnValue({ kind: "rubric", covered: ["A"], missed: ["B"] });
     const html = renderToStaticMarkup(<Feedback session={session} onAgain={noop} onBack={noop} />);
-    expect(html).toContain("not mentioned");
+    expect(html).toContain("spot this; it may be worded differently"); // v2 tools: rubric copy (standing #1)
     expect(html).not.toContain("missing");
   });
 });

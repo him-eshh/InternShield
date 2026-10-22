@@ -1,7 +1,17 @@
 import { useId, useState } from "react";
 import { formatInUnit, unitName } from "@/lib/tiers/numbers";
+import { TIER_FLAGS } from "@/lib/tiers/flags";
+import { buildScorecard, findQuote } from "@/lib/tiers/scorecard";
 import { checkTurn } from "@/lib/tiers/scripted";
-import { SCRIPTED_ROUNDS, type InterviewRound, type InterviewSession, type InterviewTurn, type StarCheck } from "@/lib/tiers/types";
+import {
+  SCRIPTED_ROUNDS,
+  type InterviewRound,
+  type InterviewSession,
+  type InterviewTurn,
+  type ScoreBand,
+  type Scorecard,
+  type StarCheck,
+} from "@/lib/tiers/types";
 import { btnPrimary, btnSecondary, card as cardCls } from "../../ui";
 
 const STAR: { key: keyof StarCheck; label: string }[] = [
@@ -101,7 +111,7 @@ function CodeCheck({ turn, round }: { turn: InterviewTurn; round: InterviewRound
           {[...r.covered.map((l) => ({ l, on: true })), ...r.missed.map((l) => ({ l, on: false }))].map(({ l, on }) => (
             <li key={l} className={`rounded-[12px] border px-3 py-2 text-[14px] ${on ? "border-good/40" : "border-border text-muted"}`}>
               <span className="block break-words font-medium text-text">{l}</span>
-              {on ? "✓ covered" : "not mentioned"}
+              {on ? "✓ covered" : NOT_SPOTTED}
             </li>
           ))}
         </ul>
@@ -109,6 +119,78 @@ function CodeCheck({ turn, round }: { turn: InterviewTurn; round: InterviewRound
     </div>
   );
 }
+
+const BAND_TONE: Record<ScoreBand, string> = {
+  Strong: "border-good/50 text-good",
+  Solid: "border-good/40 text-good",
+  Developing: "border-warn/50 text-warn",
+  "Not yet": "border-border text-muted",
+};
+
+/** v2 scorecard: bands from code-measured signals; quotes are evidence only. */
+function ScorecardView({ card, fallbackTip }: { card: Scorecard; fallbackTip: string | null }) {
+  const tip = card.nextDrill ?? fallbackTip;
+  return (
+    <section aria-labelledby="scorecard-h" className="mt-6">
+      <h2 id="scorecard-h" className="text-[19px] font-semibold">
+        Scorecard
+      </h2>
+      <ul className="mt-3 grid gap-3 sm:grid-cols-2">
+        {card.axes.map((a) => (
+          <li key={a.id} className={`${cardCls} p-4`}>
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <span className="text-[16px] font-semibold">{a.label}</span>
+              <span className={`rounded-full border px-2.5 py-0.5 text-[14px] font-semibold ${BAND_TONE[a.band]}`}>{a.band}</span>
+            </div>
+            {a.byCode && <p className="mt-1 text-[13px] font-medium text-muted">Checked by code</p>}
+            <ul className="mt-2 space-y-1 text-[14px] text-muted">
+              {a.evidence.map((e, i) => (
+                <li key={i} className="break-words">
+                  {e}
+                </li>
+              ))}
+            </ul>
+          </li>
+        ))}
+      </ul>
+      {tip && (
+        <div className="mt-4 rounded-[14px] border-l-4 border-accent bg-accent/10 px-4 py-3">
+          <h3 className="text-[15px] font-semibold">One thing to try next</h3>
+          <p className="mt-1 break-words text-[16px]">{tip}</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+/** The answer with the AI's quote marked in place (mark + screen-reader text, not color only). */
+function MarkedAnswer({ answer, quote }: { answer: string; quote: string | null }) {
+  const at = quote ? findQuote(answer, quote) : null;
+  if (!at)
+    return (
+      <>
+        <p className="mt-1 whitespace-pre-wrap break-words text-[16px]">{answer}</p>
+        {quote && (
+          <blockquote className="mt-4 break-words rounded-[12px] border-l-4 border-accent bg-accent/10 px-4 py-3 text-[16px]">
+            <span className="sr-only">Quote from your answer: </span>
+            {quote}
+          </blockquote>
+        )}
+      </>
+    );
+  return (
+    <p className="mt-1 whitespace-pre-wrap break-words text-[16px]">
+      {answer.slice(0, at[0])}
+      <mark className="rounded-[4px] bg-accent/15 px-0.5 text-text underline decoration-accent decoration-2 underline-offset-4">
+        <span className="sr-only">Quoted: </span>
+        {answer.slice(at[0], at[1])}
+      </mark>
+      {answer.slice(at[1])}
+    </p>
+  );
+}
+
+const NOT_SPOTTED = "We didn't spot this; it may be worded differently";
 
 /** True when the quote is just the whole answer again (ignoring spacing and case), so it isn't shown twice. */
 function sameText(a: string, b: string): boolean {
@@ -127,11 +209,13 @@ export default function Feedback({
   onBack: () => void;
 }) {
   const fb = session.feedback;
+  const card = TIER_FLAGS.scorecard && fb ? buildScorecard(session) : null;
   return (
     <div>
       <h1 className="text-[clamp(28px,5vw,44px)] font-bold leading-[1.1] tracking-[-0.025em]">Your feedback</h1>
       {fb ? (
         <>
+          {card && <ScorecardView card={card} fallbackTip={fb.items.find((i) => i.improve)?.improve ?? null} />}
           <p className="mt-4 max-w-[600px] break-words text-[17px] leading-relaxed">{fb.summary}</p>
           <ol className="mt-8 space-y-5">
             {session.turns.map((turn, index) => {
@@ -143,8 +227,12 @@ export default function Feedback({
                   <p className="text-[14px] font-medium text-muted">Question {index + 1}</p>
                   <p className="mt-1 break-words text-[17px] font-semibold leading-snug">{turn.question}</p>
                   <p className="mt-4 text-[14px] font-medium text-muted">Your answer</p>
-                  <p className="mt-1 whitespace-pre-wrap break-words text-[16px]">{turn.answer}</p>
-                  {item?.quote && !sameText(item.quote, turn.answer) && (
+                  {card ? (
+                    <MarkedAnswer answer={turn.answer} quote={item?.quote && !sameText(item.quote, turn.answer) ? item.quote : null} />
+                  ) : (
+                    <p className="mt-1 whitespace-pre-wrap break-words text-[16px]">{turn.answer}</p>
+                  )}
+                  {!card && item?.quote && !sameText(item.quote, turn.answer) && (
                     <blockquote className="mt-4 break-words rounded-[12px] border-l-4 border-accent bg-accent/10 px-4 py-3 text-[16px]">
                       <span className="sr-only">Quote from your answer: </span>
                       {item.quote}
@@ -171,7 +259,7 @@ export default function Feedback({
                               className={`rounded-[12px] border px-3 py-2 text-[14px] ${on ? "border-good/40" : "border-border text-muted"}`}
                             >
                               <span className="block font-medium text-text">{label}</span>
-                              {on ? "✓ covered" : "not mentioned"}
+                              {on ? "✓ covered" : NOT_SPOTTED}
                             </li>
                           );
                         })}

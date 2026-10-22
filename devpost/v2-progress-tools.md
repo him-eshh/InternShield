@@ -6,7 +6,7 @@
 - T2 A2 tiling + groq env/fallback/429 (commit "V2 tools 2")
 
 ## Current
-- T3 interview core: dup "6 of 6 hidden tests passed", wide coding layout + dark theme + CodeMirror aria-label Compartment, 4-area scorecard (flip `scorecard`).
+- T3 interview core: code done + tests green (lib/tiers/scorecard.ts, Feedback.tsx, CodingRound.tsx split pane, CodeEditor.tsx highlight + label Compartment, app/v2-tools.css code colors, flag `scorecard` on). Left: build, shots 05-coding-*, 06-scorecard-*, log tick, commit `V2 tools 3`.
 
 ## Next
 - T3 gates + shots (05-coding-*, 06-scorecard-*) + commit `V2 tools 3: ...`

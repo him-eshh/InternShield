@@ -231,8 +231,9 @@ export default function Interview({ profile, resume, target, onBack, renderRound
     const needsRetry = !session.pending && !busy && !isPanelRound && nextStep(session) !== "done" && nextStep(session) !== "answer";
     // Coding/design panels have their own Finish (it saves the code/board first).
     const canFinish = answered >= 1 && !busy && !isPanelRound;
+    const wide = session.round === "coding" || session.round === "debugging"; // split pane at >= 1024 px
     return (
-      <section className="mx-auto max-w-[720px] px-6 py-10 sm:py-16">
+      <section className={`mx-auto px-6 py-10 sm:py-16 ${wide ? "max-w-[720px] lg:max-w-[1200px]" : "max-w-[720px]"}`}>
         <BackLink label="Leave practice" onClick={leaveSession} />
         <h1 className="mt-4 text-[clamp(26px,4.5vw,40px)] font-bold leading-[1.1] tracking-[-0.025em]">{roundLabel(session.round)}</h1>
         {session.context.company || session.context.role ? (

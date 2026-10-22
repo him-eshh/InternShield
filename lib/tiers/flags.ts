@@ -15,7 +15,7 @@ export const TIER_FLAGS = {
   sqlRound: false, // SQL problems on sql.js
   debugRound: false, // "debugging" interview round
   presets: false, // company-style round presets
-  scorecard: false, // per-axis interview scorecard
+  scorecard: true, // per-axis interview scorecard
   keywordGap: false, // posting keywords vs resume
   rewriteOptions: false, // up to 3 rewrite options
 } as const;

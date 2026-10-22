@@ -204,6 +204,14 @@ export interface CodeAttempt {
   total: number;
 }
 
+export interface CodeStats {
+  /** "Run examples" presses before the first Submit. */
+  runsBeforeSubmit: number;
+  submits: number;
+  /** ms timestamp of the first Submit, or null. */
+  firstSubmitAt: number | null;
+}
+
 export interface StarCheck {
   situation: boolean;
   task: boolean;
@@ -244,6 +252,8 @@ export interface InterviewSession {
   board: BoardJson | null;
   /** Coding round: hints received, oldest first (applyReply pushes hint text here). */
   hints: string[];
+  /** Coding/debugging rounds (v2): counted by the app, feeds the scorecard. Absent on older sessions. */
+  stats?: CodeStats;
   feedback: InterviewFeedback | null;
   status: "active" | "done";
   createdAt: number;

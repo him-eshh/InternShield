@@ -20,6 +20,7 @@ export default function CodeEditor({ value, language, onChange, label }: Props) 
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView | null>(null);
   const langComp = useRef<Compartment | null>(null);
+  const labelComp = useRef<Compartment | null>(null);
   const onChangeRef = useRef(onChange);
   const initial = useRef({ value, language, label });
   const [ready, setReady] = useState(false);
@@ -31,16 +32,32 @@ export default function CodeEditor({ value, language, onChange, label }: Props) 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [{ basicSetup }, { EditorView, keymap }, { Compartment }, { indentWithTab }, lang] = await Promise.all([
-        import("codemirror"),
-        import("@codemirror/view"),
-        import("@codemirror/state"),
-        import("@codemirror/commands"),
-        loadLanguage(initial.current.language),
-      ]);
+      const [{ basicSetup }, { EditorView, keymap }, { Compartment }, { indentWithTab }, { HighlightStyle, syntaxHighlighting }, { tags: t }, lang] =
+        await Promise.all([
+          import("codemirror"),
+          import("@codemirror/view"),
+          import("@codemirror/state"),
+          import("@codemirror/commands"),
+          // ponytail: transitive deps of `codemirror` (logged under Needs integration: make them explicit).
+          import("@codemirror/language"),
+          import("@lezer/highlight"),
+          loadLanguage(initial.current.language),
+        ]);
       if (cancelled || !host.current) return;
       const comp = new Compartment();
       langComp.current = comp;
+      const labelC = new Compartment();
+      labelComp.current = labelC;
+      // Replaces CodeMirror's default (purple) highlight; colors are CSS vars in app/v2-tools.css, light and dark.
+      const highlight = HighlightStyle.define([
+        { tag: [t.keyword, t.controlKeyword, t.moduleKeyword, t.operatorKeyword, t.definitionKeyword, t.modifier], color: "var(--code-keyword)" },
+        { tag: [t.string, t.special(t.string), t.regexp], color: "var(--code-string)" },
+        { tag: [t.number, t.bool, t.null, t.atom], color: "var(--code-number)" },
+        { tag: [t.comment, t.lineComment, t.blockComment], color: "var(--code-comment)", fontStyle: "italic" },
+        { tag: [t.function(t.variableName), t.function(t.propertyName), t.definition(t.function(t.variableName))], color: "var(--code-function)" },
+        { tag: [t.typeName, t.className, t.namespace], color: "var(--code-type)" },
+        { tag: [t.propertyName, t.attributeName], color: "var(--code-property)" },
+      ]);
       const theme = EditorView.theme({
         "&": { color: "var(--text)", backgroundColor: "var(--card)", fontSize: "15px", minHeight: "240px" },
         "&.cm-focused": { outline: "2px solid var(--accent)", outlineOffset: "-2px" },
@@ -64,7 +81,8 @@ export default function CodeEditor({ value, language, onChange, label }: Props) 
           keymap.of([indentWithTab]),
           comp.of(lang),
           theme,
-          EditorView.contentAttributes.of({ "aria-label": initial.current.label }),
+          syntaxHighlighting(highlight),
+          labelC.of(EditorView.contentAttributes.of({ "aria-label": initial.current.label })),
           EditorView.updateListener.of((u) => {
             if (u.docChanged) onChangeRef.current(u.state.doc.toString());
           }),
@@ -92,6 +110,16 @@ export default function CodeEditor({ value, language, onChange, label }: Props) 
       cancelled = true;
     };
   }, [language, ready]);
+
+  // The label names the language, so it changes on a language switch (standing #8).
+  useEffect(() => {
+    if (!ready || !view.current || !labelComp.current) return;
+    const v = view.current;
+    import("@codemirror/view").then(({ EditorView }) => {
+      if (view.current !== v || !labelComp.current) return;
+      v.dispatch({ effects: labelComp.current.reconfigure(EditorView.contentAttributes.of({ "aria-label": label })) });
+    });
+  }, [label, ready]);
 
   // External value change (language switch, reset).
   useEffect(() => {

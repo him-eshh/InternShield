@@ -25,6 +25,7 @@ import {
   QUESTIONS_PER_ROUND,
   type AnswerFeedback,
   type CodeAttempt,
+  type CodeStats,
   type InterviewAsk,
   type InterviewContext,
   type InterviewFeedback,
@@ -274,13 +275,17 @@ function isContext(v: unknown): v is InterviewContext {
   );
 }
 
+const isCount = (v: unknown) => typeof v === "number" && Number.isInteger(v) && v >= 0;
+const isStats = (v: unknown): v is CodeStats =>
+  isRec(v) && isCount(v.runsBeforeSubmit) && isCount(v.submits) && (v.firstSubmitAt === null || isTime(v.firstSubmitAt));
+
 const isTurn = (v: unknown): v is InterviewTurn => isRec(v) && typeof v.question === "string" && typeof v.answer === "string";
 
 function isCode(v: unknown): v is CodeAttempt {
   return (
     isRec(v) &&
     typeof v.problemId === "string" &&
-    (v.language === "python" || v.language === "javascript") &&
+    (["python", "javascript", "typescript", "sql"] as unknown[]).includes(v.language) &&
     typeof v.code === "string" &&
     typeof v.passed === "number" &&
     Number.isInteger(v.passed) &&
@@ -328,6 +333,7 @@ function readSession(v: unknown): InterviewSession | null {
     code: v.code === null ? null : { ...(v.code as CodeAttempt) },
     board: board ? toJson(board) : null,
     hints: Array.isArray(v.hints) ? [...(v.hints as string[])] : [],
+    ...(isStats(v.stats) ? { stats: { ...v.stats } } : {}),
     feedback: v.feedback === null || v.feedback === undefined ? null : validateFeedback(v.feedback, turns, round),
     status: v.status,
     createdAt: v.createdAt,
