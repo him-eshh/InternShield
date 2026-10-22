@@ -85,7 +85,7 @@ function techAxes(s: InterviewSession, quotes: string[]): Axis[] {
     "problem",
     "Problem solving",
     ratio < 0.5 ? worse(ratioBand(1 - hints / 4, 1, 0.75, 0.5), "Developing") : ratioBand(1 - hints / 4, 1, 0.75, 0.5),
-    [`${plural(hints, "hint")} used`, ...timeNote],
+    [`${plural(hints, "hint")} used`, ...timeNote, ...(ratio < 0.5 ? ["Capped: under half the tests passed"] : [])],
   );
   const commBand: ScoreBand = n >= 25 && complexity ? "Strong" : n >= 25 || (n >= 8 && complexity) ? "Solid" : n > 0 ? "Developing" : "Not yet";
   const communication = quoted("communication", "Communication", commBand, quotes, [
