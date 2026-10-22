@@ -2,22 +2,42 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
 import {
   DEFAULT_TAILOR,
+  DEFAULT_TAILOR_V2,
+  MAX_FACT_CHARS,
+  MAX_FACTS,
   MAX_INSTRUCTION_CHARS,
   MAX_JOB_CHARS,
   MAX_REWRITE_CHARS,
   type DiffPart,
   type Emphasis,
+  type GapTerm,
   type GuardIssue,
+  type GuardWarning,
   type PostingContext,
+  type Region,
   type Strength,
   type TailorOptions,
+  type TargetLevel,
   type Tone,
 } from "@/lib/tiers/types";
 import type { ResumeData } from "@/lib/types";
 import { postRewrite } from "@/lib/tiers/client";
+import { TIER_FLAGS } from "@/lib/tiers/flags";
+import { gapCount, keywordGap } from "@/lib/tiers/keywordGap";
 import { buildResumePdf, downloadPdf } from "@/lib/tiers/pdf";
-import { checkRewrite, wordDiff } from "@/lib/tiers/resumeGuard";
-import { lineKinds, loadTailored, resetTailored, resumeLines, resumeSections, saveTailored, splitBullet } from "@/lib/tiers/tailored";
+import { guardRewrite, wordDiff } from "@/lib/tiers/resumeGuard";
+import {
+  lineKinds,
+  loadPresets,
+  loadTailored,
+  resetTailored,
+  resumeLines,
+  resumeSections,
+  savePreset,
+  saveTailored,
+  splitBullet,
+  type TailorPreset,
+} from "@/lib/tiers/tailored";
 import { ArrowLeftIcon, Spinner } from "../icons";
 import { btnPrimary, btnSecondary, card as cardCls, linkClass, pillOff, pillOn } from "../ui";
 
@@ -45,7 +65,21 @@ const STRENGTH_LABELS: [Strength, string][] = [
   ["light", "Light touch"],
   ["strong", "Stronger rewrite"],
 ];
+const LEVEL_LABELS: [TargetLevel, string][] = [
+  ["internship", "Internship"],
+  ["newgrad", "New grad"],
+  ["changer", "Career changer"],
+  ["experienced", "Experienced"],
+];
+const REGION_LABELS: [Region, string][] = [
+  ["us", "US résumé"],
+  ["uk", "UK CV"],
+  ["canada", "Canada"],
+  ["europe", "Europe"],
+  ["other", "Other"],
+];
 const smallPill = "!min-h-9 !px-3.5 !py-1 !text-[14px]";
+const V2 = TIER_FLAGS.rewriteOptions;
 
 /** One line saying which options the next suggestion will use. */
 export function optionsSummary(o: TailorOptions): string {
@@ -54,15 +88,31 @@ export function optionsSummary(o: TailorOptions): string {
     TONE_LABELS.find(([k]) => k === o.tone)![1],
     STRENGTH_LABELS.find(([k]) => k === o.strength)![1].toLowerCase(),
     o.keepLength ? "same length" : "length can change",
+    o.level ? LEVEL_LABELS.find(([k]) => k === o.level)![1].toLowerCase() : null,
+    o.region ? REGION_LABELS.find(([k]) => k === o.region)![1] : null,
   ].filter(Boolean);
   return parts.join(" · ");
 }
 
+/** Short copy for a Check-tier warning. */
+export function warningText(w: GuardWarning): string {
+  if (w.kind === "inflated") return w.was ? `"${w.token}" claims more than "${w.was}"` : `"${w.token}" may claim more than you did`;
+  if (w.kind === "qualifier") return `Drops "${w.token}"`;
+  if (w.kind === "scope") return `Adds "${w.token}"`;
+  if (w.kind === "seniority") return `"${w.token}" reads senior for your level`;
+  return `Buzzword: "${w.token}"`;
+}
+
 const fieldCls = "mt-1.5 min-h-12 w-full rounded-[14px] border border-border bg-card px-4 text-[17px] placeholder:text-muted";
 
+interface Choice {
+  text: string;
+  diff: DiffPart[];
+  warnings: GuardWarning[];
+}
 type Outcome =
-  | { kind: "ok"; index: number; suggestion: string; diff: DiffPart[] }
-  | { kind: "blocked"; index: number; issues: GuardIssue[] }
+  | { kind: "ok"; index: number; choices: Choice[]; pick: number; heldBack: string[]; hidden: number }
+  | { kind: "blocked"; index: number; issues: GuardIssue[]; fromPosting: string[] }
   | { kind: "error"; message: string };
 
 function BackLink({ onBack }: { onBack: () => void }) {
@@ -98,7 +148,33 @@ function Editor({ resume, target, onBack }: { resume: ResumeData; target: Postin
   const [description, setDescription] = useState((target?.description ?? "").slice(0, MAX_JOB_CHARS));
   const [selected, setSelected] = useState<number | null>(null);
   const [instruction, setInstruction] = useState("");
-  const [options, setOptions] = useState<TailorOptions>(DEFAULT_TAILOR);
+  const [options, setOptions] = useState<TailorOptions>(V2 ? DEFAULT_TAILOR_V2 : DEFAULT_TAILOR);
+  const [facts, setFacts] = useState<string[]>([]);
+  const [leftOut, setLeftOut] = useState<string[]>([]);
+  const [presets, setPresets] = useState<TailorPreset[]>(() => (V2 ? loadPresets() : []));
+  const [presetName, setPresetName] = useState("");
+  const [presetNote, setPresetNote] = useState("");
+  const gap = useMemo(
+    () => (TIER_FLAGS.keywordGap && description.trim() ? keywordGap(description, resume.text, facts) : null),
+    [description, resume.text, facts],
+  );
+
+  function addFact(term: string) {
+    const t = term.trim().slice(0, MAX_FACT_CHARS);
+    setFacts((f) => (f.includes(t) || f.length >= MAX_FACTS ? f : [...f, t]));
+    setLeftOut((l) => l.filter((x) => x !== t));
+    setStatus(`Added ${t} as something you have.`);
+  }
+  function leaveOut(term: string) {
+    setLeftOut((l) => (l.includes(term) ? l : [...l, term]));
+    setStatus(`Left out ${term}.`);
+  }
+  function keepPreset() {
+    if (!presetName.trim()) return;
+    setPresets(savePreset(presetName, options));
+    setPresetNote(`Saved "${presetName.trim().slice(0, 40)}".`);
+    setPresetName("");
+  }
   const [section, setSection] = useState<string>("all");
   const [busy, setBusy] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
@@ -145,6 +221,7 @@ function Editor({ resume, target, onBack }: { resume: ResumeData; target: Postin
       instruction: instruction.trim().slice(0, MAX_INSTRUCTION_CHARS) || DEFAULT_INSTRUCTION,
       posting: { company: company.trim() || null, role: role.trim() || null, description: description.trim() || null },
       options,
+      ...(V2 ? { count: 3 as const, ...(facts.length ? { facts } : {}) } : {}),
     });
     setBusy(false);
     if (res.status !== "done") {
@@ -152,23 +229,33 @@ function Editor({ resume, target, onBack }: { resume: ResumeData; target: Postin
       setStatus(res.message ?? RETRY_MESSAGE);
       return;
     }
-    const suggestion = res.data.text.trim();
-    const guard = checkRewrite(resume.text, original, suggestion);
-    if (!suggestion || suggestion === original) {
+    const texts = [...new Set((res.data.options ?? [res.data.text]).map((t) => t.trim()))].filter((t) => t && t !== original);
+    if (!texts.length) {
       setOutcome({ kind: "error", message: "That suggestion didn't change anything. Try a stronger rewrite or a different note." });
       setStatus("No change suggested.");
-    } else if (!guard.ok) {
-      setOutcome({ kind: "blocked", index, issues: guard.issues });
-      setStatus("We didn't use this suggestion.");
-    } else {
-      setOutcome({ kind: "ok", index, suggestion, diff: wordDiff(original, suggestion) });
-      setStatus("Suggestion ready. Compare it with your original below.");
+      return;
     }
+    // Every option goes through the guard; blocked ones are never shown.
+    const checked = texts.map((text) => ({
+      text,
+      g: guardRewrite({ resume: resume.text, original, rewrite: text, posting: description, facts, level: options.level, noBuzzwords: options.noBuzzwords }),
+    }));
+    const choices = checked.filter((c) => c.g.tier !== "block").map((c) => ({ text: c.text, diff: wordDiff(original, c.text), warnings: c.g.warnings }));
+    if (!choices.length) {
+      const all = checked.flatMap((c) => c.g.issues);
+      setOutcome({ kind: "blocked", index, issues: all, fromPosting: [...new Set(checked.flatMap((c) => c.g.fromPosting))] });
+      setStatus("We didn't use this suggestion.");
+      return;
+    }
+    const heldBack = (res.data.heldBack ?? []).filter((t) => !facts.includes(t));
+    setOutcome({ kind: "ok", index, choices, pick: 0, heldBack, hidden: checked.length - choices.length });
+    setStatus(choices.length > 1 ? `${choices.length} options ready. Compare them with your original below.` : "Suggestion ready. Compare it with your original below.");
   }
 
   function accept() {
     if (outcome?.kind !== "ok") return;
-    const next = lines.map((l, i) => (i === outcome.index ? splitBullet(l).prefix + outcome.suggestion : l));
+    const suggestion = outcome.choices[outcome.pick].text;
+    const next = lines.map((l, i) => (i === outcome.index ? splitBullet(l).prefix + suggestion : l));
     setLines(next);
     saveTailored(resume.text, next);
     setOutcome(null);
@@ -232,8 +319,14 @@ function Editor({ resume, target, onBack }: { resume: ResumeData; target: Postin
         </div>
       </fieldset>
 
-      <section aria-labelledby="tl-how" className={`${cardCls} mt-6 p-5 sm:p-6`}>
-        <h2 id="tl-how" className="text-[15px] font-semibold">How to tailor</h2>
+      {gap && <KeywordPanel required={gap.required} preferred={gap.preferred} facts={facts} leftOut={leftOut} onHave={addFact} onLeave={leaveOut} />}
+
+      <details open={!V2} className={`${cardCls} group mt-6 p-5 sm:p-6`}>
+        <summary className="flex min-h-10 cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-1 [&::-webkit-details-marker]:hidden">
+          <h2 id="tl-how" className="text-[15px] font-semibold">How to tailor</h2>
+          <span className="text-[14px] text-muted">{optionsSummary(options)}</span>
+          <span aria-hidden="true" className="ml-auto text-muted transition-transform duration-200 group-open:rotate-180">▾</span>
+        </summary>
         <div className="mt-4 space-y-4">
           <OptionRow label="Emphasize" hint="optional, pick any">
             {EMPHASIS_LABELS.map(([k, label]) => {
@@ -268,8 +361,60 @@ function Editor({ resume, target, onBack }: { resume: ResumeData; target: Postin
             />
             Keep about the same length
           </label>
+          {V2 && (
+            <>
+              <OptionRow label="Target level">
+                {LEVEL_LABELS.map(([k, label]) => (
+                  <button key={k} type="button" aria-pressed={options.level === k} onClick={() => setOptions((o) => ({ ...o, level: k }))} className={`${options.level === k ? pillOn : pillOff} ${smallPill}`}>
+                    {label}
+                  </button>
+                ))}
+              </OptionRow>
+              <OptionRow label="Region">
+                {REGION_LABELS.map(([k, label]) => (
+                  <button key={k} type="button" aria-pressed={options.region === k} onClick={() => setOptions((o) => ({ ...o, region: k }))} className={`${options.region === k ? pillOn : pillOff} ${smallPill}`}>
+                    {label}
+                  </button>
+                ))}
+              </OptionRow>
+              {(
+                [
+                  ["postingWords", "Use the posting's words"],
+                  ["noBuzzwords", "Avoid buzzwords"],
+                ] as const
+              ).map(([k, label]) => (
+                <label key={k} className="flex min-h-10 items-center gap-3 text-[15px]">
+                  <input type="checkbox" checked={!!options[k]} onChange={(e) => setOptions((o) => ({ ...o, [k]: e.target.checked }))} className="size-5 accent-accent" />
+                  {label}
+                </label>
+              ))}
+              <div className="border-t border-border pt-4">
+                {presets.length > 0 && (
+                  <OptionRow label="Saved">
+                    {presets.map((p) => (
+                      <button key={p.name} type="button" onClick={() => { setOptions(p.options); setPresetNote(`Using "${p.name}".`); }} className={`${pillOff} ${smallPill}`}>
+                        {p.name}
+                      </button>
+                    ))}
+                  </OptionRow>
+                )}
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
+                  <div className="flex-1">
+                    <label htmlFor="tl-preset" className="text-[15px] font-medium">Save these options as</label>
+                    <input id="tl-preset" value={presetName} maxLength={40} placeholder="For example: Finance internships" onChange={(e) => setPresetName(e.target.value)} className={fieldCls} />
+                  </div>
+                  <button type="button" onClick={keepPreset} disabled={!presetName.trim()} className={btnSecondary}>
+                    Save
+                  </button>
+                </div>
+                <p role="status" className={presetNote ? "mt-2 text-[14px] text-muted" : "sr-only"}>
+                  {presetNote}
+                </p>
+              </div>
+            </>
+          )}
         </div>
-      </section>
+      </details>
 
       <h2 className="mt-10 text-[20px] font-semibold">Your resume</h2>
       <p className="mt-1 text-[15px] text-muted">Pick a bullet to reword.</p>
@@ -345,7 +490,19 @@ function Editor({ resume, target, onBack }: { resume: ResumeData; target: Postin
                     {busy && <Spinner />}
                     {busy ? "Suggesting…" : "Suggest a rewrite"}
                   </button>
-                  {outcome && outcome.kind !== "error" && outcome.index === i && <Result outcome={outcome} original={body} onAccept={accept} onKeep={() => keepOriginal(i)} />}
+                  {outcome && outcome.kind !== "error" && outcome.index === i && (
+                    <Result
+                      outcome={outcome}
+                      original={body}
+                      onPick={(pick) => setOutcome((o) => (o?.kind === "ok" ? { ...o, pick } : o))}
+                      onAccept={accept}
+                      onKeep={() => keepOriginal(i)}
+                      onHave={(t) => {
+                        addFact(t);
+                        setOutcome((o) => (o?.kind === "ok" ? { ...o, heldBack: o.heldBack.filter((x) => x !== t) } : o));
+                      }}
+                    />
+                  )}
                   {outcome?.kind === "error" && (
                     <p className="animate-enter mt-4 text-[15px] text-muted">{outcome.message}</p>
                   )}
@@ -392,63 +549,243 @@ function OptionRow({ label, hint, children }: { label: string; hint?: string; ch
   );
 }
 
+function DiffText({ diff }: { diff: DiffPart[] }) {
+  return (
+    <>
+      {diff.map((p, i) => {
+        if (p.kind === "same") return <span key={i}>{p.text}</span>;
+        if (p.kind === "added")
+          return (
+            <span key={i} className="underline decoration-accent decoration-2 underline-offset-4">
+              <span className="sr-only">added: </span>
+              {p.text}
+            </span>
+          );
+        return (
+          <span key={i} className="text-muted line-through">
+            <span className="sr-only">removed: </span>
+            {p.text}
+          </span>
+        );
+      })}
+    </>
+  );
+}
+
+const OPTION_NAMES = ["Closest to yours", "Results first", "Posting's words"];
+
 function Result({
   outcome,
   original,
+  onPick,
   onAccept,
   onKeep,
+  onHave,
 }: {
   outcome: Extract<Outcome, { kind: "ok" | "blocked" }>;
   original: string;
+  onPick: (i: number) => void;
   onAccept: () => void;
   onKeep: () => void;
+  onHave: (term: string) => void;
 }) {
   if (outcome.kind === "blocked") {
-    const tokens = [...new Set(outcome.issues.map((x) => x.token))].join(", ");
+    const own = [...new Set(outcome.issues.map((x) => x.token))].filter((t) => !outcome.fromPosting.includes(t));
+    const any = own.length > 0 || outcome.fromPosting.length > 0;
     return (
       <div className={`${cardCls} animate-enter mt-4 p-4`}>
         <p className="text-[16px]">
-          {tokens
-            ? `We didn't use this suggestion because it added things that aren't in your resume: ${tokens}.`
+          {any
+            ? "We didn't use this suggestion. It added things that aren't in your resume:"
             : "That suggestion couldn't be used. Try a light touch or a different note."}
         </p>
+        {any && (
+          <ul className="mt-2 space-y-1 text-[15px]">
+            {own.length > 0 && <li>{own.join(", ")}</li>}
+            {outcome.fromPosting.length > 0 && (
+              <li>
+                {outcome.fromPosting.join(", ")} <span className="text-muted">(from the posting, not your resume)</span>
+              </li>
+            )}
+          </ul>
+        )}
         <button type="button" onClick={onKeep} className={`${btnSecondary} mt-4`}>
           Keep original
         </button>
       </div>
     );
   }
+  const many = outcome.choices.length > 1;
+  const chosen = outcome.choices[outcome.pick];
   return (
     <div className={`${cardCls} animate-enter mt-4 p-4`}>
       <h3 className="text-[14px] font-semibold uppercase tracking-wide text-muted">Before</h3>
       <p className="mt-1 break-words text-[16px] leading-snug text-muted">{original}</p>
-      <h3 className="mt-4 text-[14px] font-semibold uppercase tracking-wide text-muted">Suggested</h3>
-      <p className="mt-1 break-words text-[16px] leading-snug">
-        {outcome.diff.map((p, i) => {
-          if (p.kind === "same") return <span key={i}>{p.text}</span>;
-          if (p.kind === "added")
+      <h3 className="mt-4 text-[14px] font-semibold uppercase tracking-wide text-muted">{many ? "Options" : "Suggested"}</h3>
+      {many ? (
+        <div role="radiogroup" aria-label="Rewrite options" className="mt-2 space-y-2">
+          {outcome.choices.map((c, i) => {
+            const on = outcome.pick === i;
             return (
-              <span key={i} className="underline decoration-accent decoration-2 underline-offset-4">
-                <span className="sr-only">added: </span>
-                {p.text}
-              </span>
+              <label
+                key={i}
+                className={`block cursor-pointer rounded-[14px] border px-4 py-3 transition-colors duration-200 ${on ? "border-accent bg-accent/10" : "border-border hover:bg-bg-soft"}`}
+              >
+                <span className="flex items-center gap-2 text-[13px] font-semibold text-muted">
+                  <input type="radio" name="tl-choice" checked={on} onChange={() => onPick(i)} className="size-4 accent-accent" />
+                  {OPTION_NAMES[i] ?? `Option ${i + 1}`}
+                </span>
+                <span className="mt-1 block break-words text-[16px] leading-snug">
+                  <DiffText diff={c.diff} />
+                </span>
+                <Warnings warnings={c.warnings} />
+              </label>
             );
-          return (
-            <span key={i} className="text-muted line-through">
-              <span className="sr-only">removed: </span>
-              {p.text}
-            </span>
-          );
-        })}
-      </p>
+          })}
+        </div>
+      ) : (
+        <>
+          <p className="mt-1 break-words text-[16px] leading-snug">
+            <DiffText diff={chosen.diff} />
+          </p>
+          <Warnings warnings={chosen.warnings} />
+        </>
+      )}
+      {outcome.hidden > 0 && (
+        <p className="mt-2 text-[14px] text-muted">
+          {outcome.hidden === 1 ? "1 option" : `${outcome.hidden} options`} hidden: added things not in your resume.
+        </p>
+      )}
+      {outcome.heldBack.length > 0 && (
+        <div className="mt-4">
+          <h3 className="text-[14px] font-semibold">Not added: not in your resume</h3>
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {outcome.heldBack.map((t) => (
+              <li key={t} className="flex items-center gap-1 rounded-full border border-border py-0.5 pl-3 pr-1 text-[14px]">
+                {t}
+                <button type="button" onClick={() => onHave(t)} className={`${linkClass} min-h-8 rounded-full px-2 text-[14px]`}>
+                  I have this<span className="sr-only">: {t}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div className="mt-4 flex flex-col gap-3 sm:flex-row">
         <button type="button" onClick={onAccept} className={btnPrimary}>
-          Accept
+          {many ? "Use this option" : "Accept"}
         </button>
         <button type="button" onClick={onKeep} className={btnSecondary}>
           Keep original
         </button>
       </div>
     </div>
+  );
+}
+
+function Warnings({ warnings }: { warnings: GuardWarning[] }) {
+  if (!warnings.length) return null;
+  return (
+    <ul className="mt-2 space-y-1 text-[14px] text-warn">
+      {warnings.map((w, i) => (
+        <li key={i}>
+          <span aria-hidden="true">⚠ </span>
+          <span className="sr-only">Check: </span>
+          {warningText(w)}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function KeywordPanel({
+  required,
+  preferred,
+  facts,
+  leftOut,
+  onHave,
+  onLeave,
+}: {
+  required: GapTerm[];
+  preferred: GapTerm[];
+  facts: string[];
+  leftOut: string[];
+  onHave: (t: string) => void;
+  onLeave: (t: string) => void;
+}) {
+  const all = [...required.map((t) => ({ ...t, pref: false })), ...preferred.map((t) => ({ ...t, pref: true }))];
+  const req = gapCount(required);
+  const pref = gapCount(preferred);
+  const found = all.filter((t) => t.bucket === "found");
+  const alias = all.filter((t) => t.bucket === "alias");
+  const missing = all.filter((t) => t.bucket === "missing" && !leftOut.includes(t.term));
+  const tag = (p: boolean) => (p ? <span className="text-muted"> · preferred</span> : null);
+  return (
+    <section aria-labelledby="tl-gap" className={`${cardCls} animate-enter mt-6 p-5 sm:p-6`}>
+      <h2 id="tl-gap" className="text-[15px] font-semibold">Posting keywords</h2>
+      {all.length === 0 ? (
+        <p className="mt-2 text-[15px] text-muted">No skills or tools we know of in this posting.</p>
+      ) : (
+        <>
+          <p className="mt-1 text-[15px]">
+            {[req.total ? `${req.have} of ${req.total} required terms in your resume` : "", pref.total ? `${pref.have} of ${pref.total} preferred` : ""]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+          {found.length > 0 && (
+            <div className="mt-4">
+              <h3 className="text-[14px] font-semibold">In your resume</h3>
+              <ul className="mt-2 flex flex-wrap gap-2">
+                {found.map((t) => (
+                  <li key={t.term} className="rounded-full border border-border px-3 py-1 text-[14px]">
+                    <span aria-hidden="true" className="text-good">✓ </span>
+                    {t.term}
+                    {facts.includes(t.term) && <span className="text-muted"> · you added</span>}
+                    {tag(t.pref)}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {alias.length > 0 && (
+            <div className="mt-4">
+              <h3 className="text-[14px] font-semibold">Same idea, different words</h3>
+              <ul className="mt-2 space-y-1 text-[15px]">
+                {alias.map((t) => (
+                  <li key={t.term}>
+                    {t.term} <span className="text-muted">· you wrote &ldquo;{t.alias}&rdquo;</span>
+                    {tag(t.pref)}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {missing.length > 0 && (
+            <div className="mt-4">
+              <h3 className="text-[14px] font-semibold">Not found: add only if true</h3>
+              <ul className="mt-2 space-y-2">
+                {missing.map((t) => (
+                  <li key={t.term} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px]">
+                    <span className="min-w-0 break-words">
+                      {t.term}
+                      {tag(t.pref)}
+                    </span>
+                    <span className="flex gap-1.5">
+                      <button type="button" onClick={() => onHave(t.term)} className={`${pillOff} ${smallPill}`}>
+                        I have this<span className="sr-only">: {t.term}</span>
+                      </button>
+                      <button type="button" onClick={() => onLeave(t.term)} className={`${pillOff} ${smallPill}`}>
+                        Leave out<span className="sr-only">: {t.term}</span>
+                      </button>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {leftOut.length > 0 && <p className="mt-3 text-[14px] text-muted">Left out: {leftOut.join(", ")}</p>}
+        </>
+      )}
+    </section>
   );
 }

@@ -16,8 +16,8 @@ export const TIER_FLAGS = {
   debugRound: true, // "debugging" interview round
   presets: true, // company-style round presets
   scorecard: true, // per-axis interview scorecard
-  keywordGap: false, // posting keywords vs resume
-  rewriteOptions: false, // up to 3 rewrite options
+  keywordGap: true, // posting keywords vs resume
+  rewriteOptions: true, // up to 3 rewrite options
 } as const;
 
 /** v2 rounds App.tsx doesn't know about: on only with live coding and their own flag. */

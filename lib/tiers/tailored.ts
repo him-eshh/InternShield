@@ -1,6 +1,6 @@
 // Accepted resume rewrites (is:tailored), keyed to a fingerprint of the resume text.
 import { KEYS, readKey, writeKey } from "../client/storage";
-import type { TailoredResume } from "./types";
+import { STRENGTHS, TONES, type TailoredResume, type TailorOptions } from "./types";
 
 const LONG = 600;
 
@@ -59,6 +59,33 @@ export function loadTailored(resumeText: string): string[] {
 export function saveTailored(resumeText: string, lines: string[]): void {
   const value: TailoredResume = { resumeKey: resumeKey(resumeText), lines, updatedAt: Date.now() };
   writeKey(KEYS.tailored, value);
+}
+
+// ---------- v2: saved tailoring presets (options only, no resume text) ----------
+export const PRESETS_KEY = "is:tailorPresets";
+export const MAX_PRESETS = 6;
+export interface TailorPreset {
+  name: string;
+  options: TailorOptions;
+}
+
+function validOptions(o: unknown): o is TailorOptions {
+  const x = o as TailorOptions;
+  return !!x && Array.isArray(x.emphasis) && (TONES as readonly unknown[]).includes(x.tone) && (STRENGTHS as readonly unknown[]).includes(x.strength) && typeof x.keepLength === "boolean";
+}
+
+export function loadPresets(): TailorPreset[] {
+  const v = readKey<unknown>(PRESETS_KEY);
+  if (!Array.isArray(v)) return [];
+  return v.filter((p): p is TailorPreset => !!p && typeof p.name === "string" && p.name.trim() !== "" && validOptions(p.options)).slice(0, MAX_PRESETS);
+}
+
+/** Same name replaces; newest first; keeps MAX_PRESETS. */
+export function savePreset(name: string, options: TailorOptions): TailorPreset[] {
+  const n = name.trim().slice(0, 40);
+  const next = [{ name: n, options }, ...loadPresets().filter((p) => p.name !== n)].slice(0, MAX_PRESETS);
+  writeKey(PRESETS_KEY, next);
+  return next;
 }
 
 export function resetTailored(): void {
