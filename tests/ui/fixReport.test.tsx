@@ -71,10 +71,10 @@ describe("ProfileChip", () => {
 });
 
 describe("EvidenceCard", () => {
-  it("wraps long quotes and is visible in print", () => {
+  it("wraps long quotes and is never hidden (no scroll-reveal, so print and reduced motion see it)", () => {
     const flag = { ...(scamReport.flags[0] ?? realReport.flags[0]), quote: "reach me at a.very.long.address.that.keeps.going@example-company-name.com" };
     const html = renderToStaticMarkup(<ul><EvidenceCard flag={flag} /></ul>);
     expect(html).toContain("[overflow-wrap:anywhere]");
-    expect(html).toContain("print:opacity-100");
+    expect(html).not.toContain("opacity-0");
   });
 });

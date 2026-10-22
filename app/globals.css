@@ -3,56 +3,145 @@
 /* Dark mode is class-based: the no-flash script in layout.tsx sets .dark on <html>. */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Direction A "Calm Instrument" (findings 06 §2, §12): blue-tinted neutrals (hue ~258), one blue accent,
+   green/amber/red only for results. Old names (--bg-soft, --card, --text, --muted, --accent-contrast) alias the new ones. */
 :root {
   --bg: #ffffff;
-  --bg-soft: #f7f7f9;
-  --card: #ffffff;
-  --text: #1d1d1f;
-  --muted: #6e6e73;
-  --border: #e5e5ea;
-  --accent: #2a5fb8; /* darker than spec's #2F6FD6: blue text on the 10% blue tint must pass 4.5:1 */
+  --bg-subtle: #f6f7f9;
+  --surface: #ffffff;
+  --sunken: #f1f3f6;
+  --border: #e3e6eb;
+  --border-strong: #c5cad3;
+  --fg: #14171c;
+  --fg-2: #555c68;
+  --fg-3: #6c737f; /* meta text, on --bg only */
+  --accent: #2466c3;
+  --accent-hover: #1657af;
+  --accent-fg: #2460b7; /* links */
+  --accent-tint: #e3f0ff;
   --accent-contrast: #ffffff;
-  --good: #2e7d4f;
-  --warn: #9a6200;
-  --bad: #b8382b;
+  --good: #1d7a4c;
+  --good-tint: #e6f4ec;
+  --warn: #95590a;
+  --warn-tint: #fcf1df;
+  --bad: #bf3a2b;
+  --bad-tint: #fcebe8;
+  --shadow-1: 0 1px 0 rgb(20 23 28 / 0.04), 0 1px 2px rgb(20 23 28 / 0.06);
+  --shadow-2: 0 1px 2px rgb(20 23 28 / 0.06), 0 4px 12px -2px rgb(20 23 28 / 0.08);
+  --shadow-3: 0 2px 4px rgb(20 23 28 / 0.06), 0 12px 32px -8px rgb(20 23 28 / 0.14);
+  /* Accent ramp, Radix step semantics: 1-2 bg, 3-5 states, 6-8 borders, 9-10 solids, 11-12 text. */
+  --blue-1: #f9fcff; --blue-2: #f2f7ff; --blue-3: #e3f0ff; --blue-4: #d2e6ff; --blue-5: #c1dbff; --blue-6: #adcdfc;
+  --blue-7: #94b9f1; --blue-8: #6ea0e8; --blue-9: #2466c3; --blue-10: #1657af; --blue-11: #2460b7; --blue-12: #0c2c5a;
   color-scheme: light;
 }
 
 .dark {
-  --bg: #111113;
-  --bg-soft: #161618;
-  --card: #1c1c1f;
-  --text: #ececf0;
-  --muted: #9a9aa2;
-  --border: #2c2c31;
-  --accent: #6ea0e6;
-  --accent-contrast: #111113;
-  --good: #5fae7f;
-  --warn: #d4a24c;
-  --bad: #d9776b;
+  --bg: #0e1013;
+  --bg-subtle: #13161a;
+  --surface: #171a1f;
+  --sunken: #1d2127;
+  --border: #272c33;
+  --border-strong: #3d444f;
+  --fg: #eceef2;
+  --fg-2: #a4abb6;
+  --fg-3: #868e9a;
+  --accent: #6ea0e8;
+  --accent-hover: #82b0f3;
+  --accent-fg: #8fb9f7;
+  --accent-tint: #152235;
+  --accent-contrast: #0e1013;
+  --good: #5bbf8a;
+  --good-tint: #12271c;
+  --warn: #e3a94f;
+  --warn-tint: #2a200f;
+  --bad: #f0857a;
+  --bad-tint: #2d1614;
+  /* Dark mode: hairlines and surface steps instead of shadows. */
+  --shadow-1: 0 0 0 1px rgb(255 255 255 / 0.04);
+  --shadow-2: 0 0 0 1px rgb(255 255 255 / 0.06), 0 8px 24px -8px rgb(0 0 0 / 0.6);
+  --shadow-3: 0 0 0 1px rgb(255 255 255 / 0.06), 0 12px 32px -8px rgb(0 0 0 / 0.7);
+  --blue-1: #0b1016; --blue-2: #10161f; --blue-3: #152235; --blue-4: #172b49; --blue-5: #1d3559; --blue-6: #26426c;
+  --blue-7: #345687; --blue-8: #4772b1; --blue-9: #6ea0e8; --blue-10: #82b0f3; --blue-11: #8fb9f7; --blue-12: #dce9fc;
   color-scheme: dark;
 }
 
 @theme inline {
+  /* colors (new names) */
   --color-bg: var(--bg);
-  --color-bg-soft: var(--bg-soft);
-  --color-card: var(--card);
-  --color-text: var(--text);
-  --color-muted: var(--muted);
+  --color-bg-subtle: var(--bg-subtle);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-fg: var(--fg);
+  --color-fg-2: var(--fg-2);
+  --color-fg-3: var(--fg-3);
   --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-tint: var(--accent-tint);
   --color-accent-contrast: var(--accent-contrast);
   --color-good: var(--good);
+  --color-good-tint: var(--good-tint);
   --color-warn: var(--warn);
+  --color-warn-tint: var(--warn-tint);
   --color-bad: var(--bad);
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-inter), system-ui, sans-serif;
-  --radius-card: 18px;
-  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --color-bad-tint: var(--bad-tint);
+  --color-blue-1: var(--blue-1); --color-blue-2: var(--blue-2); --color-blue-3: var(--blue-3); --color-blue-4: var(--blue-4);
+  --color-blue-5: var(--blue-5); --color-blue-6: var(--blue-6); --color-blue-7: var(--blue-7); --color-blue-8: var(--blue-8);
+  --color-blue-9: var(--blue-9); --color-blue-10: var(--blue-10); --color-blue-11: var(--blue-11); --color-blue-12: var(--blue-12);
+  /* colors (old names, kept working) */
+  --color-bg-soft: var(--bg-subtle);
+  --color-card: var(--surface);
+  --color-text: var(--fg);
+  --color-muted: var(--fg-2);
+
+  --font-sans: system-ui, -apple-system, "SF Pro Text", var(--font-inter), sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* type scale (weights: 400 body, 600 headline, 680-700 display) */
+  --text-display: clamp(2.5rem, 5.5vw + 0.5rem, 4.5rem); --text-display--line-height: 1.04; --text-display--letter-spacing: -0.032em;
+  --text-title: clamp(1.75rem, 2.5vw + 0.75rem, 2.5rem); --text-title--line-height: 1.12; --text-title--letter-spacing: -0.024em;
+  --text-level: clamp(1.875rem, 3vw + 0.75rem, 2.75rem); --text-level--line-height: 1.1; --text-level--letter-spacing: -0.022em;
+  --text-score: 3.5rem; --text-score--line-height: 1; --text-score--letter-spacing: -0.03em;
+  --text-headline: 1.0625rem; --text-headline--line-height: 1.4;
+  --text-body: 1.0625rem; --text-body--line-height: 1.6;
+  --text-callout: 0.9375rem; --text-callout--line-height: 1.5;
+  --text-footnote: 0.8125rem; --text-footnote--line-height: 1.45;
+
+  /* radii: child <= parent; pill = rounded-full */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-card: 18px; /* old name */
+
+  --shadow-1: var(--shadow-1);
+  --shadow-2: var(--shadow-2);
+  --shadow-3: var(--shadow-3);
+
+  /* motion (findings 06 §4.2): productive everywhere, expressive (reveal) only for the result */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1); /* old name */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-exit: cubic-bezier(0.3, 0, 0.8, 0.15);
+  --ease-reveal: cubic-bezier(0.05, 0.7, 0.1, 1);
+}
+
+/* Durations and spacing rhythm as plain variables (4 pt base: 4 8 12 16 20 24 32 40 56 72 96 = Tailwind 1..24). */
+:root {
+  --dur-press: 90ms;
+  --dur-micro: 150ms;
+  --dur-base: 220ms;
+  --dur-screen: 280ms;
+  --dur-reveal: 800ms;
+  --stagger: 40ms;
 }
 
 html {
   background: var(--bg);
-  color: var(--text);
+  color: var(--fg);
+  font-optical-sizing: auto;
 }
 
 body {
@@ -62,30 +151,40 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+h1, h2, h3 { text-wrap: balance; }
+p { text-wrap: pretty; }
+
+@utility num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Dark inputs: stronger edge so each field reads as a field (findings 06 §10, 1.4.11). */
+.dark :is(input:not([type="checkbox"], [type="radio"], [type="range"]), textarea, select) {
+  border-color: var(--border-strong);
+}
+
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
-/* Screen transition: fade + slight slide up (spec.md > Look and Feel > Motion). */
+/* Screen transition: fade + slight rise. */
 @keyframes enter {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: none; }
 }
-@keyframes fade {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
 .animate-enter {
-  animation: enter 320ms var(--ease-out-soft) both;
+  animation: enter var(--dur-screen) var(--ease-out) both;
 }
 
+/* Reduced motion: no CSS animations or transitions anywhere; Motion handles its own via MotionConfig. */
 @media (prefers-reduced-motion: reduce) {
-  .animate-enter {
-    animation: fade 200ms ease-out both;
-  }
   *, *::before, *::after {
-    transition-property: opacity !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
     scroll-behavior: auto !important;
   }
 }

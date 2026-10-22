@@ -1,8 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import MotionProvider from "@/components/MotionProvider";
 import "./globals.css";
+import "./v2-check.css";
+import "./v2-tools.css";
 
-const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
+const inter = Inter({ variable: "--font-inter", subsets: ["latin"], axes: ["opsz"] });
 
 export const metadata: Metadata = {
   // Vercel sets VERCEL_PROJECT_PRODUCTION_URL; locally the share image resolves against localhost.
@@ -14,7 +17,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#111113" },
+    { media: "(prefers-color-scheme: dark)", color: "#0e1013" },
   ],
 };
 
@@ -27,7 +30,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="min-h-dvh bg-bg text-text">{children}</body>
+      <body className="min-h-dvh bg-bg text-text">
+        <MotionProvider>{children}</MotionProvider>
+      </body>
     </html>
   );
 }

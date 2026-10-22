@@ -1,40 +1,12 @@
-"use client";
-import { useEffect, useRef, useState } from "react";
 import type { Flag } from "@/lib/types";
 import { AlertIcon, CheckCircleIcon, ExternalIcon, WarningIcon } from "../icons";
 
+// Always visible: no scroll-reveal (findings 05 standing #12).
 export default function EvidenceCard({ flag }: { flag: Flag }) {
-  const ref = useRef<HTMLLIElement>(null);
-  const [seen, setSeen] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || typeof IntersectionObserver === "undefined") {
-      const id = requestAnimationFrame(() => setSeen(true));
-      return () => cancelAnimationFrame(id);
-    }
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          setSeen(true);
-          io.disconnect();
-        }
-      },
-      { rootMargin: "0px 0px -8% 0px" },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
   const red = flag.kind === "red";
   const Icon = red ? (flag.critical ? AlertIcon : WarningIcon) : CheckCircleIcon;
   return (
-    <li
-      ref={ref}
-      className={`rounded-[18px] border border-border border-l-[5px] bg-card p-5 transition-[opacity,transform] duration-300 ease-out motion-reduce:transition-none print:translate-y-0 print:opacity-100 ${
-        red ? "border-l-bad" : "border-l-good"
-      } ${seen ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"}`}
-    >
+    <li className={`rounded-[18px] border border-border border-l-[5px] bg-card p-5 ${red ? "border-l-bad" : "border-l-good"}`}>
       <div className="flex items-start gap-3">
         <span className={`mt-0.5 shrink-0 ${red ? "text-bad" : "text-good"}`}>
           <Icon size={22} />

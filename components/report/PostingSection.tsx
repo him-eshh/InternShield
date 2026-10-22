@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import type { MatchRow, PostingData } from "@/lib/types";
 import { CheckCircleIcon, ChevronIcon, ExternalIcon, WarningIcon } from "../icons";
 import { btnPrimary, btnSecondary, card } from "../ui";
@@ -28,30 +28,8 @@ interface Props {
 
 export default function PostingSection({ checked = true, posting, match, company, careersUrl }: Props) {
   const found = !!posting?.found;
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLElement>(null);
-
-  // Expand by itself once it scrolls into view.
-  useEffect(() => {
-    const el = ref.current;
-    if (!found || !el) return;
-    if (typeof IntersectionObserver === "undefined") {
-      const id = requestAnimationFrame(() => setOpen(true));
-      return () => cancelAnimationFrame(id);
-    }
-    let t: ReturnType<typeof setTimeout> | undefined;
-    const io = new IntersectionObserver((entries) => {
-      if (entries.some((e) => e.isIntersecting)) {
-        t = setTimeout(() => setOpen(true), 250);
-        io.disconnect();
-      }
-    });
-    io.observe(el);
-    return () => {
-      io.disconnect();
-      if (t) clearTimeout(t);
-    };
-  }, [found]);
+  // Starts open: nothing waits for a scroll to show (findings 05 standing #12).
+  const [open, setOpen] = useState(true);
 
   if (!found || !posting) {
     return (
@@ -79,7 +57,7 @@ export default function PostingSection({ checked = true, posting, match, company
     ["Posted", fmtDate(posting.postedDate)],
   ];
   return (
-    <section ref={ref} aria-labelledby="posting-title" className={`${card} p-6 sm:p-8`}>
+    <section aria-labelledby="posting-title" className={`${card} p-6 sm:p-8`}>
       <button type="button" aria-expanded={open} aria-controls="posting-body" onClick={() => setOpen(!open)} className="flex w-full items-center justify-between gap-4 text-left">
         <span>
           <span className="block text-[14px] font-medium text-good">
