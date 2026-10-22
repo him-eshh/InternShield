@@ -18,13 +18,15 @@ function fmtDate(iso: string | null): string | null {
 }
 
 interface Props {
+  /** True when the posting search ran (it may still have found nothing). */
+  checked?: boolean;
   posting: PostingData | null;
   match: MatchRow[] | null;
   company: string | null;
   careersUrl: string | null;
 }
 
-export default function PostingSection({ posting, match, company, careersUrl }: Props) {
+export default function PostingSection({ checked = true, posting, match, company, careersUrl }: Props) {
   const found = !!posting?.found;
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLElement>(null);
@@ -56,7 +58,9 @@ export default function PostingSection({ posting, match, company, careersUrl }: 
       <section className={`${card} p-6 sm:p-8`}>
         <h3 className="text-[24px] font-semibold tracking-[-0.02em]">The real posting</h3>
         <p className="mt-3 text-[17px] text-muted">
-          We couldn&apos;t find this role in a search of the company&apos;s site. That doesn&apos;t count against the message. Roles don&apos;t always show up in a search.
+          {checked
+            ? "We couldn't find this role on the company's site. That doesn't count against the message."
+            : "We couldn't check the posting."}
         </p>
         {careersUrl && (
           <a href={careersUrl} target="_blank" rel="noopener noreferrer" className={`${btnSecondary} mt-6`}>
@@ -79,7 +83,7 @@ export default function PostingSection({ posting, match, company, careersUrl }: 
       <button type="button" aria-expanded={open} aria-controls="posting-body" onClick={() => setOpen(!open)} className="flex w-full items-center justify-between gap-4 text-left">
         <span>
           <span className="block text-[14px] font-medium text-good">
-            {posting.onOfficialDomain ? "Found on the company's own site" : "Found on a hiring platform the company uses"}
+            {posting.onOfficialDomain ? "Found on the company's site" : "Found on a hiring platform"}
           </span>
           <span id="posting-title" className="mt-1 block text-[24px] font-semibold tracking-[-0.02em]">{posting.title ?? "Matching posting"}</span>
         </span>
@@ -87,7 +91,7 @@ export default function PostingSection({ posting, match, company, careersUrl }: 
       </button>
       <div
         id="posting-body"
-        className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
+        className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:transition-none print:grid-rows-[1fr] print:opacity-100 ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
       >
         <div className="overflow-hidden" inert={!open}>
           <dl className="mt-6 grid gap-x-8 gap-y-3 sm:grid-cols-2">
@@ -107,11 +111,11 @@ export default function PostingSection({ posting, match, company, careersUrl }: 
                     <li key={r.row} className="border-t border-border py-3 text-[15px]">
                       <p className="font-medium">{ROW_LABEL[r.row]}</p>
                       <p className="mt-1 break-words">
-                        <span className="text-muted">The message says: </span>
+                        <span className="text-muted">Message: </span>
                         {r.message ?? <span className="text-muted">Not listed</span>}
                       </p>
                       <p className="mt-1 break-words">
-                        <span className="text-muted">The posting says: </span>
+                        <span className="text-muted">Posting: </span>
                         {r.posting ?? <span className="text-muted">Not listed</span>}
                       </p>
                       <p className="mt-1.5 flex items-center gap-1.5">

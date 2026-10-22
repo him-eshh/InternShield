@@ -31,10 +31,10 @@ const SKILL_SUGGESTIONS: Record<Field, string[]> = {
 };
 
 const WHY = [
-  "We use this to check whether a role fits what you'd really be applying for.",
-  "A role that asks for far more or far less than your level can be a warning sign.",
-  "Skills help us spot jobs that don't match what you do. Totally optional.",
-  "With a resume we can compare the role to your background. The file stays on this device. Only a line you choose to reword is ever sent to an AI.",
+  "Helps check whether a role fits you.",
+  "A role far above or below your level can be a warning sign.",
+  "Optional. Helps spot roles that don't match you.",
+  "Your file stays on this device. It goes to an AI only when you reword a line or practice with it.",
 ];
 
 interface Props {
@@ -222,11 +222,11 @@ export default function ProfileSteps({ initial, initialResume, onDone, onCancel 
                       const words = resume.text.split(/\s+/).filter(Boolean).length;
                       const spotted = spottedSkills(resume.text, [...SKILL_SUGGESTIONS[field ?? "other"], ...skills]);
                       return spotted.length > 0
-                        ? `Read ${words.toLocaleString("en-US")} words. Skills we spotted: ${spotted.join(", ")}`
-                        : `Read ${words.toLocaleString("en-US")} words. No skills from your list spotted.`;
+                        ? `${words.toLocaleString("en-US")} words read. Skills spotted: ${spotted.join(", ")}`
+                        : `${words.toLocaleString("en-US")} words read. No listed skills spotted.`;
                     })()}
                   </p>
-                  <p className="text-[14px] text-muted">Saved on this device only.</p>
+                  <p className="text-[14px] text-muted">Saved on this device.</p>
                 </>
               ) : (
                 <>

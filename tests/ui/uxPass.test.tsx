@@ -15,7 +15,10 @@ async function renderReport(name: "real" | "scam" | "medium") {
 }
 
 describe("Copy report", () => {
-  it.each(["real", "medium", "scam"] as const)("shows on the %s report", async (name) => {
+  it("is absent from a low report", async () => {
+    expect(await renderReport("real")).not.toContain("Copy report");
+  });
+  it.each(["medium", "scam"] as const)("shows once on the %s report", async (name) => {
     const html = await renderReport(name);
     expect(html.match(/Copy report/g)).toHaveLength(1);
   });
@@ -136,7 +139,7 @@ describe("ResumeTailor options panel", () => {
     const buttons = [...html.matchAll(/<button[^>]*aria-pressed="false"[^>]*>([^<]*)<\/button>/g)].map((m) => m[1]);
     expect(buttons.some((b) => b.startsWith("• Resolved"))).toBe(true);
     expect(buttons.some((b) => b.includes("Jordan Lee") || b.includes("@example.edu") || b === "EDUCATION")).toBe(false);
-    expect(html).toContain("Your name, contact details and section headings stay as they are.");
+    expect(html).toContain("Pick a bullet to reword.");
   });
 
   it("offers a section filter", () => {

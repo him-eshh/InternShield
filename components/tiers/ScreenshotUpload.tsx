@@ -9,7 +9,7 @@ interface Props {
   disabled?: boolean;
 }
 
-const DEFAULT_ERROR = "We couldn't read that screenshot. Try again, or paste the text instead.";
+const DEFAULT_ERROR = "Couldn't read that screenshot. Try again or paste the text.";
 
 export default function ScreenshotUpload({ onText, disabled }: Props) {
   const input = useRef<HTMLInputElement>(null);
@@ -29,7 +29,7 @@ export default function ScreenshotUpload({ onText, disabled }: Props) {
       }
       const res = await postTranscribe(prepared.dataUrl);
       if (res.status === "done" && res.data.text.trim()) onText(res.data.text);
-      else setError(res.status === "failed" ? (res.message ?? DEFAULT_ERROR) : "We couldn't find any text in that image.");
+      else setError(res.status === "failed" ? (res.message ?? DEFAULT_ERROR) : "No text found in that image.");
     } finally {
       setBusy(false);
     }
@@ -58,7 +58,7 @@ export default function ScreenshotUpload({ onText, disabled }: Props) {
         Upload a screenshot
       </button>
       <span role="status" aria-live="polite" className={busy || error ? "mt-1 text-[14px] text-muted" : "sr-only"}>
-        {busy ? "Reading your screenshot…" : (error ?? "")}
+        {busy ? "Reading screenshot…" : (error ?? "")}
       </span>
     </span>
   );

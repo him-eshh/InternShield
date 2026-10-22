@@ -67,7 +67,7 @@ export default function ProfileChip({
         onClick={() => { setOpen(!open); setConfirming(false); }}
         className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-border bg-card px-3.5 text-[15px] hover:bg-bg-soft"
       >
-        {FIELD_LABELS[profile.field]} · {LEVEL_NAMES[profile.level]}
+        {[FIELD_LABELS[profile.field], LEVEL_NAMES[profile.level]].filter(Boolean).join(" · ")}
         <ChevronIcon size={14} />
       </button>
       {open && (
