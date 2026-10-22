@@ -32,6 +32,7 @@ const quoteOnly = obj({ quote });
 export const EXTRACT_SCHEMA = obj({
   isJobMessage: { type: "boolean" },
   company: orNull(quoted),
+  department: nstr,
   role: orNull(quoted),
   pay: orNull(quoted),
   sender: obj({ name: nstr, email: nstr, phone: nstr }),
