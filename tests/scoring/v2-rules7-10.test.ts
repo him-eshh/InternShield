@@ -40,9 +40,19 @@ describe("rule 8: impersonated university, government, immigration", () => {
     expect(r.flags.find((f) => f.id === "impersonation")?.points).toBe(30);
   });
 
-  it("fires on a 'via' relay even from a .edu-looking name", () => {
-    const r = run(`${prof} Sent via Sendinblue.`, bad("kim@bio.example.edu"));
-    expect(r.flags.map((f) => f.id)).toContain("impersonation");
+  it("a 'via' relay counts only when the sender is unknown, not from a real .edu", () => {
+    expect(run(`${prof} Sent via Sendinblue.`, bad("kim@bio.example.edu")).flags.map((f) => f.id)).not.toContain("impersonation");
+    expect(run(`${prof} Sent via Sendinblue.`).flags.map((f) => f.id)).toContain("impersonation");
+  });
+
+  it("a company partnering with your career center is not a claim", () => {
+    const r = run("Hi, we are partnering with your career center to hire analysts.", bad("jo@acme.example"));
+    expect(r.flags.map((f) => f.id)).not.toContain("impersonation");
+  });
+
+  it("an onboarding note from a hiring platform is not early paperwork", () => {
+    const r = run("Welcome aboard! Please complete your I-9 and W-4 before your start date.", bad("no-reply@myworkdayjobs.com"));
+    expect(r.flags.map((f) => f.id)).not.toContain("paperwork_too_early");
   });
 
   it("fires for USCIS / immigration from a non-.gov sender", () => {

@@ -16,7 +16,8 @@ export const WEIGHTS = {
   unsolicited: 5, // the user said they didn't apply first
   replyYes: 25,
   offPlatform: 20,
-  offPlatformAbroad: 10, // employer outside the US and no money or data asked for
+  offPlatformAbroad: 10, // you applied first and no money or data asked for
+  chatInterview: 25, // added to offPlatform when the interview itself is text chat on the app
   noInterview: 20,
   vagueEasyPayCombo: 15,
   newDomain: 15,

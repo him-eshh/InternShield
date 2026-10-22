@@ -6,7 +6,8 @@ import { firstMatch, snippetAround } from "./backstop";
 export type OrgKind = "university" | "government" | "immigration";
 
 const IDENTITY =
-  String.raw`\b(?:this is|i am|i['’]m|we are|we['’]re|my name is|writing (?:to you )?(?:from|on behalf of)|(?:message|email|notice|notification|letter) from|on behalf of|from the|representing|official)\b[^.!?\n]{0,80}?`;
+  String.raw`\b(?:this is|i am|i['’]m|we are|we['’]re|my name is|writing (?:to you )?(?:from|on behalf of)|(?:message|email|notice|notification|letter) from|on behalf of|from the|representing|official)\b(?:(?!\b(?:your|with|via|through|partner\w*|found)\b)[^.!?\n]){0,40}?`;
+// The filler can't say "your/with/via/partnering": "we are partnering with your career center" is a company, not a claim.
 
 const ORGS: [OrgKind, string][] = [
   ["immigration", String.raw`(?:uscis|sevp|sevis|citizenship and immigration|homeland security|\bdhs\b|immigration (?:services|office|officer|department|authority)|international student (?:office|services)|designated school official)`],

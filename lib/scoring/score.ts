@@ -84,6 +84,7 @@ const STARTUP_WORDS =
 const APPLIED_TEXT = /\b(?:thank(?:s| you) for (?:applying|your (?:application|interest))|your (?:recent )?application|you applied)\b/i;
 /** Any hiring talk at all; "Have they asked you to..." only makes sense on a job message. */
 const JOB_TALK = /\b(?:job|role|position|internship|intern|hire|hiring|interview|offer|recruit\w*|candidate|apply|application|salary|pay)\b/i;
+const CHAT_INTERVIEW = /\binterview\w*\b[^.!?\n]{0,30}\b(?:by|over|via|through)\s+(?:text|chat)\b|\b(?:text|chat)[- ](?:based\s+)?interview/i;
 const IMPLIES_HIRED =
   /\b(?:offer|hired|hire you|selected|congratulations|welcome aboard|welcome to the team|onboarding|start date|you have been chosen|position is yours)\b/i;
 const GENERIC_GREETING =
@@ -299,7 +300,10 @@ function evaluate(input: ScoreInput): Evaluated {
   }
 
   // Rule 9: tax, work-eligibility, and payroll forms belong after a signed offer. A fee for them is already pay_fee.
-  const papers = signed || input.stage === "offer" ? null : earlyPaperwork(text);
+  // An onboarding note ("welcome aboard, complete your I-9") from a hiring platform or the company's own domain is normal.
+  const earlyOfficial = input.steps.company.status === "done" ? input.steps.company.data?.officialDomain ?? null : null;
+  const onboardingNote = senderDomain !== null && (isHiringPlatform(senderDomain) || senderDomain === earlyOfficial) && IMPLIES_HIRED.test(text);
+  const papers = signed || input.stage === "offer" || onboardingNote ? null : earlyPaperwork(text);
   if (papers && !flags.some((f) => f.id === "pay_fee")) {
     const withFee = papers.fee || ticked.includes("pay");
     red(
@@ -321,11 +325,13 @@ function evaluate(input: ScoreInput): Evaluated {
     const appRaw = offFact?.app ?? offHit?.match ?? "";
     const app = APP_NAMES.find(([re]) => re.test(appRaw))?.[1] ?? null;
     // Softer only when you applied first and they want no money or data (brief C4; the employer-abroad softening is gone).
-    const soft = appliedFirst && !moneyOrData;
+    // A chat-only interview (by answer or in the text) is never softened and counts more than a channel move.
+    const chatInterview = answers.talked_live === "chat_only" || CHAT_INTERVIEW.test(text);
+    const soft = appliedFirst && !moneyOrData && !chatInterview;
     red(
       "off_platform",
       "message",
-      soft ? W.offPlatformAbroad : W.offPlatform,
+      chatInterview ? W.offPlatform + W.chatInterview : soft ? W.offPlatformAbroad : W.offPlatform,
       app ? `They want to move you to ${app}` : "They want a chat-only interview",
       soft
         ? "You applied first, so this counts for less. Still keep hiring on official channels."
@@ -481,7 +487,8 @@ function evaluate(input: ScoreInput): Evaluated {
   const relay = relayQuote(text);
   const threat = visaThreat(text);
   const senderIsInstitution = senderDomain ? isInstitutionDomain(senderDomain) : false;
-  const wrongSender = relay !== null || (senderDomain !== null && !platform && !senderIsInstitution);
+  // A real .edu/.gov sender using a bulk-mail relay is fine; the relay only counts when the sender is unknown.
+  const wrongSender = senderDomain !== null ? !platform && !senderIsInstitution : relay !== null;
   const payNow = flags.some((f) => ["pay_fee", "gift_cards", "crypto_or_task_deposit", "money_wrong_way", "deposit_check"].includes(f.id)) || paymentAsk(text) !== null;
   if (claim && wrongSender && !flags.some((f) => f.id === "lookalike_domain")) {
     const overlap = flags.some((f) => f.id === "free_email");

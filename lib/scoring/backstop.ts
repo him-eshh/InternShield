@@ -71,6 +71,7 @@ const PATTERNS: Record<BackstopId, Pattern[]> = {
     new RegExp(String.raw`\b${YOU_BUY}pay\b[^.!?\n]{0,40}\bfees?\b`, "gi"),
     /\b(?:one[- ]time|small|refundable|upfront|up-front)\s+(?:fee|deposit)\b/gi,
     /\bfees?\b[^.!?\n]{0,30}\b(?:to (?:start|begin|get started|secure|reserve|process)|before (?:you )?start)/gi,
+    /\bto (?:reserve|secure|hold|keep) your (?:internship |job )?(?:place|spot|seat|slot|position)\b[^.!?\n]{0,40}\b(?:pay|send|deposit)\b/gi,
   ],
   buy_equipment: [
     new RegExp(String.raw`(?:(?<=(?:^|[.!?\n:])\s{0,3})|\b${YOU_BUY})(?:buy|purchase|order|pay for)\b[^.!?\n]{0,50}\b(?:equipment|laptop|computer|software|supplies|devices?|macbook|ipad|iphone|printer|starter kit|training (?:materials|kit|course))\b`, "gi"),
