@@ -13,8 +13,8 @@ Branch `v2-tools` from `v2-base` 36ad123. Brief: `devpost/v2-brief-tools.md`. Pr
 - [x] Bug C unit-aware number reader (19-case table + extras, unit mismatch copy, "We read your final number as X")
 - [x] Bug A1 screenshot route codes, partial on `length`, reasoning_effort none, 2,500 tokens, UI copy per code
 ### T2 Tall screenshots + model resilience
-- [ ] Bug A2 tiling (planTiles, findSeam, mergeTiles, 2 strips/request, <= 3.5 MB)
-- [ ] groq.ts env model ids, interview fallback 20b, 429 retry-after one retry, RATE_LIMITED, 404 test
+- [x] Bug A2 tiling (planTiles, findSeam, mergeTiles, 2 strips/request, <= 3 MB, see Decisions)
+- [x] groq.ts env model ids, interview fallback 20b, 429 retry-after one retry, RATE_LIMITED, 404 test
 ### T3 Interview core
 - [ ] duplicated "6 of 6 hidden tests passed"
 - [ ] wide coding layout, dark code theme (no purple), CodeMirror aria-label Compartment
@@ -42,11 +42,18 @@ Branch `v2-tools` from `v2-base` 36ad123. Brief: `devpost/v2-brief-tools.md`. Pr
 ## Bugs
 - E: pdf text joined with spaces, DOCX raw text, early whitespace collapse -> y-grouped lines + hasEOL, mammoth HTML -> lines, normalize last. Tests: tests/tiers/v2-resumeLines.test.ts. QA 01-resume-*.
 - C: answer reader took first number, no units -> "1,200,000%". lib/tiers/numbers.ts {value, unit}, final cue, unit-mismatch note, editable read. Tests: numbers.test.ts (19-case table), interview-numbers.test.tsx. QA 03-finance-*.
+- A2: tall screenshots squashed to 1600 px long side -> unreadable. prepareStrips (width-capped, seam-cut, <= 2 strips, JPEG quality fit), one request with both strips + `=== IMAGE 2 ===` marker, server mergeTiles. planTiles text estimate = width/24 (phone) so 1x chats aren't over-shrunk; too tall -> "Upload it in two parts". Tests: v2-tiles.test.ts, v2-tools-groq.test.ts. QA 04-screenshot-* (qa/v2-tools-t2.mjs checks strips sent).
+- groq: model ids from env (VISION_MODEL, INTERVIEW_MODEL, REWRITE_MODEL), questions on 20b -> interview model, feedback on interview model -> 120b -> 20b, retry-after <= 5 s retried once in place, interview limit -> RATE_LIMITED/DAILY_CAP codes. Tests: v2-tools-groq.test.ts (404, 429 short/long, env).
 - A1: generic error on truncation -> typed codes, `length` = partial, ScreenshotUpload copy per code. Tests: tests/api/transcribe.test.ts. QA 02-screenshot-*.
 
 ## Decisions
 - Per-phase reviewer passes folded into the T9 full reviewer pass to save usage (orchestrator self-reviews each phase diff).
 
+- Transcribe payload cap 3,000,000 chars (not findings' 3.5 MB): guard.ts caps transcribe bodies at 3 MiB and is frozen.
+- Interview question cap raised 150 -> 400 tokens: gpt-oss counts reasoning in max_completion_tokens.
+
 ## Needs integration
+- `.env.example`: add optional `VISION_MODEL=qwen/qwen3.8-27b`, `INTERVIEW_MODEL=qwen/qwen3.8-27b`, `REWRITE_MODEL=qwen/qwen3.8-27b` (lib/server/groq.ts reads them; defaults shown).
+- `lib/server/guard.ts`: optionally raise MAX_IMAGE_BODY_BYTES to 3.6 MB (findings A2 allow 3.5 MB of strips) and lower TRANSCRIBE_DAILY_CAP default 20 -> 12 (findings A2: 2-strip calls share qwen TPD). Not required for correctness.
 
 ## Pending Himesh

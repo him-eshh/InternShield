@@ -1,7 +1,7 @@
 "use client";
 import { useRef, useState } from "react";
 import { postTranscribe } from "@/lib/tiers/client";
-import { prepareImage } from "@/lib/tiers/image";
+import { prepareStrips } from "@/lib/tiers/image";
 import type { ApiErrorCode } from "@/lib/types";
 import { UploadIcon } from "../icons";
 
@@ -12,7 +12,8 @@ interface Props {
 
 const DEFAULT_ERROR = "Couldn't read that screenshot. Try again or paste the text.";
 const PARTIAL = "We read the top part of this screenshot. Check the text below and paste anything that's missing.";
-const CANT_READ = "We couldn't read this screenshot. Paste the text instead.";
+const TOO_TALL = "This screenshot is very long. Upload it in two parts, or paste the text.";
+const CANT_READ ="We couldn't read this screenshot. Paste the text instead.";
 
 function failCopy(code: ApiErrorCode | undefined, retryAfter: number | undefined, message: string | undefined): string {
   switch (code) {
@@ -46,12 +47,12 @@ export default function ScreenshotUpload({ onText, disabled }: Props) {
     setError(null);
     setBusy(true);
     try {
-      const prepared = await prepareImage(file);
+      const prepared = await prepareStrips(file);
       if (!prepared.ok) {
-        setError(prepared.message);
+        setError(prepared.code === "TOO_TALL" ? TOO_TALL : failCopy(prepared.code, undefined, undefined));
         return;
       }
-      const res = await postTranscribe(prepared.dataUrl);
+      const res = await postTranscribe(prepared.images);
       if (res.status === "done" && res.data.text.trim()) {
         onText(res.data.text);
         if (res.data.partial) setError(PARTIAL);

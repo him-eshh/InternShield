@@ -28,7 +28,8 @@ import { checkTurn, describeCheck } from "@/lib/tiers/scripted";
 import type { Field } from "@/lib/types";
 import { callGroq } from "./groq";
 import { takeInterview } from "./guard";
-import { done, failed, fromOutcome, MESSAGES } from "./http";
+import { done, failed, MESSAGES } from "./http";
+import { codedFail } from "./transcribe";
 
 export const SESSION_CAP = "This practice session reached its limit. Get your feedback or start a new one.";
 export const INTERVIEW_FAILED = "The interviewer is busy right now. Your answers are saved; try again in a minute.";
@@ -279,15 +280,21 @@ export async function handleInterview(body: Record<string, unknown>): Promise<Re
   if (!cap.ok) return failed("limit", { retryAfter: cap.retryAfter, message: MESSAGES.daily });
 
   const feedback = input.ask === "feedback";
-  const r = await callGroq("interview", {
+  const r = await callGroq(feedback ? "interviewFeedback" : "interview", {
     system: systemFor(input),
     user: buildUser(input),
-    maxTokens: feedback ? 900 : 150,
+    // gpt-oss counts its (low-effort) reasoning in this cap; cleanQuestion still cuts the reply short.
+    maxTokens: feedback ? 900 : 400,
     ...(feedback ? { schema: FEEDBACK_SCHEMA } : {}),
   });
   // Empty/unusable model output comes back as "error": show the calm interviewer message, not the generic one.
   if (!r.ok && r.reason === "error") return failed("error", { message: feedback ? FEEDBACK_FAILED : INTERVIEW_FAILED });
-  if (!r.ok) return fromOutcome(r);
+  if (!r.ok && r.reason === "timeout") return codedFail("TIMEOUT", "timeout", 504, MESSAGES.timeout);
+  if (!r.ok) {
+    return (r.retryAfter ?? 0) > 3600
+      ? codedFail("DAILY_CAP", "limit", 429, MESSAGES.daily, r.retryAfter)
+      : codedFail("RATE_LIMITED", "limit", 429, MESSAGES.busy, r.retryAfter);
+  }
 
   if (feedback) {
     let raw: unknown;

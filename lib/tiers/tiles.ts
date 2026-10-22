@@ -1,4 +1,5 @@
 // Pure logic for cutting tall screenshots into strips and merging the per-strip transcripts. No DOM, no network.
+import { MAX_IMAGE_DATA_URL } from "./types";
 
 export type Tile = { y: number; h: number };
 export type TilePlan = { scale: number; tiles: Tile[]; tooTall: boolean };
@@ -20,7 +21,9 @@ export function planTiles(width: number, height: number, opts: PlanOptions = {})
     overlap = 0.08,
     minOverlapPx = 150,
     maxTiles = 2,
-    typicalTextPx = 30,
+    // Phone screenshots (720-1290 wide) have body text near width/24 (16 px at 390, ~30 at 780).
+    // ponytail: wider images are assumed desktop (16 px per 1440 px); a real text-height probe if this misjudges.
+    typicalTextPx = width <= 1290 ? width / 24 : width / 90,
     minTextPx = 16,
   } = opts;
   if (!(width > 0) || !(height > 0)) return { scale: 1, tiles: [], tooTall: true };
@@ -155,7 +158,8 @@ export function mergeTiles(texts: string[], maxOverlapLines = 8, threshold = 0.8
 }
 
 export const JPEG_QUALITIES = [0.85, 0.7, 0.55];
-export const MAX_PAYLOAD_BASE64 = 3_500_000;
+// Findings say 3.5 MB (under Vercel's 4.5 MB), but guard.ts caps a transcribe body at 3 MiB: stay under that.
+export const MAX_PAYLOAD_BASE64 = MAX_IMAGE_DATA_URL;
 
 /**
  * Choose a JPEG quality per strip so the total encoded size fits. Lowers the largest strip first,

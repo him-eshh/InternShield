@@ -1,5 +1,6 @@
 // Screenshot transcription (tier2-spec.md > Slice 10). The image lives in memory for one request:
 // never cached, logged or stored.
+import { mergeTiles } from "@/lib/tiers/tiles";
 import { MAX_IMAGE_DATA_URL } from "@/lib/tiers/types";
 import { MAX_MESSAGE_CHARS, type ApiErrorCode, type ApiResponse, type FailReason } from "@/lib/types";
 import { callGroq } from "./groq";
@@ -113,19 +114,36 @@ function dropLastLine(text: string): string {
   return lines.join("\n").trim();
 }
 
+/** The model writes this line before image 2's text, so the strips can be merged by overlap (05 Bug A2). */
+const STRIP_MARK = "=== IMAGE 2 ===";
+
+/** Split a 2-strip transcript at the marker and merge the overlap; without the marker, the text as is. */
+export function joinStrips(raw: string): string {
+  const at = raw.indexOf(STRIP_MARK);
+  return at < 0 ? raw : mergeTiles([raw.slice(0, at), raw.slice(at + STRIP_MARK.length)]);
+}
+
 export async function handleTranscribe(body: Record<string, unknown>): Promise<Response> {
-  const image = body.image;
-  if (typeof image !== "string") return codedFail("BAD_INPUT", "error", 400, BAD_IMAGE);
-  if (image.length > MAX_IMAGE_DATA_URL) return codedFail("TOO_LARGE", "error", 413, BIG_IMAGE);
-  if (!IMAGE_RE.test(image)) return codedFail("BAD_INPUT", "error", 400, BAD_IMAGE);
+  // `image` (one) or `images` (a tall screenshot cut into at most 2 strips, top first).
+  const images = Array.isArray(body.images) ? body.images : [body.image];
+  if (images.length < 1 || images.length > 2 || images.some((i) => typeof i !== "string"))
+    return codedFail("BAD_INPUT", "error", 400, BAD_IMAGE);
+  const strs = images as string[];
+  const total = strs.reduce((n, s) => n + s.length, 0);
+  if (total > MAX_IMAGE_DATA_URL)
+    return codedFail("TOO_LARGE", "error", 413, BIG_IMAGE);
+  if (!strs.every((s) => IMAGE_RE.test(s))) return codedFail("BAD_INPUT", "error", 400, BAD_IMAGE);
 
   const cap = takeTranscribe();
   if (!cap.ok) return codedFail("DAILY_CAP", "limit", 429, MESSAGES.daily, cap.retryAfter);
 
   const r = await callGroq("transcribe", {
     system: SYSTEM,
-    user: "Transcribe the text in this screenshot.",
-    images: [image],
+    user:
+      strs.length === 1
+        ? "Transcribe the text in this screenshot."
+        : `Image 1 is the top, image 2 continues below it with a small overlap. Transcribe each message once. Write the line ${STRIP_MARK} before the text from image 2.`,
+    images: strs,
     maxTokens: 2500,
     allowTruncated: true,
   });
@@ -140,7 +158,7 @@ export async function handleTranscribe(body: Record<string, unknown>): Promise<R
     if (r.modelMissing) return codedFail("MODEL_UNAVAILABLE", "error", 502, TRANSCRIBE_FAILED);
     return transcribeFailed();
   }
-  let text = cleanTranscript(r.data);
+  let text = cleanTranscript(strs.length > 1 ? joinStrips(r.data) : r.data);
   if (r.partial) text = dropLastLine(text);
   if (!text) return failed("error", { message: NO_TEXT });
   return done(r.partial ? { text, partial: true } : { text });

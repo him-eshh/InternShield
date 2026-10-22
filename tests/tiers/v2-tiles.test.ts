@@ -2,6 +2,12 @@ import { describe, expect, it } from "vitest";
 import { findSeam, fitPayload, mergeTiles, planTiles, rowVariance } from "@/lib/tiers/tiles";
 
 describe("planTiles", () => {
+  it("1x phone chat: one strip when it fits, crop request when text would drop under 16 px", () => {
+    expect(planTiles(390, 4216).tiles).toHaveLength(1);
+    expect(planTiles(390, 18216).tooTall).toBe(true);
+    expect(planTiles(390, 9000)).toMatchObject({ tooTall: false });
+  });
+
   it("780x5516 gives 2 strips at about 0.89 with readable text", () => {
     const p = planTiles(780, 5516);
     expect(p.tooTall).toBe(false);
@@ -31,7 +37,7 @@ describe("planTiles", () => {
     for (const [w, h] of [[720, 3000], [780, 6000], [1080, 4000], [1290, 5000], [900, 9000], [1170, 7000]]) {
       const p = planTiles(w, h);
       expect(p.tiles.length).toBeLessThanOrEqual(2);
-      if (!p.tooTall) expect(p.scale * 30).toBeGreaterThanOrEqual(16);
+      if (!p.tooTall) expect((p.scale * w) / 24).toBeGreaterThanOrEqual(16); // phone text ~ width/24
     }
   });
 
@@ -157,7 +163,7 @@ describe("fitPayload", () => {
   });
 
   it("lowers quality of the largest strip first", () => {
-    const q = fitPayload(2, sizer([2_000_000, 1_700_000]));
+    const q = fitPayload(2, sizer([2_000_000, 1_700_000]), 3_500_000);
     expect(q).toEqual([0.7, 0.85]);
   });
 

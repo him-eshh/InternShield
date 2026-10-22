@@ -3,21 +3,36 @@ import Groq from "groq-sdk";
 import { cacheGet, cacheSet } from "./cache";
 import { classify, OUTSIDE_TIMEOUT_MS } from "./http";
 
-export type GroqTask = "extract" | "explain" | "rewrite" | "transcribe" | "interview";
+/** "interview" = questions and hints; "interviewFeedback" = the graded feedback JSON. */
+export type GroqTask = "extract" | "explain" | "rewrite" | "transcribe" | "interview" | "interviewFeedback";
 
 export const MODEL_20B = "openai/gpt-oss-20b";
 export const MODEL_120B = "openai/gpt-oss-120b";
 /** Preview vision model (api-facts.md > Vision). Its own per-model budget, so Tier 2 doesn't eat the core's. */
 export const MODEL_VISION = "qwen/qwen3.8-27b";
 
-const ORDER: Record<GroqTask, string[]> = {
-  extract: [MODEL_20B, MODEL_120B],
-  explain: [MODEL_120B, MODEL_20B],
-  // qwen is a Preview model; gpt-oss-20b only when it fails (rewrite is capped at REWRITE_DAILY_CAP, a small share of 20b's budget).
-  rewrite: [MODEL_VISION, MODEL_20B],
-  transcribe: [MODEL_VISION], // the only vision model; no fallback model
-  interview: [MODEL_VISION], // Tier 3: same qwen budget as Tier 2, never the core's gpt-oss
-};
+// Model ids can be swapped from env when Groq retires a Preview model (standing #4). Read per call.
+const envModel = (name: string, fallback: string) => process.env[name]?.trim() || fallback;
+
+/** Models tried in order; duplicates dropped. Load is split across per-model buckets. */
+export function modelOrder(task: GroqTask): string[] {
+  const vision = envModel("VISION_MODEL", MODEL_VISION);
+  const interview = envModel("INTERVIEW_MODEL", MODEL_VISION);
+  const order: Record<GroqTask, string[]> = {
+    extract: [MODEL_20B, MODEL_120B],
+    explain: [MODEL_120B, MODEL_20B],
+    // gpt-oss-20b only when the rewrite model fails (rewrite is capped at REWRITE_DAILY_CAP, a small share of 20b's budget).
+    rewrite: [envModel("REWRITE_MODEL", MODEL_VISION), MODEL_20B],
+    transcribe: [vision], // the only vision model; no fallback model
+    interview: [MODEL_20B, interview], // short questions: cheap gpt-oss-20b first
+    interviewFeedback: [interview, MODEL_120B, MODEL_20B],
+  };
+  return [...new Set(order[task])];
+}
+
+const isQwen = (model: string) => model.startsWith("qwen/");
+/** One in-place wait on a 429 when Groq asks for at most this long. */
+const MAX_RETRY_WAIT_S = 5;
 
 export interface GroqRequest {
   system: string;
@@ -97,7 +112,7 @@ export async function callGroq(task: GroqTask, req: GroqRequest): Promise<GroqOu
   let errStatus: number | undefined;
   const deadline = Date.now() + TOTAL_DEADLINE_MS; // shared across models and retries
 
-  for (const model of ORDER[task]) {
+  for (const model of modelOrder(task)) {
     if (restingFor(model)) {
       limited = true;
       continue;
@@ -114,13 +129,13 @@ export async function callGroq(task: GroqTask, req: GroqRequest): Promise<GroqOu
       temperature: 0,
       max_completion_tokens: req.maxTokens,
       // gpt-oss: lowest effort. Qwen 3: no thinking (its reasoning tokens would count too).
-      ...(model === MODEL_VISION ? { reasoning_effort: "none" } : { reasoning_effort: "low" }),
+      ...(isQwen(model) ? { reasoning_effort: "none" } : model.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" } : {}),
       ...(req.schema
         ? { response_format: { type: "json_schema", json_schema: { name: "facts", strict: true, schema: req.schema } } }
         : {}),
     };
 
-    // Up to 2 attempts per model: the retry is for a schema-mismatch 400 only.
+    // Up to 2 attempts per model: a schema-mismatch 400, a rejected reasoning param, or one short 429 wait.
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const remaining = deadline - Date.now();
@@ -155,7 +170,7 @@ export async function callGroq(task: GroqTask, req: GroqRequest): Promise<GroqOu
         }
         const raw = data.choices?.[0]?.message?.content;
         // Only Qwen thinks in-band; never touch gpt-oss output (a message quoting "<think>" must not cut extract JSON).
-        const text = typeof raw === "string" ? (model === MODEL_VISION ? stripThinking(raw) : raw.trim()) : "";
+        const text = typeof raw === "string" ? (isQwen(model) ? stripThinking(raw) : raw.trim()) : "";
         if (text) return truncated ? { ok: true, data: text, partial: true } : { ok: true, data: text };
         hardError = true;
         break;
@@ -163,13 +178,17 @@ export async function callGroq(task: GroqTask, req: GroqRequest): Promise<GroqOu
         const e = err as { status?: number; headers?: HeadersLike };
         if (e?.status === 429) {
           const secs = parseSeconds(header(e.headers, "retry-after"), 30);
+          if (attempt === 0 && secs <= MAX_RETRY_WAIT_S && Date.now() + secs * 1000 < deadline) {
+            await new Promise((r) => setTimeout(r, secs * 1000));
+            continue; // honor retry-after once on the same model
+          }
           rest(model, secs);
           limited = true;
           retryAfter = Math.min(retryAfter ?? secs, secs);
           break; // other model
         }
         if (e?.status === 400 && req.schema && attempt === 0) continue; // schema mismatch: retry once
-        if (e?.status === 400 && model === MODEL_VISION && attempt === 0 && "reasoning_effort" in params) {
+        if (e?.status === 400 && isQwen(model) && attempt === 0 && "reasoning_effort" in params) {
           // ponytail: Preview model; if it rejects the reasoning param, retry once without it.
           delete params.reasoning_effort;
           continue;
