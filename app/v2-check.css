@@ -23,3 +23,7 @@
   font-size: 0.9375rem;
   font-weight: 500;
 }
+/* High risk after a quick answer: hide Tailor/Practice (direct buttons); Save to tracker sits inside .contents. */
+.rf-extras[data-level="high"] > div > button {
+  display: none;
+}

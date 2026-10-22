@@ -35,7 +35,8 @@ export default function ReportFooter({ report, careersUrl, officialLink, source,
       <button type="button" onClick={onAgain} className={btnPrimary}>
         Check another message
       </button>
-      <div role="group" aria-label="More actions" className="rf-extras flex flex-wrap items-center justify-center gap-2">
+      {/* data-level: the live level (after quick answers); App gates Tailor/Practice on the first report only. */}
+      <div role="group" aria-label="More actions" data-level={report.level} className="rf-extras flex flex-wrap items-center justify-center gap-2">
         {!low && <CopyReportButton report={report} careersUrl={careersUrl} compact />}
         {officialLink && <Out href={officialLink.url} label={officialLink.label} />}
         <Out href={FTC_URL} label="Report to the FTC" />
