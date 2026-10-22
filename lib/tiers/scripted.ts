@@ -271,28 +271,172 @@ export function findQuestion(prompt: string): ScriptedQuestion | null {
 }
 
 // A number not glued to a letter, digit or dot on its left (so "Q4" and the "20" in "10-20" stay positive),
-// with an optional minus and $, thousands commas, decimals, and a k/m/b/bn/thousand/million/billion or % suffix
-// (a space before the suffix is fine: "1.2 M"; shorthand like "b/c" or "m&a" is not a suffix).
+// with an optional minus and $, thousands commas, decimals, and a k/m/mm/mil/b/bn/thousand/million/billion or
+// %/percent suffix (a space before the suffix is fine: "1.2 M"; shorthand like "b/c" or "m&a" is not a suffix).
 const NUMBER_RE =
-  /(?<![A-Za-z0-9.])(-)?\$?(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d+))?(?:\s*(thousand|million|billion|k|m|bn|b)\b(?![/&])|\s*%)?/gi;
-const SCALE: Record<string, number> = { k: 1e3, thousand: 1e3, m: 1e6, million: 1e6, b: 1e9, bn: 1e9, billion: 1e9 };
+  /(?<![A-Za-z0-9.])(-)?\$?(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d+))?(?:\s*(thousand|million|billion|mil|mm|bn|k|m|b)\b(?![/&])|\s*(?:%|percent\b|per\s?cent\b))?/gi;
+const SCALE: Record<string, number> = { k: 1e3, thousand: 1e3, m: 1e6, mm: 1e6, mil: 1e6, million: 1e6, b: 1e9, bn: 1e9, billion: 1e9 };
 
-/** The last number in the answer, e.g. "$1,500" -> 1500, "1.5k" -> 1500, "12%" -> 12. None -> null. */
-export function extractNumber(answer: string): number | null {
-  let last: number | null = null;
-  for (const m of (answer ?? "").matchAll(NUMBER_RE)) {
-    const [, minus, whole, frac, word] = m;
-    const base = Number(`${whole.replace(/,/g, "")}${frac ? `.${frac}` : ""}`);
-    const scale = SCALE[(word ?? "").toLowerCase()] ?? 1;
-    const v = Math.round(base * scale * 1e6) / 1e6;
-    last = minus ? -v : v;
+// Number words: "four thousand", "twelve thousand five hundred", "a million", "one hundred and fifty", "twenty-five".
+const SMALL: Record<string, number> = {
+  zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+  eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19,
+  twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90,
+};
+const BIG: Record<string, number> = { thousand: 1e3, million: 1e6, billion: 1e9 };
+const WORDS = [...Object.keys(SMALL), "hundred", ...Object.keys(BIG)].join("|");
+const A_SCALE = "(?:a\\s+(?=(?:hundred|thousand|million|billion)\\b))?"; // "a" only counts before a scale word
+const WORD_RE = new RegExp(`\\b${A_SCALE}(?:${WORDS})\\b(?:(?:\\s+and\\s+|[\\s-]+)${A_SCALE}(?:${WORDS})\\b)*`, "gi");
+
+/** A run of number words -> its value. A bare "one" (a pronoun as often as not) or a run starting with a bare scale word -> null. */
+function parseWords(run: string): number | null {
+  const toks = run.toLowerCase().split(/[\s-]+/).filter((t) => t && t !== "and");
+  if (!toks.length || toks[0] === "hundred" || BIG[toks[0]] !== undefined || (toks.length === 1 && toks[0] === "one")) return null;
+  let total = 0;
+  let cur = 0;
+  for (const t of toks) {
+    if (t === "a") cur = 1;
+    else if (t === "hundred") cur = (cur || 1) * 100;
+    else if (BIG[t] !== undefined) {
+      total += (cur || 1) * BIG[t];
+      cur = 0;
+    } else cur += SMALL[t] ?? 0;
   }
-  return last;
+  return total + cur;
 }
 
+type Found = { start: number; end: number; value: number; base: number; scale: number; neg: boolean; range: boolean; rate: boolean };
+
+const round6 = (n: number) => Math.round(n * 1e6) / 1e6;
+// A count per day/hour/week ("133 cups a day", "40/hour"): usually a side note, not the answer.
+const RATE_RE = /^\s*(?:[a-z]+\s*)?(?:(?:per|a|an|each|every)\s+(?:day|hour|hr|minute|min|week|shift)\b|\/\s*(?:day|hr|hour|week|wk)\b|(?:daily|hourly|weekly)\b)/i;
+const STRONG_CUE = /\b(?:final (?:answer|number|result)|answer)\b/gi;
+// Group 1: result cues; group 2: hedge cues.
+const CUE = /(=|\b(?:so|totals?|totaling|totalling|equals|comes to)\b)|([~≈]|\b(?:about|roughly|approximately|approx|around)\b)/gi;
+const HEDGE_WORD = /[~≈]|\b(?:about|roughly|approximately|approx|around)\b/i;
+
+/** Every number in the text, in order, with ranges ("3,000-5,000", "3-5k", "between 3k and 5k", "3k to 5k") merged into their midpoint. */
+function numbersIn(text: string): Found[] {
+  const raw: Found[] = [];
+  for (const m of text.matchAll(NUMBER_RE)) {
+    const [all, minus, whole, frac, word] = m;
+    const base = Number(`${whole.replace(/,/g, "")}${frac ? `.${frac}` : ""}`);
+    const scale = SCALE[(word ?? "").toLowerCase()] ?? 1;
+    const start = m.index ?? 0;
+    raw.push({ start, end: start + all.length, value: round6(base * scale), base, scale, neg: !!minus, range: false, rate: false });
+  }
+  for (const m of text.matchAll(WORD_RE)) {
+    const start = m.index ?? 0;
+    const end = start + m[0].length;
+    if (raw.some((d) => d.start < end && start < d.end)) continue; // "4 thousand": the digit match already has it
+    const v = parseWords(m[0]);
+    if (v !== null) raw.push({ start, end, value: v, base: v, scale: 1, neg: false, range: false, rate: false });
+  }
+  raw.sort((a, b) => a.start - b.start);
+
+  const out: Found[] = [];
+  for (const c of raw) {
+    const prev = out[out.length - 1];
+    if (prev) {
+      const gap = text.slice(prev.end, c.start);
+      const binaryMinus = c.neg && /^\s*$/.test(gap); // "1350 - 1200", "10%-20%": a minus between numbers is not a sign
+      if (binaryMinus) c.neg = false;
+      const before = text.slice(0, prev.start);
+      const dash = binaryMinus || /^\s*[-–]\s*$/.test(gap);
+      const to = /^\s+to\s+$/i.test(gap) && !/\bfrom\s*$/i.test(before); // "from 3,600 to 4,000" is a change, not a range
+      const and = /^\s+and\s+$/i.test(gap) && /\bbetween\s*$/i.test(before);
+      if (!prev.range && !prev.neg && !c.neg && (dash || to || and)) {
+        const lo = prev.scale === 1 && c.scale > 1 ? round6(prev.base * c.scale) : prev.value; // "3-5k" -> 3k to 5k
+        if (and || c.value > lo) {
+          // A dash or "to" with a smaller second number is subtraction or a change, not a range.
+          Object.assign(prev, { value: round6((lo + c.value) / 2), end: c.end, scale: c.scale, range: true });
+          continue;
+        }
+      }
+    }
+    out.push(c);
+  }
+  for (const n of out) n.rate = RATE_RE.test(text.slice(n.end));
+  return out;
+}
+
+/** The number the answer gives as its result, e.g. "$1,500" -> 1500, "1.5k" -> 1500, "12%" -> 12, "four thousand" -> 4000. None -> null.
+ *  Rule order:
+ *   1. A number right after (<= 30 chars, same sentence) an explicit cue: "final answer", "final number", "answer (is)". Last such cue wins.
+ *   2. Otherwise a number right after a result cue: "=", "so", "total", "equals", "comes to". Last such cue wins.
+ *      It may be a per-day/hour/week count ("so $150 a day"), unless a hedge word sits between ("so about 133 a day").
+ *   3. Otherwise a number right after a hedge cue: "about", "roughly", "approximately", "around", "~". Last wins.
+ *      A hedge never picks a per-day/hour/week count ("that's about 133 a day" is a side note).
+ *   4. Otherwise the last number, skipping per-day/hour/week counts unless that's all there is.
+ *  Ranges count as one number at their midpoint. Percentages read as the percent value: "30%" and "30 percent" -> 30. */
+export function extractNumber(answer: string): number | null {
+  const text = (answer ?? "").replace(/[‘’]/g, "'");
+  const nums = numbersIn(text);
+  if (!nums.length) return null;
+  const signed = (n: Found) => (n.neg && n.value ? -n.value : n.value);
+
+  const after = (cueEnd: number, allowRate: boolean): Found | null => {
+    const n = nums.find((x) => x.start >= cueEnd);
+    if (!n) return null;
+    const between = text.slice(cueEnd, n.start);
+    if (between.length > 30 || /[!?\n]|\.(?:\s|$)/.test(between)) return null;
+    if (n.rate && (!allowRate || HEDGE_WORD.test(between))) return null;
+    return n;
+  };
+
+  let pick: Found | null = null;
+  for (const m of text.matchAll(STRONG_CUE)) pick = after((m.index ?? 0) + m[0].length, true) ?? pick;
+  if (pick) return signed(pick);
+  for (const m of text.matchAll(CUE)) if (m[1]) pick = after((m.index ?? 0) + m[0].length, true) ?? pick;
+  if (pick) return signed(pick);
+  for (const m of text.matchAll(CUE)) if (m[2]) pick = after((m.index ?? 0) + m[0].length, false) ?? pick;
+  if (pick) return signed(pick);
+  const pool = nums.some((n) => !n.rate) ? nums.filter((n) => !n.rate) : nums;
+  return signed(pool[pool.length - 1]);
+}
+
+/** Extra wording per rubric keyword: any point listing the key also accepts these. Data only; keys are lowercase bank keywords. */
+export const SYNONYMS: Record<string, string[]> = {
+  revenue: ["top line", "turnover", "money coming in", "earnings"],
+  sales: ["sold", "units", "cups", "orders", "transactions", "purchases", "how many cups", "per day", "per week", "how often", "frequency"],
+  price: ["charge", "fee", "willingness to pay"],
+  cost: ["overhead", "cogs", "fixed", "variable", "bills", "utilities", "beans", "milk"],
+  customer: ["client", "consumer", "buyer", "user", "visitor", "population", "audience", "segment", "drink", "drinker", "who buy", "how many people", "number of people", "market size"],
+  student: ["undergrad", "faculty", "campus population", "enrollment", "enrolment", "classmate"],
+  demand: ["interest", "willingness to pay", "elasticity", "sensitiv", "how many want"],
+  compet: ["other shop", "other store", "other cart", "new cart", "new cafe", "market share", "dining hall", "vending", "substitute", "new entrant"],
+  rider: ["commuter", "passenger", "cyclist", "user"],
+  invest: ["capex", "setup", "set up", "fit out", "renovat", "lease"],
+  risk: ["uncertain", "concern", "worry", "what could go wrong", "backfire"],
+  recommend: ["my advice", "they should", "we should", "the owner should", "the board should"],
+  test: ["experiment", "a/b"],
+  "flows into": ["feeds into", "links to", "carries over", "carry over"],
+};
+
+/** Light stemmer: "students" -> "student", "drinks" -> "drink", "pricing"/"price"/"priced" -> "pric", "companies" -> "company". */
+function stem(w: string): string {
+  let s = w;
+  const undouble = (x: string) => (/([^aeiousl])\1$/.test(x) ? x.slice(0, -1) : x); // "running" -> "run"
+  if (s.length > 4 && s.endsWith("ies")) s = `${s.slice(0, -3)}y`;
+  else if (s.length > 5 && s.endsWith("ing")) s = undouble(s.slice(0, -3));
+  else if (s.length > 5 && s.endsWith("ed")) s = undouble(s.slice(0, -2));
+  else if (s.length > 3 && s.endsWith("s") && !/(ss|us|is)$/.test(s)) s = s.slice(0, -1);
+  if (s.length > 3 && s.endsWith("e")) s = s.slice(0, -1);
+  return s;
+}
+const stemAll = (s: string) => s.replace(/[a-z]+/g, stem);
+
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-/** Case-insensitive keyword match that starts at a word (so "cost" matches "costs" but "ad" doesn't match "had"). */
-const mentions = (text: string, keyword: string) => new RegExp(`(^|[^a-z0-9])${escapeRe(keyword.toLowerCase())}`).test(text);
+/** Keyword match that starts at a word (so "cost" matches "costs" but "ad" doesn't match "had"). */
+const mentions = (text: string, keyword: string) => new RegExp(`(^|[^a-z0-9])${escapeRe(keyword)}`).test(text);
+/** Whole-word match on stems (so "pricing" ~ "price", but the stem "sal" of "sales" never matches "salary"). */
+const mentionsStem = (stemmed: string, keyword: string) => new RegExp(`(^|[^a-z0-9])${escapeRe(stemAll(keyword))}(?![a-z0-9])`).test(stemmed);
+
+/** A point's keywords plus their synonyms, lowercased. */
+const keywordsFor = (any: string[]) => {
+  const base = any.map((k) => k.toLowerCase());
+  return [...base, ...base.flatMap((k) => SYNONYMS[k] ?? [])];
+};
 
 export function checkAnswer(check: AnswerCheck, answer: string): CheckResult {
   if (check.kind === "number") {
@@ -301,9 +445,13 @@ export function checkAnswer(check: AnswerCheck, answer: string): CheckResult {
     return { kind: "number", found, expected: check.expected, correct, unit: check.unit };
   }
   const text = (answer ?? "").toLowerCase().replace(/[‘’]/g, "'");
+  const stemmed = stemAll(text);
   const covered: string[] = [];
   const missed: string[] = [];
-  for (const p of check.points) (p.any.some((k) => mentions(text, k)) ? covered : missed).push(p.label);
+  for (const p of check.points) {
+    const hit = keywordsFor(p.any).some((k) => mentions(text, k) || mentionsStem(stemmed, k));
+    (hit ? covered : missed).push(p.label);
+  }
   return { kind: "rubric", covered, missed };
 }
 
