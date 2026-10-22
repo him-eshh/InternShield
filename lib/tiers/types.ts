@@ -124,7 +124,9 @@ export type TranscribeResponse = ApiResponse<{ text: string; partial?: boolean }
 
 // ---------- Tier 3: mock interview ----------
 
-export type InterviewRound = "screen" | "behavioral" | "coding" | "design" | "case" | "finance" | "portfolio" | "challenge" | "debugging";
+export type InterviewRound = "screen" | "behavioral" | "coding" | "design" | "case" | "finance" | "portfolio" | "challenge" | "debugging" | "sql";
+/** Rounds graded by running code locally (one local problem, hints allowed, no AI questions). */
+export const CODE_ROUNDS: InterviewRound[] = ["coding", "debugging", "sql"];
 
 // ---------- v2: scorecard and company-style presets ----------
 export type ScoreBand = "Strong" | "Solid" | "Developing" | "Not yet";
@@ -144,6 +146,8 @@ export const INTERVIEW_ROUNDS: { id: InterviewRound; label: string; field: Field
   { id: "screen", label: "Recruiter screen", field: null },
   { id: "behavioral", label: "Behavioral", field: null },
   { id: "coding", label: "Live coding", field: "tech" },
+  { id: "sql", label: "SQL", field: "tech" },
+  { id: "debugging", label: "Debugging", field: "tech" },
   { id: "design", label: "System design", field: "tech" },
   { id: "case", label: "Case interview", field: "business" },
   { id: "finance", label: "Technical questions", field: "finance" },
@@ -161,6 +165,7 @@ export const QUESTIONS_PER_ROUND: Record<InterviewRound, number> = {
   portfolio: 4,
   challenge: 3,
   debugging: 1,
+  sql: 1,
 };
 /** Rounds whose questions all come from a local script (no AI questions; AI only for feedback). */
 export const SCRIPTED_ROUNDS: InterviewRound[] = ["case", "finance"];

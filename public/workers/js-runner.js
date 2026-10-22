@@ -2,16 +2,27 @@
 "use strict";
 
 var LOG_CAP = 2000;
+var OUTPUT_CAP = 100000; // chars of JSON per case
+var TS_URL = "https://cdn.jsdelivr.net/npm/typescript@5.9.3/lib/typescript.js"; // keep in sync with package-lock
+var BLOCKED = ["fetch", "XMLHttpRequest", "WebSocket", "EventSource", "importScripts", "indexedDB", "caches", "BroadcastChannel", "Worker", "SharedWorker", "WebTransport"];
 
+// Remove network/storage APIs from the global and every prototype it inherits them from (standing #7).
 function neutralize() {
-  var names = ["fetch", "XMLHttpRequest", "WebSocket", "EventSource", "importScripts", "indexedDB", "caches"];
-  for (var i = 0; i < names.length; i++) {
-    try {
-      Object.defineProperty(self, names[i], { value: undefined, writable: false, configurable: false });
-    } catch (e) {
+  for (var i = 0; i < BLOCKED.length; i++) {
+    var n = BLOCKED[i];
+    for (var o = self; o; o = Object.getPrototypeOf(o)) {
       try {
-        self[names[i]] = undefined;
-      } catch (e2) {
+        delete o[n];
+      } catch (e) {
+        /* ignore */
+      }
+    }
+    try {
+      Object.defineProperty(self, n, { value: undefined, writable: false, configurable: false });
+    } catch (e2) {
+      try {
+        self[n] = undefined;
+      } catch (e3) {
         /* ignore */
       }
     }
@@ -21,7 +32,30 @@ function neutralize() {
 function roundTrip(v) {
   if (v === undefined) return null;
   if (typeof v === "number" && !isFinite(v)) return null;
-  return JSON.parse(JSON.stringify(v));
+  var s = JSON.stringify(v);
+  if (s !== undefined && s.length > OUTPUT_CAP) throw new Error("Output too large.");
+  return s === undefined ? null : JSON.parse(s);
+}
+
+// TypeScript -> JavaScript (types removed, no type checking). Returns { code } or { error }.
+function transpile(code) {
+  try {
+    importScripts(TS_URL);
+  } catch (e) {
+    /* reported below */
+  }
+  var ts = self.ts;
+  if (!ts || !ts.transpileModule) return { error: "TypeScript could not load. Check your connection and try again.", load: true };
+  var out = ts.transpileModule(code, {
+    reportDiagnostics: true,
+    compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.None },
+  });
+  var d = out.diagnostics && out.diagnostics[0];
+  if (d) {
+    var line = d.file && typeof d.start === "number" ? d.file.getLineAndCharacterOfPosition(d.start).line + 1 : null;
+    return { error: (line ? "Line " + line + ": " : "") + ts.flattenDiagnosticMessageText(d.messageText, "\n") };
+  }
+  return { code: out.outputText };
 }
 
 self.onmessage = function (event) {
@@ -32,6 +66,15 @@ self.onmessage = function (event) {
   if (!/^[A-Za-z_$][\w$]*$/.test(functionName)) {
     self.postMessage({ type: "error", message: "Invalid function name." });
     return;
+  }
+  if (data.typescript) {
+    var t = transpile(code);
+    if (t.error) {
+      self.postMessage({ type: "error", message: t.error, load: !!t.load });
+      return;
+    }
+    code = t.code;
+    self.postMessage({ type: "compiled" });
   }
   neutralize();
   // Dynamic import() can't be removed from a worker, so refuse code that uses it.

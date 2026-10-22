@@ -13,6 +13,7 @@ import {
   MAX_SESSION_TURNS,
   MAX_TURNS,
   SCRIPTED_ROUNDS,
+  CODE_ROUNDS,
   type BoardJson,
   type CodeAttempt,
   type InterviewAsk,
@@ -22,7 +23,7 @@ import {
   type InterviewTurn,
 } from "@/lib/tiers/types";
 import { describe, fromJson } from "@/lib/tiers/board";
-import { TIER_FLAGS } from "@/lib/tiers/flags";
+import { TIER_FLAGS, v2RoundOn } from "@/lib/tiers/flags";
 import { validateFeedback } from "@/lib/tiers/interview";
 import { checkTurn, describeCheck } from "@/lib/tiers/scripted";
 import type { Field } from "@/lib/types";
@@ -100,7 +101,7 @@ function parseCode(v: unknown): CodeAttempt | null | undefined {
   if (v === null || v === undefined) return null;
   if (!isRec(v)) return undefined;
   if (typeof v.problemId !== "string" || v.problemId.length === 0 || v.problemId.length > 60) return undefined;
-  if (v.language !== "python" && v.language !== "javascript") return undefined;
+  if (v.language !== "python" && v.language !== "javascript" && v.language !== "typescript" && v.language !== "sql") return undefined;
   if (typeof v.code !== "string" || v.code.length > MAX_CODE_CHARS) return undefined;
   if (!isInt(v.passed, 0, 100) || !isInt(v.total, 0, 100)) return undefined;
   return { problemId: v.problemId, language: v.language, code: v.code, passed: v.passed, total: v.total };
@@ -112,7 +113,7 @@ export function parseInterview(body: Rec): InterviewRequest | null {
   const round = body.round as InterviewRound;
   if (typeof body.round !== "string" || !INTERVIEW_ROUNDS.some((r) => r.id === round)) return null;
   // A hidden round stays unreachable by direct POST too.
-  if (!TIER_FLAGS.interview || (round in TIER_FLAGS && !TIER_FLAGS[round as keyof typeof TIER_FLAGS])) return null;
+  if (!TIER_FLAGS.interview || (round in TIER_FLAGS && !TIER_FLAGS[round as keyof typeof TIER_FLAGS]) || !v2RoundOn(round)) return null;
   const context = parseContext(body.context);
   const turns = parseTurns(body.turns);
   if (!context || !turns) return null;
@@ -149,7 +150,7 @@ function systemFor(r: InterviewRequest): string {
         ? "Judge STAR (situation, task, action, result) for each answer."
         : "Set every star field to false; STAR applies only to behavioral rounds.";
     let tests =
-      r.round === "coding" && r.code
+      CODE_ROUNDS.includes(r.round) && r.code
         ? ` The line starting "Tests:" is fact; do not re-grade correctness.`
         : "";
     if (SCRIPTED_ROUNDS.includes(r.round)) {
@@ -196,7 +197,11 @@ function buildUser(r: InterviewRequest): string {
   if (r.code) {
     parts.push(`CODE (${r.code.language}):\n${r.code.code}`);
     if (r.ask === "feedback") {
-      parts.push(`Tests: passed ${r.code.passed} of ${r.code.total} hidden tests (graded by code; do not re-grade)`);
+      parts.push(
+        r.code.language === "sql"
+          ? `Tests: the query result ${r.code.passed === r.code.total ? "matched" : "did not match"} the expected rows (graded by code; do not re-grade)`
+          : `Tests: passed ${r.code.passed} of ${r.code.total} hidden tests (graded by code; do not re-grade)`,
+      );
     }
   }
   if (r.board) {
@@ -272,8 +277,8 @@ export async function handleInterview(body: Record<string, unknown>): Promise<Re
   if (!input) return failed("error", { status: 400, message: MESSAGES.bad });
 
   if (input.used >= MAX_SESSION_TURNS) return failed("limit", { status: 429, message: SESSION_CAP });
-  if (input.ask === "hint" && input.round !== "coding") return failed("error", { status: 400, message: MESSAGES.bad });
-  if (input.ask === "question" && (input.round === "coding" || SCRIPTED_ROUNDS.includes(input.round))) return failed("error", { status: 400, message: MESSAGES.bad });
+  if (input.ask === "hint" && !CODE_ROUNDS.includes(input.round)) return failed("error", { status: 400, message: MESSAGES.bad });
+  if (input.ask === "question" && (CODE_ROUNDS.includes(input.round) || SCRIPTED_ROUNDS.includes(input.round))) return failed("error", { status: 400, message: MESSAGES.bad });
   if (input.ask === "feedback" && input.turns.length < 1) return failed("error", { status: 400, message: MESSAGES.bad });
 
   const cap = takeInterview();

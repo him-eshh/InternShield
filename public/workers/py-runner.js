@@ -17,7 +17,15 @@ var ready = (async function () {
     pyodide.setStdout({ batched: addLog });
     pyodide.setStderr({ batched: addLog });
     // Pyodide is loaded; take network APIs away so user code (via `import js`) can't reach out.
-    ["fetch", "XMLHttpRequest", "WebSocket", "EventSource", "importScripts", "indexedDB", "caches", "Worker", "SharedWorker", "WebTransport"].forEach(function (n) {
+    // Delete from every prototype too (fetch lives on WorkerGlobalScope.prototype), then pin undefined.
+    ["fetch", "XMLHttpRequest", "WebSocket", "EventSource", "importScripts", "indexedDB", "caches", "BroadcastChannel", "Worker", "SharedWorker", "WebTransport"].forEach(function (n) {
+      for (var o = self; o; o = Object.getPrototypeOf(o)) {
+        try {
+          delete o[n];
+        } catch (e0) {
+          /* ignore */
+        }
+      }
       try {
         Object.defineProperty(self, n, { value: undefined, writable: false, configurable: false });
       } catch (e) {

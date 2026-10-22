@@ -19,3 +19,10 @@ export const TIER_FLAGS = {
   keywordGap: false, // posting keywords vs resume
   rewriteOptions: false, // up to 3 rewrite options
 } as const;
+
+/** v2 rounds App.tsx doesn't know about: on only with live coding and their own flag. */
+export function v2RoundOn(round: string): boolean {
+  if (round === "sql") return TIER_FLAGS.coding && TIER_FLAGS.sqlRound;
+  if (round === "debugging") return TIER_FLAGS.coding && TIER_FLAGS.debugRound;
+  return true;
+}
