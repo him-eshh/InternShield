@@ -20,7 +20,7 @@ for (const v of variants) {
   hits.length = 0;
   await page.getByRole("button", { name: "Recheck" }).click();
   await page.getByText("Rechecked with Northwind Labs").waitFor({ timeout: 10000 });
-  const focus = await page.evaluate(() => document.activeElement?.textContent);
+  const focus = await page.evaluate(() => `${document.activeElement?.tagName}:${document.activeElement?.textContent?.slice(0, 40)}`);
   await shot(page, `21-chip-rechecked-${tag(v)}`, { fullPage: false });
   await page.getByText("Already sent money or shared info?").click();
   await page.locator("#recovery").scrollIntoViewIfNeeded();

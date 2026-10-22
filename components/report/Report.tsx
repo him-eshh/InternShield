@@ -47,10 +47,12 @@ export default function Report(props: Props) {
   const [rerun, setRerun] = useState<{ outcome: PipelineOutcome; input: PipelineInput; n: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const [kept, setKept] = useState<Answers>({}); // quick answers survive a company recheck
   if (base !== props.outcome) {
     setBase(props.outcome);
     setRerun(null);
     setNote(null);
+    setKept({});
   }
   const outcome = rerun?.outcome ?? props.outcome;
   const input = rerun?.input ?? props.input;
@@ -63,9 +65,13 @@ export default function Report(props: Props) {
     setRerun((r) => ({ outcome: next, input: nextInput, n: (r?.n ?? 0) + 1 }));
     setBusy(false);
     setNote(`Rechecked with ${name}`);
-    // The body remounts; put focus back on the chip so keyboard users stay in place.
-    requestAnimationFrame(() => document.querySelector<HTMLElement>("[data-company-edit]")?.focus());
   }
+
+  // The body remounts after a recheck; put focus back on the chip (after commit) so keyboard users stay in place.
+  const reruns = rerun?.n ?? 0;
+  useEffect(() => {
+    if (reruns) document.querySelector<HTMLElement>("[data-company-edit]")?.focus();
+  }, [reruns]);
 
   if (!outcome.report) return null;
   return (
@@ -75,15 +81,27 @@ export default function Report(props: Props) {
       outcome={outcome}
       input={input}
       company={{ busy, note, onSave: (n) => void onCompany(n) }}
+      kept={kept}
+      onAnswers={setKept}
     />
   );
 }
 
-function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, recovery, company }: Props & { company?: { busy: boolean; note: string | null; onSave: (name: string) => void } }) {
-  const initial = outcome.report as ReportData;
+interface BodyProps extends Props {
+  company?: { busy: boolean; note: string | null; onSave: (name: string) => void };
+  /** Answers given before a company recheck; the remounted body re-scores with them. */
+  kept?: Answers;
+  onAnswers?: (a: Answers) => void;
+}
+
+function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, recovery, company, kept, onAnswers }: BodyProps) {
+  const fresh = outcome.report as ReportData;
+  const [answers, setAnswers] = useState<Answers>(kept ?? {});
+  const [initial] = useState<ReportData>(() => (Object.keys(answers).length ? score({ ...outcome.scoreInput, answers }) : fresh));
   const [report, setReport] = useState<ReportData>(initial);
-  const [questions] = useState(initial.questions);
-  const [answers, setAnswers] = useState<Answers>({});
+  const [questions] = useState(fresh.questions);
+  // Kept answers that moved the level make the rechecked explanation stale: fetch one for this report.
+  const [stale] = useState(initial.level !== fresh.level);
   const [change, setChange] = useState<string | null>(null);
   const [lastId, setLastId] = useState<QuestionId | null>(null);
   const [explanation, setExplanation] = useState<ExplanationData | null>(outcome.explanation);
@@ -104,15 +122,16 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, recov
   // The explanation arrives after the report; fill it in when it does.
   const pending = outcome.pendingExplanation;
   useEffect(() => {
-    if (!pending) return;
+    const p = stale ? fetchExplanation(initial, { fetch: fetchImpl }) : pending;
+    if (!p) return;
     let live = true;
-    void pending.then((ex) => {
+    void p.then((ex) => {
       if (live && req.current === 0) setExplanation(ex);
     });
     return () => {
       live = false;
     };
-  }, [pending]);
+  }, [pending, stale, initial, fetchImpl]);
 
   // Announce the result once it's on screen. After an answer, only when the level moved:
   // the ring announces the score change itself.
@@ -133,6 +152,7 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, recov
     const next = { ...answers, [id]: value } as Answers;
     const nextReport = score({ ...outcome.scoreInput, answers: next });
     setAnswers(next);
+    onAnswers?.(next);
     setChange(describeChange(report, nextReport));
     setLastId(id);
     const levelChanged = nextReport.level !== report.level;

@@ -23,17 +23,22 @@ Branch `v2-check` from `v2-base` 36ad123. Brief: `devpost/v2-brief-check.md`.
 - [x] confidence ("How sure")
 - Near-miss tests: `tests/scoring/v2-rules.test.ts`, `tests/scoring/v2-nearmiss.test.ts`; 10 eval cases `eval/messages/v2-*.json`.
 ### C3 Report redesign
-- [ ] Ring v2 (number, 14 ticks, score-0 state, reveal <1.2 s, delta chip + aria-live)
-- [ ] Order: ring, verdict, action line, top 3 reasons, explanation, severity list, questions, recovery, posting, footer
-- [ ] Quotes in mark style, not color-only
-- [ ] Footer: one primary + compact secondary row; level rules
-- [ ] Evidence always visible (reduced motion + full-page shot)
+- [x] Ring v2 (number, 14 ticks, score-0 state, reveal <1.2 s, delta chip + aria-live)
+- [x] Order: ring, verdict, action line, top 3 reasons, explanation, severity list, questions, recovery, posting, footer
+  (Couldn't check sits right after the evidence list, before the questions: review fix.)
+- [x] Quotes in mark style, not color-only
+- [x] Footer: one primary + compact secondary row; level rules (live level hides Tailor/Practice via CSS, see Needs integration)
+- [x] Evidence always visible (reduced motion + full-page shot `33-report-real-reduced-motion-1440-light`)
+- Shots: `11-report-{scam,real}-*`, `10-form-empty-hint-*`. Reviewer (session 6): no blockers.
 ### C4 Quick questions + recovery + company chip
-- [ ] Question picking (could change level/critical/advice; max 3; drop after answer; stable ids)
-- [ ] New question set; delete outside_us; "Not sure"
-- [ ] UI: hint line, "Make this check more accurate · Optional", +N more, confirmation below
-- [ ] Recovery card (FTC order)
-- [ ] Editable company chip (re-runs company + posting only)
+- [x] Question picking (could change level/critical/advice; max 3; drop after answer; stable ids). "Advice" = `actionLine(level)`,
+  so a level flip already covers an advice change; no separate check.
+- [x] New question set; delete outside_us; "Not sure". Chat-app penalty now softens only when applied first (the employer-abroad
+  softening and its phone-country code were removed; lands in the C5 commit because the C5 worker was editing score.ts).
+- [x] UI: hint line, "Make this check more accurate · Optional", +N more, confirmation below
+- [x] Recovery card (FTC order)
+- [x] Editable company chip (re-runs company + posting only; quick answers survive the recheck; focus returns to Edit after commit)
+- Shots: `20-22` chip/recovery, `30-33` questions before/after + reduced motion.
 ### C5 Link checks + rules 7-10
 - [ ] Local link checks, `report.links`
 - [ ] Rule 7 secrecy / 8 impersonation / 9 paperwork / 10 platforms + reply YES
@@ -63,11 +68,13 @@ Branch `v2-check` from `v2-base` 36ad123. Brief: `devpost/v2-brief-check.md`.
   - `tests/scoring/score.test.ts` "asks where the message came from" -> "asks what they've asked you to do" (ticking deposit_check -> high); "I don't know" test -> "Not sure" on `asked_to_do`; "outside the US" test -> never asked, `who_first: yes` softens the WhatsApp move; "asks about an interview" -> `talked_live` not shown (0 -> 20 stays low, so no level flip) but `not_yet` still adds no_interview +20; "never asks when the source is known" (`[]`) -> only `["asked_to_do"]` (a ticked ask can switch on a critical).
   - `tests/scoring/questionsReal.test.ts`: source tests -> channel/who_first; "asks about the interview" -> answer still adds no_interview (not shown: no level flip).
   - `tests/ui/quickQuestionsReal.test.tsx` "renders every question" -> top question open + "+N more" (brief C4 UI); escape `"` too.
+  - `tests/ui/quickQuestionsReal.test.tsx` thanks line "Thanks. Score updated: Score went down." -> "Thanks. Score went down." (said "score" twice; concise-copy rule).
 
 ## Needs integration
 - `components/App.tsx` line ~103 `onLine`: pass the code too: `setLines((l) => ({ ...l, [key]: { state, reason, code: r && r.status === "failed" ? r.code : undefined } }))`. Why: Checklist can then say "resting for today" for DAILY_CAP (today it falls back on reason).
 - `components/App.tsx` `reportExtras`: Tailor/Practice are gated on `target.risk` (the first level). If a quick-question answer
   raises the report to high, they stay. Fix: let `Report` pass its live level to a render-prop `extras={(level) => ...}`.
+  Workaround in place: ReportFooter sets `data-level` (live) and `app/v2-check.css` hides the direct extra buttons on high.
 - Bug B: if `App.tsx` lifts the tracker open state into the footer later, the `contents` wrapper in SaveToTracker can go.
 
 ## Pending Himesh

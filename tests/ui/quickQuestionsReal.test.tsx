@@ -45,8 +45,8 @@ describe("QuickQuestions with real engine output", () => {
     const html = renderToStaticMarkup(<QuickQuestions questions={questions} answers={answers} change="Score went down." lastId={last.id} onAnswer={() => {}} />);
     expect(html).toContain("A few quick questions");
     expect(html).toContain('aria-pressed="true"');
-    expect(html).toContain("Thanks. Score updated: Score went down.");
-    const thanks = html.indexOf("Thanks. Score updated");
+    expect(html).toContain("Thanks. Score went down.");
+    const thanks = html.indexOf("Thanks. Score went");
     const lastOption = html.lastIndexOf(escape(last.options[last.options.length - 1].label), thanks);
     expect(lastOption).toBeGreaterThan(html.indexOf(escape(last.text)));
     expect(thanks).toBeGreaterThan(lastOption);

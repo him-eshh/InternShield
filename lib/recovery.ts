@@ -9,7 +9,7 @@ export interface RecoveryStep {
   link?: { label: string; url: string };
 }
 
-export const RECOVERY_INTRO = "There's no shame in it. Act on these in order.";
+export const RECOVERY_INTRO = "Act on these in order.";
 
 export const RECOVERY_STEPS: RecoveryStep[] = [
   { id: "stop", title: "Stop paying and replying", body: "They'll keep asking for more until you stop." },

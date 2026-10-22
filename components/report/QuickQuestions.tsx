@@ -17,7 +17,7 @@ interface Props {
 }
 
 export function confirmation(change: string | null): string {
-  return change ? `Thanks. Score updated: ${change}` : "Thanks. The score didn't change.";
+  return change ? `Thanks. ${change}` : "Thanks. The score didn't change.";
 }
 
 /** Values that answer a multi-select on their own ("None yet", "Not sure"). */
