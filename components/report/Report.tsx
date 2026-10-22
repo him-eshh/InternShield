@@ -12,7 +12,7 @@ import CouldntCheck, { COULDNT_CHECK_ID } from "./CouldntCheck";
 import EvidenceList from "./EvidenceList";
 import Explanation from "./Explanation";
 import PostingSection from "./PostingSection";
-import QuickQuestions from "./QuickQuestions";
+import QuickQuestions, { type AnswerValue } from "./QuickQuestions";
 import RecoveryCard from "./RecoveryCard";
 import ReportFooter from "./ReportFooter";
 import RiskRing from "./RiskRing";
@@ -129,7 +129,7 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, recov
     return () => clearInterval(id);
   }, [counting]);
 
-  async function onAnswer(id: QuestionId, value: string) {
+  async function onAnswer(id: QuestionId, value: AnswerValue) {
     const next = { ...answers, [id]: value } as Answers;
     const nextReport = score({ ...outcome.scoreInput, answers: next });
     setAnswers(next);
@@ -173,6 +173,9 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, recov
   const coverage = report.coverage;
   const missing = coverage.missingImportant.length ? ` · couldn't check ${coverage.missingImportant.join(", ")}` : "";
   const quotes = report.flags.map((f) => f.quote).filter((q): q is string => !!q);
+  // Never add questions after the first render; drop the ones that stopped mattering (answered ones stay).
+  const shownQuestions = questions.filter((q) => answers[q.id] !== undefined || report.questions.some((x) => x.id === q.id));
+  const channel = answers.channel && answers.channel !== "other" ? answers.channel : null;
 
   return (
     <article className="mx-auto max-w-[960px] px-6 py-10 sm:py-16">
@@ -186,6 +189,9 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, recov
         )}
         <RiskRing score={report.score} level={report.level} coverage={report.coverage} />
         <p className="mt-3 max-w-[46ch] text-[17px] leading-snug text-fg-2">{actionLine(report.level)}</p>
+        {report.questionHint && shownQuestions.some((q) => answers[q.id] === undefined) && (
+          <p className="mt-2 text-[14px] text-muted">{report.questionHint}</p>
+        )}
         {company && !incomplete && <CompanyChip name={companyName} busy={company.busy} note={company.note} onSave={company.onSave} />}
         <button
           type="button"
@@ -237,9 +243,7 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, recov
 
         <EvidenceList flags={report.flags} level={report.level} />
 
-        <CouldntCheck items={report.couldntCheck} />
-
-        <QuickQuestions questions={questions} answers={answers} change={change} lastId={lastId} onAnswer={onAnswer} />
+        <QuickQuestions questions={shownQuestions} answers={answers} change={change} lastId={lastId} onAnswer={onAnswer} />
 
         {recovery ?? <RecoveryCard level={report.level} />}
 
@@ -247,11 +251,13 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, recov
           <PostingSection checked={steps.posting.status === "done"} posting={postingData} match={report.postingMatch} company={companyName} careersUrl={careersUrl} />
         )}
 
+        <CouldntCheck items={report.couldntCheck} />
+
         <ReportFooter
           report={report}
           careersUrl={careersUrl}
           officialLink={officialLink}
-          source={answers.source && answers.source !== "unknown" ? answers.source : input.source}
+          source={channel ?? input.source}
           onAgain={onAgain}
           extras={extras}
         />

@@ -1,0 +1,18 @@
+{
+  "note": "Task scam with no crypto words: like and subscribe, sets of tasks, commission per task, personal coach.",
+  "text": "Dear candidate,\n\nEarn $200 to $400 a day working from home, no experience needed. Your job is to like and subscribe to partner videos and finish 2 sets of 30 tasks daily. Commission per task is paid every day, and your personal coach will guide you. Reply within 24 hours to claim a spot.\n\nTalent Desk",
+  "expectedLevel": "high",
+  "profile": { "field": "business", "level": "freshman", "skills": [] },
+  "source": "text_whatsapp",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "pay": { "value": "$200 to $400 a day", "quote": "Earn $200 to $400 a day" },
+        "dutiesVague": { "quote": "like and subscribe to partner videos" },
+        "noExperienceNeeded": { "quote": "no experience needed" }
+      }
+    }
+  }
+}

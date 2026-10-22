@@ -100,13 +100,16 @@ export interface StepResults {
 }
 
 // ---------- Quick questions ----------
-export type QuestionId = "outside_us" | "source" | "signed_offer" | "had_interview";
-export type YesNo = "yes" | "no" | "unknown"; // "unknown" = "I don't know"
+// Findings 02 > 4.1. Ids are stable: the UI keys on them across answers.
+export type QuestionId = "asked_to_do" | "who_first" | "channel" | "talked_live" | "signed_offer";
+export type YesNo = "yes" | "no" | "unknown"; // "unknown" = "Not sure"
+export type AskedTo = "pay" | "deposit_check" | "crypto" | "run_file" | "share_data";
 export interface Answers {
-  outside_us?: YesNo;
-  source?: Source | "unknown";
+  asked_to_do?: AskedTo[] | "none" | "unknown"; // multi-select; an empty pick is "none"
+  who_first?: YesNo; // "Did you apply for this job first?"
+  channel?: "email" | "linkedin" | "handshake" | "text_whatsapp" | "other";
+  talked_live?: "video" | "phone" | "chat_only" | "not_yet";
   signed_offer?: YesNo;
-  had_interview?: YesNo;
 }
 export interface Question {
   id: QuestionId;

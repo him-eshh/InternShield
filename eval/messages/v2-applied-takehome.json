@@ -1,0 +1,28 @@
+{
+  "note": "Legit near-miss: git clone take-home after applying, from the company's own domain. Rules give untrusted_code +15 minus good signs, so low.",
+  "text": "Hi Jordan,\n\nThanks for applying to the Backend Intern role at Fernwood Systems. As the next step, please complete our take-home exercise: git clone the starter project from github.com/fernwood-systems/intern-takehome and follow the README. You have 5 days, and you can reply here with any questions.\n\nBest,\nDana Whitfield\nRecruiting, Fernwood Systems\ndana.whitfield@fernwoodsystems.example",
+  "expectedLevel": "low",
+  "profile": { "field": "tech", "level": "junior", "skills": ["Python", "SQL"] },
+  "source": "company_site",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Fernwood Systems", "quote": "Backend Intern role at Fernwood Systems" },
+        "role": { "value": "Backend Intern", "quote": "the Backend Intern role" },
+        "sender": { "name": "Dana Whitfield", "email": "dana.whitfield@fernwoodsystems.example", "phone": null },
+        "asks": [{ "kind": "run_code_or_install", "quote": "git clone the starter project from github.com/fernwood-systems/intern-takehome" }]
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "fernwoodsystems.example", "careersUrl": "https://fernwoodsystems.example/careers" } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "dana.whitfield@fernwoodsystems.example", "domain": "fernwoodsystems.example", "freeEmail": false, "registeredAt": "2012-05-10T00:00:00Z", "hasMx": true }
+    },
+    "posting": {
+      "status": "done",
+      "data": { "found": true, "url": "https://fernwoodsystems.example/careers/backend-intern", "title": "Backend Intern", "location": "Remote", "pay": null, "postedDate": "2026-09-20", "onOfficialDomain": true }
+    }
+  }
+}

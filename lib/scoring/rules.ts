@@ -13,6 +13,7 @@ export const WEIGHTS = {
   freeEmailEstablished: 25,
   freeEmailStartup: 12,
   surpriseText: 25,
+  unsolicited: 5, // the user said they didn't apply first
   replyYes: 25,
   offPlatform: 20,
   offPlatformAbroad: 10, // employer outside the US and no money or data asked for

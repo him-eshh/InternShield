@@ -1,0 +1,23 @@
+{
+  "note": "Remote-access tool request. Critical even from an applied-to company on its own domain.",
+  "text": "Hi Priya,\n\nI'm Marcus from Northgate Labs recruiting. For the IT onboarding step, please install AnyDesk and send me your access code so our technician can configure your laptop before Monday.\n\nMarcus\nmarcus@northgatelabs.example",
+  "expectedLevel": "high",
+  "profile": { "field": "tech", "level": "junior", "skills": ["Python"] },
+  "source": "company_site",
+  "stage": "interviewing",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Northgate Labs", "quote": "Marcus from Northgate Labs recruiting" },
+        "sender": { "name": "Marcus", "email": "marcus@northgatelabs.example", "phone": null },
+        "asks": [{ "kind": "run_code_or_install", "quote": "please install AnyDesk and send me your access code" }]
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "northgatelabs.example", "careersUrl": null } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "marcus@northgatelabs.example", "domain": "northgatelabs.example", "freeEmail": false, "registeredAt": "2016-02-01T00:00:00Z", "hasMx": true }
+    }
+  }
+}

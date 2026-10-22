@@ -1,7 +1,10 @@
 "use client";
+import { useState } from "react";
 import type { Answers, Question, QuestionId } from "@/lib/types";
 import { InfoIcon } from "../icons";
-import { pillOff, pillOn } from "../ui";
+import { btnSecondary, pillOff, pillOn } from "../ui";
+
+export type AnswerValue = string | string[];
 
 interface Props {
   questions: Question[];
@@ -10,39 +13,94 @@ interface Props {
   change: string | null;
   /** The question answered most recently; the confirmation shows under it. */
   lastId?: QuestionId | null;
-  onAnswer: (id: QuestionId, value: string) => void;
+  onAnswer: (id: QuestionId, value: AnswerValue) => void;
 }
 
 export function confirmation(change: string | null): string {
   return change ? `Thanks. Score updated: ${change}` : "Thanks. The score didn't change.";
 }
 
+/** Values that answer a multi-select on their own ("None yet", "Not sure"). */
+const ALONE = new Set(["none", "unknown"]);
+
+function labelOf(q: Question, value: Answers[QuestionId] | undefined): string | undefined {
+  const vals = Array.isArray(value) ? value : value === undefined ? [] : [value];
+  const labels = vals.map((v) => q.options.find((o) => o.value === v)?.label).filter(Boolean);
+  return labels.length ? labels.join(", ") : undefined;
+}
+
+function MultiQuestion({ q, value, onAnswer }: { q: Question; value: Answers[QuestionId] | undefined; onAnswer: Props["onAnswer"] }) {
+  const [picked, setPicked] = useState<string[]>(Array.isArray(value) ? value : []);
+  const toggle = (v: string) => setPicked((p) => (p.includes(v) ? p.filter((x) => x !== v) : [...p, v]));
+  return (
+    <>
+      <div className="mt-2.5 flex flex-wrap gap-2">
+        {q.options.map((o) => {
+          const alone = ALONE.has(o.value);
+          const on = alone ? value === o.value : picked.includes(o.value);
+          return (
+            <button
+              key={o.value}
+              type="button"
+              aria-pressed={on}
+              className={on ? pillOn : pillOff}
+              onClick={() => {
+                if (!alone) return toggle(o.value);
+                setPicked([]);
+                onAnswer(q.id, o.value);
+              }}
+            >
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
+      {picked.length > 0 && (
+        <button type="button" className={`${btnSecondary} mt-3 !min-h-10 !px-5 !py-2 !text-[15px]`} onClick={() => onAnswer(q.id, picked)}>
+          Update the check
+        </button>
+      )}
+    </>
+  );
+}
+
 export default function QuickQuestions({ questions, answers, change, lastId = null, onAnswer }: Props) {
+  const [showAll, setShowAll] = useState(false);
   if (questions.length === 0) return null;
   const message = lastId && answers[lastId] !== undefined ? confirmation(change) : "";
   // Prefix the chosen answer so two answers with the same result are both announced.
-  const picked = questions.find((q) => q.id === lastId)?.options.find((o) => o.value === answers[lastId ?? "source"])?.label;
+  const lastQ = questions.find((q) => q.id === lastId);
+  const picked = lastQ ? labelOf(lastQ, answers[lastQ.id]) : undefined;
   const spoken = message && picked ? `${picked}. ${message}` : message;
+  // The top unanswered question is open; the rest wait behind "+N more" (answered ones stay visible).
+  const firstOpen = questions.findIndex((q) => answers[q.id] === undefined);
+  const shown = showAll ? questions : questions.filter((q, i) => answers[q.id] !== undefined || i === firstOpen);
+  const more = questions.length - shown.length;
   return (
     <section aria-labelledby="qq-title" className="rounded-[18px] border border-border bg-bg-soft p-6">
       <h3 id="qq-title" className="flex items-center gap-2 text-[19px] font-semibold">
         <span className="text-accent"><InfoIcon size={20} /></span>
         A few quick questions
       </h3>
+      <p className="mt-1 text-[15px] text-muted">Make this check more accurate · Optional</p>
       <div className="mt-5 space-y-6">
-        {questions.map((q) => (
+        {shown.map((q) => (
           <fieldset key={q.id}>
             <legend className="text-[17px]">{q.text}</legend>
-            <div className="mt-2.5 flex flex-wrap gap-2">
-              {q.options.map((o) => {
-                const on = answers[q.id] === o.value;
-                return (
-                  <button key={o.value} type="button" aria-pressed={on} className={on ? pillOn : pillOff} onClick={() => onAnswer(q.id, o.value)}>
-                    {o.label}
-                  </button>
-                );
-              })}
-            </div>
+            {q.kind === "multi" ? (
+              <MultiQuestion q={q} value={answers[q.id]} onAnswer={onAnswer} />
+            ) : (
+              <div className="mt-2.5 flex flex-wrap gap-2">
+                {q.options.map((o) => {
+                  const on = answers[q.id] === o.value;
+                  return (
+                    <button key={o.value} type="button" aria-pressed={on} className={on ? pillOn : pillOff} onClick={() => onAnswer(q.id, o.value)}>
+                      {o.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
             {message && lastId === q.id && (
               <p aria-hidden="true" className="mt-3 text-[15px] text-muted">
                 {message}
@@ -51,6 +109,11 @@ export default function QuickQuestions({ questions, answers, change, lastId = nu
           </fieldset>
         ))}
       </div>
+      {more > 0 && (
+        <button type="button" onClick={() => setShowAll(true)} className="mt-5 text-[15px] font-medium text-accent-fg underline-offset-4 hover:underline">
+          +{more} more
+        </button>
+      )}
       <p role="status" aria-live="polite" className="sr-only">
         {spoken}
       </p>

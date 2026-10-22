@@ -1,0 +1,23 @@
+{
+  "note": "Reimbursement trap: buy a laptop from their vendor, repaid later. Equipment stays critical.",
+  "text": "Hi Morgan,\n\nCongratulations on being selected for the Marketing Intern role at Brightline Media Group! To get started, please purchase a MacBook Air from our approved vendor, Orchard Supply Co. Keep the receipt and we'll reimburse the full cost in your first paycheck.\n\nRegards,\nHR Team\nhr@brightline-media-group.example",
+  "expectedLevel": "high",
+  "profile": { "field": "other", "level": "sophomore", "skills": ["Canva"] },
+  "source": "linkedin",
+  "stage": "offer",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Brightline Media Group", "quote": "Marketing Intern role at Brightline Media Group" },
+        "role": { "value": "Marketing Intern", "quote": "the Marketing Intern role" },
+        "sender": { "name": null, "email": "hr@brightline-media-group.example", "phone": null },
+        "asks": [{ "kind": "buy_equipment", "quote": "please purchase a MacBook Air from our approved vendor" }]
+      }
+    },
+    "sender": {
+      "status": "done",
+      "data": { "email": "hr@brightline-media-group.example", "domain": "brightline-media-group.example", "freeEmail": false, "registeredAt": "-35d", "hasMx": true }
+    }
+  }
+}

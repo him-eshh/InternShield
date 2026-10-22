@@ -1,0 +1,11 @@
+{
+  "note": "Zero-width characters inside W-h-a-t-s-A-p-p and the fee words; the scan must still read it.",
+  "text": "Hello! We reviewed your resume and you are selected. Message our manager on W​ h a​ t s A​ p p to receive your offer. A one-time reg​istration f​ee of $60 is required to secure your spot.",
+  "expectedLevel": "high",
+  "profile": { "field": "business", "level": "sophomore", "skills": [] },
+  "source": "text_whatsapp",
+  "stage": "message",
+  "savedSteps": {
+    "extract": { "status": "done", "data": {} }
+  }
+}

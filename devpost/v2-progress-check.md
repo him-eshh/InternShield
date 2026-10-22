@@ -12,6 +12,13 @@
 - engine-builder (background): tests/scoring/v2-rules.test.ts + eval/messages/v2-*.json (C2 tests/eval). No lib edits.
 - Me: wire links.ts into score.ts (C5), then C2 gates + commit "V2 check 2", reviewer pass C3/C8, "V2 check 3"/"8".
 
+- Me: C4 question set v2 IN PROGRESS: lib/types.ts (QuestionId/Answers new), lib/scoring/questions.ts rewritten (pickQuestions
+  takes outcomeOf -> {level,critical}; questionHint), then score.ts answers wiring, QuickQuestions.tsx multi + "+N more", Report.tsx.
+- Reviewer fixes TODO (C2/C3 review, session 4): backstop "driver's license" false critical + `\b\.exe`; money_wrong_way bare
+  "mobile deposit"/"e-check" too broad; TASK_TERMS coach/mentor + "complete N tasks" too generic; unicode hidden chars count
+  soft hyphen/LRM/U+034F (newsletter false +10); CompanyChip Edit button missing data-company-edit (focus blocker);
+  footer hide Tailor/Practice on high (needs level gate on extras); CouldntCheck placement; CompanyChip text-accent-fg.
+
 ## Next
 - C4 finish: question picking + new question set (check what's in lib/scoring/questions*), hint line, wire RecoveryCard/CompanyChip.
 - C5 rules 7-10, C6 annotated view (annotate.ts exists), C7 grow eval to ~90, C9 intro/logo, C10 final.

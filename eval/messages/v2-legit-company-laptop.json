@@ -1,0 +1,24 @@
+{
+  "note": "Legit near-miss: company-provided laptop shipped at no cost, real onboarding in the HR portal, after two interviews.",
+  "text": "Hi Riley,\n\nWelcome to the Design Intern team at Larkspur Studio! Following your two interviews last week, we're excited to have you start on June 3. Your laptop is company-provided: IT will ship a MacBook to your home at no cost, and you return it at the end of the internship. Your onboarding tasks are in our Workday portal; sign in with your Larkspur account.\n\nWarmly,\nKai Brandt\nPeople Team, Larkspur Studio\nkai.brandt@larkspurstudio.example",
+  "expectedLevel": "low",
+  "profile": { "field": "design", "level": "junior", "skills": ["Figma"] },
+  "source": "company_site",
+  "stage": "offer",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Larkspur Studio", "quote": "Design Intern team at Larkspur Studio" },
+        "role": { "value": "Design Intern", "quote": "the Design Intern team" },
+        "sender": { "name": "Kai Brandt", "email": "kai.brandt@larkspurstudio.example", "phone": null },
+        "interview": { "status": "mentioned", "quote": "Following your two interviews last week" }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "larkspurstudio.example", "careersUrl": "https://larkspurstudio.example/careers" } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "kai.brandt@larkspurstudio.example", "domain": "larkspurstudio.example", "freeEmail": false, "registeredAt": "2013-08-20T00:00:00Z", "hasMx": true }
+    }
+  }
+}
