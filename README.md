@@ -39,7 +39,13 @@ Every outside service is on a free plan with no card. Per visitor: 3 checks a mi
 ## Test-set results
 
 <!-- eval:start -->
-26/26 made-up messages land in their expected level. `*` marks a critical flag.
+26/26 made-up messages land in their expected level; false positives on low: 0/10 (0%). `*` marks a critical flag.
+
+| expected \ got | low | medium | high |
+|---|---|---|---|
+| low | 10 | 0 | 0 |
+| medium | 0 | 5 | 0 |
+| high | 0 | 0 | 11 |
 
 | Message | Expected | Got | Score | Top flags |
 |---|---|---|---|---|

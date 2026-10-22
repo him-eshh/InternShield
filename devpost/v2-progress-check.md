@@ -5,7 +5,9 @@
 - C1 (Bug D 989718c, Wikidata 8633079, Bug B + error codes in the "V2 check 1" commit). 688 tests.
 
 ## Current
-- 3 background workers launched (uncommitted output may be in the tree after a rotation; review + commit as WIP):
+- WIP 3d3d104: lib/reportView.ts, lib/recovery.ts, rerunWithCompany in pipeline.ts (+ chip test) from the killed workers.
+- Session 3 relaunched the same 3 workers (C2/C3/C7 below); me: eval/run.ts heldout + confusion matrix.
+- Workers (uncommitted output may be in the tree after a rotation; review + commit as WIP):
   - engine-builder C2: lib/scoring/**, tests/scoring/v2-*, new eval/messages, lib/server/extract*.ts, lib/quotes.ts, lib/explainFallback.ts, lib/types.ts (additive)
   - ui-builder C3: components/report/**, app/v2-check.css, lib/reportView.ts, tests/ui/v2-check-report*/ring*
   - general-purpose C7 held-out: eval/heldout/*.json (blind to lib/scoring). eval/run.ts support for heldout + confusion matrix is still TODO (mine).
