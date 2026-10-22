@@ -1,0 +1,26 @@
+{
+  "note": "Fake executive assistant job requiring gift card purchases.",
+  "text": "Good day, I am Dr. Helen Voss, CEO of Lumen Ridge Capital. I need a personal assistant for urgent tasks while I am in meetings. Your first task: buy five $100 Apple gift cards, scratch the backs, and send me the codes by text. You will be repaid plus a $200 bonus. Keep this confidential.",
+  "expectedLevel": "high",
+  "profile": { "field": "tech", "level": "junior", "skills": ["python", "react"] },
+  "source": null,
+  "stage": null,
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "isJobMessage": true,
+        "company": { "value": "Lumen Ridge Capital", "quote": "Lumen Ridge Capital" },
+        "role": { "value": "personal assistant", "quote": "personal assistant" },
+        "pay": { "value": "$200 bonus", "quote": "$200 bonus" },
+        "sender": { "name": "Helen Voss", "email": "helen.voss.ceo@gmail.example", "phone": null },
+        "asks": [{ "kind": "gift_cards", "quote": "buy five $100 Apple gift cards, scratch the backs, and send me the codes by text" }],
+        "pressure": [{ "quote": "Keep this confidential" }]
+      }
+    },
+    "sender": {
+      "status": "done",
+      "data": { "email": "helen.voss.ceo@gmail.example", "domain": "gmail.example", "freeEmail": true, "registeredAt": null, "hasMx": true, "hunter": null }
+    }
+  }
+}

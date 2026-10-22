@@ -1,0 +1,23 @@
+{
+  "note": "University career-center event invite, free registration, no ask.",
+  "text": "Dear students, this is Maya Collins from the Willowbrook University Career Center (careers.willowbrook-univ.example). Employers including Fernhill Bank will be at the Spring Internship Fair on Feb 12, 10 AM to 3 PM in the Student Union. Bring copies of your resume. Registration is free.",
+  "expectedLevel": "low",
+  "profile": { "field": "business", "level": "senior", "skills": ["excel", "sql"] },
+  "source": "email",
+  "stage": null,
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "isJobMessage": true,
+        "company": { "value": "Willowbrook University Career Center", "quote": "Willowbrook University Career Center" },
+        "sender": { "name": "Maya Collins", "email": "mcollins@willowbrook-univ.example", "phone": null }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "willowbrook-univ.example", "careersUrl": null } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "mcollins@willowbrook-univ.example", "domain": "willowbrook-univ.example", "freeEmail": false, "registeredAt": "-5000d", "hasMx": true, "hunter": null }
+    }
+  }
+}

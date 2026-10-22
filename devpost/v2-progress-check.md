@@ -10,7 +10,9 @@
 - Workers (uncommitted output may be in the tree after a rotation; review + commit as WIP):
   - engine-builder C2: lib/scoring/**, tests/scoring/v2-*, new eval/messages, lib/server/extract*.ts, lib/quotes.ts, lib/explainFallback.ts, lib/types.ts (additive)
   - ui-builder C3: components/report/**, app/v2-check.css, lib/reportView.ts, tests/ui/v2-check-report*/ring*
-  - general-purpose C7 held-out: eval/heldout/*.json (blind to lib/scoring). eval/run.ts support for heldout + confusion matrix is still TODO (mine).
+  - general-purpose C7 held-out: eval/heldout/*.json (blind to lib/scoring). eval/run.ts heldout + matrix DONE (9d65c5a).
+  - ui-builder C8: components/CheckForm.tsx, Checklist.tsx, tests/ui/v2-check-form/checklist.test.tsx
+- Done by me (9d65c5a): lib/client/annotate.ts (+test), lib/scoring/links.ts checkLinks (+test, NOT wired into score.ts yet: wire after C2 lands; lookalike+brand-careers on one link = count once).
 - Dev server running on 3100 (`node qa/serve.mjs stop 3100` when done).
 
 ## Next

@@ -1,0 +1,20 @@
+{
+  "note": "Letter-spaced payment words to dodge keyword filters.",
+  "text": "Hello, Pinecrest Remote Staffing offers you a paid internship, $45/hr. To activate your account you need to p a y a $99 r e g i s t r a t i o n f e e via Bitcoin. Your spot is only reserved for 12 hours.",
+  "expectedLevel": "high",
+  "profile": { "field": "tech", "level": "junior", "skills": ["python", "react"] },
+  "source": null,
+  "stage": null,
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "isJobMessage": true,
+        "company": { "value": "Pinecrest Remote Staffing", "quote": "Pinecrest Remote Staffing" },
+        "pay": { "value": "$45/hr", "quote": "$45/hr" },
+        "asks": [{ "kind": "pay_fee", "quote": "p a y a $99 r e g i s t r a t i o n f e e via Bitcoin" }],
+        "pressure": [{ "quote": "only reserved for 12 hours" }]
+      }
+    }
+  }
+}

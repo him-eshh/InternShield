@@ -1,0 +1,19 @@
+{
+  "note": "Install remote-access tool under time pressure for 'training'.",
+  "text": "Hello Tara, this is Iron Bay Technologies IT onboarding. To start your paid training today, install AnyDesk from anydesk-download.example and send me the 9-digit access code so our trainer can set up your workstation. We must finish within the hour or your offer is cancelled.",
+  "expectedLevel": "high",
+  "profile": { "field": "tech", "level": "junior", "skills": ["python", "react"] },
+  "source": null,
+  "stage": null,
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "isJobMessage": true,
+        "company": { "value": "Iron Bay Technologies", "quote": "Iron Bay Technologies" },
+        "asks": [{ "kind": "run_code_or_install", "quote": "install AnyDesk from anydesk-download.example and send me the 9-digit access code" }],
+        "pressure": [{ "quote": "We must finish within the hour or your offer is cancelled" }]
+      }
+    }
+  }
+}

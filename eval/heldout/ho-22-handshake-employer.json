@@ -1,0 +1,19 @@
+{
+  "note": "Handshake message from an employer after the user applied.",
+  "text": "Hi Noah, thanks for applying through Handshake to the Accounting Intern role at Marlow & Pike LLP. We reviewed your resume and would like to invite you to an on-campus information session and short interview on Oct 30. Details are in the Handshake event.",
+  "expectedLevel": "low",
+  "profile": { "field": "business", "level": "senior", "skills": ["excel", "sql"] },
+  "source": "handshake",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "isJobMessage": true,
+        "company": { "value": "Marlow & Pike LLP", "quote": "Marlow & Pike LLP" },
+        "role": { "value": "Accounting Intern", "quote": "Accounting Intern" },
+        "interview": { "status": "mentioned", "quote": "short interview on Oct 30" }
+      }
+    }
+  }
+}

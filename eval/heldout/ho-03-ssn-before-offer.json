@@ -1,0 +1,21 @@
+{
+  "note": "SSN and bank details demanded with no interview.",
+  "text": "Hi Marcus, thanks for your interest in the Research Assistant role at Orchard Lane Partners. We would like to move you straight to hiring. To set up payroll today, please reply with your full Social Security number, date of birth, and your bank account and routing numbers. No interview is needed.",
+  "expectedLevel": "high",
+  "profile": { "field": "tech", "level": "junior", "skills": ["python", "react"] },
+  "source": "email",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "isJobMessage": true,
+        "company": { "value": "Orchard Lane Partners", "quote": "Orchard Lane Partners" },
+        "role": { "value": "Research Assistant", "quote": "Research Assistant" },
+        "asks": [{ "kind": "sensitive_data", "quote": "please reply with your full Social Security number, date of birth, and your bank account and routing numbers" }],
+        "pressure": [{ "quote": "set up payroll today" }],
+        "interview": { "status": "none_hired_directly", "quote": "No interview is needed" }
+      }
+    }
+  }
+}

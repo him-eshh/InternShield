@@ -1,0 +1,25 @@
+{
+  "note": "Interview scheduling via Lever from a company domain, user applied.",
+  "text": "Hi Aisha, this is Tom Reyes from Bayfield Robotics. Thanks for applying to our Software Intern role. I'd like to schedule a 30 minute video interview next Tuesday or Wednesday. You can pick a slot here: jobs.lever.example/bayfield-robotics/schedule.",
+  "expectedLevel": "low",
+  "profile": { "field": "tech", "level": "junior", "skills": ["python", "react"] },
+  "source": "company_site",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "isJobMessage": true,
+        "company": { "value": "Bayfield Robotics", "quote": "Bayfield Robotics" },
+        "role": { "value": "Software Intern", "quote": "Software Intern" },
+        "sender": { "name": "Tom Reyes", "email": "tom.reyes@bayfield-robotics.example", "phone": null },
+        "interview": { "status": "mentioned", "quote": "schedule a 30 minute video interview" }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "bayfield-robotics.example", "careersUrl": null } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "tom.reyes@bayfield-robotics.example", "domain": "bayfield-robotics.example", "freeEmail": false, "registeredAt": "-3100d", "hasMx": true, "hunter": null }
+    }
+  }
+}

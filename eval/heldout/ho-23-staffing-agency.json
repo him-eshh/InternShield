@@ -1,0 +1,25 @@
+{
+  "note": "Established staffing agency, contract role described, phone screen proposed.",
+  "text": "Hello Grace, I'm Pat Lowry from Keystone Talent Partners (keystone-talent.example), a staffing agency. We received your application and have a 3-month contract Marketing Coordinator role with one of our clients. Are you free for a phone screen Thursday at 3 PM?",
+  "expectedLevel": "low",
+  "profile": { "field": "business", "level": "senior", "skills": ["excel", "sql"] },
+  "source": "email",
+  "stage": null,
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "isJobMessage": true,
+        "company": { "value": "Keystone Talent Partners", "quote": "Keystone Talent Partners" },
+        "role": { "value": "Marketing Coordinator", "quote": "Marketing Coordinator" },
+        "sender": { "name": "Pat Lowry", "email": "pat.lowry@keystone-talent.example", "phone": null },
+        "interview": { "status": "mentioned", "quote": "Are you free for a phone screen Thursday at 3 PM?" }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "keystone-talent.example", "careersUrl": null } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "pat.lowry@keystone-talent.example", "domain": "keystone-talent.example", "freeEmail": false, "registeredAt": "-2900d", "hasMx": true, "hunter": null }
+    }
+  }
+}

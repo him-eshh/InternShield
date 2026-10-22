@@ -1,0 +1,25 @@
+{
+  "note": "Legit reschedule; 'disregard my previous invite' wording resembles an injection line but is ordinary scheduling.",
+  "text": "Hi Victor, please disregard my previous invite for Wednesday, I need to move your interview with Alder Bay Software for the UX Design Intern role to Thursday at 11 AM Pacific. A new calendar invite with a Zoom link is on its way from this address. Sorry for the change.",
+  "expectedLevel": "low",
+  "profile": { "field": "design", "level": "junior", "skills": ["figma", "prototyping"] },
+  "source": "company_site",
+  "stage": "interviewing",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "isJobMessage": true,
+        "company": { "value": "Alder Bay Software", "quote": "Alder Bay Software" },
+        "role": { "value": "UX Design Intern", "quote": "UX Design Intern" },
+        "sender": { "name": null, "email": "talent@alderbay-software.example", "phone": null },
+        "interview": { "status": "mentioned", "quote": "move your interview with Alder Bay Software for the UX Design Intern role to Thursday at 11 AM Pacific" }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "alderbay-software.example", "careersUrl": null } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "talent@alderbay-software.example", "domain": "alderbay-software.example", "freeEmail": false, "registeredAt": "-2000d", "hasMx": true, "hunter": null }
+    }
+  }
+}

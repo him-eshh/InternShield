@@ -1,0 +1,22 @@
+{
+  "note": "Task/commission scam with USDT top-up and Telegram coach.",
+  "text": "Hello! Brightwave Digital (brightwave-digital.example) is hiring remote app optimizers. Complete 40 tasks a day and earn $300-$800 daily commission. No experience needed. To unlock the premium task group you must top up 150 USDT to your task account, which is refunded with your commission. Message your coach on Telegram @bw_coach_mia to begin.",
+  "expectedLevel": "high",
+  "profile": { "field": "tech", "level": "junior", "skills": ["python", "react"] },
+  "source": null,
+  "stage": null,
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "isJobMessage": true,
+        "company": { "value": "Brightwave Digital", "quote": "Brightwave Digital (brightwave-digital.example)" },
+        "pay": { "value": "$300-$800 daily commission", "quote": "$300-$800 daily commission" },
+        "asks": [{ "kind": "crypto_or_task_deposit", "quote": "you must top up 150 USDT to your task account" }],
+        "offPlatform": { "app": "Telegram", "quote": "Message your coach on Telegram @bw_coach_mia" },
+        "dutiesVague": { "quote": "Complete 40 tasks a day" },
+        "noExperienceNeeded": { "quote": "No experience needed" }
+      }
+    }
+  }
+}

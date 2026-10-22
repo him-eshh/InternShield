@@ -1,0 +1,21 @@
+{
+  "note": "Interview conducted over Telegram text chat, no payment ask.",
+  "text": "Hello, Summit Oak Partners is reviewing your application for a Finance Intern role. Our interview is a text chat on Telegram, add @summitoak_hr and we will begin. The role pays $28/hour.",
+  "expectedLevel": "medium",
+  "profile": { "field": "business", "level": "senior", "skills": ["excel", "sql"] },
+  "source": "email",
+  "stage": null,
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "isJobMessage": true,
+        "company": { "value": "Summit Oak Partners", "quote": "Summit Oak Partners" },
+        "role": { "value": "Finance Intern", "quote": "Finance Intern" },
+        "pay": { "value": "$28/hour", "quote": "$28/hour" },
+        "offPlatform": { "app": "Telegram", "quote": "add @summitoak_hr and we will begin" },
+        "interview": { "status": "mentioned", "quote": "Our interview is a text chat on Telegram" }
+      }
+    }
+  }
+}

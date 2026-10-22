@@ -1,0 +1,21 @@
+{
+  "note": "Fee request disguised with Cyrillic a, Cyrillic g, and zero-width spaces inside scam words.",
+  "text": "Congratulations, Dylan! Northgate Analytics has selected you for the Data Intern role at $38/hour. Before your laptop ships you must Pаy a $180 tra​ining f​ee by cгypto or gift card within 24 hours.",
+  "expectedLevel": "high",
+  "profile": { "field": "tech", "level": "junior", "skills": ["python", "react"] },
+  "source": null,
+  "stage": null,
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "isJobMessage": true,
+        "company": { "value": "Northgate Analytics", "quote": "Northgate Analytics" },
+        "role": { "value": "Data Intern", "quote": "Data Intern" },
+        "pay": { "value": "$38/hour", "quote": "$38/hour" },
+        "asks": [{ "kind": "pay_fee", "quote": "you must Pаy a $180 tra​ining f​ee" }],
+        "pressure": [{ "quote": "within 24 hours" }]
+      }
+    }
+  }
+}

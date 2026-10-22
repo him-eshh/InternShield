@@ -1,0 +1,20 @@
+{
+  "note": "Off-platform WhatsApp, no money ask, plausible company.",
+  "text": "Hi Nora, I'm Kyle from Redwood Peak Media. We saw your profile and have a Marketing Intern opening. Can you message me on WhatsApp at +1 555 0142 so we can talk details?",
+  "expectedLevel": "medium",
+  "profile": { "field": "business", "level": "senior", "skills": ["excel", "sql"] },
+  "source": "linkedin",
+  "stage": null,
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "isJobMessage": true,
+        "company": { "value": "Redwood Peak Media", "quote": "Redwood Peak Media" },
+        "role": { "value": "Marketing Intern", "quote": "Marketing Intern" },
+        "sender": { "name": "Kyle", "email": null, "phone": "+1 555 0142" },
+        "offPlatform": { "app": "WhatsApp", "quote": "message me on WhatsApp at +1 555 0142" }
+      }
+    }
+  }
+}
