@@ -37,4 +37,38 @@ npm run build
 - Never commit `.env.local` or `devpost/learner-profile.md`. Never push, deploy, or touch remotes.
 - Example messages are made up. Never put Himesh's real recruiter or scam messages in the repo.
 - Never say "safe" as a verdict. Nothing from `scope.md > Explicitly Cut`; Tier 2 stays hidden.
-- No animation or icon libraries (spec.md > Stack): CSS motion + inline SVG.
+- Motion (`motion/react`) is the only animation library; icons stay inline SVG.
+
+## v2 ownership (parallel worktrees)
+
+Two streams build at once from `v2-base`: `check` (worktree branch `v2-check`) and `tools` (`v2-tools`). Only edit files in your table; anything else goes under "Needs integration" in your log. Shared files nobody edits until integration: `package.json`, lockfile, configs (`next.config.ts`, `eslint.config.mjs`, ...), `app/layout.tsx`, `app/globals.css`, `components/App.tsx`, `components/MotionProvider.tsx`, `qa/lib.mjs`, `qa/ports.mjs`, `qa/serve.mjs`, `.env.example`, `lib/server/guard.ts`, `CLAUDE.md`.
+
+| check owns | |
+|---|---|
+| Scoring + eval | `lib/scoring/**`, `eval/**`, `tests/scoring/**` |
+| Server (check routes) | `app/api/{extract,company,posting,sender,explain}/**`, `lib/server/{extract,extractSchema,tavily,rdap,dns,hunter,http,cache}.ts`, new `lib/server/{wikidata,links}.ts`, `lib/explainFallback.ts` |
+| Client logic | `lib/client/{pipeline,copyReport}.ts`, new `lib/client/{annotate,errorCopy}.ts`, `lib/autofill.ts`, `lib/examples.ts`, `lib/quotes.ts`, new `lib/{reportView,recovery}.ts`, `lib/types.ts` (additive; tools reads it), `fixtures/**` |
+| UI | `components/report/**`, `components/{CheckForm,Checklist,Intro,Logo,icons}.tsx`, `components/tiers/SaveToTracker.tsx` (Bug B only), `app/v2-check.css`, `app/icon.svg`, `app/apple-icon.png`, `app/opengraph-image.tsx` |
+| Tests + QA | `tests/api/{extract,company,sender,explain,explainTidy,picker}.test.ts` + new `tests/api/v2-check-*.test.ts`, `tests/ui/{fixReport,pipeline,autofill,quickQuestionsReal,slice7}.test.*` + new `tests/ui/v2-check-*.test.tsx`, `qa/v2-check-*.mjs`, `devpost/v2-check-*.md`, `README.md` (eval table only) |
+
+| tools owns | |
+|---|---|
+| Tier logic + types | `lib/tiers/**` (incl. `lib/tiers/types.ts` and `lib/tiers/flags.ts`), new `lib/v2/tools-*.ts` |
+| Server (tool routes) | `app/api/{rewrite,transcribe,interview}/**`, `lib/server/{rewrite,transcribe,interview,groq}.ts` |
+| Client | `lib/client/resume.ts`, `components/ProfileSteps.tsx` (resume upload preview only) |
+| UI | `components/tiers/**` except `SaveToTracker.tsx`, `app/v2-tools.css`, `public/**` (workers, vendor assets) |
+| Tests + QA | `tests/tiers/**`, `tests/fixtures/**`, `tests/api/{rewrite,transcribe,transcribeDedupe,interview,guard}.test.ts` + new `tests/api/v2-tools-*.test.ts`, `tests/ui/interview*.test.tsx` + new `tests/ui/v2-tools-*.test.tsx`, `qa/v2-tools-*.mjs`, `devpost/v2-tools-*.md` |
+
+v2 flags in `lib/tiers/flags.ts` start false; tools flips each in the commit where it passes gates. Check-stream features aren't flagged (they replace UI directly and must work at every commit).
+
+QA in a worktree: set `QA_BASE`, `QA_SHOTS` (required: `.git` is a file there), `QA_PORT_RANGE`; `node qa/serve.mjs start|stop <port>` runs one `next dev` per worktree.
+
+### v2 gates (all green before a phase-closing commit)
+
+```
+npm run lint
+npx tsc --noEmit
+npx vitest run
+npm run build
+npm run eval    # 26/26
+```
