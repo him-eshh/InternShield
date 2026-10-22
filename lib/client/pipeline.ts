@@ -120,14 +120,15 @@ async function call<T>(key: StepKey, url: string, body: unknown, deps: PipelineD
     } catch {
       json = null;
     }
+    const err = json && json.status === "failed" ? json : null;
     if (res.status === 429) {
-      return { status: "failed", reason: "limit", retryAfter: json && json.status === "failed" ? json.retryAfter : undefined };
+      return { status: "failed", reason: "limit", retryAfter: err?.retryAfter, code: err?.code ?? "RATE_LIMITED" };
     }
     if (json && json.status === "done" && res.ok) return { status: "done", data: json.data };
-    if (json && json.status === "failed") return { status: "failed", reason: json.reason, retryAfter: json.retryAfter };
-    return { status: "failed", reason: "error" };
+    if (err) return { status: "failed", reason: err.reason, retryAfter: err.retryAfter, code: err.code };
+    return { status: "failed", reason: "error", code: "UNKNOWN" };
   } catch {
-    return { status: "failed", reason: timedOut ? "timeout" : "error" };
+    return { status: "failed", reason: timedOut ? "timeout" : "error", code: timedOut ? "TIMEOUT" : "UNKNOWN" };
   } finally {
     clearTimeout(timer);
   }

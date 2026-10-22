@@ -61,7 +61,7 @@ export type FailReason = "timeout" | "limit" | "error";
 export type SkipReason = `needs step ${number}` | "missing input";
 export type StepResult<T> =
   | { status: "done"; data: T }
-  | { status: "failed"; reason: FailReason; retryAfter?: number } // retryAfter in seconds
+  | { status: "failed"; reason: FailReason; retryAfter?: number; code?: ApiErrorCode } // retryAfter in seconds
   | { status: "skipped"; reason: SkipReason };
 
 /** Step 2. null data = search ran but no official site identified. */

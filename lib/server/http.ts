@@ -1,5 +1,5 @@
 // Response helpers shared by every route. Bodies are lib/types ApiResponse shapes.
-import type { ApiResponse, FailReason } from "@/lib/types";
+import type { ApiErrorCode, ApiResponse, FailReason } from "@/lib/types";
 
 export const OUTSIDE_TIMEOUT_MS = 8000;
 
@@ -24,9 +24,22 @@ export function done<T>(data: T): Response {
   return Response.json(body);
 }
 
+/** Code from what the route already says; an explicit `code` wins. */
+export function codeFor(
+  reason: FailReason,
+  opts: { status?: number; retryAfter?: number; message?: string; code?: ApiErrorCode } = {},
+): ApiErrorCode {
+  if (opts.code) return opts.code;
+  if (reason === "timeout") return "TIMEOUT";
+  if (reason === "limit") return opts.message === MESSAGES.daily || (opts.retryAfter ?? 0) > 3600 ? "DAILY_CAP" : "RATE_LIMITED";
+  if (opts.status === 413) return "TOO_LARGE";
+  if (opts.status === 400 || opts.status === 403) return "BAD_INPUT";
+  return "UPSTREAM";
+}
+
 export function failed(
   reason: FailReason,
-  opts: { status?: number; retryAfter?: number; message?: string } = {},
+  opts: { status?: number; retryAfter?: number; message?: string; code?: ApiErrorCode } = {},
 ): Response {
   const body: ApiResponse<never> = {
     status: "failed",
@@ -34,6 +47,7 @@ export function failed(
     ...(opts.retryAfter ? { retryAfter: opts.retryAfter } : {}),
     message:
       opts.message ?? (reason === "timeout" ? MESSAGES.timeout : reason === "limit" ? MESSAGES.busy : MESSAGES.error),
+    code: codeFor(reason, opts),
   };
   const headers: Record<string, string> = {};
   if (opts.retryAfter) headers["Retry-After"] = String(opts.retryAfter);

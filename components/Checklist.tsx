@@ -1,10 +1,13 @@
 import { STEP_LABELS, type LineState, type StepKey } from "@/lib/client/pipeline";
+import { stepNote } from "@/lib/client/errorCopy";
+import type { ApiErrorCode } from "@/lib/types";
 import { CheckIcon, InfoIcon, Spinner } from "./icons";
 import { subhead } from "./ui";
 
 export interface LineInfo {
   state: LineState;
   reason?: string; // "timeout" | "limit" | "error" | skip reason
+  code?: ApiErrorCode; // set once App passes it through (Needs integration)
 }
 
 export const KEYS_IN_ORDER: StepKey[] = ["extract", "company", "sender", "posting", "explain"];
@@ -14,7 +17,7 @@ export function initialLines(): Record<StepKey, LineInfo> {
 }
 
 function note(info: LineInfo): string | null {
-  if (info.state === "failed") return info.reason === "limit" ? "busy, try again soon" : "couldn't check";
+  if (info.state === "failed") return stepNote(info.code, info.reason);
   if (info.state === "skipped") return "couldn't check";
   return null;
 }
