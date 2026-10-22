@@ -37,7 +37,7 @@ import Feedback from "./Feedback";
 import SqlRound from "./SqlRound";
 import CodingRound from "./CodingRound";
 import { TIER_FLAGS, v2RoundOn } from "@/lib/tiers/flags";
-import { PRESETS, type PresetId } from "@/lib/tiers/presets";
+import { lpTags, PRESETS, type PresetId } from "@/lib/tiers/presets";
 
 const BUSY_MSG = "The interviewer is busy right now. Your answers are saved; try again in a minute.";
 const CAP_MSG = "This practice session reached its limit. Get your feedback or start a new one.";
@@ -299,6 +299,7 @@ export default function Interview({ profile, resume, target, onBack, renderRound
               <div key={answered} ref={questionRef} tabIndex={-1} className={`${cardCls} animate-enter mt-6 p-5 outline-offset-2 sm:p-6`}>
                 <p className="text-[14px] font-medium text-muted">
                   Question {Math.min(answered + 1, total)} of {total}
+                  {lpTags([pending]).length > 0 && ` · Leadership Principle: ${lpTags([pending]).join(", ")}`}
                 </p>
                 <p className="mt-2 break-words text-[20px] font-semibold leading-snug">{pending}</p>
               </div>

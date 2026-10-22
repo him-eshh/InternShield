@@ -7,9 +7,10 @@
 - T3 interview core (commit "V2 tools 3")
 
 - T4 TS + SQL runners, worker hardening (commit "V2 tools 4")
+- T5 debugging round, presets, round cards (commit "V2 tools 5")
 
 ## Current
-- T5 code done (WIP commits): debugging round reuses CodingRound (lib/tiers/debugging.ts, tests/tiers/v2-debugging.test.ts), presets (lib/tiers/presets.ts, context.preset, server style line, LP tags on scorecard; tests/tiers/v2-presets.test.ts), round cards in Interview.tsx. Flags debugRound + presets ON. Left: build, screenshots (qa/v2-tools-t5.mjs), phase reviewer, commit "V2 tools 5: ...".
+- T6 resume tailoring: start by grepping findings 03 TL;DR, sections 3, 4, 7 and brief T6 lines 71-78.
 
 ## Next
 - T6 resume tailoring
@@ -22,4 +23,5 @@
 - Subagents may lack shell; orchestrator runs gates/commits.
 - Per-phase reviewer folded into T9 (logged under Decisions).
 - groq tasks: "interview" (questions/hints) vs "interviewFeedback". Transcribe accepts `image` or `images` (<= 2).
+- tests/tiers/pdf.test.ts "returns PDF bytes" can time out in the full run under load; passes alone.
 - Next dev shows a "Cache disabled" badge bottom-left in shots: dev-only, ignore.

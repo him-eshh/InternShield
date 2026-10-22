@@ -24,9 +24,9 @@ Branch `v2-tools` from `v2-base` 36ad123. Brief: `devpost/v2-brief-tools.md`. Pr
 - [x] SQL round (sql.js worker, multiset grader, 6 questions, reference queries in vitest), `SqlRound.tsx`, flip `sqlRound` (QA 08-sql-*)
 - [x] worker hardening (prototype deletes incl. Worker/SharedWorker/WebTransport, import() refused, output/log/row caps, kill on timeout) + tests (tests/tiers/v2-workers.test.ts). CSP header already in next.config.ts from setup.
 ### T5 Debugging + presets + round cards
-- [ ] debugging round (5 programs), flip `debugRound`
-- [ ] company-style presets + Amazon STAR signals, flip `presets`
-- [ ] round cards on setup
+- [x] debugging round (5 programs Py/JS/TS, lib/tiers/debugging.ts, reuses CodingRound with "Fix"/"What was the bug?" copy; JS reference fixes + TS-transpile parity in tests/tiers/v2-debugging.test.ts), flip `debugRound` (QA 10-debug-*)
+- [x] company-style presets (lib/tiers/presets.ts: Google/Meta/Amazon/McKinsey/Goldman "-style", official 04 §1a links only, "Practice only; not affiliated"), context.preset -> server style line; Amazon LP bank (8 made-up prompts, LP tag shown on the question), scorecard: I/we + numbers (existing) + "Leadership Principles: ..." line. Flip `presets` (QA 09-setup-amazon-*, 09-amazon-question-*)
+- [x] round cards on setup (title, ~min, blurb, "Feedback: ..."; ✓ on selected, not color-only); company/role still pre-filled from target (QA 09-setup-cards-*)
 ### T6 Resume tailoring
 - [ ] keyword-gap panel, flip `keywordGap`
 - [ ] 3 rewrite options + heldBack, flip `rewriteOptions`
@@ -51,6 +51,8 @@ Branch `v2-tools` from `v2-base` 36ad123. Brief: `devpost/v2-brief-tools.md`. Pr
 
 - Transcribe payload cap 3,000,000 chars (not findings' 3.5 MB): guard.ts caps transcribe bodies at 3 MiB and is frozen.
 - Interview question cap raised 150 -> 400 tokens: gpt-oss counts reasoning in max_completion_tokens.
+- T5: client canCall/buildRequest now use CODE_ROUNDS (coding, debugging, sql), matching the server; before, SQL could request an AI "question" the route rejects. Python debugging fixes aren't executed in vitest (no Pyodide in node); the Python starters mirror the JS bugs.
+- T5: Google preset source is the official how-we-hire page (JS-rendered; Research verified it via the official video). Stripe "Bug Squash" not a preset (self-reported only).
 
 ## Needs integration
 - `components/App.tsx`: v2 rounds (sql, debugging) are enabled by `v2RoundOn()` and rendered inside `Interview.tsx` (App's `roundsEnabled`/`renderRound` don't know them). Optional: move them into App's maps at integration.
