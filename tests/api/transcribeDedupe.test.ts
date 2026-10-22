@@ -1,8 +1,7 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { resetServerState } from "@/lib/server/cache";
 import { cleanTranscript, dedupeTranscript } from "@/lib/server/transcribe";
+import { readFixture } from "../shared/readFixture";
 import { groqOk, req } from "./helpers";
 
 const h = vi.hoisted(() => ({ create: vi.fn() }));
@@ -28,7 +27,7 @@ describe("review: repeated sender headers keep the message", () => {
   });
 });
 
-const fixture = (name: string) => readFileSync(join(__dirname, "..", "fixtures", "transcripts", `${name}.txt`), "utf8");
+const fixture = (name: string) => readFixture(`transcripts/${name}.txt`);
 const IMG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB";
 
 const EXPECTED = [

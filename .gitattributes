@@ -1,0 +1,7 @@
+* text=auto eol=lf
+tests/fixtures/** text eol=lf
+*.png -text
+*.pdf -text
+*.docx -text
+*.wasm -text
+*.woff2 -text
