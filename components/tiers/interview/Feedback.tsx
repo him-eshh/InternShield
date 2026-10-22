@@ -1,3 +1,5 @@
+import { useId, useState } from "react";
+import { formatInUnit, unitName } from "@/lib/tiers/numbers";
 import { checkTurn } from "@/lib/tiers/scripted";
 import { SCRIPTED_ROUNDS, type InterviewRound, type InterviewSession, type InterviewTurn, type StarCheck } from "@/lib/tiers/types";
 import { btnPrimary, btnSecondary, card as cardCls } from "../../ui";
@@ -9,28 +11,91 @@ const STAR: { key: keyof StarCheck; label: string }[] = [
   { key: "result", label: "Result" },
 ];
 
-function fmt(n: number, unit: "$" | "%" | ""): string {
-  const s = Math.abs(n).toLocaleString("en-US", { maximumFractionDigits: 2 });
-  const sign = n < 0 ? "-" : "";
-  return unit === "$" ? `${sign}$${s}` : unit === "%" ? `${sign}${s}%` : `${sign}${s}`;
-}
+const INPUT =
+  "min-h-11 w-full max-w-[220px] rounded-[12px] border border-border bg-card px-3 py-2 text-[16px] text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-accent";
+const SMALL_BTN =
+  "inline-flex min-h-11 items-center rounded-full border border-border bg-card px-4 text-[15px] font-medium text-text transition-colors duration-200 hover:bg-bg-soft focus-visible:outline-2 focus-visible:outline-accent";
 
 function CodeCheck({ turn, round }: { turn: InterviewTurn; round: InterviewRound }) {
-  const r = SCRIPTED_ROUNDS.includes(round) ? checkTurn(turn) : null;
+  // The user can correct the number we read; the check re-runs here on the typed number, without touching the saved answer.
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [fixed, setFixed] = useState<string | null>(null);
+  const inputId = useId();
+  const r = SCRIPTED_ROUNDS.includes(round) ? checkTurn(fixed === null ? turn : { ...turn, answer: fixed }) : null;
   if (!r) return null;
+  const submit = () => {
+    if (!draft.trim()) return;
+    setFixed(draft.trim());
+    setEditing(false);
+  };
+  // The user's number in the user's unit; the question's unit only when the check did not record one.
+  const own = r.kind === "number" && r.found !== null ? formatInUnit(r.found, r.foundUnit ?? r.unit) : "";
   return (
     <div className="mt-5 rounded-[12px] border border-border px-4 py-3">
       <h2 className="text-[15px] font-semibold">Checked by code</h2>
       {r.kind === "number" ? (
-        <p className="mt-1 break-words text-[16px]">
-          {r.found === null ? "No final number found" : `Your final number: ${fmt(r.found, r.unit)}`} · Expected: {fmt(r.expected, r.unit)}
-          {r.found !== null && (
-            <>
-              {" · "}
-              <span className={`font-medium ${r.correct ? "text-good" : "text-muted"}`}>{r.correct ? "✓ correct" : "not quite"}</span>
-            </>
+        <>
+          <p className="mt-1 break-words text-[16px]">
+            {r.found === null ? "No final number found" : `Your final number: ${own}`}
+            {r.unitMismatch && r.unit ? ` (expected ${unitName(r.unit)})` : ""} · Expected: {formatInUnit(r.expected, r.unit)}
+            {r.found !== null && (
+              <>
+                {" · "}
+                <span className={`font-medium ${r.correct ? "text-good" : "text-muted"}`}>{r.correct ? "✓ correct" : "not quite"}</span>
+              </>
+            )}
+          </p>
+          {(r.message || r.note) && <p className="mt-1 break-words text-[14px] text-muted">{[r.message, r.note].filter(Boolean).join(". ")}</p>}
+          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px] text-muted">
+            {r.found !== null && <span>We read your final number as {own}.</span>}
+            {fixed !== null && <span>(edited)</span>}
+            {!editing && (
+              <>
+                <span>Not right?</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDraft(fixed ?? "");
+                    setEditing(true);
+                  }}
+                  className="min-h-11 rounded-full px-2 font-medium text-accent underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-accent"
+                >
+                  Edit
+                </button>
+              </>
+            )}
+          </div>
+          {editing && (
+            <form
+              className="mt-2 flex flex-wrap items-center gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                submit();
+              }}
+            >
+              <label className="text-[14px] font-medium" htmlFor={inputId}>
+                Your final number
+              </label>
+              <input
+                id={inputId}
+                className={INPUT}
+                value={draft}
+                inputMode="decimal"
+                autoComplete="off"
+                autoFocus
+                placeholder="e.g. 7.5% or $1.2 million"
+                onChange={(e) => setDraft(e.target.value)}
+              />
+              <button type="submit" className={SMALL_BTN}>
+                Check again
+              </button>
+              <button type="button" className={SMALL_BTN} onClick={() => setEditing(false)}>
+                Cancel
+              </button>
+            </form>
           )}
-        </p>
+        </>
       ) : (
         <ul className="mt-2 grid gap-2 sm:grid-cols-2">
           {[...r.covered.map((l) => ({ l, on: true })), ...r.missed.map((l) => ({ l, on: false }))].map(({ l, on }) => (
