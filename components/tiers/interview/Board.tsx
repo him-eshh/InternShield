@@ -53,6 +53,7 @@ export default function Board({ board, onChange, defaultKind = "server" }: Props
   const [renaming, setRenaming] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [note, setNote] = useState("");
+  const [exported, setExported] = useState(false);
 
   const byId = (id: string | null) => board.nodes.find((n) => n.id === id) ?? null;
   const nameOf = (id: string) => byId(id)?.label || "Untitled";
@@ -211,9 +212,11 @@ export default function Board({ board, onChange, defaultKind = "server" }: Props
         a.click();
         URL.revokeObjectURL(url);
         setNote("Board exported as board.png.");
+        setExported(true);
       }, "image/png");
     };
     img.onerror = () => setNote("Could not export the board.");
+    setExported(false);
     img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(xml)}`;
   };
 
@@ -248,14 +251,19 @@ export default function Board({ board, onChange, defaultKind = "server" }: Props
         <button type="button" className={`${btnSecondary} ${small}`} onClick={exportPng}>
           Export PNG
         </button>
+        {exported && (
+          <span aria-hidden="true" className="animate-enter text-[15px] text-muted">
+            Saved as board.png.
+          </span>
+        )}
       </div>
 
       <p className="text-[15px] text-muted" id={`${markerId}-hint`}>
         {connectFrom
-          ? `Connecting from ${nameOf(connectFrom)}: click or focus another box and press Enter. Escape cancels.`
+          ? `Connecting from ${nameOf(connectFrom)}: pick another box, press Enter. Esc cancels.`
           : board.nodes.length === 0
-            ? "Add a box to start. Drag boxes to move them."
-            : "Drag boxes, or focus one and use arrow keys. Enter renames, C connects, Delete removes."}
+            ? "Add a box to start."
+            : "Drag boxes, or use arrow keys. Enter renames, C connects, Delete removes."}
       </p>
 
       <div className={`${card} overflow-hidden p-0`}>

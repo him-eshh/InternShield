@@ -27,7 +27,7 @@ function CodeCheck({ turn, round }: { turn: InterviewTurn; round: InterviewRound
           {r.found !== null && (
             <>
               {" · "}
-              <span className={`font-medium ${r.correct ? "text-good" : "text-muted"}`}>{r.correct ? "✓ correct" : "– not quite"}</span>
+              <span className={`font-medium ${r.correct ? "text-good" : "text-muted"}`}>{r.correct ? "✓ correct" : "not quite"}</span>
             </>
           )}
         </p>
@@ -36,7 +36,7 @@ function CodeCheck({ turn, round }: { turn: InterviewTurn; round: InterviewRound
           {[...r.covered.map((l) => ({ l, on: true })), ...r.missed.map((l) => ({ l, on: false }))].map(({ l, on }) => (
             <li key={l} className={`rounded-[12px] border px-3 py-2 text-[14px] ${on ? "border-good/40" : "border-border text-muted"}`}>
               <span className="block break-words font-medium text-text">{l}</span>
-              {on ? "✓ covered" : "– missing"}
+              {on ? "✓ covered" : "not mentioned"}
             </li>
           ))}
         </ul>
@@ -106,7 +106,7 @@ export default function Feedback({
                               className={`rounded-[12px] border px-3 py-2 text-[14px] ${on ? "border-good/40" : "border-border text-muted"}`}
                             >
                               <span className="block font-medium text-text">{label}</span>
-                              {on ? "✓ covered" : "– missing"}
+                              {on ? "✓ covered" : "not mentioned"}
                             </li>
                           );
                         })}

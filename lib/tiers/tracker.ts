@@ -80,7 +80,7 @@ export function addCard(
 ): TrackerCard[] {
   const company = (c.company ?? "").trim();
   const role = (c.role ?? "").trim();
-  if (!company || !role) return cards;
+  if (!company) return cards; // role is optional: reports don't always name one
   const link = cleanLink(c.link);
   const key = dupKey(company, role, link);
   if (cards.some((x) => dupKey(x.company.trim(), x.role.trim(), x.link) === key)) return cards;

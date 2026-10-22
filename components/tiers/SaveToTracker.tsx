@@ -1,21 +1,32 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { addCard, loadCards, saveCards } from "@/lib/tiers/tracker";
-import type { NewCard } from "@/lib/tiers/types";
+import type { NewCard, TrackerCard } from "@/lib/tiers/types";
 import { CheckIcon } from "../icons";
-import { btnSecondary, linkClass } from "../ui";
+import { btnPrimary, btnSecondary, linkClass } from "../ui";
 
 interface Props {
   card: NewCard;
   onOpen: () => void;
 }
 
-export default function SaveToTracker({ card, onOpen }: Props) {
-  const [state, setState] = useState<"idle" | "saved" | "already">("idle");
+const fieldCls = "mt-1.5 min-h-12 w-full rounded-[14px] border border-border bg-card px-4 text-[17px] placeholder:text-muted";
+/** Company/role as the user confirmed them; a blank role stays blank (never a placeholder). */
+export function addToTracker(before: TrackerCard[], company: string, role: string, base: NewCard): TrackerCard[] {
+  return addCard(before, { ...base, company, role });
+}
 
-  function save() {
+export default function SaveToTracker({ card, onOpen }: Props) {
+  const [state, setState] = useState<"idle" | "form" | "saved" | "already">("idle");
+  const [company, setCompany] = useState(card.company);
+  const [role, setRole] = useState(card.role);
+  const [error, setError] = useState<string | null>(null);
+  const [cancelled, setCancelled] = useState(false);
+  const companyRef = useRef<HTMLInputElement>(null);
+
+  function commit(co: string, ro: string) {
     const before = loadCards();
-    const after = addCard(before, card);
+    const after = addToTracker(before, co, ro, card);
     if (after.length === before.length) {
       setState("already");
       return;
@@ -24,21 +35,91 @@ export default function SaveToTracker({ card, onOpen }: Props) {
     setState("saved");
   }
 
+  function onSave() {
+    if (!card.company.trim()) {
+      setCompany(card.company);
+      setRole(card.role);
+      setError(null);
+      setState("form");
+      return;
+    }
+    commit(card.company.trim(), card.role.trim());
+  }
+
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    const co = company.trim();
+    if (!co) {
+      setError("Add the company name.");
+      companyRef.current?.focus();
+      return;
+    }
+    commit(co, role.trim());
+  }
+
   return (
     <div>
       {state === "idle" && (
-        <button type="button" onClick={save} className={btnSecondary}>
+        <button type="button" autoFocus={cancelled} onClick={onSave} className={btnSecondary}>
           Save to tracker
         </button>
       )}
-      <p role="status" className={state === "idle" ? "sr-only" : "animate-enter flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px]"}>
-        {state !== "idle" && (
+      {state === "form" && (
+        <form onSubmit={submit} noValidate className="animate-enter grid max-w-[520px] gap-4" aria-label="Save to tracker">
+          <div>
+            <label htmlFor="st-company" className="text-[15px] font-medium">
+              Company
+            </label>
+            <input
+              id="st-company"
+              ref={companyRef}
+              autoFocus={!company.trim()}
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              maxLength={120}
+              required
+              aria-required="true"
+              aria-describedby={error ? "st-error" : undefined}
+              className={fieldCls}
+            />
+          </div>
+          <div>
+            <label htmlFor="st-role" className="text-[15px] font-medium">
+              Role <span className="font-normal text-muted">(optional)</span>
+            </label>
+            <input id="st-role" autoFocus={Boolean(company.trim())} value={role} onChange={(e) => setRole(e.target.value)} maxLength={120} className={fieldCls} />
+          </div>
+          {error && (
+            <p id="st-error" role="alert" className="text-[15px] font-medium">
+              {error}
+            </p>
+          )}
+          <div className="flex flex-wrap gap-3">
+            <button type="submit" className={btnPrimary}>
+              Save
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setCancelled(true);
+                setState("idle");
+              }}
+              className={btnSecondary}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+      <p role="status" className={state === "saved" || state === "already" ? "animate-enter flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px]" : "sr-only"}>
+        {(state === "saved" || state === "already") && (
           <>
             <span className="inline-flex items-center gap-1.5">
               <CheckIcon size={16} className="text-accent" />
               {state === "saved" ? "Saved." : "Already in your tracker."}
             </span>
-            <button type="button" onClick={onOpen} className={`${linkClass} min-h-10 font-medium`}>
+            {/* The Save button just unmounted: keep focus on the next step. */}
+            <button type="button" autoFocus onClick={onOpen} className={`${linkClass} min-h-10 font-medium`}>
               Open my applications
             </button>
           </>

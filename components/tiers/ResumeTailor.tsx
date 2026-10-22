@@ -29,7 +29,7 @@ interface Props {
 }
 
 const DEFAULT_INSTRUCTION = "Make it match the posting";
-const RETRY_MESSAGE = "We couldn't suggest a rewrite right now. Try again in a moment.";
+const RETRY_MESSAGE = "Couldn't reword that right now. Try again in a minute.";
 const EMPHASIS_LABELS: [Emphasis, string][] = [
   ["skills", "Skills"],
   ["impact", "Impact and results"],
@@ -104,6 +104,7 @@ function Editor({ resume, target, onBack }: { resume: ResumeData; target: Postin
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [status, setStatus] = useState("");
   const [pdfBusy, setPdfBusy] = useState(false);
+  const [pdfNote, setPdfNote] = useState("");
 
   const original = useMemo(() => resumeLines(resume.text), [resume.text]);
   // Kinds come from the original lines (accepting a rewrite keeps the line count), so an edit never turns a bullet into a header.
@@ -171,7 +172,7 @@ function Editor({ resume, target, onBack }: { resume: ResumeData; target: Postin
     setLines(next);
     saveTailored(resume.text, next);
     setOutcome(null);
-    setStatus("Accepted. Your line was updated.");
+    setStatus("Line updated.");
     lineRefs.current[outcome.index]?.focus();
   }
 
@@ -185,11 +186,12 @@ function Editor({ resume, target, onBack }: { resume: ResumeData; target: Postin
 
   async function download() {
     setPdfBusy(true);
+    setPdfNote("");
     try {
       downloadPdf(await buildResumePdf(lines, "Tailored resume"), "resume-tailored.pdf");
-      setStatus("Your PDF is downloading.");
+      setPdfNote("Downloaded resume-tailored.pdf.");
     } catch {
-      setStatus("We couldn't make the PDF. Try again.");
+      setPdfNote("Couldn't make the PDF. Try again.");
     } finally {
       setPdfBusy(false);
     }
@@ -200,7 +202,7 @@ function Editor({ resume, target, onBack }: { resume: ResumeData; target: Postin
       <BackLink onBack={onBack} />
       <h1 className="mt-4 text-[clamp(30px,5vw,48px)] font-bold leading-[1.1] tracking-[-0.025em]">Tailor your resume</h1>
       <p className="mt-2 text-[15px] text-muted">
-        Only the line you pick and the posting details are sent to an AI to suggest wording. Your resume stays in this browser.
+        Only the line you pick and the job details go to an AI. The rest stays here.
       </p>
 
       <fieldset className={`${cardCls} mt-8 p-5 sm:p-6`}>
@@ -232,7 +234,6 @@ function Editor({ resume, target, onBack }: { resume: ResumeData; target: Postin
 
       <section aria-labelledby="tl-how" className={`${cardCls} mt-6 p-5 sm:p-6`}>
         <h2 id="tl-how" className="text-[15px] font-semibold">How to tailor</h2>
-        <p className="mt-1 text-[14px] text-muted">Applies to every suggestion. Facts stay the same whatever you pick.</p>
         <div className="mt-4 space-y-4">
           <OptionRow label="Emphasize" hint="optional, pick any">
             {EMPHASIS_LABELS.map(([k, label]) => {
@@ -271,7 +272,7 @@ function Editor({ resume, target, onBack }: { resume: ResumeData; target: Postin
       </section>
 
       <h2 className="mt-10 text-[20px] font-semibold">Your resume</h2>
-      <p className="mt-1 text-[15px] text-muted">Pick a bullet to reword. Your name, contact details and section headings stay as they are.</p>
+      <p className="mt-1 text-[15px] text-muted">Pick a bullet to reword.</p>
       {sections.length > 1 && (
         <div role="group" aria-label="Show section" className="mt-4 flex flex-wrap gap-2">
           {[{ title: "all", label: "All sections" }, ...sections.map((sec) => ({ title: sec.title, label: sec.title }))].map((sec) => (
@@ -371,6 +372,9 @@ function Editor({ resume, target, onBack }: { resume: ResumeData; target: Postin
             Undo all changes
           </button>
         )}
+        <p role="status" className={pdfNote ? "animate-enter self-center text-[15px]" : "sr-only"}>
+          {pdfNote}
+        </p>
       </div>
     </section>
   );

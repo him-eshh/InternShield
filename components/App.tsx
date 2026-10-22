@@ -29,12 +29,12 @@ import { btnPrimary, btnSecondary, subhead } from "./ui";
 
 type Screen = "loading" | "intro" | "profile" | "check" | "checking" | "report" | "notjob" | "resume" | "tracker" | "interview";
 
-/** Company/role/link the last report found: feeds "Save to tracker" and resume tailoring. */
+/** Company/role/link the last report found: feeds "Save to tracker" and resume tailoring. Empty string = not known (Save asks). */
 function reportTarget(outcome: PipelineOutcome, input: PipelineInput): NewCard {
   const posting = outcome.steps.posting.status === "done" ? outcome.steps.posting.data : null;
   return {
-    company: outcome.facts?.company?.value ?? input.form.company ?? "Unknown company",
-    role: outcome.facts?.role?.value ?? posting?.title ?? "Role not listed",
+    company: outcome.facts?.company?.value?.trim() || input.form.company?.trim() || "",
+    role: outcome.facts?.role?.value?.trim() || posting?.title?.trim() || "",
     link: posting?.found && posting.onOfficialDomain ? posting.url : null,
     risk: outcome.report?.level ?? null,
   };

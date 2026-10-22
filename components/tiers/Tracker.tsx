@@ -2,15 +2,19 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { addCard, loadCards, moveCard, removeCard, saveCards, updateNotes } from "@/lib/tiers/tracker";
 import { TRACKER_COLUMNS, type TrackerCard } from "@/lib/tiers/types";
-import type { RiskLevel } from "@/lib/types";
+import { LEVEL_LABELS, type RiskLevel } from "@/lib/types";
 import { ArrowLeftIcon, ExternalIcon } from "../icons";
 import { btnPrimary, card as cardCls, linkClass } from "../ui";
 
+// Same wording as the report, so a card never contradicts it.
 const RISK: Record<RiskLevel, { label: string; cls: string }> = {
-  low: { label: "Low risk", cls: "border-good/40 text-good" },
-  medium: { label: "Medium risk", cls: "border-warn/40 text-warn" },
-  high: { label: "High risk", cls: "border-bad/40 text-bad" },
+  low: { label: LEVEL_LABELS.low, cls: "border-good/40 text-good" },
+  medium: { label: LEVEL_LABELS.medium, cls: "border-warn/40 text-warn" },
+  high: { label: LEVEL_LABELS.high, cls: "border-bad/40 text-bad" },
 };
+
+/** Display fallback only; never stored. */
+const nameOf = (c: TrackerCard) => c.company.trim() || "Untitled application";
 
 const small =
   "inline-flex min-h-10 items-center rounded-full border border-border bg-card px-3.5 text-[14px] font-medium transition-colors duration-200 hover:bg-bg-soft disabled:opacity-40";
@@ -51,6 +55,7 @@ export default function Tracker({
   const [role, setRole] = useState("");
   const [link, setLink] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
+  const [added, setAdded] = useState<string | null>(null);
   const refocus = useRef<string | null>(null);
 
   useEffect(() => {
@@ -83,7 +88,7 @@ export default function Tracker({
     if (!target) return;
     refocus.current = c.id;
     commit(moveCard(cards, c.id, dir));
-    setAnnounce(`Moved ${c.company} to ${target.label}`);
+    setAnnounce(`Moved ${nameOf(c)} to ${target.label}`);
   }
 
   function onKey(e: KeyboardEvent<HTMLElement>, c: TrackerCard) {
@@ -99,10 +104,11 @@ export default function Tracker({
 
   function submit(e: FormEvent) {
     e.preventDefault();
+    setAdded(null);
     const co = company.trim();
     const ro = role.trim();
     const li = link.trim();
-    if (!co || !ro) return setFormError("Add a company and a role.");
+    if (!co) return setFormError("Add the company name.");
     if (li && !isHttp(li)) return setFormError("The link should start with http:// or https://.");
     const next = addCard(cards, { company: co, role: ro, link: li || null, risk: null });
     if (next.length === cards.length) return setFormError("That one is already in your tracker.");
@@ -111,7 +117,7 @@ export default function Tracker({
     setRole("");
     setLink("");
     setFormError(null);
-    setAnnounce(`Added ${co}`);
+    setAdded(`Added ${co}`);
   }
 
   return (
@@ -120,7 +126,7 @@ export default function Tracker({
         <ArrowLeftIcon size={16} /> Back
       </button>
       <h1 className="mt-4 text-[clamp(30px,5vw,48px)] font-bold leading-[1.1] tracking-[-0.025em]">My applications</h1>
-      <p className="mt-2 max-w-[560px] text-[17px] text-muted">Kept in this browser only. Use the buttons on a card, or the arrow keys, to move it along.</p>
+      <p className="mt-2 max-w-[560px] text-[17px] text-muted">Saved in this browser.</p>
 
       <p role="status" aria-live="polite" className="sr-only">
         {announce}
@@ -131,7 +137,7 @@ export default function Tracker({
 
       {ready && cards.length === 0 && (
         <p className={`${cardCls} mt-8 p-6 text-[17px] text-muted`}>
-          Nothing here yet. Save a checked offer from its report, or add one below.
+          Nothing here yet. Add one below, or save one from a report.
         </p>
       )}
 
@@ -162,10 +168,10 @@ export default function Tracker({
                       aria-describedby="card-hint"
                       className={`${cardCls} animate-enter p-4 outline-offset-2`}
                     >
-                      <p className="break-words text-[17px] font-semibold leading-snug">{c.company}</p>
-                      <p className="break-words text-[15px] text-muted">{c.role}</p>
+                      <p className="break-words text-[17px] font-semibold leading-snug">{nameOf(c)}</p>
+                      {c.role.trim() && <p className="break-words text-[15px] text-muted">{c.role}</p>}
                       {risk && (
-                        <p className={`mt-2 inline-block rounded-full border px-2.5 py-0.5 text-[13px] font-medium ${risk.cls}`}>{risk.label}</p>
+                        <p className={`mt-2 inline-block max-w-full rounded-full border px-2.5 py-0.5 text-[13px] font-medium ${risk.cls}`}>{risk.label}</p>
                       )}
                       {c.link && (
                         <p className="mt-2 break-all text-[14px]">
@@ -238,7 +244,7 @@ export default function Tracker({
                           </button>
                         )}
                         {confirming === c.id ? (
-                          <span role="group" aria-label={`Delete ${c.company}?`} className="flex flex-wrap items-center gap-2 text-[14px]">
+                          <span role="group" aria-label={`Delete ${nameOf(c)}?`} className="flex flex-wrap items-center gap-2 text-[14px]">
                             Delete this?
                             <button
                               type="button"
@@ -246,7 +252,7 @@ export default function Tracker({
                               onClick={() => {
                                 commit(removeCard(cards, c.id));
                                 setConfirming(null);
-                                setAnnounce(`Deleted ${c.company}`);
+                                setAnnounce(`Deleted ${nameOf(c)}`);
                               }}
                             >
                               Delete
@@ -276,11 +282,15 @@ export default function Tracker({
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="t-company" className="text-[15px] font-medium">Company</label>
-            <input id="t-company" value={company} onChange={(e) => setCompany(e.target.value)} maxLength={120} className={fieldCls} required aria-required="true" />
+            <input id="t-company" value={company} onChange={(e) => {
+                setCompany(e.target.value);
+                setAdded(null);
+              }}
+              maxLength={120} className={fieldCls} required aria-required="true" />
           </div>
           <div>
-            <label htmlFor="t-role" className="text-[15px] font-medium">Role</label>
-            <input id="t-role" value={role} onChange={(e) => setRole(e.target.value)} maxLength={120} className={fieldCls} required aria-required="true" />
+            <label htmlFor="t-role" className="text-[15px] font-medium">Role <span className="font-normal text-muted">(optional)</span></label>
+            <input id="t-role" value={role} onChange={(e) => setRole(e.target.value)} maxLength={120} className={fieldCls} />
           </div>
         </div>
         <div className="mt-4">
@@ -294,9 +304,14 @@ export default function Tracker({
             {formError}
           </p>
         )}
-        <button type="submit" className={`${btnPrimary} mt-5`}>
-          Add application
-        </button>
+        <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
+          <button type="submit" className={btnPrimary}>
+            Add application
+          </button>
+          <p role="status" className={added ? "animate-enter text-[15px]" : "sr-only"}>
+            {added}
+          </p>
+        </div>
       </form>
     </section>
   );

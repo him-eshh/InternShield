@@ -1,6 +1,4 @@
-/* InternShield Python runner (classic worker). Loads Pyodide from jsDelivr only. */
-"use strict";
-
+/* InternShield Python runner (MODULE worker: importScripts of the CDN fails in current browsers). Loads Pyodide from jsDelivr only. */
 var PYODIDE_VERSION = "314.0.7";
 var BASE = "https://cdn.jsdelivr.net/npm/pyodide@" + PYODIDE_VERSION + "/";
 var LOG_CAP = 2000;
@@ -14,12 +12,12 @@ function addLog(line) {
 
 var ready = (async function () {
   try {
-    importScripts(BASE + "pyodide.js");
-    pyodide = await loadPyodide({ indexURL: BASE });
+    var mod = await import(BASE + "pyodide.mjs");
+    pyodide = await mod.loadPyodide({ indexURL: BASE });
     pyodide.setStdout({ batched: addLog });
     pyodide.setStderr({ batched: addLog });
     // Pyodide is loaded; take network APIs away so user code (via `import js`) can't reach out.
-    ["fetch", "XMLHttpRequest", "WebSocket", "EventSource", "importScripts", "indexedDB", "caches"].forEach(function (n) {
+    ["fetch", "XMLHttpRequest", "WebSocket", "EventSource", "importScripts", "indexedDB", "caches", "Worker", "SharedWorker", "WebTransport"].forEach(function (n) {
       try {
         Object.defineProperty(self, n, { value: undefined, writable: false, configurable: false });
       } catch (e) {
