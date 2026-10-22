@@ -4,6 +4,8 @@ import { req } from "./helpers";
 
 const h = vi.hoisted(() => ({ search: vi.fn() }));
 vi.mock("@tavily/core", () => ({ tavily: () => ({ search: h.search }) }));
+// Wikidata finds nothing here, so these tests exercise the Tavily fallback (Wikidata has its own tests).
+vi.mock("@/lib/server/wikidata", () => ({ wikidataCompany: async () => null }));
 
 import { POST as company } from "@/app/api/company/route";
 import { POST as posting } from "@/app/api/posting/route";

@@ -6,6 +6,7 @@ import type { CompanyData, PostingData } from "@/lib/types";
 import { cacheGet, cacheSet, DAY } from "./cache";
 import { takeTavily } from "./guard";
 import { classify, type Outcome, withTimeout } from "./http";
+import { wikidataCompany } from "./wikidata";
 
 interface Hit {
   title: string;
@@ -98,6 +99,9 @@ export async function findCompany(company: string): Promise<Outcome<CompanyData 
   const key = `company:${company.toLowerCase()}`;
   const hit = cacheGet<CompanyData | null>(key);
   if (hit !== undefined) return { ok: true, data: hit };
+  // Wikidata first (free); Tavily only when it found no official website.
+  const wiki = await wikidataCompany(company);
+  if (wiki) return { ok: true, data: wiki };
   const r = await search(`${company} careers`);
   if (!r.ok) return r;
   const data = pickOfficial(company, r.data);
