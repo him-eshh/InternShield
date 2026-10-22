@@ -21,14 +21,15 @@ async function start(field, round) {
   await s.page.waitForTimeout(1000);
   await s.page.locator("header button").first().click();
   await s.page.getByRole("button", { name: "Practice an interview" }).click();
-  await s.page.getByRole("radio", { name: round }).check({ force: true });
+  await s.page.locator("label", { hasText: round }).first().click();
   await s.page.getByRole("button", { name: "Start" }).click();
   await s.page.waitForTimeout(800);
   return s;
 }
 const say = async (page, label) => console.log(`== ${label} (overflow ${await overflowX(page)})\n` + (await page.locator("main").innerText()).slice(0, 1800));
 
-if (!only || only === "coding") {
+if (only === "coding") {
+  // ponytail: superseded by explore-coding.mjs (this wait matched the "Running maximum" title); kept for the old shots.
   const { browser, page, log } = await start("tech", "Live coding");
   await shot(page, `12-coding-${t}-${phase}`);
   await say(page, "coding start");

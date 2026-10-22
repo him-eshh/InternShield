@@ -47,14 +47,14 @@ describe("sectioned fallback explanation", () => {
     for (const level of ["low", "medium", "high"] as const) expect(hasBannedWord(fallbackExplanation({ level, flags: FLAGS }))).toBe(false);
   });
 
-  it("renders titles, a bullet list and highlighted quotes for fallback text", () => {
+  it("renders titles and a bullet list for fallback text, without repeating the cards' quotes", () => {
     const text = fallbackExplanation({ level: "medium", flags: FLAGS });
     const html = renderToStaticMarkup(<Explanation text={text} source="fallback" quotes={["deposit the check we mail you"]} />);
     expect(html).toContain(">Our take</h3>");
     expect(html).toContain(">What stood out</h3>");
     expect(html).toContain(">What to do next</h3>");
     expect(html.match(/<li /g)).toHaveLength(2);
-    expect(html).toContain("<mark");
+    expect(html).not.toContain("<mark");
     expect(html).not.toContain("## ");
   });
 

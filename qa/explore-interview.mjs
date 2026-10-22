@@ -44,7 +44,7 @@ for (const round of Object.keys(ANSWERS)) {
   await page.getByRole("button", { name: "Practice an interview" }).click();
   await page.getByRole("heading", { name: "Practice an interview" }).waitFor();
   console.log(`\n######## ${round}\n== setup\n` + (await page.locator("main").innerText()));
-  await page.getByRole("radio", { name: LABEL[round] }).first().check({ force: true });
+  await page.locator("label", { hasText: LABEL[round] }).first().click();
   if (round === "portfolio") {
     const links = page.getByPlaceholder("One link per line");
     if (await links.count()) await links.fill("https://example.com/alex-portfolio\nhttps://dribbble.example/alex");

@@ -47,6 +47,12 @@ describe("tidyExplanation", () => {
 });
 
 describe("fallbackExplanation quote dedupe", () => {
+  it("lists at most 3 signs (the cards below show every flag)", () => {
+    const flags = ["Asks for a deposit", "Free email", "WhatsApp", "Rushing you", "No interview", "Vague duties"].map((title) => ({ title, quote: null, why: `${title} is a warning sign` }));
+    const text = fallbackExplanation({ level: "high", flags });
+    expect(text.split("\n").filter((l) => l.startsWith("- "))).toHaveLength(3);
+  });
+
   it("never repeats the same quote", () => {
     const q = "Once you deposit the check";
     const text = fallbackExplanation({
@@ -56,6 +62,7 @@ describe("fallbackExplanation quote dedupe", () => {
         { title: "Fake check", quote: q, why: "w" },
       ],
     });
-    expect(text.split(q).length - 1).toBe(1);
+    // Fix pass: quotes live on the evidence cards only, so the explanation repeats none.
+    expect(text.split(q).length - 1).toBe(0);
   });
 });

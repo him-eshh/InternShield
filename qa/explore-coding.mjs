@@ -13,7 +13,7 @@ await page.getByRole("heading", { name: "Is this offer real?" }).waitFor();
 await page.waitForTimeout(1000);
 await page.locator("header button").first().click();
 await page.getByRole("button", { name: "Practice an interview" }).click();
-await page.getByRole("radio", { name: "Live coding" }).check({ force: true });
+await page.locator("label", { hasText: "Live coding" }).click();
 await page.getByRole("button", { name: "Start" }).click();
 await page.waitForTimeout(800);
 const fn = await page.locator("code.font-mono").first().innerText();

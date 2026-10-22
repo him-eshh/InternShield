@@ -65,7 +65,8 @@ export function fallbackExplanation({ level, flags }: ExplainRequest): string {
         ? "This message has some warning signs worth double checking."
         : "We didn't find strong red flags, but a few details are worth a look.";
   const seenQuotes = new Set<string>();
-  const body = [...new Set(flags.slice(0, 6).map((f) => sentenceFor(f, seenQuotes)))];
+  // Top 3 only and no quotes: the evidence cards right below show every flag with its quote.
+  const body = [...new Set(flags.map((f) => sentenceFor({ ...f, quote: null }, seenQuotes)))].slice(0, 3);
   const close =
     level === "high"
       ? "Please don't send money or personal details, and report it if you can."
