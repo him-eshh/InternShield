@@ -72,7 +72,7 @@ export default function AnnotatedMessage({ text, flags, annotated }: { text: str
     <section aria-labelledby="annotated-title">
       <h3 id="annotated-title" className="text-[24px] font-semibold tracking-[-0.02em]">Your message</h3>
       <p className="mt-1 text-[14px] text-muted">Numbered passages match the evidence below.</p>
-      <div id={bodyId} className="am-body mt-4 rounded-[18px] border border-border bg-bg-soft p-5 text-[15px] leading-[1.7]" data-collapsed={long && !expanded}>
+      <div id={bodyId} className="am-body mt-4 rounded-[18px] border border-border bg-bg-soft p-5 text-[15px] leading-[1.7]" data-collapsed={long && !expanded} onFocus={() => setExpanded(true)}>
         {segments.map((s) =>
           s.marks.length === 0 ? (
             <span key={s.start}>{s.text}</span>
