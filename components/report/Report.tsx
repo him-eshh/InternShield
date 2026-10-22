@@ -1,20 +1,21 @@
 "use client";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import "@/app/v2-check.css";
 import { fetchExplanation, type Explanation as ExplanationData, type PipelineInput, type PipelineOutcome, type StepKey } from "@/lib/client/pipeline";
-import { FTC_URL } from "@/lib/client/copyReport";
+import { actionLine } from "@/lib/reportView";
 import { describeChange, score } from "@/lib/scoring/score";
-import { LEVEL_LABELS, type Answers, type FlagGroup, type QuestionId, type Report as ReportData } from "@/lib/types";
-import { ExternalIcon, InfoIcon } from "../icons";
-import { btnPrimary, btnSecondary, linkClass } from "../ui";
+import { LEVEL_LABELS, type Answers, type QuestionId, type Report as ReportData } from "@/lib/types";
+import { InfoIcon } from "../icons";
+import { btnSecondary } from "../ui";
 import CouldntCheck, { COULDNT_CHECK_ID } from "./CouldntCheck";
-import EvidenceGroup from "./EvidenceGroup";
+import EvidenceList from "./EvidenceList";
 import Explanation from "./Explanation";
 import PostingSection from "./PostingSection";
 import QuickQuestions from "./QuickQuestions";
+import ReportFooter from "./ReportFooter";
 import RiskRing from "./RiskRing";
-import ScamOutcome from "./ScamOutcome";
+import TopReasons from "./TopReasons";
 
-const GROUPS: FlagGroup[] = ["sender", "message", "offer"];
 const RESTING_AFTER_SECONDS = 900; // a retryAfter this long means a daily cap, not a blip
 
 interface Props {
@@ -24,8 +25,10 @@ interface Props {
   onAgain: () => void;
   /** Test/preview hook: the fetch used to re-request the explanation. */
   fetchImpl?: typeof fetch;
-  /** Optional extra actions shown above "Check another message". */
+  /** Optional extra actions, shown in the footer's secondary row. */
   extras?: ReactNode;
+  /** Slot for the recovery card ("Already sent money or shared info?"), shown after the quick questions. */
+  recovery?: ReactNode;
 }
 
 export function announcement(report: ReportData): string {
@@ -33,7 +36,7 @@ export function announcement(report: ReportData): string {
   return `${LEVEL_LABELS[report.level]}, risk ${report.score}, ${red} red flag${red === 1 ? "" : "s"}`;
 }
 
-export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, extras }: Props) {
+export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, extras, recovery }: Props) {
   const initial = outcome.report as ReportData;
   const [report, setReport] = useState<ReportData>(initial);
   const [questions] = useState(initial.questions);
@@ -68,8 +71,9 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, ex
     };
   }, [pending]);
 
-  // Announce the result once it's on screen, and again if a quick question changes it.
-  const spoken = announcement(report);
+  // Announce the result once it's on screen. After an answer, only when the level moved:
+  // the ring announces the score change itself.
+  const spoken = Object.keys(answers).length === 0 || report.level !== initial.level ? announcement(report) : "";
   useEffect(() => {
     const id = setTimeout(() => setAnnounce(spoken), 400);
     return () => clearTimeout(id);
@@ -117,9 +121,9 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, ex
   const careersUrl = steps.company.status === "done" ? (steps.company.data?.careersUrl ?? null) : null;
   const officialDomain = steps.company.status === "done" ? (steps.company.data?.officialDomain ?? null) : null;
   const officialLink = careersUrl
-    ? { url: careersUrl, label: "The company's official careers page" }
+    ? { url: careersUrl, label: "Official careers page" }
     : officialDomain
-      ? { url: `https://${officialDomain}`, label: `The company's official website (${officialDomain})` }
+      ? { url: `https://${officialDomain}`, label: "Official website" }
       : null;
   const postingData = steps.posting.status === "done" ? steps.posting.data : null;
   const companyName = outcome.facts?.company?.value ?? input.form.company;
@@ -133,16 +137,17 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, ex
 
       <header className="flex flex-col items-center text-center">
         {(input.exampleId || outcome.usedSaved) && (
-          <span className="mb-6 rounded-full bg-accent/10 px-3 py-1 text-[13px] font-medium text-accent">
+          <span className="mb-6 rounded-full bg-accent/10 px-3 py-1 text-[13px] font-medium text-accent-fg">
             {outcome.usedSaved ? "Example (saved)" : "Example"}
           </span>
         )}
-        <RiskRing score={report.score} level={report.level} />
+        <RiskRing score={report.score} level={report.level} coverage={report.coverage} />
+        <p className="mt-3 max-w-[46ch] text-[17px] leading-snug text-fg-2">{actionLine(report.level)}</p>
         <button
           type="button"
           onClick={jumpToCouldntCheck}
           disabled={report.couldntCheck.length === 0}
-          className="mt-4 rounded-full px-3 py-1 text-[14px] text-muted underline-offset-4 enabled:hover:text-text enabled:hover:underline"
+          className="mt-3 rounded-full px-3 py-1 text-[14px] text-muted underline-offset-4 enabled:hover:text-text enabled:hover:underline"
         >
           {coverage.ran} of {coverage.total} checks ran{missing}
         </button>
@@ -178,7 +183,7 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, ex
           </p>
         )}
 
-        <QuickQuestions questions={questions} answers={answers} change={change} lastId={lastId} onAnswer={onAnswer} />
+        <TopReasons flags={report.flags} />
 
         {explanation ? (
           <Explanation text={explanation.text} source={explanation.source} quotes={quotes} loading={explaining} />
@@ -186,40 +191,27 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, ex
           pending && <p className="text-[17px] text-muted" aria-busy="true">Writing the explanation...</p>
         )}
 
-        <div className="space-y-10">
-          {GROUPS.map((g) => (
-            <EvidenceGroup key={g} group={g} flags={report.groups[g]} />
-          ))}
-        </div>
+        <EvidenceList flags={report.flags} level={report.level} />
 
         <CouldntCheck items={report.couldntCheck} />
 
-        {report.level === "low" ? (
+        <QuickQuestions questions={questions} answers={answers} change={change} lastId={lastId} onAnswer={onAnswer} />
+
+        {/* Recovery card (C4) goes here. */}
+        {recovery}
+
+        {report.level !== "high" && (
           <PostingSection checked={steps.posting.status === "done"} posting={postingData} match={report.postingMatch} company={companyName} careersUrl={careersUrl} />
-        ) : (
-          <ScamOutcome report={report} source={answers.source && answers.source !== "unknown" ? answers.source : input.source} careersUrl={careersUrl} />
         )}
 
-        <footer className="flex flex-col items-center gap-5 border-t border-border pt-10 text-center">
-          <p className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-[15px]">
-            {officialLink ? (
-              <a href={officialLink.url} target="_blank" rel="noopener noreferrer" className={`${linkClass} inline-flex items-center gap-1`}>
-                {officialLink.label} <ExternalIcon size={14} />
-                <span className="sr-only">(opens in a new tab)</span>
-              </a>
-            ) : (
-              <span className="text-muted">Check the company&apos;s own website.</span>
-            )}
-            <a href={FTC_URL} target="_blank" rel="noopener noreferrer" className={`${linkClass} inline-flex items-center gap-1`}>
-              Report a scam to the FTC <ExternalIcon size={14} />
-              <span className="sr-only">(opens in a new tab)</span>
-            </a>
-          </p>
-          {extras}
-          <button type="button" onClick={onAgain} className={btnPrimary}>
-            Check another message
-          </button>
-        </footer>
+        <ReportFooter
+          report={report}
+          careersUrl={careersUrl}
+          officialLink={officialLink}
+          source={answers.source && answers.source !== "unknown" ? answers.source : input.source}
+          onAgain={onAgain}
+          extras={extras}
+        />
       </div>
     </article>
   );

@@ -1,1 +1,25 @@
-/* Global CSS owned by the v2 check stream (only place for it). Tokens live in globals.css. */
+/* v2 check stream: report styles that Tailwind classes can't express. Imported by components/report/Report.tsx. */
+
+/* Quoted text from the message. Tint plus underline plus the quotation marks: never color alone. */
+.quote-mark {
+  background: var(--warn-tint);
+  color: inherit;
+  padding: 0.05em 0.25em;
+  border-radius: 3px;
+  border-bottom: 2px solid var(--warn);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* Footer: App.tsx passes pre-styled buttons as `extras`; flatten its wrapper and shrink them to the compact row. */
+.rf-extras > div {
+  display: contents;
+}
+.rf-extras > div > button,
+.rf-extras > div > .contents > button {
+  min-height: 2.5rem;
+  width: auto;
+  padding: 0.375rem 1rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+}

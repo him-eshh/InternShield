@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { checkLinks, findUrls } from "@/lib/scoring/links";
 
-const ctx = { company: "Northwind Labs", officialDomain: "northwind.example" };
+const ctx: { company: string | null; officialDomain: string | null } = { company: "Northwind Labs", officialDomain: "northwind.example" };
 const issuesOf = (text: string, c = ctx) => checkLinks(text, c).map((l) => l.issues);
 
 describe("link checks (local, no fetch)", () => {
