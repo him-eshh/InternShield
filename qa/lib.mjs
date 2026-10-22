@@ -2,16 +2,18 @@
 import { chromium } from "playwright";
 import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 
-// Tee console.log to qa/out.txt (the shell here can't pipe or redirect).
-writeFileSync("qa/out.txt", "");
+// Tee console.log to qa/out.txt, or $QA_OUT (the shell here can't pipe or redirect).
+const OUT = process.env.QA_OUT ?? "qa/out.txt";
+writeFileSync(OUT, "");
 const rawLog = console.log;
 console.log = (...a) => {
-  appendFileSync("qa/out.txt", a.join(" ") + "\n");
+  appendFileSync(OUT, a.join(" ") + "\n");
   if (process.argv.includes("--loud")) rawLog(...a);
 };
 
 export const BASE = process.env.QA_BASE ?? "http://localhost:3000";
-export const SHOTS = ".git/internshield-relay/fix-shots";
+// Worktrees: `.git` is a file there, so streams MUST set QA_SHOTS.
+export const SHOTS = process.env.QA_SHOTS ?? ".git/internshield-relay/fix-shots";
 mkdirSync(SHOTS, { recursive: true });
 const EX = JSON.parse(readFileSync("qa/examples.json", "utf8"));
 
@@ -50,9 +52,10 @@ export async function mockApi(page, over = {}) {
   return calls;
 }
 
-export async function open({ width = 1440, theme = "light", profile = true, resume = null, storage = {} } = {}) {
+/** reducedMotion: "reduce" | "no-preference" (default). */
+export async function open({ width = 1440, theme = "light", profile = true, resume = null, storage = {}, reducedMotion = "no-preference" } = {}) {
   const browser = await chromium.launch();
-  const ctx = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: theme, permissions: ["clipboard-read", "clipboard-write"] });
+  const ctx = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: theme, reducedMotion, permissions: ["clipboard-read", "clipboard-write"] });
   const init = { ...storage };
   if (profile) init["is:profile"] = JSON.stringify(profile === true ? { field: "tech", level: "student", skills: ["Python", "React"] } : profile);
   if (resume) init["is:resume"] = JSON.stringify(resume);
@@ -68,9 +71,32 @@ export async function open({ width = 1440, theme = "light", profile = true, resu
   return { browser, ctx, page, log };
 }
 
-export async function shot(page, name) {
-  await page.waitForTimeout(350);
-  await page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: true });
+/** Waits for animations to finish (max 2 s) so motion never blanks a capture. */
+async function settle(page) {
+  await page.evaluate(() =>
+    Promise.race([
+      Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))),
+      new Promise((r) => setTimeout(r, 2000)),
+    ]),
+  );
+}
+
+/** Full-page by default: waits for fonts, scrolls through once (lazy/in-view content), then waits for motion to settle. */
+export async function shot(page, name, { fullPage = true } = {}) {
+  await page.evaluate(() => document.fonts.ready);
+  if (fullPage) {
+    await page.evaluate(async () => {
+      const step = Math.max(200, innerHeight * 0.8);
+      for (let y = 0; y < document.documentElement.scrollHeight; y += step) {
+        scrollTo(0, y);
+        await new Promise((r) => setTimeout(r, 60));
+      }
+      scrollTo(0, 0);
+    });
+  }
+  await page.waitForTimeout(150);
+  await settle(page);
+  await page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage });
 }
 
 /** Sideways overflow in px (0 = fine). */
