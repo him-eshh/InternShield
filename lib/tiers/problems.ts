@@ -1,6 +1,7 @@
 // Live coding problems and deterministic grading (devpost/tier3-spec.md > Slice 12). Pure.
 // All problems are made up. Expected outputs are plain JSON (no tuples, no NaN) with a defined order.
 import type { CaseOutput, CodeTest, CodingProblem, GradeResult } from "./types";
+import { DEBUG_PROBLEMS } from "./debugging";
 
 const EPS = 1e-9;
 
@@ -113,7 +114,7 @@ export const PROBLEMS: CodingProblem[] = [
 ];
 
 export function getProblem(id: string | null | undefined): CodingProblem | null {
-  return PROBLEMS.find((p) => p.id === id) ?? null;
+  return PROBLEMS.find((p) => p.id === id) ?? DEBUG_PROBLEMS.find((p) => p.id === id) ?? null;
 }
 
 export function pickProblem(seed: number): CodingProblem {

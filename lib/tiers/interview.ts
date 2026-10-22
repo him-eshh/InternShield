@@ -5,6 +5,7 @@ import { quoteIsReal } from "../quotes";
 import { KEYS, readKey, writeKey } from "../client/storage";
 import { fromJson, toJson } from "./board";
 import { getProblem, pickProblem } from "./problems";
+import { pickDebugProblem } from "./debugging";
 import { pickSqlProblem } from "./sql";
 import { scriptFor } from "./scripted";
 import {
@@ -91,6 +92,7 @@ export function firstQuestion(round: InterviewRound, context: InterviewContext, 
   if (round === "design") return pick(DESIGN_PROMPTS, seed);
   if (round === "coding") return pickProblem(seed).prompt;
   if (round === "sql") return pickSqlProblem(seed).prompt;
+  if (round === "debugging") return pickDebugProblem(seed).prompt;
   if (round === "challenge") return pick(CHALLENGE_PROMPTS, seed);
   if (round === "portfolio") return PORTFOLIO_FIRST;
   const script = scriptFor(round, seed);
@@ -114,7 +116,14 @@ export function newSession(
     pending: firstQuestion(round, context, opts.seed),
     used: 0,
     seed: opts.seed,
-    problemId: round === "coding" ? pickProblem(opts.seed).id : round === "sql" ? pickSqlProblem(opts.seed).id : null,
+    problemId:
+      round === "coding"
+        ? pickProblem(opts.seed).id
+        : round === "sql"
+          ? pickSqlProblem(opts.seed).id
+          : round === "debugging"
+            ? pickDebugProblem(opts.seed).id
+            : null,
     code: null,
     board: null,
     hints: [],
