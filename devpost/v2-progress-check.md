@@ -5,7 +5,11 @@
 - C1 (Bug D 989718c, Wikidata 8633079, Bug B + error codes in the "V2 check 1" commit). 688 tests.
 
 ## Current
-- C2 scoring rules (brief C2 items 1-7), owner engine-builder. Not started.
+- 3 background workers launched (uncommitted output may be in the tree after a rotation; review + commit as WIP):
+  - engine-builder C2: lib/scoring/**, tests/scoring/v2-*, new eval/messages, lib/server/extract*.ts, lib/quotes.ts, lib/explainFallback.ts, lib/types.ts (additive)
+  - ui-builder C3: components/report/**, app/v2-check.css, lib/reportView.ts, tests/ui/v2-check-report*/ring*
+  - general-purpose C7 held-out: eval/heldout/*.json (blind to lib/scoring). eval/run.ts support for heldout + confusion matrix is still TODO (mine).
+- Dev server running on 3100 (`node qa/serve.mjs stop 3100` when done).
 
 ## Next
 - C3 report redesign, C4 questions/recovery/chip, C5 links + rules 7-10, C6 annotated view, C7 eval (parallel during C4-C6)

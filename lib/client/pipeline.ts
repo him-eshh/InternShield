@@ -169,6 +169,25 @@ export async function fetchExplanation(
 }
 
 /**
+ * Editable company chip: re-runs only the company and posting lookups (and scoring) with the user's
+ * company name. Extraction and the sender lookup are reused, never re-run.
+ */
+export function rerunWithCompany(
+  input: PipelineInput,
+  steps: StepResults,
+  company: string,
+  deps: PipelineDeps = {},
+): Promise<PipelineOutcome> {
+  const name = company.trim();
+  const ex = steps.extract;
+  const extract: StepResults["extract"] =
+    ex.status === "done" && ex.data
+      ? { status: "done", data: { ...ex.data, company: ex.data.company ? { ...ex.data.company, value: name } : null } }
+      : ex;
+  return runPipeline({ ...input, form: { ...input.form, company: name || null } }, deps, { extract, sender: steps.sender });
+}
+
+/**
  * Runs the whole checklist. `prev` holds results from an earlier run: steps already "done" are reused
  * and only failed/skipped steps run again (Retry). Never throws.
  */
