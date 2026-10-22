@@ -103,7 +103,7 @@ describe("extractNumber", () => {
     ["a loss of -$250", -250],
     ["1,200 then 1,500", 1500],
     ["The answer is 4000.", 4000],
-    ["between 10-20", 20],
+    ["between 10-20", 15], // B11: a range reads as its midpoint (was 20, the last number)
     ["year-over-year 30 months", 30],
     ["in Q4", null],
     ["none", null],

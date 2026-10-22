@@ -15,7 +15,7 @@ export default function Intro({ onStart }: { onStart: () => void }) {
       </svg>
       <h1 className={headline}>Is this offer real?</h1>
       <p className="mt-6 max-w-[34ch] text-[clamp(19px,2.4vw,24px)] leading-snug text-muted">
-        Paste a recruiter message and see the evidence in seconds
+        Paste a recruiter message. See the evidence.
       </p>
       <div className="mt-10 w-full sm:w-auto">
         <button type="button" onClick={onStart} className={btnPrimary}>
@@ -23,8 +23,8 @@ export default function Intro({ onStart }: { onStart: () => void }) {
         </button>
       </div>
       <p className="mt-14 max-w-[44ch] text-[14px] leading-relaxed text-muted">
-        Your message is sent to an AI and a search service to run the check. Nothing is stored.
-        {TIER_FLAGS.screenshot && " Screenshots are read by an AI to copy the text, then thrown away."}
+        Your message goes to an AI and a search service for the check. Nothing is stored.
+        {TIER_FLAGS.screenshot && " Screenshots are read by AI, then discarded."}
       </p>
     </section>
   );

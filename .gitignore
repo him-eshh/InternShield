@@ -17,3 +17,8 @@ npm-debug.log*
 
 # local agent worktrees
 .claude/worktrees/
+
+# QA harness output (images live in .git/internshield-relay/fix-shots)
+/qa/out*.txt
+/qa/shots/
+/qa/examples.json

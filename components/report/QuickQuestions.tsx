@@ -8,17 +8,26 @@ interface Props {
   answers: Answers;
   /** One line from describeChange(), or null. */
   change: string | null;
+  /** The question answered most recently; the confirmation shows under it. */
+  lastId?: QuestionId | null;
   onAnswer: (id: QuestionId, value: string) => void;
 }
 
-export default function QuickQuestions({ questions, answers, change, onAnswer }: Props) {
+export function confirmation(change: string | null): string {
+  return change ? `Thanks. Score updated: ${change}` : "Thanks. The score didn't change.";
+}
+
+export default function QuickQuestions({ questions, answers, change, lastId = null, onAnswer }: Props) {
   if (questions.length === 0) return null;
-  const open = questions.filter((q) => answers[q.id] === undefined).length;
+  const message = lastId && answers[lastId] !== undefined ? confirmation(change) : "";
+  // Prefix the chosen answer so two answers with the same result are both announced.
+  const picked = questions.find((q) => q.id === lastId)?.options.find((o) => o.value === answers[lastId ?? "source"])?.label;
+  const spoken = message && picked ? `${picked}. ${message}` : message;
   return (
     <section aria-labelledby="qq-title" className="rounded-[18px] border border-border bg-bg-soft p-6">
       <h3 id="qq-title" className="flex items-center gap-2 text-[19px] font-semibold">
         <span className="text-accent"><InfoIcon size={20} /></span>
-        {open > 0 ? `Answer ${open} quick question${open === 1 ? "" : "s"} to make this more accurate` : "Thanks, we updated the result"}
+        A few quick questions
       </h3>
       <div className="mt-5 space-y-6">
         {questions.map((q) => (
@@ -34,11 +43,16 @@ export default function QuickQuestions({ questions, answers, change, onAnswer }:
                 );
               })}
             </div>
+            {message && lastId === q.id && (
+              <p aria-hidden="true" className="mt-3 text-[15px] text-muted">
+                {message}
+              </p>
+            )}
           </fieldset>
         ))}
       </div>
-      <p role="status" className="mt-5 min-h-[1.5em] text-[15px] text-muted">
-        {change}
+      <p role="status" aria-live="polite" className="sr-only">
+        {spoken}
       </p>
     </section>
   );

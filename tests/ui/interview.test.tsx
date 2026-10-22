@@ -97,7 +97,7 @@ describe("Feedback code check", () => {
     checkTurnMock.mockReturnValue({ kind: "rubric", covered: ["Segments"], missed: ["Risks"] });
     const html = render();
     expect(html).toContain("✓ covered");
-    expect(html).toContain("– missing");
+    expect(html).toContain("not mentioned");
   });
   it("shows nothing when there is no check", () => {
     checkTurnMock.mockReturnValue(null);
@@ -138,7 +138,7 @@ describe("Feedback", () => {
     const html = renderToStaticMarkup(<Feedback session={session} onAgain={noop} onBack={noop} />);
     expect(html).toContain("organized our club trip");
     expect(html).toContain("✓ covered");
-    expect(html).toContain("– missing");
+    expect(html).toContain("not mentioned");
     expect(html).toContain("What worked");
     expect(html).toContain("Try next time");
   });

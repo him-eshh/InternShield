@@ -20,7 +20,29 @@ export interface RewriteRequest {
   text: string;
   instruction: string;
   posting: PostingContext;
+  /** How to tailor. Fixed choices only; the server turns them into its own wording. Missing = DEFAULT_TAILOR. */
+  options?: TailorOptions;
 }
+
+// ---------- Tailoring options (fixed choices, never free text) ----------
+export const EMPHASES = ["skills", "impact", "leadership", "technical"] as const;
+export type Emphasis = (typeof EMPHASES)[number];
+export const TONES = ["concise", "confident", "formal"] as const;
+export type Tone = (typeof TONES)[number];
+export const STRENGTHS = ["light", "strong"] as const;
+export type Strength = (typeof STRENGTHS)[number];
+
+export interface TailorOptions {
+  /** What to bring forward. Empty = whatever fits the posting. */
+  emphasis: Emphasis[];
+  tone: Tone;
+  /** "light" changes a few words; "strong" may restructure the sentence. */
+  strength: Strength;
+  /** Keep about the same length as the original line. */
+  keepLength: boolean;
+}
+
+export const DEFAULT_TAILOR: TailorOptions = { emphasis: [], tone: "confident", strength: "light", keepLength: true };
 export type RewriteResponse = ApiResponse<{ text: string }>;
 
 /** What the guard found that isn't in the original resume. Empty = allowed. */
@@ -258,7 +280,7 @@ export type CheckResult =
 //   FINANCE_BANK: ScriptedQuestion[]                                         // >= 12 made-up accounting/valuation questions, >= 5 numeric
 //   scriptFor(round, seed): ScriptedQuestion[] | null   // case -> one case's questions; finance -> 4 distinct bank questions; other rounds null. Deterministic.
 //   findQuestion(prompt: string): ScriptedQuestion | null   // exact prompt match across CASES and FINANCE_BANK
-//   extractNumber(answer: string): number | null   // last number; handles $, commas, %, k/m/million/billion, negatives, decimals
+//   extractNumber(answer: string): number | null   // the stated answer (cue phrase > "=" / "so" > "about" > last), ranges -> midpoint, number words; handles $, commas, %, k/m/million/billion, negatives, decimals
 //   checkAnswer(check: AnswerCheck, answer: string): CheckResult
 //   checkTurn(turn: InterviewTurn): CheckResult | null   // findQuestion(turn.question)?.check -> checkAnswer
 //   describeCheck(r: CheckResult): string   // one plain line for the AI prompt and the UI, e.g. "Final number 1500 vs expected 1500: correct (checked by code)"

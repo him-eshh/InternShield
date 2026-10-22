@@ -88,7 +88,7 @@ function runPython(code: string, functionName: string, cases: unknown[][], optio
   return new Promise((resolve) => {
     if (!pyWorker) {
       try {
-        pyWorker = new Worker("/workers/py-runner.js");
+        pyWorker = new Worker("/workers/py-runner.js", { type: "module" });
       } catch {
         resolve({ ok: false, reason: "error", message: "Could not start the Python runner." });
         return;

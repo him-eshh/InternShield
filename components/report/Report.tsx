@@ -39,6 +39,7 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, ex
   const [questions] = useState(initial.questions);
   const [answers, setAnswers] = useState<Answers>({});
   const [change, setChange] = useState<string | null>(null);
+  const [lastId, setLastId] = useState<QuestionId | null>(null);
   const [explanation, setExplanation] = useState<ExplanationData | null>(outcome.explanation);
   const [explaining, setExplaining] = useState(false);
   const [announce, setAnnounce] = useState("");
@@ -86,6 +87,7 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, ex
     const nextReport = score({ ...outcome.scoreInput, answers: next });
     setAnswers(next);
     setChange(describeChange(report, nextReport));
+    setLastId(id);
     const levelChanged = nextReport.level !== report.level;
     setReport(nextReport);
     const mine = ++req.current; // every answer invalidates any in-flight explanation
@@ -111,6 +113,7 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, ex
   }
 
   const { steps } = outcome;
+  const incomplete = steps.extract.status !== "done";
   const careersUrl = steps.company.status === "done" ? (steps.company.data?.careersUrl ?? null) : null;
   const officialDomain = steps.company.status === "done" ? (steps.company.data?.officialDomain ?? null) : null;
   const officialLink = careersUrl
@@ -118,7 +121,7 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, ex
     : officialDomain
       ? { url: `https://${officialDomain}`, label: `The company's official website (${officialDomain})` }
       : null;
-  const postingData =steps.posting.status === "done" ? steps.posting.data : null;
+  const postingData = steps.posting.status === "done" ? steps.posting.data : null;
   const companyName = outcome.facts?.company?.value ?? input.form.company;
   const coverage = report.coverage;
   const missing = coverage.missingImportant.length ? ` · couldn't check ${coverage.missingImportant.join(", ")}` : "";
@@ -131,7 +134,7 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, ex
       <header className="flex flex-col items-center text-center">
         {(input.exampleId || outcome.usedSaved) && (
           <span className="mb-6 rounded-full bg-accent/10 px-3 py-1 text-[13px] font-medium text-accent">
-            {outcome.usedSaved ? "Example (saved results)" : "Example"}
+            {outcome.usedSaved ? "Example (saved)" : "Example"}
           </span>
         )}
         <RiskRing score={report.score} level={report.level} />
@@ -146,17 +149,20 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, ex
       </header>
 
       <div className="mx-auto mt-12 max-w-[720px] space-y-10">
-        {(canRetry || resting || outcome.limited) && (
+        {(canRetry || resting || outcome.limited || incomplete) && (
           <div role="status" className="flex flex-col items-start gap-4 rounded-[18px] border border-border bg-bg-soft p-5 sm:flex-row sm:items-center sm:justify-between">
             <p className="flex items-start gap-3 text-[15px]">
               <span className="mt-0.5 text-muted"><InfoIcon size={18} /></span>
               {resting
-                ? "InternShield is resting for today. The checks that finished are below."
+                ? "InternShield is resting for today."
                 : cappedSteps.length > 0
-                  ? "Some checks are resting for today. You can retry the others."
+                  ? "Some checks are resting for today."
                   : outcome.limited
-                  ? "We're busy right now. Try again in a moment. The checks that finished are below."
-                  : "Some checks didn't finish. They're listed under Couldn't check. Retry runs only those."}
+                    ? "We're busy. Try again in a moment."
+                    : incomplete
+                      ? null
+                      : "Some checks didn't finish."}
+              {incomplete && `${resting || cappedSteps.length > 0 || outcome.limited ? " " : ""}We couldn't read the message, so this result is incomplete.`}
             </p>
             {canRetry && (
               <button type="button" onClick={onRetry} disabled={wait > 0} className={`${btnSecondary} !min-h-10 !px-5 !py-2 !text-[15px]`}>
@@ -168,14 +174,14 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, ex
 
         {report.thinMessage && (
           <p className="rounded-[18px] border border-border bg-bg-soft p-5 text-[15px] text-muted">
-            There wasn&apos;t much to check in this message. Paste the whole message for a fuller result.
+            Not much to check here. Paste the whole message for a fuller result.
           </p>
         )}
 
-        <QuickQuestions questions={questions} answers={answers} change={change} onAnswer={onAnswer} />
+        <QuickQuestions questions={questions} answers={answers} change={change} lastId={lastId} onAnswer={onAnswer} />
 
         {explanation ? (
-          <Explanation text={explanation.text} quotes={quotes} loading={explaining} />
+          <Explanation text={explanation.text} source={explanation.source} quotes={quotes} loading={explaining} />
         ) : (
           pending && <p className="text-[17px] text-muted" aria-busy="true">Writing the explanation...</p>
         )}
@@ -189,7 +195,7 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, ex
         <CouldntCheck items={report.couldntCheck} />
 
         {report.level === "low" ? (
-          <PostingSection posting={postingData} match={report.postingMatch} company={companyName} careersUrl={careersUrl} />
+          <PostingSection checked={steps.posting.status === "done"} posting={postingData} match={report.postingMatch} company={companyName} careersUrl={careersUrl} />
         ) : (
           <ScamOutcome report={report} source={answers.source && answers.source !== "unknown" ? answers.source : input.source} careersUrl={careersUrl} />
         )}
@@ -202,7 +208,7 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, ex
                 <span className="sr-only">(opens in a new tab)</span>
               </a>
             ) : (
-              <span className="text-muted">Look up the company&apos;s own website to apply or verify.</span>
+              <span className="text-muted">Check the company&apos;s own website.</span>
             )}
             <a href={FTC_URL} target="_blank" rel="noopener noreferrer" className={`${linkClass} inline-flex items-center gap-1`}>
               Report a scam to the FTC <ExternalIcon size={14} />

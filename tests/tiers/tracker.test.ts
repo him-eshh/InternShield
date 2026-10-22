@@ -48,10 +48,12 @@ describe("addCard", () => {
     expect(addCard([], { ...base, link: " https://brightleaf.example/apply " }, 1, "a")[0].link).toBe("https://brightleaf.example/apply");
   });
 
-  it("needs a company and a role", () => {
+  it("needs a company; the role is optional", () => {
     const start = [card()];
     expect(addCard(start, { ...base, company: "   " }, 1, "a")).toBe(start);
-    expect(addCard(start, { ...base, role: "" }, 1, "a")).toBe(start);
+    const added = addCard(start, { ...base, role: "" }, 1, "a");
+    expect(added).toHaveLength(2);
+    expect(added[0].role).toBe("");
   });
 
   it("makes an id when none is given", () => {

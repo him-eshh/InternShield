@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import { explanationSections } from "@/lib/explainFallback";
 
 /** Split `text` into plain and highlighted parts, marking any span that matches a flag quote. */
 export function highlightParts(text: string, quotes: string[]): { text: string; hit: boolean }[] {
@@ -39,16 +40,58 @@ export function explanationParagraphs(text: string): string[] {
   return (parts.length ? parts : [text.trim()]).slice(0, 2);
 }
 
-export default function Explanation({ text, quotes, loading }: { text: string; quotes: string[]; loading?: boolean }) {
+function Highlighted({ text, quotes }: { text: string; quotes: string[] }) {
+  return (
+    <>
+      {highlightParts(text, quotes).map((p, i) => (
+        <Fragment key={i}>{p.hit ? <mark className="rounded bg-accent/15 px-0.5 text-text">{p.text}</mark> : p.text}</Fragment>
+      ))}
+    </>
+  );
+}
+
+interface Props {
+  text: string;
+  quotes: string[];
+  loading?: boolean;
+  /** "fallback" text is pre-written in titled sections; lay those out instead of paragraphs. */
+  source?: "ai" | "fallback";
+}
+
+export default function Explanation({ text, quotes, loading, source }: Props) {
+  const sections = source === "fallback" ? explanationSections(text) : null;
+  if (sections) {
+    return (
+      <div className={`space-y-6 break-words transition-opacity duration-300 ${loading ? "opacity-50" : ""}`} aria-busy={loading}>
+        {sections.map((sec, n) => (
+          <section key={n} aria-label={sec.title || undefined}>
+            {sec.title && <h3 className="text-[13px] font-semibold uppercase tracking-wide text-muted">{sec.title}</h3>}
+            {sec.kind === "list" ? (
+              <ul className="mt-2 space-y-2.5">
+                {sec.items.map((item, i) => (
+                  <li key={i} className="flex gap-3 text-[17px] leading-relaxed">
+                    <span aria-hidden="true" className="mt-[0.7em] size-1.5 shrink-0 rounded-full bg-muted" />
+                    <span className="min-w-0">
+                      <Highlighted text={item} quotes={quotes} />
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className={`mt-1.5 leading-relaxed ${n === 0 ? "text-[19px] font-medium" : "text-[17px]"}`}>
+                <Highlighted text={sec.items.join(" ")} quotes={quotes} />
+              </p>
+            )}
+          </section>
+        ))}
+      </div>
+    );
+  }
   return (
     <div className={`space-y-4 break-words text-[19px] leading-relaxed transition-opacity duration-300 ${loading ? "opacity-50" : ""}`} aria-busy={loading}>
       {explanationParagraphs(text).map((para, n) => (
         <p key={n}>
-          {highlightParts(para, quotes).map((p, i) => (
-            <Fragment key={i}>
-              {p.hit ? <mark className="rounded bg-accent/15 px-0.5 text-text">{p.text}</mark> : p.text}
-            </Fragment>
-          ))}
+          <Highlighted text={para} quotes={quotes} />
         </p>
       ))}
     </div>

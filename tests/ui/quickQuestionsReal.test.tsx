@@ -35,14 +35,34 @@ describe("QuickQuestions with real engine output", () => {
       for (const o of q.options) expect(html).toContain(escape(o.label));
     }
     expect(html).toContain("Where did this message come from?");
-    expect(html).toContain(`Answer ${questions.length} quick question`);
+    expect(html).toContain("A few quick questions");
+    expect(html).not.toContain("Answer ");
   });
 
-  it("shows the thanks line once everything is answered", () => {
+  it("shows the thanks under the last answered question, never above", () => {
+    const last = questions[questions.length - 1];
     const answers = Object.fromEntries(questions.map((q) => [q.id, q.options[0].value])) as Answers;
-    const html = renderToStaticMarkup(<QuickQuestions questions={questions} answers={answers} change="Score went down" onAnswer={() => {}} />);
-    expect(html).toContain("Thanks, we updated the result");
+    const html = renderToStaticMarkup(<QuickQuestions questions={questions} answers={answers} change="Score went down." lastId={last.id} onAnswer={() => {}} />);
+    expect(html).toContain("A few quick questions");
     expect(html).toContain('aria-pressed="true"');
-    expect(html).toContain("Score went down");
+    expect(html).toContain("Thanks. Score updated: Score went down.");
+    const thanks = html.indexOf("Thanks. Score updated");
+    const lastOption = html.lastIndexOf(escape(last.options[last.options.length - 1].label), thanks);
+    expect(lastOption).toBeGreaterThan(html.indexOf(escape(last.text)));
+    expect(thanks).toBeGreaterThan(lastOption);
+  });
+
+  it("says so when an answer didn't move the score, below the answered question", () => {
+    const answers = { [questions[0].id]: questions[0].options[0].value } as Answers;
+    const html = renderToStaticMarkup(<QuickQuestions questions={questions} answers={answers} change={null} lastId={questions[0].id} onAnswer={() => {}} />);
+    const msg = escape("Thanks. The score didn't change.");
+    expect(html).toContain(msg);
+    expect(html.indexOf(msg)).toBeGreaterThan(html.indexOf(escape(questions[0].text)));
+  });
+
+  it("shows nothing before any answer, and keeps one empty live region", () => {
+    const html = renderToStaticMarkup(<QuickQuestions questions={questions} answers={{}} change={null} onAnswer={() => {}} />);
+    expect(html).not.toContain("Thanks");
+    expect(html.match(/role="status"/g)).toHaveLength(1);
   });
 });

@@ -65,14 +65,14 @@ function newId(): string {
 }
 
 const ROUND_BLURB: Record<InterviewRound, string> = {
-  screen: "A short first call: why you, why this role, and what you want next.",
-  behavioral: "Stories from your past, answered the STAR way: situation, task, action, result.",
-  coding: "One coding problem in the browser. Tests run on your device and are checked by code.",
-  design: "Sketch a system on a drawing board and explain your choices.",
-  case: "A short made-up business case: structure it, do one calculation (checked by code), then recommend.",
-  finance: "Four made-up accounting and valuation questions. Numbers are checked by code.",
-  portfolio: "Walk through your work: the problem, your role, your choices and what you learned.",
-  challenge: `A ${CHALLENGE_MINUTES}-minute design challenge on a drawing board.`,
+  screen: "A short first call: why you, why this role.",
+  behavioral: "Stories from your past, in STAR form.",
+  coding: "One coding problem. Tests run on your device.",
+  design: "Sketch a system and explain your choices.",
+  case: "A made-up business case with one calculation.",
+  finance: "Four made-up accounting and valuation questions.",
+  portfolio: "Walk through your work and what you learned.",
+  challenge: `A ${CHALLENGE_MINUTES}-minute design challenge.`,
 };
 
 const LINK_CLS = `${linkClass} break-all`;
@@ -340,9 +340,9 @@ export default function Interview({ profile, resume, target, onBack, renderRound
   const jd = (
     <div className="mt-6">
       <label htmlFor="iv-desc" className="text-[15px] font-medium">
-        Paste the job description <span className="font-normal text-muted">(optional)</span>
+        Job description <span className="font-normal text-muted">(optional)</span>
       </label>
-      {!hadContext && <p className="mt-1 text-[15px] text-muted">Paste the job description so the questions fit the role.</p>}
+      {!hadContext && <p className="mt-1 text-[15px] text-muted">Helps fit the questions.</p>}
       <textarea
         id="iv-desc"
         value={description}
@@ -375,7 +375,7 @@ export default function Interview({ profile, resume, target, onBack, renderRound
       <BackLink label="Back" onClick={onBack} />
       <h1 className="mt-4 text-[clamp(30px,5vw,48px)] font-bold leading-[1.1] tracking-[-0.025em]">Practice an interview</h1>
       <p className="mt-2 max-w-[560px] text-[17px] text-muted">
-        Answer a few questions and get feedback on what worked. Your answers stay in this browser; only the text of the current practice is sent to write the questions and feedback.
+        Answer a few questions, get feedback. Answers stay here; an AI sees the current practice.
       </p>
 
       {hadContext ? (
@@ -396,6 +396,7 @@ export default function Interview({ profile, resume, target, onBack, renderRound
             <input type="checkbox" checked={useResume} onChange={(e) => setUseResume(e.target.checked)} className="size-5 accent-[var(--accent)]" />
             Use my resume
           </label>
+          <p className="text-[14px] text-muted">Sent to the AI with your answers.</p>
         </div>
       )}
 
@@ -418,7 +419,7 @@ export default function Interview({ profile, resume, target, onBack, renderRound
             Portfolio links <span className="font-normal text-muted">(optional)</span>
           </label>
           <p id="iv-links-help" className="mt-1 text-[15px] text-muted">
-            Start each with https:// (up to 5). We only show these. Nothing opens them; the interviewer only sees the text of the link.
+            Start each with https:// (up to 5). Never opened; only the link text is read.
           </p>
           <textarea
             id="iv-links"

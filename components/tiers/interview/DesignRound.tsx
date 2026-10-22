@@ -30,7 +30,7 @@ function ChallengeTimer({ session }: { session: InterviewSession }) {
     const t = setInterval(() => setLeft(challengeLeft(session, now())), 1000);
     return () => clearInterval(t);
   }, [session, over]);
-  const note = left <= 0 ? "Time's up. Finish when you're ready." : left <= 5 * 60_000 ? "Under 5 minutes left" : "";
+  const note = left <= 0 ? "Time's up. Explain your design, then finish." : left <= 5 * 60_000 ? "Under 5 minutes left" : "";
   return (
     <div>
       <p role="timer" className="text-[15px] font-medium tabular-nums">
@@ -159,7 +159,7 @@ export default function DesignRound({ session, onUpdate, ask, busy }: RoundPanel
       </div>
       {!canFinish && <p className="text-[15px] text-muted">Answer the question first.</p>}
       {!session.pending && !busy && moreToAsk && (
-        <p className="text-[15px] text-muted">Your answer is saved. Ask me a follow-up to continue, or finish.</p>
+        <p className="text-[15px] text-muted">Answer saved. Ask a follow-up, or finish.</p>
       )}
     </div>
   );

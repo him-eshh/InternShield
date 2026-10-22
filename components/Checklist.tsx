@@ -14,7 +14,7 @@ export function initialLines(): Record<StepKey, LineInfo> {
 }
 
 function note(info: LineInfo): string | null {
-  if (info.state === "failed") return info.reason === "limit" ? "busy, try again in a moment" : "couldn't check";
+  if (info.state === "failed") return info.reason === "limit" ? "busy, try again soon" : "couldn't check";
   if (info.state === "skipped") return "couldn't check";
   return null;
 }
@@ -23,7 +23,7 @@ export default function Checklist({ lines, example }: { lines: Record<StepKey, L
   return (
     <section className="mx-auto max-w-[640px] px-6 py-16 sm:py-24">
       <h2 className={subhead}>Checking the message</h2>
-      {example && <p className="mt-2 text-[15px] text-muted">Running a live check on the example.</p>}
+      {example && <p className="mt-2 text-[15px] text-muted">Live check on the example.</p>}
       <ol aria-live="polite" aria-label="Checks in progress" className="mt-10 space-y-5">
         {KEYS_IN_ORDER.map((k, i) => {
           const info = lines[k];

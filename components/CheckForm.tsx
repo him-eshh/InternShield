@@ -116,7 +116,7 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
           <label htmlFor="message" className="flex items-center text-[15px] font-medium">
             The message
             {example && <FilledTag label="Example" />}
-            {fromShot && !example && <FilledTag label="from screenshot, check it" />}
+            {fromShot && !example && <FilledTag label="from screenshot" />}
           </label>
           {TIER_FLAGS.screenshot && (
             <ScreenshotUpload
@@ -136,7 +136,7 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
         />
         {trimmed && (
           <p role="status" className="mt-2 text-[14px] text-muted">
-            That message was longer than {MAX_MESSAGE_CHARS.toLocaleString()} characters, so we kept the first {MAX_MESSAGE_CHARS.toLocaleString()}.
+            Too long. We kept the first {MAX_MESSAGE_CHARS.toLocaleString()} characters.
           </p>
         )}
 
@@ -160,7 +160,7 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
             />
             {noSender && (
               <p id="sender-hint" className="mt-1.5 text-[14px] text-muted">
-                We couldn&apos;t find it. Add it if you have it.
+                No sender found. Add it if you have it.
               </p>
             )}
           </div>
@@ -228,7 +228,7 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
           </button>
           {!text.trim() && (
             <p id="check-hint" className="-mt-2 text-[14px] text-muted">
-              Paste a message to check it.
+              Paste a message first.
             </p>
           )}
           <p className="text-[15px] text-muted">
