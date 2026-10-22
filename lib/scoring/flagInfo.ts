@@ -62,6 +62,11 @@ export const FLAG_INFO: Record<string, Info> = {
   link_google_form: { action: "Don't fill it in. Apply through the company's own careers page.", learnMore: L.jobs },
   link_shortener: { action: "Don't click it. Find the job on the company's careers page instead.", learnMore: L.jobs },
 
+  secrecy: { action: "Don't keep it secret. Talk to your bank, your school's career center, or someone you trust before you do anything.", learnMore: L.mules },
+  impersonation: { action: "Email the office at the address on the university or agency's own website, not the one in this message.", learnMore: L.students },
+  visa_threat: { action: "Don't pay or reply. Check your status with your school's international office, using details from its own website.", learnMore: L.students },
+  paperwork_too_early: { action: "Wait for a signed offer. Then fill in tax and work forms only in the company's official HR portal.", learnMore: L.jobs },
+
   // Sender
   free_email: { action: "Find this recruiter on the company's careers page or LinkedIn, then email them at the company's domain.", learnMore: L.recruiters },
   lookalike_domain: { action: "Type the company's website yourself and find the recruiter there. Don't use links from the message.", learnMore: L.recruiters },

@@ -13,6 +13,7 @@ export type BackstopId =
   | "risky_run" // remote-access tools, terminal pastes, disabling antivirus, installers: critical on their own
   | "money_wrong_way" // the candidate sends money onward, keeps a cut, or pays to withdraw
   | "sensitive_data"
+  | "secrecy" // "don't tell your bank", "keep this between us", "don't contact HR"
   | "off_platform"
   | "reply_yes"
   | "no_interview"
@@ -133,6 +134,13 @@ const PATTERNS: Record<BackstopId, Pattern[]> = {
     /\breset\s+(?:your\s+)?tasks?\b/gi,
   ],
   sensitive_data: [new RegExp(String.raw`\b${ASK_VERB}\b[^.!?\n]{0,50}?\b${SENSITIVE_THING}\b`, "gi")],
+  secrecy: [
+    /\b(?:do not|don['’]?t|never|must not|should not|shouldn['’]?t)\s+(?:tell|inform|notify|mention\s+(?:this\s+)?to|speak\s+(?:to|with)|talk\s+(?:to|with)|let)\s+(?:\w+\s+){0,3}?(?:bank|banker|family|parents?|friends?|anyone|anybody|school|university|advisor|adviser|career (?:center|services)|dean)\b/gi,
+    /\bkeep\s+(?:this|it|everything|these details)\s+(?:strictly\s+|completely\s+|totally\s+)?(?:confidential|secret|private|quiet)\s+from\b/gi,
+    /\bkeep\s+(?:this|it)\s+(?:a\s+)?secret\b|\bkeep\s+(?:this|it)\s+between\s+us\b|\bbetween\s+us\s+(?:only|for now)\b/gi,
+    /\b(?:do not|don['’]?t|never)\s+(?:contact|call|email|reach out to|check with|verify with)\s+(?:\w+\s+){0,2}?(?:hr|human resources|the company|your school|your university|career (?:center|services)|your bank)\b/gi,
+    /\bif\s+(?:the\s+|your\s+)?(?:bank|teller|anyone)\s+asks\b[^.!?\n]{0,30}\b(?:say|tell|just say)\b/gi,
+  ],
   off_platform: [
     /\b(?:whatsapp|whats app|telegram|wechat|viber|google hangouts|wickr|threema)\b/gi,
     /\b(?:on|via|over|through|download|use)\s+signal\b(?!\s+processing)/gi,

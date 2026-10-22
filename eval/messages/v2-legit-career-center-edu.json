@@ -1,0 +1,22 @@
+{
+  "note": "Legit near-miss: a university career center writing from the exact .edu domain about an employer event.",
+  "text": "Hi Jordan,\n\nThis is the Career Center at Eastfield University. Northwind Labs is holding an on-campus info session for summer interns on Thursday at 5 PM in Room 210. You can sign up on Handshake. Please bring your resume.\n\nBest,\nCareer Center\ncareers@eastfield.edu",
+  "expectedLevel": "low",
+  "profile": { "field": "tech", "level": "sophomore", "skills": ["Python"] },
+  "source": "email",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Eastfield University", "quote": "Career Center at Eastfield University" },
+        "sender": { "name": "Career Center", "email": "careers@eastfield.edu", "phone": null }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "eastfield.edu", "careersUrl": null } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "careers@eastfield.edu", "domain": "eastfield.edu", "freeEmail": false, "registeredAt": "1990-01-01T00:00:00Z", "hasMx": true }
+    }
+  }
+}

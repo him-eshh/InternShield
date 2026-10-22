@@ -1,0 +1,22 @@
+{
+  "note": "Rule 9: I-9, W-4 and direct deposit form asked for before any interview or offer, from a free email.",
+  "text": "Hi Taylor,\n\nThanks for your interest in the Office Coordinator role at Lakemont Services. To get you started right away, please fill out the I-9, the W-4 and the direct deposit form attached and send them back today. No interview is needed at this stage.\n\nLakemont Services HR\nlakemont.hr.team@gmail.com",
+  "expectedLevel": "high",
+  "profile": { "field": "business", "level": "junior", "skills": ["Excel"] },
+  "source": "email",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Lakemont Services", "quote": "Office Coordinator role at Lakemont Services" },
+        "role": { "value": "Office Coordinator", "quote": "the Office Coordinator role" },
+        "sender": { "name": null, "email": "lakemont.hr.team@gmail.com", "phone": null }
+      }
+    },
+    "sender": {
+      "status": "done",
+      "data": { "email": "lakemont.hr.team@gmail.com", "domain": "gmail.com", "freeEmail": true, "registeredAt": "1995-08-13T00:00:00Z", "hasMx": true }
+    }
+  }
+}

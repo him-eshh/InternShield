@@ -1,6 +1,5 @@
 // The scoring engine (spec.md > Scoring Engine). Pure: no network, env, or React.
 // AI facts and the raw-text backstop are combined; fixed rules decide the score.
-import { parsePhoneNumberFromString } from "libphonenumber-js/min";
 import type { AskedTo, AskKind, Facts, Flag, FlagGroup, LinkIssue, Quoted, Report, RiskLevel, ScoreInput } from "../types";
 import { quoteIsReal, visibleQuote } from "../quotes";
 import { backstop, type BackstopId } from "./backstop";
@@ -14,6 +13,7 @@ import { pickQuestions, questionGaps, questionHint, type Relevance } from "./que
 import { BANNED_WORDS, CHANGE_REASONS, WEIGHTS as W } from "./rules";
 import { cleanText } from "./unicode";
 import { checkLinks } from "./links";
+import { claimedInstitution, earlyPaperwork, isInstitutionDomain, namesScheduledInterview, paymentAsk, relayQuote, visaThreat } from "./institutions";
 
 const DAY_MS = 86_400_000;
 const FTC_JOB_SCAMS = "https://consumer.ftc.gov/articles/job-scams";
@@ -115,14 +115,6 @@ function ago(days: number): string {
   return `${Math.round(d / 30)} months ago`;
 }
 
-function phoneCountry(phone: string | null): string | null {
-  if (!phone) return null;
-  try {
-    return parsePhoneNumberFromString(phone, "US")?.country ?? null;
-  } catch {
-    return null;
-  }
-}
 
 function digitsIn(a: string, b: string): boolean {
   const d = a.replace(/\D/g, "");
@@ -213,6 +205,10 @@ function evaluate(input: ScoreInput): Evaluated {
   const source = (answers.channel && answers.channel !== "other" ? answers.channel : null) ?? input.source;
   // "Did you apply first?" overrides the channel guess; Handshake or the company site imply it.
   const appliedFirst = answers.who_first === "yes" || (answers.who_first !== "no" && (source === "company_site" || source === "handshake"));
+  // Rule 10: you applied (said so, or the stage is past the first message) and the text names a booked interview:
+  // "Reply YES to confirm" is then ordinary scheduling, not a surprise text.
+  const confirmedInterview =
+    (answers.who_first === "yes" || (input.stage !== null && input.stage !== "message")) && namesScheduledInterview(text);
   const ticked = Array.isArray(answers.asked_to_do) ? answers.asked_to_do : [];
   const signed = input.stage === "signed" || answers.signed_offer === "yes";
   const company = facts?.company?.value ?? (input.form.company?.trim() || null);
@@ -302,30 +298,38 @@ function evaluate(input: ScoreInput): Evaluated {
     }
   }
 
-  const moneyOrData = flags.some((f) => f.critical) || sensitiveAsked;
+  // Rule 9: tax, work-eligibility, and payroll forms belong after a signed offer. A fee for them is already pay_fee.
+  const papers = signed || input.stage === "offer" ? null : earlyPaperwork(text);
+  if (papers && !flags.some((f) => f.id === "pay_fee")) {
+    const withFee = papers.fee || ticked.includes("pay");
+    red(
+      "paperwork_too_early",
+      "offer",
+      withFee ? W.critical : W.paperwork,
+      withFee ? "They want a fee for hiring paperwork" : "They want hiring paperwork before an offer",
+      withFee
+        ? "Real employers never charge for hiring forms, and these forms come after a signed offer."
+        : "Forms like the I-9, W-4, or direct deposit come after you sign an offer, through the company's HR system. Asking early is a way to collect your details.",
+      papers.quote,
+      withFee ? { critical: true, sourceUrl: FTC_JOB_SCAMS } : {},
+    );
+  }
 
-  // Employer country: answer first, else the AI's hint, else the phone's country code.
-  const hint = facts?.employerCountryHint?.trim() || null;
-  const hintAbroad = hint ? !/^(?:us|u\.s\.?|usa|u\.s\.a\.?|united states|america)\b/i.test(hint) : null;
-  const phone = facts?.sender.phone ?? /\+\d[\d\s().-]{7,18}\d/.exec(text)?.[0] ?? null;
-  const country = phoneCountry(phone);
-  const autoAbroad = hintAbroad ?? (country ? country !== "US" : null);
+  const moneyOrData = flags.some((f) => f.critical) || sensitiveAsked;
 
   if (offPlatform) {
     const appRaw = offFact?.app ?? offHit?.match ?? "";
     const app = APP_NAMES.find(([re]) => re.test(appRaw))?.[1] ?? null;
-    // Softer when you applied first or the employer is abroad, and they want no money or data.
-    const soft = (appliedFirst || autoAbroad === true) && !moneyOrData;
+    // Softer only when you applied first and they want no money or data (brief C4; the employer-abroad softening is gone).
+    const soft = appliedFirst && !moneyOrData;
     red(
       "off_platform",
       "message",
       soft ? W.offPlatformAbroad : W.offPlatform,
       app ? `They want to move you to ${app}` : "They want a chat-only interview",
       soft
-        ? appliedFirst
-          ? "You applied first, so this counts for less. Still keep hiring on official channels."
-          : "Chat apps are common for work in some countries, so this counts for less. Still keep hiring on official channels."
-        : "Real recruiters rarely move hiring to WhatsApp, Telegram, or chat-only interviews. Scammers do it to avoid platform checks.",
+        ? "You applied first, so this counts for less. Still keep hiring on official channels."
+        :"Real recruiters rarely move hiring to WhatsApp, Telegram, or chat-only interviews. Scammers do it to avoid platform checks.",
       offFact?.quote ?? offHit!.snippet,
     );
   }
@@ -333,13 +337,18 @@ function evaluate(input: ScoreInput): Evaluated {
   // ----- Message signals -----
   const yesFact = ask("reply_yes");
   const yesHit = hit("reply_yes");
-  if (yesFact || yesHit) {
+  if ((yesFact || yesHit) && !confirmedInterview) {
     red("reply_yes", "message", W.replyYes, "It asks you to reply YES", "Messages asking you to reply YES are a common way scammers find people who will answer.", yesFact?.quote ?? yesHit!.snippet);
   }
 
   const pressureQuote = facts?.pressure[0]?.quote ?? hit("pressure")?.snippet ?? null;
   if (pressureQuote) {
     red("pressure", "message", W.pressure, "They're rushing you", "Pressure to act fast is meant to stop you from checking. Real offers give you time to think.", pressureQuote);
+  }
+
+  const secrecy = hit("secrecy");
+  if (secrecy) {
+    red("secrecy", "message", W.secrecy, "They ask you to keep it secret", "Real employers don't ask you to hide a job from your bank, school, or family, or to avoid checking with them. Secrecy keeps people from spotting a scam.", secrecy.snippet);
   }
 
   const greeting = GENERIC_GREETING.exec(text);
@@ -391,7 +400,7 @@ function evaluate(input: ScoreInput): Evaluated {
   }
 
   // ----- Sender -----
-  if (source === "text_whatsapp" && !appliedFirst) {
+  if (source === "text_whatsapp" && !appliedFirst && !confirmedInterview) {
     red("surprise_text", "sender", W.surpriseText, "This came as a surprise text", "Unexpected job texts and WhatsApp messages are one of the most common ways job scams start.", null);
   } else if (appliedFirst) {
     good(
@@ -464,6 +473,41 @@ function evaluate(input: ScoreInput): Evaluated {
 
   if (senderStep && !free && senderStep.hasMx === false) {
     red("no_mx", "sender", W.noMx, "This email's website can't receive email", `${domainLabel} isn't set up to receive email, which is odd for a real company.`, emailQuote);
+  }
+
+  // ----- Impersonated institution and visa threats (rule 8) -----
+  // Only the exact .edu/.gov (or a country form) is a match. Hiring platforms and an unknown sender are never flagged for this alone.
+  const claim = claimedInstitution(text);
+  const relay = relayQuote(text);
+  const threat = visaThreat(text);
+  const senderIsInstitution = senderDomain ? isInstitutionDomain(senderDomain) : false;
+  const wrongSender = relay !== null || (senderDomain !== null && !platform && !senderIsInstitution);
+  const payNow = flags.some((f) => ["pay_fee", "gift_cards", "crypto_or_task_deposit", "money_wrong_way", "deposit_check"].includes(f.id)) || paymentAsk(text) !== null;
+  if (claim && wrongSender && !flags.some((f) => f.id === "lookalike_domain")) {
+    const overlap = flags.some((f) => f.id === "free_email");
+    const who = claim.kind === "immigration" ? "an immigration office" : claim.kind === "government" ? "a government office" : "a university office";
+    red(
+      "impersonation",
+      "sender",
+      payNow ? W.critical : overlap ? W.impersonationOverlap : W.impersonation,
+      `It says it's from ${who}, but the sender doesn't match`,
+      relay
+        ? "The message was sent through a bulk-mail service, not from the school or agency's own address. Real offices write from their .edu or .gov address."
+        : "Real university and government offices write from their own .edu or .gov address. This sender uses a different one.",
+      relay ?? claim.quote,
+      payNow ? { critical: true, sourceUrl: FTC_JOB_SCAMS } : {},
+    );
+  }
+  if (threat && !senderIsInstitution) {
+    red(
+      "visa_threat",
+      "message",
+      payNow ? W.critical : W.visaThreat,
+      "It threatens your visa or student status",
+      "Real offices don't threaten to end your OPT, visa, or status by message, or ask for money to keep it. Scammers use fear of losing status to rush people.",
+      threat,
+      payNow ? { critical: true, sourceUrl: FTC_JOB_SCAMS } : {},
+    );
   }
 
   // ----- Posting -----

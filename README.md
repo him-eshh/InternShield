@@ -39,30 +39,30 @@ Every outside service is on a free plan with no card. Per visitor: 3 checks a mi
 ## Test-set results
 
 <!-- eval:start -->
-36/36 made-up messages land in their expected level; false positives on low: 0/13 (0%). `*` marks a critical flag.
+41/41 made-up messages land in their expected level; false positives on low: 0/15 (0%). `*` marks a critical flag.
 
 | expected \ got | low | medium | high |
 |---|---|---|---|
-| low | 13 | 0 | 0 |
-| medium | 0 | 5 | 0 |
-| high | 0 | 0 | 18 |
+| low | 15 | 0 | 0 |
+| medium | 0 | 6 | 0 |
+| high | 0 | 0 | 20 |
 
-Held-out set (27 cases written without seeing the rules, not gating): 23/27; false positives on low: 1/9 (11%).
+Held-out set (27 cases written without seeing the rules, not gating): 24/27; false positives on low: 0/9 (0%).
 
 | expected \ got | low | medium | high |
 |---|---|---|---|
-| low | 8 | 1 | 0 |
+| low | 9 | 0 | 0 |
 | medium | 2 | 5 | 1 |
 | high | 0 | 0 | 10 |
 
 | Message | Expected | Got | Score | Top flags |
 |---|---|---|---|---|
-| mid-caregiver-whatsapp | medium | medium | 43 | surprise_text, off_platform, field_pattern |
+| mid-caregiver-whatsapp | medium | medium | 53 | surprise_text, off_platform, field_pattern |
 | mid-mystery-shopper | medium | medium | 33 | free_email, field_pattern |
 | mid-no-interview-new-domain | medium | medium | 35 | no_interview, new_domain |
 | mid-recruiter-gmail-whatsapp | medium | medium | 55 | free_email, off_platform, pressure |
 | mid-telegram-new-domain | medium | medium | 45 | off_platform, new_domain, pressure |
-| real-abroad-whatsapp | low | low | 0 | off_platform |
+| real-abroad-whatsapp | low | low | 10 | off_platform |
 | real-company-recruiter | low | low | 0 | - |
 | real-greenhouse | low | low | 0 | - |
 | real-handshake-interview | low | low | 0 | - |
@@ -86,8 +86,13 @@ Held-out set (27 cases written without seeing the rules, not gating): 23/27; fal
 | v2-anydesk-install | high | high | 85 | run_code_or_install* |
 | v2-applied-takehome | low | low | 0 | untrusted_code |
 | v2-camera-terminal | high | high | 85 | run_code_or_install* |
+| v2-impersonated-opt | high | high | 100 | impersonation*, visa_threat*, new_domain |
+| v2-legit-career-center-edu | low | low | 0 | - |
 | v2-legit-company-laptop | low | low | 0 | - |
 | v2-legit-direct-deposit | low | low | 0 | - |
+| v2-legit-workday-confirm-text | low | low | 0 | - |
+| v2-paperwork-before-interview | high | high | 65 | free_email, paperwork_too_early, no_interview |
+| v2-professor-gmail-secret | medium | medium | 55 | free_email, secrecy, impersonation |
 | v2-reimburse-laptop | high | high | 85 | buy_equipment*, new_domain |
 | v2-task-no-crypto | high | high | 73 | surprise_text, field_pattern, vague_easy_pay |
 | v2-unicode-whatsapp-fee | high | high | 95 | pay_fee*, surprise_text, off_platform |

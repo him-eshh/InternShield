@@ -35,6 +35,11 @@ export const WEIGHTS = {
   linkRawIp: 15,
   linkGoogleForm: 10, // critical instead when the message also asks for SSN/bank data
   linkShortener: 5,
+  secrecy: 20, // "don't tell your bank", "keep this from your school"
+  impersonation: 30, // claims to be a university, government, or immigration office from the wrong sender
+  impersonationOverlap: 10, // same, when a free-email or look-alike flag already counted the sender
+  visaThreat: 25, // "your OPT status will be terminated"
+  paperwork: 20, // I-9, W-4, direct deposit forms before a signed offer; critical with a fee
   noMx: 5,
   throwawayEmail: 15, // Hunter says the address is disposable; only when Hunter ran
   genericGreeting: 3,
@@ -65,9 +70,6 @@ export const CHANGE_REASONS: Record<string, { up?: string; down?: string }> = {
   surprise_text: { up: "this came as a surprise text", down: "it didn't come as a surprise text" },
   applied_first: { up: "you didn't apply first", down: "you applied first through an official channel" },
   no_interview: { up: "you haven't had an interview with them", down: "you've had an interview with them" },
-  off_platform: {
-    up: "the employer is in the US, where moving hiring to a chat app is unusual",
-    down: "the employer is outside the US, where chat apps are common for work",
-  },
+  off_platform: { up: "they want to move hiring to a chat app", down: "you applied first, so the chat app counts for less" },
   sensitive_data: { up: "you haven't signed an offer letter yet", down: "you've signed an offer letter" },
 };

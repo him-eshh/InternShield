@@ -2,11 +2,13 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import "@/app/v2-check.css";
 import { fetchExplanation, rerunWithCompany, type Explanation as ExplanationData, type PipelineInput, type PipelineOutcome, type StepKey } from "@/lib/client/pipeline";
-import { actionLine } from "@/lib/reportView";
+import { annotate } from "@/lib/client/annotate";
+import { actionLine, goods, reds } from "@/lib/reportView";
 import { describeChange, score } from "@/lib/scoring/score";
 import { LEVEL_LABELS, type Answers, type QuestionId, type Report as ReportData } from "@/lib/types";
 import { InfoIcon } from "../icons";
 import { btnSecondary } from "../ui";
+import AnnotatedMessage from "./AnnotatedMessage";
 import CompanyChip from "./CompanyChip";
 import CouldntCheck, { COULDNT_CHECK_ID } from "./CouldntCheck";
 import EvidenceList from "./EvidenceList";
@@ -195,6 +197,10 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, recov
   const quotes = report.flags.map((f) => f.quote).filter((q): q is string => !!q);
   // Never add questions after the first render; drop the ones that stopped mattering (answered ones stay).
   const shownQuestions = questions.filter((q) => answers[q.id] !== undefined || report.questions.some((x) => x.id === q.id));
+  // Numbers follow the evidence list order (red flags by severity, then good signs).
+  const ordered = [...reds(report.flags), ...goods(report.flags)];
+  const annotated = annotate(input.text, ordered);
+  const numbers = Object.fromEntries(annotated.marks.map((m) => [m.flagId, m.n]));
   const channel = answers.channel && answers.channel !== "other" ? answers.channel : null;
 
   return (
@@ -261,7 +267,9 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, recov
           pending && <p className="text-[17px] text-muted" aria-busy="true">Writing the explanation...</p>
         )}
 
-        <EvidenceList flags={report.flags} level={report.level} />
+        <AnnotatedMessage text={input.text} flags={ordered} annotated={annotated} />
+
+        <EvidenceList flags={report.flags} level={report.level} numbers={numbers} />
 
         <CouldntCheck items={report.couldntCheck} />
 

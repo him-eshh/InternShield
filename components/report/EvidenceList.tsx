@@ -5,7 +5,7 @@ import EvidenceCard from "./EvidenceCard";
 import { countLabel } from "./EvidenceGroup";
 
 /** One evidence list: red flags by severity, then good signs (collapsed on high risk, where they can't outweigh the flags). */
-export default function EvidenceList({ flags, level }: { flags: Flag[]; level: RiskLevel }) {
+export default function EvidenceList({ flags, level, numbers = {} }: { flags: Flag[]; level: RiskLevel; numbers?: Record<string, number> }) {
   const red = reds(flags);
   const good = goods(flags);
   return (
@@ -17,7 +17,7 @@ export default function EvidenceList({ flags, level }: { flags: Flag[]; level: R
       {red.length > 0 && (
         <ul className="mt-4 space-y-3">
           {red.map((f) => (
-            <EvidenceCard key={f.id} flag={f} />
+            <EvidenceCard key={f.id} flag={f} n={numbers[f.id]} />
           ))}
         </ul>
       )}
@@ -34,14 +34,14 @@ export default function EvidenceList({ flags, level }: { flags: Flag[]; level: R
             </summary>
             <ul className="space-y-3 px-3 pb-3">
               {good.map((f) => (
-                <EvidenceCard key={f.id} flag={f} />
+                <EvidenceCard key={f.id} flag={f} n={numbers[f.id]} />
               ))}
             </ul>
           </details>
         ) : (
           <ul className="mt-3 space-y-3">
             {good.map((f) => (
-              <EvidenceCard key={f.id} flag={f} />
+              <EvidenceCard key={f.id} flag={f} n={numbers[f.id]} />
             ))}
           </ul>
         ))}
