@@ -13,7 +13,8 @@ export const MODEL_VISION = "qwen/qwen3.8-27b";
 const ORDER: Record<GroqTask, string[]> = {
   extract: [MODEL_20B, MODEL_120B],
   explain: [MODEL_120B, MODEL_20B],
-  rewrite: [MODEL_VISION], // no gpt-oss fallback: keeps Tier 2 off the core's budget
+  // qwen is a Preview model; gpt-oss-20b only when it fails (rewrite is capped at REWRITE_DAILY_CAP, a small share of 20b's budget).
+  rewrite: [MODEL_VISION, MODEL_20B],
   transcribe: [MODEL_VISION], // the only vision model; no fallback model
   interview: [MODEL_VISION], // Tier 3: same qwen budget as Tier 2, never the core's gpt-oss
 };
