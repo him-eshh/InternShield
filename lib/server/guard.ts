@@ -3,7 +3,7 @@ import { MAX_MESSAGE_CHARS } from "@/lib/types";
 import { MINUTE, takeCount } from "./cache";
 import { failed, MESSAGES } from "./http";
 
-export type RouteName = "extract" | "company" | "sender" | "posting" | "explain" | "rewrite" | "transcribe" | "interview";
+export type RouteName = "extract" | "company" | "sender" | "posting" | "explain" | "rewrite" | "transcribe" | "interview" | "wikidata";
 
 export type GuardResult =
   | { ok: true; body: Record<string, unknown>; ip: string }
@@ -135,8 +135,14 @@ export function takeInterview(): { ok: true } | { ok: false; retryAfter: number 
   return r.ok ? { ok: true } : { ok: false, retryAfter: r.retryAfter };
 }
 
-/** Counts one Tavily call against TAVILY_DAILY_CAP. */
+/** Counts one Tavily call against TAVILY_DAILY_CAP (free plan: 1,000 credits/month). */
 export function takeTavily(): { ok: true } | { ok: false; retryAfter: number } {
-  const r = takeCount("global:tavily", envInt("TAVILY_DAILY_CAP", 80), "day");
+  const r = takeCount("global:tavily", envInt("TAVILY_DAILY_CAP", 30), "day");
+  return r.ok ? { ok: true } : { ok: false, retryAfter: r.retryAfter };
+}
+
+/** Counts one Wikidata lookup against WIKIDATA_DAILY_CAP (site-wide). */
+export function takeWikidata(): { ok: true } | { ok: false; retryAfter: number } {
+  const r = takeCount("global:wikidata", envInt("WIKIDATA_DAILY_CAP", 300), "day");
   return r.ok ? { ok: true } : { ok: false, retryAfter: r.retryAfter };
 }

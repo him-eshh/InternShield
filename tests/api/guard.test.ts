@@ -11,6 +11,13 @@ vi.mock("groq-sdk", () => ({
 
 import { POST as explain } from "@/app/api/explain/route";
 import { POST as extract } from "@/app/api/extract/route";
+import { takeTavily, takeWikidata } from "@/lib/server/guard";
+
+function drain(take: () => { ok: boolean }): number {
+  let n = 0;
+  while (take().ok && n < 1000) n++;
+  return n;
+}
 
 beforeEach(() => {
   resetServerState();
@@ -19,6 +26,19 @@ beforeEach(() => {
   vi.unstubAllEnvs();
   vi.stubEnv("GROQ_API_KEY", "test-key");
   vi.stubEnv("ALLOWED_ORIGINS", "");
+});
+
+describe("daily caps", () => {
+  it("Tavily defaults to 30 a day (free plan is 1,000 credits/month)", () => {
+    expect(drain(takeTavily)).toBe(30);
+  });
+
+  it("Wikidata defaults to 300 a day and honors WIKIDATA_DAILY_CAP", () => {
+    expect(drain(takeWikidata)).toBe(300);
+    resetServerState();
+    vi.stubEnv("WIKIDATA_DAILY_CAP", "2");
+    expect(drain(takeWikidata)).toBe(2);
+  });
 });
 
 describe("usage guard", () => {
