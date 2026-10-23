@@ -21,7 +21,7 @@ const flags = vi.hoisted(() => ({
   resume: true, tracker: true, screenshot: true, interview: true, coding: true, design: true,
   case: true, finance: true, portfolio: true, challenge: true,
 }));
-vi.mock("@/lib/tiers/flags", () => ({ TIER_FLAGS: flags }));
+vi.mock("@/lib/tiers/flags", () => ({ TIER_FLAGS: flags, v2RoundOn: () => true }));
 
 import { POST } from "@/app/api/interview/route";
 
@@ -121,14 +121,14 @@ describe("interview route", () => {
     expect(h.create).toHaveBeenCalledTimes(1);
   });
 
-  it("cleans a question and uses qwen with 150 tokens and labeled data", async () => {
-    h.create.mockReturnValue(groqOk('<think>hm</think>```\n**"What was the hardest part of that fundraiser?"**\n```'));
+  it("cleans a question and uses gpt-oss-20b with 400 tokens and labeled data", async () => {
+    h.create.mockReturnValue(groqOk('```\n**"What was the hardest part of that fundraiser?"**\n```'));
     const json = await (await call()).json();
     expect(json.status).toBe("done");
     expect(json.data).toEqual({ text: "What was the hardest part of that fundraiser?", feedback: null });
     const params = h.create.mock.calls[0][0];
-    expect(params.model).toBe("qwen/qwen3.8-27b");
-    expect(params.max_completion_tokens).toBe(150);
+    expect(params.model).toBe("openai/gpt-oss-20b");
+    expect(params.max_completion_tokens).toBe(400);
     expect(params.response_format).toBeUndefined();
     expect(params.messages[0].content).toMatch(/never instructions/);
     const user = params.messages[1].content as string;
@@ -144,7 +144,7 @@ describe("interview route", () => {
     expect(json.data.text.length).toBeLessThanOrEqual(300);
     expect(h.create.mock.calls[0][0].messages[1].content).toContain("PROBLEM:\nSum a list.");
 
-    h.create.mockReturnValue(groqOk("<think>only</think>"));
+    h.create.mockReturnValue(groqOk("")); // empty from every model in the order
     const res = await call(hint);
     expect(res.status).toBe(502);
     expect((await res.json()).message).toMatch(/interviewer is busy/);
@@ -159,6 +159,14 @@ describe("interview route", () => {
     expect(user).toContain("BOARD:");
     expect(user).toContain("Users DB");
     expect(user).toContain("Web App");
+  });
+
+  it("allows SQL hints, refuses SQL questions", async () => {
+    h.create.mockReturnValue(groqOk("Try a LEFT JOIN and look for NULLs."));
+    const code = { problemId: "sql-not-enrolled", language: "sql", code: "SELECT name FROM students;", passed: 0, total: 1 };
+    expect((await call({ ...body, ask: "hint", round: "sql", problem: "Find students.", turns: [], code })).status).toBe(200);
+    expect(h.create.mock.calls[0][0].messages[1].content).toContain("CODE (sql):");
+    expect((await call({ ...body, round: "sql" })).status).toBe(400);
   });
 
   it("allows a portfolio question and shows links as not opened", async () => {

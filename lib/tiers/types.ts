@@ -22,7 +22,13 @@ export interface RewriteRequest {
   posting: PostingContext;
   /** How to tailor. Fixed choices only; the server turns them into its own wording. Missing = DEFAULT_TAILOR. */
   options?: TailorOptions;
+  /** v2: 3 = three options in one strict-JSON call plus heldBack. Missing = one plain rewrite. */
+  count?: 1 | 3;
+  /** v2: terms the user confirmed ("I have this"), at most MAX_FACTS of MAX_FACT_CHARS each. */
+  facts?: string[];
 }
+export const MAX_FACTS = 12;
+export const MAX_FACT_CHARS = 60;
 
 // ---------- Tailoring options (fixed choices, never free text) ----------
 export const EMPHASES = ["skills", "impact", "leadership", "technical"] as const;
@@ -40,10 +46,22 @@ export interface TailorOptions {
   strength: Strength;
   /** Keep about the same length as the original line. */
   keepLength: boolean;
+  // v2 (all optional; missing = not sent, the server adds no line)
+  level?: TargetLevel;
+  region?: Region;
+  /** Prefer the posting's word for a concept the line already covers. */
+  postingWords?: boolean;
+  noBuzzwords?: boolean;
 }
+export const TARGET_LEVELS = ["internship", "newgrad", "changer", "experienced"] as const;
+export type TargetLevel = (typeof TARGET_LEVELS)[number];
+export const REGIONS = ["us", "uk", "canada", "europe", "other"] as const;
+export type Region = (typeof REGIONS)[number];
 
 export const DEFAULT_TAILOR: TailorOptions = { emphasis: [], tone: "confident", strength: "light", keepLength: true };
-/** options: up to 3 alternative rewrites; heldBack: options the guard rejected (shown as "held back"). */
+/** v2 defaults (findings 03 section 3): posting's words and no buzzwords on. */
+export const DEFAULT_TAILOR_V2: TailorOptions = { ...DEFAULT_TAILOR, level: "internship", region: "us", postingWords: true, noBuzzwords: true };
+/** options: up to 3 alternative rewrites; heldBack: posting terms the model left out because the line doesn't support them. */
 export type RewriteResponse = ApiResponse<{ text: string; options?: string[]; heldBack?: string[] }>;
 
 // ---------- v2: keyword gap (job posting terms vs resume) ----------
@@ -66,6 +84,21 @@ export interface GuardIssue {
 /** tier (v2): "block" = never show, "check" = show with a warning, "ok" = clean. */
 export type GuardTier = "block" | "check" | "ok";
 export type GuardResult = { ok: true; tier?: GuardTier } | { ok: false; issues: GuardIssue[]; tier?: GuardTier };
+/** v2 soft warnings (Check tier): stronger verb, dropped qualifier, new scope/seniority word, buzzword. */
+export type GuardWarningKind = "inflated" | "qualifier" | "scope" | "seniority" | "buzzword";
+export interface GuardWarning {
+  kind: GuardWarningKind;
+  token: string;
+  /** inflated: the original's weaker verb, when there was one. */
+  was?: string;
+}
+export interface GuardV2 {
+  tier: GuardTier;
+  issues: GuardIssue[];
+  warnings: GuardWarning[];
+  /** Blocked terms that came from the posting, not the resume. */
+  fromPosting: string[];
+}
 // lib/tiers/resumeGuard.ts exports:
 //   checkRewrite(resumeText: string, original: string, rewrite: string): GuardResult
 //   wordDiff(before: string, after: string): DiffPart[]
@@ -110,19 +143,23 @@ export type NewCard = Pick<TrackerCard, "company" | "role" | "link" | "risk">;
 
 // ---------- Slice 10: screenshot ----------
 
-/** Max data-URL length the browser may send (after downscale/compress). */
-export const MAX_IMAGE_DATA_URL = 2_500_000;
+/** Max total data-URL length per transcribe request (all strips). Under guard.ts's 3 MiB body cap. */
+export const MAX_IMAGE_DATA_URL = 3_000_000;
 export const IMAGE_MAX_SIDE = 1600;
 
 /** POST /api/transcribe. `image` is a data:image/(jpeg|png|webp);base64 URL. */
 export interface TranscribeRequest {
-  image: string;
+  image?: string;
+  /** A tall screenshot cut into at most 2 strips, top first (lib/tiers/image.ts prepareStrips). */
+  images?: string[];
 }
-export type TranscribeResponse = ApiResponse<{ text: string }>;
+export type TranscribeResponse = ApiResponse<{ text: string; partial?: boolean }>;
 
 // ---------- Tier 3: mock interview ----------
 
-export type InterviewRound = "screen" | "behavioral" | "coding" | "design" | "case" | "finance" | "portfolio" | "challenge" | "debugging";
+export type InterviewRound = "screen" | "behavioral" | "coding" | "design" | "case" | "finance" | "portfolio" | "challenge" | "debugging" | "sql";
+/** Rounds graded by running code locally (one local problem, hints allowed, no AI questions). */
+export const CODE_ROUNDS: InterviewRound[] = ["coding", "debugging", "sql"];
 
 // ---------- v2: scorecard and company-style presets ----------
 export type ScoreBand = "Strong" | "Solid" | "Developing" | "Not yet";
@@ -142,6 +179,8 @@ export const INTERVIEW_ROUNDS: { id: InterviewRound; label: string; field: Field
   { id: "screen", label: "Recruiter screen", field: null },
   { id: "behavioral", label: "Behavioral", field: null },
   { id: "coding", label: "Live coding", field: "tech" },
+  { id: "sql", label: "SQL", field: "tech" },
+  { id: "debugging", label: "Debugging", field: "tech" },
   { id: "design", label: "System design", field: "tech" },
   { id: "case", label: "Case interview", field: "business" },
   { id: "finance", label: "Technical questions", field: "finance" },
@@ -159,6 +198,7 @@ export const QUESTIONS_PER_ROUND: Record<InterviewRound, number> = {
   portfolio: 4,
   challenge: 3,
   debugging: 1,
+  sql: 1,
 };
 /** Rounds whose questions all come from a local script (no AI questions; AI only for feedback). */
 export const SCRIPTED_ROUNDS: InterviewRound[] = ["case", "finance"];
@@ -183,6 +223,8 @@ export interface InterviewContext {
   field: Field | null;
   /** Portfolio round (Tier 4): http(s) links the user typed. Only shown and sent as text; never fetched. */
   links?: string[];
+  /** v2 company-style preset (lib/tiers/presets.ts). Absent on older sessions. */
+  preset?: import("./presets").PresetId;
 }
 export const MAX_LINKS = 5;
 export const MAX_LINK_CHARS = 200;
@@ -200,6 +242,14 @@ export interface CodeAttempt {
   code: string;
   passed: number;
   total: number;
+}
+
+export interface CodeStats {
+  /** "Run examples" presses before the first Submit. */
+  runsBeforeSubmit: number;
+  submits: number;
+  /** ms timestamp of the first Submit, or null. */
+  firstSubmitAt: number | null;
 }
 
 export interface StarCheck {
@@ -242,6 +292,8 @@ export interface InterviewSession {
   board: BoardJson | null;
   /** Coding round: hints received, oldest first (applyReply pushes hint text here). */
   hints: string[];
+  /** Coding/debugging rounds (v2): counted by the app, feeds the scorecard. Absent on older sessions. */
+  stats?: CodeStats;
   feedback: InterviewFeedback | null;
   status: "active" | "done";
   createdAt: number;
@@ -302,7 +354,20 @@ export interface ScriptedQuestion {
   check: AnswerCheck | null;
 }
 export type CheckResult =
-  | { kind: "number"; found: number | null; expected: number; correct: boolean; unit: "$" | "%" | "" }
+  | {
+      kind: "number";
+      found: number | null; // in `foundUnit` (0.075 for a percent question reads as 7.5 "%", bps as percent)
+      expected: number;
+      correct: boolean;
+      unit: "$" | "%" | ""; // the question's unit
+      // Added for Bug C (all optional so older results still type-check):
+      foundUnit?: "$" | "%" | "bps" | "x" | ""; // the unit the user's own number is in
+      unitMismatch?: boolean; // the user gave an explicit unit the question does not ask for
+      note?: string; // "We read 0.075 as 7.5%", "We used the midpoint of your range ..."
+      message?: string; // why it is not correct when unitMismatch
+      read?: string; // the user's number in the user's unit, e.g. "$1,200,000"
+      range?: [number, number]; // the ends of a range answer
+    }
   | { kind: "rubric"; covered: string[]; missed: string[] };
 // lib/tiers/scripted.ts exports (engine-builder):
 //   CASES: { id: string; title: string; questions: ScriptedQuestion[] }[]   // >= 4 made-up cases, 3 questions each: structure (rubric), math (number), recommendation (rubric)

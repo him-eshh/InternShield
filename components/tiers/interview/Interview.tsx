@@ -16,6 +16,7 @@ import { askInterview } from "@/lib/tiers/client";
 import {
   BOARD_ROUNDS,
   CHALLENGE_MINUTES,
+  CODE_ROUNDS,
   INTERVIEW_ROUNDS,
   MAX_ANSWER_CHARS,
   MAX_CONTEXT_FIELD,
@@ -33,6 +34,10 @@ import type { Profile, ResumeData } from "@/lib/types";
 import { ArrowLeftIcon } from "../../icons";
 import { btnPrimary, btnSecondary, card as cardCls, linkClass, pillOff, pillOn } from "../../ui";
 import Feedback from "./Feedback";
+import SqlRound from "./SqlRound";
+import CodingRound from "./CodingRound";
+import { TIER_FLAGS, v2RoundOn } from "@/lib/tiers/flags";
+import { lpTags, PRESETS, type PresetId } from "@/lib/tiers/presets";
 
 const BUSY_MSG = "The interviewer is busy right now. Your answers are saved; try again in a minute.";
 const CAP_MSG = "This practice session reached its limit. Get your feedback or start a new one.";
@@ -74,7 +79,23 @@ const ROUND_BLURB: Record<InterviewRound, string> = {
   portfolio: "Walk through your work and what you learned.",
   challenge: `A ${CHALLENGE_MINUTES}-minute design challenge.`,
   debugging: "Find and fix the bug. Tests run on your device.",
+  sql: "One SQL question on made-up data. Runs on your device.",
 };
+// Round cards (findings 06 section 13): rough length and what the feedback checks.
+const ROUND_CARD: Record<InterviewRound, { minutes: number; feedback: string }> = {
+  screen: { minutes: 10, feedback: "Clarity and fit, with quotes" },
+  behavioral: { minutes: 15, feedback: "STAR, “I” vs “we”, numbers" },
+  coding: { minutes: 30, feedback: "Hidden tests, approach, testing" },
+  design: { minutes: 25, feedback: "Parts and links on your board" },
+  case: { minutes: 20, feedback: "Math checked by code, structure" },
+  finance: { minutes: 15, feedback: "Answers checked by code" },
+  portfolio: { minutes: 15, feedback: "Process and outcome, with quotes" },
+  challenge: { minutes: CHALLENGE_MINUTES, feedback: "Your flow on the board" },
+  debugging: { minutes: 20, feedback: "Hidden tests, what the bug was" },
+  sql: { minutes: 20, feedback: "Result rows checked by code" },
+};
+// v2 rounds App.tsx (frozen) doesn't know: enabled by their own flags, rendered here.
+const V2_ROUNDS: InterviewRound[] = ["sql", "debugging"];
 
 const LINK_CLS = `${linkClass} break-all`;
 
@@ -97,6 +118,7 @@ export default function Interview({ profile, resume, target, onBack, renderRound
   const [description, setDescription] = useState(target?.description ?? "");
   const [useResume, setUseResume] = useState(true);
   const [round, setRound] = useState<InterviewRound>("screen");
+  const [preset, setPreset] = useState<PresetId | null>(null);
   const [past, setPast] = useState<InterviewSession[]>([]);
   const [confirming, setConfirming] = useState<string | null>(null);
   const [session, setSession] = useState<InterviewSession | null>(null);
@@ -111,8 +133,11 @@ export default function Interview({ profile, resume, target, onBack, renderRound
   const feedbackRef = useRef<HTMLDivElement>(null);
   const hadContext = Boolean(target?.company || target?.role);
 
-  const rounds = INTERVIEW_ROUNDS.filter((r) => r.field === null || (profile?.field === r.field && roundsEnabled?.[r.id] === true));
-  const activeRound = rounds.some((r) => r.id === round) ? round : "screen";
+  const rounds = INTERVIEW_ROUNDS.filter((r) => r.field === null || (profile?.field === r.field && (V2_ROUNDS.includes(r.id) ? v2RoundOn(r.id) : roundsEnabled?.[r.id] === true)));
+  const presets = TIER_FLAGS.presets ? PRESETS.filter((p) => p.rounds.some((id) => rounds.some((r) => r.id === id))) : [];
+  const activePreset = presets.find((p) => p.id === preset) ?? null;
+  const shownRounds = activePreset ? rounds.filter((r) => activePreset.rounds.includes(r.id)) : rounds;
+  const activeRound = shownRounds.some((r) => r.id === round) ? round : (shownRounds[0]?.id ?? "screen");
 
   useEffect(() => {
     // Sessions live in browser storage, so read them after mount.
@@ -149,6 +174,7 @@ export default function Interview({ profile, resume, target, onBack, renderRound
       description: description.trim() ? description.trim().slice(0, MAX_JOB_CHARS) : null,
       resume: resume && useResume ? resume.text.slice(0, MAX_RESUME_CONTEXT_CHARS) : null,
       field: profile?.field ?? null,
+      ...(activePreset ? { preset: activePreset.id } : {}),
     };
     if (activeRound === "portfolio") {
       const links = cleanLinks(linksText);
@@ -226,13 +252,14 @@ export default function Interview({ profile, resume, target, onBack, renderRound
   // ---------- Session ----------
   if (session && panel) {
     const total = QUESTIONS_PER_ROUND[session.round];
-    const isPanelRound = session.round === "coding" || BOARD_ROUNDS.includes(session.round);
+    const isPanelRound = CODE_ROUNDS.includes(session.round) || BOARD_ROUNDS.includes(session.round);
     const answered = session.turns.length;
     const needsRetry = !session.pending && !busy && !isPanelRound && nextStep(session) !== "done" && nextStep(session) !== "answer";
     // Coding/design panels have their own Finish (it saves the code/board first).
     const canFinish = answered >= 1 && !busy && !isPanelRound;
+    const wide = CODE_ROUNDS.includes(session.round); // split pane at >= 1024 px
     return (
-      <section className="mx-auto max-w-[720px] px-6 py-10 sm:py-16">
+      <section className={`mx-auto px-6 py-10 sm:py-16 ${wide ? "max-w-[720px] lg:max-w-[1200px]" : "max-w-[720px]"}`}>
         <BackLink label="Leave practice" onClick={leaveSession} />
         <h1 className="mt-4 text-[clamp(26px,4.5vw,40px)] font-bold leading-[1.1] tracking-[-0.025em]">{roundLabel(session.round)}</h1>
         {session.context.company || session.context.role ? (
@@ -255,7 +282,13 @@ export default function Interview({ profile, resume, target, onBack, renderRound
 
         {isPanelRound ? (
           <div className="mt-6">
-            <RoundSlot render={renderRound} round={session.round} panel={panel} />
+            {session.round === "sql" && v2RoundOn("sql") ? (
+              <SqlRound {...panel} />
+            ) : session.round === "debugging" && v2RoundOn("debugging") ? (
+              <CodingRound {...panel} />
+            ) : (
+              <RoundSlot render={renderRound} round={session.round} panel={panel} />
+            )}
           </div>
         ) : (
           <>
@@ -266,6 +299,7 @@ export default function Interview({ profile, resume, target, onBack, renderRound
               <div key={answered} ref={questionRef} tabIndex={-1} className={`${cardCls} animate-enter mt-6 p-5 outline-offset-2 sm:p-6`}>
                 <p className="text-[14px] font-medium text-muted">
                   Question {Math.min(answered + 1, total)} of {total}
+                  {lpTags([pending]).length > 0 && ` · Leadership Principle: ${lpTags([pending]).join(", ")}`}
                 </p>
                 <p className="mt-2 break-words text-[20px] font-semibold leading-snug">{pending}</p>
               </div>
@@ -401,17 +435,55 @@ export default function Interview({ profile, resume, target, onBack, renderRound
         </div>
       )}
 
+      {presets.length > 0 && (
+        <fieldset className="mt-6">
+          <legend className="text-[15px] font-medium">
+            Company style <span className="font-normal text-muted">(optional)</span>
+          </legend>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {[null, ...presets].map((p) => (
+              <label key={p?.id ?? "any"} className={`${(p?.id ?? null) === (activePreset?.id ?? null) ? pillOn : pillOff} cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2`}>
+                <input type="radio" name="iv-preset" checked={(p?.id ?? null) === (activePreset?.id ?? null)} onChange={() => setPreset(p?.id ?? null)} className="sr-only" />
+                {p?.label ?? "Any"}
+              </label>
+            ))}
+          </div>
+          {activePreset && (
+            <p className="mt-2 text-[14px] text-muted">
+              Based on{" "}
+              <a href={activePreset.source.url} target="_blank" rel="noopener noreferrer" className={LINK_CLS}>
+                {activePreset.source.label}
+              </a>
+              . Practice only; not affiliated.
+            </p>
+          )}
+        </fieldset>
+      )}
+
       <fieldset className="mt-6">
         <legend className="text-[15px] font-medium">Round</legend>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {rounds.map((r) => (
-            <label key={r.id} className={`${activeRound === r.id ? pillOn : pillOff} cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2`}>
-              <input type="radio" name="iv-round" value={r.id} checked={activeRound === r.id} onChange={() => setRound(r.id)} className="sr-only" />
-              {r.label}
-            </label>
-          ))}
+        <div className="mt-2 grid gap-3 sm:grid-cols-2">
+          {shownRounds.map((r) => {
+            const on = activeRound === r.id;
+            return (
+              <label
+                key={r.id}
+                className={`${cardCls} cursor-pointer p-4 transition-colors duration-200 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 ${on ? "border-accent bg-accent/10" : "hover:bg-bg-soft"}`}
+              >
+                <input type="radio" name="iv-round" value={r.id} checked={on} onChange={() => setRound(r.id)} className="sr-only" />
+                <span className="flex items-baseline justify-between gap-3">
+                  <span className={`text-[17px] font-semibold ${on ? "text-accent" : ""}`}>
+                    {on && <span aria-hidden="true">✓ </span>}
+                    {r.label}
+                  </span>
+                  <span className="shrink-0 text-[14px] text-muted">~{ROUND_CARD[r.id].minutes} min</span>
+                </span>
+                <span className="mt-1 block text-[15px]">{ROUND_BLURB[r.id]}</span>
+                <span className="mt-1 block text-[14px] text-muted">Feedback: {ROUND_CARD[r.id].feedback}</span>
+              </label>
+            );
+          })}
         </div>
-        <p className="mt-3 max-w-[560px] text-[15px] text-muted">{ROUND_BLURB[activeRound]}</p>
       </fieldset>
 
       {activeRound === "portfolio" && (

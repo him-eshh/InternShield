@@ -1,7 +1,16 @@
 // Rewrite guard and word diff for the tailored resume (devpost/tier2-spec.md > Slice 8).
 // Pure: a suggested rewrite may reword, never add facts. Anything that looks like a number,
 // a name, or a tool must already be somewhere in the user's resume text.
-import { MAX_REWRITE_CHARS, type DiffPart, type GuardIssue, type GuardIssueKind, type GuardResult } from "./types";
+import {
+  MAX_REWRITE_CHARS,
+  type DiffPart,
+  type GuardIssue,
+  type GuardIssueKind,
+  type GuardResult,
+  type GuardV2,
+  type GuardWarning,
+  type TargetLevel,
+} from "./types";
 
 // ---------- word lists ----------
 
@@ -60,6 +69,7 @@ const COMMON = new Set(
     "developed designed created managed improved planned supported collaborated analyzed researched launched organized " +
     "coordinated mentored trained presented reduced increased boosted streamlined automated implemented established " +
     "maintained oversaw reviewed prepared conducted assisted spearheaded engineered optimized refactored documented " +
+    "architected orchestrated championed pioneered headed founded leveraged " +
     "facilitated directed produced generated identified resolved negotiated drafted edited translated volunteered " +
     "building developing designing creating managing leading working helping using supporting improving " +
     "recently additionally " +
@@ -94,10 +104,16 @@ const SKILL_RES = SKILLS.map((name) => {
   return { name, key: c, re: new RegExp(`(?<![a-z0-9+#])${escapeRe(c)}(?![a-z0-9+#]|\\.[a-z0-9])`) };
 });
 
-/** "$1,200" -> "1200", "40%" / "40 percent" -> "40%", "3x" / "3 times"? -> "3x", "5k" -> "5k". */
-const NUMBER_RE = /[$£€]?\d+(?:[.,]\d+)*(?:\s?%|\s?percent\b|x\b|k\b|m\b|bn\b)?/gi;
+/**
+ * "$1,200" -> "1200", "40%" / "40 percent" -> "40%", "3x" -> "3x", "5k" -> "5k", "1st" -> "1".
+ * A digit token only (standing #5): no digits glued to letters or a hyphen ("Q3", "COVID-19", "3D").
+ */
+const NUMBER_RE = /(?<![A-Za-z0-9_-])[$£€]?\d+(?:[.,]\d+)*(?:\s?%|\s?percent\b|x\b|k\b|m\b|bn\b|st\b|nd\b|rd\b|th\b)?(?![A-Za-z0-9])/gi;
+/** Hyphen compounds that contain a number word or digits but aren't a count. */
+const COMPOUND_RE = /\b(?:double-checked|double-check|one-on-one|first-year|second-year|third-year|fourth-year|third-party|end-of-day|24\/7)\b/gi;
+const dropCompounds = (s: string) => s.replace(COMPOUND_RE, " ");
 function numberKey(raw: string): string {
-  const lower = raw.toLowerCase();
+  const lower = raw.toLowerCase().replace(/(?<=\d)(?:st|nd|rd|th)$/, "");
   const digits = lower.replace(/[^\d.,]/g, "").replace(/,(?=\d{3}\b)/g, "").replace(/,/g, ".").replace(/\.$/, "");
   const suffix = /%|percent/.test(lower) ? "%" : /x$/.test(lower) ? "x" : /k$/.test(lower) ? "k" : /bn$/.test(lower) ? "bn" : /m$/.test(lower) ? "m" : "";
   return digits + suffix;
@@ -203,8 +219,9 @@ export function checkRewrite(resumeText: string, original: string, rewrite: stri
 
   const known = `${resumeText ?? ""}\n${original ?? ""}`;
   const knownCanon = canon(known);
-  const knownNumbers = numberKeys(known);
+  const knownNumbers = numberKeys(dropCompounds(known));
   const rewriteCanon = canon(text);
+  const countCanon = canon(dropCompounds(text));
 
   const issues: GuardIssue[] = [];
   const seen = new Set<string>();
@@ -215,16 +232,16 @@ export function checkRewrite(resumeText: string, original: string, rewrite: stri
     issues.push({ kind, token });
   };
 
-  for (const m of text.normalize("NFKC").matchAll(NUMBER_RE)) {
+  for (const m of dropCompounds(text).normalize("NFKC").matchAll(NUMBER_RE)) {
     if (!knownNumbers.has(numberKey(m[0]))) flag("number", m[0].trim());
   }
 
   const has = (w: string) => knownCanon.includes(` ${w} `);
-  for (const w of rewriteCanon.trim().split(" ")) {
+  for (const w of countCanon.trim().split(" ")) {
     if (!isNumberWord(w) || has(w)) continue;
     const digit = NUMBER_WORDS[w];
     if (digit && knownNumbers.has(digit)) continue;
-    if (w === "one" && !rewriteCanon.replace(new RegExp(NOT_A_COUNT.source, "g"), " ").includes(" one ")) continue;
+    if (w === "one" && !countCanon.replace(new RegExp(NOT_A_COUNT.source, "g"), " ").includes(" one ")) continue;
     flag("number", w);
   }
 
@@ -238,6 +255,9 @@ export function checkRewrite(resumeText: string, original: string, rewrite: stri
   for (const run of capitalRuns(text.normalize("NFKC"), knownCanon)) {
     const key = canon(run).trim();
     if (!key || skillsHere.has(key) || isNumberWord(key) || has(key)) continue;
+    // "PostgreSQL-backed Python": every capitalized part is a skill here or already known.
+    const caps = run.split(/[\s-]+/).filter((w) => /^[A-Z]/.test(w)).map((w) => canon(w).trim());
+    if (caps.length && caps.every((w) => skillsHere.has(w) || has(w))) continue;
     flag("proper_noun", run);
   }
 
@@ -254,6 +274,102 @@ export function checkRewrite(resumeText: string, original: string, rewrite: stri
   }
 
   return issues.length ? { ok: false, issues } : { ok: true };
+}
+
+// ---------- guard v2 (findings 03 section 4): Block / Check / OK ----------
+
+/** Same skill, different words. Both sides are normalized through this before diffing. */
+export const ALIASES: string[][] = [
+  ["Machine learning", "ML"],
+  ["JavaScript", "JS"],
+  ["PostgreSQL", "Postgres"],
+  ["Kubernetes", "k8s"],
+  ["GCP", "Google Cloud"],
+  ["Excel", "Microsoft Excel", "MS Excel"],
+  ["Node.js", "NodeJS"],
+  ["React", "React.js", "ReactJS"],
+  ["REST API", "REST APIs", "RESTful"],
+  ["NLP", "Natural language processing"],
+  ["Deep learning", "Neural networks"],
+  ["CI/CD", "Continuous integration"],
+  ["Microsoft Office", "MS Office", "Office 365"],
+  ["Data visualization", "Dashboards", "Data viz"],
+  ["A/B testing", "Experimentation"],
+  ["Customer service", "Customer support"],
+  ["Public speaking", "Presentations"],
+  ["Financial modeling", "Financial models"],
+  ["Data analysis", "Data analytics", "Analyzed data"],
+  ["UX research", "User research", "Usability testing"],
+  ["Project management", "Managed projects"],
+];
+
+export { canon, SKILLS };
+/** A whole-term matcher over canon() text. */
+export function termRe(name: string): RegExp {
+  return new RegExp(`(?<![a-z0-9+#])${escapeRe(canon(name).trim())}(?![a-z0-9+#]|\\.[a-z0-9])`);
+}
+const ALIAS_RES = ALIASES.map((g) => g.map((name) => ({ name, re: termRe(name) })));
+
+/** Every alias of a skill the text already names, so "ML" in the resume backs "machine learning". */
+function withAliases(text: string): string {
+  const c = canon(text);
+  const extra = ALIAS_RES.filter((g) => g.some((t) => t.re.test(c))).flatMap((g) => g.map((t) => t.name));
+  return extra.length ? `${text}\n${extra.join("\n")}` : text;
+}
+
+const LOW_VERBS = ["helped", "assisted", "supported", "contributed", "participated", "worked on", "was part of", "collaborated"];
+const HIGH_VERBS = [
+  "led", "spearheaded", "owned", "drove", "headed", "directed", "managed", "architected", "founded", "launched",
+  "single handedly", "orchestrated", "championed", "pioneered",
+];
+const QUALIFIERS = ["co", "helped", "assisted", "with a team of", "as part of", "contributed to", "jointly", "partly", "partially"];
+const SCOPE = [
+  "company wide", "organization wide", "end to end", "cross functional", "enterprise", "global", "entire", "all", "every",
+  "sole", "first ever", "award winning", "production", "at scale",
+];
+const SENIOR = ["architected", "orchestrated", "mentored", "managed"];
+export const BUZZWORDS = [
+  "spearheaded", "leveraged", "synergy", "results driven", "passionate", "dynamic", "go getter", "team player", "hardworking",
+];
+
+export interface GuardInput {
+  resume: string;
+  original: string;
+  rewrite: string;
+  /** The pasted job description; a blocked term found here is labeled "from the posting". */
+  posting?: string | null;
+  /** Terms the user confirmed ("I have this"); treated like resume text. */
+  facts?: string[];
+  level?: TargetLevel;
+  noBuzzwords?: boolean;
+}
+
+/** Block = invented facts (never shown); Check = shown with warnings; OK = clean. */
+export function guardRewrite(g: GuardInput): GuardV2 {
+  const known = withAliases([g.resume ?? "", ...(g.facts ?? [])].join("\n"));
+  const base = checkRewrite(known, g.original, g.rewrite);
+  const issues = base.ok ? [] : base.issues;
+  const postingCanon = canon(g.posting ?? "");
+  const fromPosting = issues
+    .filter((x) => x.kind !== "number" && postingCanon.trim() && termRe(x.token).test(postingCanon))
+    .map((x) => x.token);
+
+  const before = canon(g.original);
+  const after = canon(g.rewrite);
+  const inB = (w: string) => before.includes(` ${w} `);
+  const inA = (w: string) => after.includes(` ${w} `);
+  const added = (w: string) => inA(w) && !inB(w);
+  const warnings: GuardWarning[] = [];
+  const was = LOW_VERBS.find(inB);
+  if (!HIGH_VERBS.some(inB)) for (const v of HIGH_VERBS.filter(added)) warnings.push({ kind: "inflated", token: v, was });
+  for (const q of QUALIFIERS) if (inB(q) && !inA(q)) warnings.push({ kind: "qualifier", token: q === "co" ? "co-" : q });
+  for (const s of SCOPE.filter(added)) warnings.push({ kind: "scope", token: s });
+  if (g.level === "internship" || g.level === "newgrad")
+    for (const s of SENIOR.filter(added)) if (!warnings.some((w) => w.token === s)) warnings.push({ kind: "seniority", token: s });
+  if (g.noBuzzwords) for (const b of BUZZWORDS.filter(added)) warnings.push({ kind: "buzzword", token: b });
+
+  if (!g.rewrite?.trim() || g.rewrite.length > MAX_REWRITE_CHARS) return { tier: "block", issues, warnings, fromPosting };
+  return { tier: issues.length ? "block" : warnings.length ? "check" : "ok", issues, warnings, fromPosting };
 }
 
 // ---------- diff ----------

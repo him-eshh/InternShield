@@ -5,9 +5,13 @@ import { quoteIsReal } from "../quotes";
 import { KEYS, readKey, writeKey } from "../client/storage";
 import { fromJson, toJson } from "./board";
 import { getProblem, pickProblem } from "./problems";
+import { pickDebugProblem } from "./debugging";
+import { LP_PROMPTS } from "./presets";
+import { pickSqlProblem } from "./sql";
 import { scriptFor } from "./scripted";
 import {
   BOARD_ROUNDS,
+  CODE_ROUNDS,
   CHALLENGE_MINUTES,
   INTERVIEW_ROUNDS,
   MAX_LINKS,
@@ -25,6 +29,7 @@ import {
   QUESTIONS_PER_ROUND,
   type AnswerFeedback,
   type CodeAttempt,
+  type CodeStats,
   type InterviewAsk,
   type InterviewContext,
   type InterviewFeedback,
@@ -85,9 +90,11 @@ const isScripted = (round: InterviewRound) => SCRIPTED_ROUNDS.includes(round);
 
 /** The local first question for a round (no AI call). */
 export function firstQuestion(round: InterviewRound, context: InterviewContext, seed: number): string {
-  if (round === "behavioral") return pick(BEHAVIORAL_PROMPTS, seed);
+  if (round === "behavioral") return context.preset === "amazon" ? pick(LP_PROMPTS, seed).prompt : pick(BEHAVIORAL_PROMPTS, seed);
   if (round === "design") return pick(DESIGN_PROMPTS, seed);
   if (round === "coding") return pickProblem(seed).prompt;
+  if (round === "sql") return pickSqlProblem(seed).prompt;
+  if (round === "debugging") return pickDebugProblem(seed).prompt;
   if (round === "challenge") return pick(CHALLENGE_PROMPTS, seed);
   if (round === "portfolio") return PORTFOLIO_FIRST;
   const script = scriptFor(round, seed);
@@ -111,7 +118,14 @@ export function newSession(
     pending: firstQuestion(round, context, opts.seed),
     used: 0,
     seed: opts.seed,
-    problemId: round === "coding" ? pickProblem(opts.seed).id : null,
+    problemId:
+      round === "coding"
+        ? pickProblem(opts.seed).id
+        : round === "sql"
+          ? pickSqlProblem(opts.seed).id
+          : round === "debugging"
+            ? pickDebugProblem(opts.seed).id
+            : null,
     code: null,
     board: null,
     hints: [],
@@ -146,9 +160,9 @@ export function canCall(s: InterviewSession, ask: InterviewAsk): boolean {
   if (s.status === "done" || s.used >= MAX_SESSION_TURNS) return false;
   if (ask === "feedback") return s.turns.length >= 1;
   if (s.used >= MAX_SESSION_TURNS - 1) return false;
-  if (ask === "hint") return s.round === "coding";
+  if (ask === "hint") return CODE_ROUNDS.includes(s.round);
   // Coding and scripted questions are all local; the route rejects AI questions there.
-  if (s.round === "coding" || isScripted(s.round)) return false;
+  if (CODE_ROUNDS.includes(s.round) || isScripted(s.round)) return false;
   return !s.pending && s.turns.length < roundTotal(s);
 }
 
@@ -197,15 +211,16 @@ export function buildRequest(s: InterviewSession, ask: InterviewAsk, now = Date.
       resume: cap(c.resume, MAX_RESUME_CONTEXT_CHARS),
       field: c.field,
       ...(Array.isArray(c.links) ? { links: capLinks(c.links) } : {}),
+      ...(c.preset ? { preset: c.preset } : {}),
     },
     turns: s.turns.slice(0, MAX_TURNS).map((t) => ({
       question: t.question.slice(0, MAX_QUESTION_CHARS),
       answer: t.answer.slice(0, MAX_ANSWER_CHARS),
     })),
     used: s.used,
-    code: s.round === "coding" && s.code ? { ...s.code, code: s.code.code.slice(0, MAX_CODE_CHARS) } : null,
+    code: CODE_ROUNDS.includes(s.round) && s.code ? { ...s.code, code: s.code.code.slice(0, MAX_CODE_CHARS) } : null,
     board: BOARD_ROUNDS.includes(s.round) ? s.board : null,
-    problem: s.round === "coding" ? (getProblem(s.problemId)?.prompt ?? null) : null,
+    problem: CODE_ROUNDS.includes(s.round) ? (getProblem(s.problemId)?.prompt ?? null) : null,
     ...(s.round === "challenge" && ask === "feedback" ? { timeUp: challengeLeft(s, now) === 0 } : {}),
   };
 }
@@ -274,13 +289,17 @@ function isContext(v: unknown): v is InterviewContext {
   );
 }
 
+const isCount = (v: unknown) => typeof v === "number" && Number.isInteger(v) && v >= 0;
+const isStats = (v: unknown): v is CodeStats =>
+  isRec(v) && isCount(v.runsBeforeSubmit) && isCount(v.submits) && (v.firstSubmitAt === null || isTime(v.firstSubmitAt));
+
 const isTurn = (v: unknown): v is InterviewTurn => isRec(v) && typeof v.question === "string" && typeof v.answer === "string";
 
 function isCode(v: unknown): v is CodeAttempt {
   return (
     isRec(v) &&
     typeof v.problemId === "string" &&
-    (v.language === "python" || v.language === "javascript") &&
+    (["python", "javascript", "typescript", "sql"] as unknown[]).includes(v.language) &&
     typeof v.code === "string" &&
     typeof v.passed === "number" &&
     Number.isInteger(v.passed) &&
@@ -328,6 +347,7 @@ function readSession(v: unknown): InterviewSession | null {
     code: v.code === null ? null : { ...(v.code as CodeAttempt) },
     board: board ? toJson(board) : null,
     hints: Array.isArray(v.hints) ? [...(v.hints as string[])] : [],
+    ...(isStats(v.stats) ? { stats: { ...v.stats } } : {}),
     feedback: v.feedback === null || v.feedback === undefined ? null : validateFeedback(v.feedback, turns, round),
     status: v.status,
     createdAt: v.createdAt,

@@ -1,4 +1,12 @@
 // Simple one-column Letter PDF from resume lines. pdf-lib is loaded on demand.
+import { isHeader } from "./tailored";
+
+/** "Sam Rivera" -> "Sam-Rivera-resume.pdf" (falls back to resume-tailored.pdf). */
+export function pdfFileName(lines: string[]): string {
+  const name = (lines.find((l) => l.trim()) ?? "").trim();
+  const slug = name.length <= 60 && !/[@\d•]/.test(name) ? toWinAnsi(name).replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "") : "";
+  return slug ? `${slug}-resume.pdf` : "resume-tailored.pdf";
+}
 
 const REPLACEMENTS: Record<string, string> = {
   "‘": "'", "’": "'", "‚": "'", "“": '"', "”": '"', "„": '"',
@@ -30,6 +38,7 @@ export async function buildResumePdf(lines: string[], title = "Resume"): Promise
   const doc = await PDFDocument.create();
   doc.setTitle(toWinAnsi(title));
   const font = await doc.embedFont(StandardFonts.Helvetica);
+  const bold = await doc.embedFont(StandardFonts.HelveticaBold);
   const SIZE = 10.5;
   const LEADING = 14.5;
   const M = 54;
@@ -49,39 +58,43 @@ export async function buildResumePdf(lines: string[], title = "Resume"): Promise
     }
   };
 
-  const wrap = (text: string, width: number): string[] => {
+  const wrap = (text: string, width: number, f: typeof font, size: number): string[] => {
     const rows: string[] = [];
     let cur = "";
     for (const word of text.split(/\s+/).filter(Boolean)) {
       let w = word;
       // Break a single word that is wider than the line.
-      while (font.widthOfTextAtSize(w, SIZE) > width) {
+      while (f.widthOfTextAtSize(w, size) > width) {
         let n = w.length - 1;
-        while (n > 1 && font.widthOfTextAtSize(w.slice(0, n), SIZE) > width) n--;
+        while (n > 1 && f.widthOfTextAtSize(w.slice(0, n), size) > width) n--;
         if (cur) { rows.push(cur); cur = ""; }
         rows.push(w.slice(0, n));
         w = w.slice(n);
       }
       const next = cur ? `${cur} ${w}` : w;
-      if (font.widthOfTextAtSize(next, SIZE) <= width) cur = next;
+      if (f.widthOfTextAtSize(next, size) <= width) cur = next;
       else { rows.push(cur); cur = w; }
     }
     if (cur) rows.push(cur);
     return rows;
   };
 
+  const nameAt = lines.findIndex((l) => l.trim());
   lines.forEach((raw, idx) => {
     const isBullet = BULLET_RE.test(raw);
+    const isName = idx === nameAt && !isBullet && raw.trim().length <= 60;
+    const f = isName || isHeader(raw) ? bold : font;
+    const size = isName ? 16 : SIZE;
     const body = toWinAnsi(isBullet ? raw.replace(BULLET_RE, "") : raw);
     const x = isBullet ? M + INDENT : M;
-    const rows = wrap(body, maxW - (isBullet ? INDENT : 0));
+    const rows = wrap(body, maxW - (isBullet ? INDENT : 0), f, size);
     if (rows.length === 0) return;
-    if (idx > 0) y -= 3;
+    if (idx > 0) y -= isHeader(raw) ? 9 : 3;
     rows.forEach((row, i) => {
       if (i > 0) y -= LEADING;
       ensure();
       if (isBullet && i === 0) page.drawCircle({ x: M + 4, y: y + SIZE * 0.32, size: 1.6, color: rgb(0.1, 0.1, 0.1) });
-      page.drawText(row, { x, y, size: SIZE, font, color: rgb(0.1, 0.1, 0.1) });
+      page.drawText(row, { x, y, size, font: f, color: rgb(0.1, 0.1, 0.1) });
     });
     y -= LEADING;
   });

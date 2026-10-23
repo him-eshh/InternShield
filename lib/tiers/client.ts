@@ -21,5 +21,5 @@ export const postRewrite = (req: RewriteRequest): Promise<RewriteResponse> => po
 export const askInterview = (req: InterviewRequest): Promise<InterviewResponse> =>
   post<InterviewResponse>("/api/interview", req);
 
-export const postTranscribe = (image: string): Promise<TranscribeResponse> =>
-  post<TranscribeResponse>("/api/transcribe", { image });
+export const postTranscribe = (images: string[]): Promise<TranscribeResponse> =>
+  post<TranscribeResponse>("/api/transcribe", images.length === 1 ? { image: images[0] } : { images });

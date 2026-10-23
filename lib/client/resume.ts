@@ -1,5 +1,6 @@
 // Resume Reader (spec.md > Resume Reader). Runs entirely in the browser: the file is never uploaded.
 import type { ResumeData } from "../types";
+import { htmlToLines, normalizeLines, pdfItemsToLines } from "../tiers/resumeLines";
 
 export const RESUME_MAX_CHARS = 20000;
 
@@ -27,23 +28,27 @@ export function spottedSkills(text: string, candidates: string[]): string[] {
   return out;
 }
 
-async function readPdf(buf: ArrayBuffer): Promise<string> {
+async function readPdf(buf: ArrayBuffer): Promise<string[]> {
   const pdfjs = await import("pdfjs-dist");
   pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs"; // copied into public/
   const doc = await pdfjs.getDocument({ data: new Uint8Array(buf) }).promise;
-  const parts: string[] = [];
-  for (let i = 1; i <= doc.numPages && parts.join(" ").length < RESUME_MAX_CHARS; i++) {
+  const lines: string[] = [];
+  let size = 0;
+  for (let i = 1; i <= doc.numPages && size < RESUME_MAX_CHARS; i++) {
     const page = await doc.getPage(i);
     const content = await page.getTextContent();
-    parts.push(content.items.map((it) => ("str" in it ? it.str : "")).join(" "));
+    const items = content.items.filter((it): it is Extract<typeof it, { str: string }> => "str" in it);
+    const pageLines = pdfItemsToLines(items);
+    for (const l of pageLines) size += l.length + 1;
+    lines.push(...pageLines, ""); // blank line between pages
   }
-  return parts.join("\n");
+  return lines;
 }
 
-async function readDocx(buf: ArrayBuffer): Promise<string> {
+async function readDocx(buf: ArrayBuffer): Promise<string[]> {
   const mammoth = await import("mammoth");
-  const out = await mammoth.extractRawText({ arrayBuffer: buf });
-  return out.value;
+  const out = await mammoth.convertToHtml({ arrayBuffer: buf });
+  return htmlToLines(out.value);
 }
 
 export async function readResume(file: File): Promise<ResumeResult> {
@@ -54,8 +59,8 @@ export async function readResume(file: File): Promise<ResumeResult> {
   if (!isPdf && !isDocx) return { ok: false, message: UNSUPPORTED };
   try {
     const buf = await file.arrayBuffer();
-    const raw = isPdf ? await readPdf(buf) : await readDocx(buf);
-    const text = raw.replace(/\s+/g, " ").trim().slice(0, RESUME_MAX_CHARS);
+    const lines = isPdf ? await readPdf(buf) : await readDocx(buf);
+    const text = normalizeLines(lines).slice(0, RESUME_MAX_CHARS).trim();
     if (!text) return { ok: false, message: EMPTY };
     return { ok: true, data: { text, fileName: name } };
   } catch {

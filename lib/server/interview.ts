@@ -13,6 +13,7 @@ import {
   MAX_SESSION_TURNS,
   MAX_TURNS,
   SCRIPTED_ROUNDS,
+  CODE_ROUNDS,
   type BoardJson,
   type CodeAttempt,
   type InterviewAsk,
@@ -22,13 +23,15 @@ import {
   type InterviewTurn,
 } from "@/lib/tiers/types";
 import { describe, fromJson } from "@/lib/tiers/board";
-import { TIER_FLAGS } from "@/lib/tiers/flags";
+import { TIER_FLAGS, v2RoundOn } from "@/lib/tiers/flags";
 import { validateFeedback } from "@/lib/tiers/interview";
+import { getPreset } from "@/lib/tiers/presets";
 import { checkTurn, describeCheck } from "@/lib/tiers/scripted";
 import type { Field } from "@/lib/types";
 import { callGroq } from "./groq";
 import { takeInterview } from "./guard";
-import { done, failed, fromOutcome, MESSAGES } from "./http";
+import { done, failed, MESSAGES } from "./http";
+import { codedFail } from "./transcribe";
 
 export const SESSION_CAP = "This practice session reached its limit. Get your feedback or start a new one.";
 export const INTERVIEW_FAILED = "The interviewer is busy right now. Your answers are saved; try again in a minute.";
@@ -67,6 +70,10 @@ function parseContext(v: unknown): InterviewContext | null {
     field = v.field as Field;
   }
   const base: InterviewContext = { company, role, description, resume, field };
+  if (v.preset !== null && v.preset !== undefined) {
+    if (!getPreset(v.preset)) return null;
+    base.preset = v.preset as InterviewContext["preset"];
+  }
   if (v.links === null || v.links === undefined) return base;
   if (!Array.isArray(v.links) || v.links.length > MAX_LINKS) return null;
   const links: string[] = [];
@@ -99,7 +106,7 @@ function parseCode(v: unknown): CodeAttempt | null | undefined {
   if (v === null || v === undefined) return null;
   if (!isRec(v)) return undefined;
   if (typeof v.problemId !== "string" || v.problemId.length === 0 || v.problemId.length > 60) return undefined;
-  if (v.language !== "python" && v.language !== "javascript") return undefined;
+  if (v.language !== "python" && v.language !== "javascript" && v.language !== "typescript" && v.language !== "sql") return undefined;
   if (typeof v.code !== "string" || v.code.length > MAX_CODE_CHARS) return undefined;
   if (!isInt(v.passed, 0, 100) || !isInt(v.total, 0, 100)) return undefined;
   return { problemId: v.problemId, language: v.language, code: v.code, passed: v.passed, total: v.total };
@@ -111,7 +118,7 @@ export function parseInterview(body: Rec): InterviewRequest | null {
   const round = body.round as InterviewRound;
   if (typeof body.round !== "string" || !INTERVIEW_ROUNDS.some((r) => r.id === round)) return null;
   // A hidden round stays unreachable by direct POST too.
-  if (!TIER_FLAGS.interview || (round in TIER_FLAGS && !TIER_FLAGS[round as keyof typeof TIER_FLAGS])) return null;
+  if (!TIER_FLAGS.interview || (round in TIER_FLAGS && !TIER_FLAGS[round as keyof typeof TIER_FLAGS]) || !v2RoundOn(round)) return null;
   const context = parseContext(body.context);
   const turns = parseTurns(body.turns);
   if (!context || !turns) return null;
@@ -139,6 +146,8 @@ function roundLabel(round: InterviewRound): string {
 
 function systemFor(r: InterviewRequest): string {
   const label = roundLabel(r.round);
+  const preset = getPreset(r.context.preset);
+  const style = preset ? ` ${preset.style} Never claim to work for or speak for the company.` : "";
   if (r.ask === "hint") {
     return `You are a friendly interviewer in a live coding interview with a student or early-career candidate. Give one short nudge under 50 words toward the coding PROBLEM, based on their CODE so far. No code, no full solution, no preamble. ${SAFETY}`;
   }
@@ -148,7 +157,7 @@ function systemFor(r: InterviewRequest): string {
         ? "Judge STAR (situation, task, action, result) for each answer."
         : "Set every star field to false; STAR applies only to behavioral rounds.";
     let tests =
-      r.round === "coding" && r.code
+      CODE_ROUNDS.includes(r.round) && r.code
         ? ` The line starting "Tests:" is fact; do not re-grade correctness.`
         : "";
     if (SCRIPTED_ROUNDS.includes(r.round)) {
@@ -158,6 +167,7 @@ function systemFor(r: InterviewRequest): string {
       tests += ` Comment on the user flow shown on the BOARD. The ${CHALLENGE_MINUTES}-minute timer ${r.timeUp ? "ran out before they finished; mention time management kindly" : "had not run out"}.`;
     }
     if (r.round === "portfolio") tests += " The links were NOT opened; never claim to have seen the work.";
+    tests += style;
     return `You are a kind, honest coach reviewing a ${label} mock interview for a student or early-career candidate. Return JSON only: a short summary and one item per answer, with index (0-based), one strength, one concrete improvement, and a quote. The quote must be copied exactly from that answer, or "" if none fits. ${star}${tests} Be specific and encouraging; do not claim to know hiring outcomes. ${SAFETY}`;
   }
   const extra: Partial<Record<InterviewRound, string>> = {
@@ -170,7 +180,7 @@ function systemFor(r: InterviewRequest): string {
     finance: " Ask a follow-up about accounting or valuation.",
   };
   const design = extra[r.round] ?? "";
-  return `You are a friendly interviewer for a student or early-career candidate in a ${label} interview. Ask exactly one next question, under 60 words, plain text, no preamble. Do not repeat earlier questions.${design} Fit the role, posting and resume when given. ${SAFETY}`;
+  return `You are a friendly interviewer for a student or early-career candidate in a ${label} interview. Ask exactly one next question, under 60 words, plain text, no preamble. Do not repeat earlier questions.${design}${style} Fit the role, posting and resume when given. ${SAFETY}`;
 }
 
 function buildUser(r: InterviewRequest): string {
@@ -195,7 +205,11 @@ function buildUser(r: InterviewRequest): string {
   if (r.code) {
     parts.push(`CODE (${r.code.language}):\n${r.code.code}`);
     if (r.ask === "feedback") {
-      parts.push(`Tests: passed ${r.code.passed} of ${r.code.total} hidden tests (graded by code; do not re-grade)`);
+      parts.push(
+        r.code.language === "sql"
+          ? `Tests: the query result ${r.code.passed === r.code.total ? "matched" : "did not match"} the expected rows (graded by code; do not re-grade)`
+          : `Tests: passed ${r.code.passed} of ${r.code.total} hidden tests (graded by code; do not re-grade)`,
+      );
     }
   }
   if (r.board) {
@@ -271,23 +285,29 @@ export async function handleInterview(body: Record<string, unknown>): Promise<Re
   if (!input) return failed("error", { status: 400, message: MESSAGES.bad });
 
   if (input.used >= MAX_SESSION_TURNS) return failed("limit", { status: 429, message: SESSION_CAP });
-  if (input.ask === "hint" && input.round !== "coding") return failed("error", { status: 400, message: MESSAGES.bad });
-  if (input.ask === "question" && (input.round === "coding" || SCRIPTED_ROUNDS.includes(input.round))) return failed("error", { status: 400, message: MESSAGES.bad });
+  if (input.ask === "hint" && !CODE_ROUNDS.includes(input.round)) return failed("error", { status: 400, message: MESSAGES.bad });
+  if (input.ask === "question" && (CODE_ROUNDS.includes(input.round) || SCRIPTED_ROUNDS.includes(input.round))) return failed("error", { status: 400, message: MESSAGES.bad });
   if (input.ask === "feedback" && input.turns.length < 1) return failed("error", { status: 400, message: MESSAGES.bad });
 
   const cap = takeInterview();
   if (!cap.ok) return failed("limit", { retryAfter: cap.retryAfter, message: MESSAGES.daily });
 
   const feedback = input.ask === "feedback";
-  const r = await callGroq("interview", {
+  const r = await callGroq(feedback ? "interviewFeedback" : "interview", {
     system: systemFor(input),
     user: buildUser(input),
-    maxTokens: feedback ? 900 : 150,
+    // gpt-oss counts its (low-effort) reasoning in this cap; cleanQuestion still cuts the reply short.
+    maxTokens: feedback ? 900 : 400,
     ...(feedback ? { schema: FEEDBACK_SCHEMA } : {}),
   });
   // Empty/unusable model output comes back as "error": show the calm interviewer message, not the generic one.
   if (!r.ok && r.reason === "error") return failed("error", { message: feedback ? FEEDBACK_FAILED : INTERVIEW_FAILED });
-  if (!r.ok) return fromOutcome(r);
+  if (!r.ok && r.reason === "timeout") return codedFail("TIMEOUT", "timeout", 504, MESSAGES.timeout);
+  if (!r.ok) {
+    return (r.retryAfter ?? 0) > 3600
+      ? codedFail("DAILY_CAP", "limit", 429, MESSAGES.daily, r.retryAfter)
+      : codedFail("RATE_LIMITED", "limit", 429, MESSAGES.busy, r.retryAfter);
+  }
 
   if (feedback) {
     let raw: unknown;

@@ -6,10 +6,12 @@ import {
   MAX_CODE_CHARS,
   type CaseOutput,
   type CodeLanguage,
+  type CodeStats,
   type RoundPanelProps,
 } from "@/lib/tiers/types";
 import { getProblem, gradeOutputs } from "@/lib/tiers/problems";
-import { runCode, stopRunners } from "@/lib/tiers/runner";
+import { preloadPython, runCode, stopRunners } from "@/lib/tiers/runner";
+import { TIER_FLAGS } from "@/lib/tiers/flags";
 import { Spinner } from "../../icons";
 import { btnPrimary, btnSecondary, card as cardCls, pillOff, pillOn } from "../../ui";
 
@@ -21,7 +23,9 @@ const CodeEditor = dynamic(() => import("./CodeEditor"), {
 const LANGS: { id: CodeLanguage; label: string }[] = [
   { id: "python", label: "Python" },
   { id: "javascript", label: "JavaScript" },
+  ...(TIER_FLAGS.tsRunner ? [{ id: "typescript" as const, label: "TypeScript" }] : []),
 ];
+const langLabel = (l: CodeLanguage) => LANGS.find((x) => x.id === l)?.label ?? l;
 
 interface ExampleRow {
   input: string;
@@ -37,10 +41,12 @@ const show = (v: unknown) => {
     return String(v);
   }
 };
+const NO_STATS: CodeStats = { runsBeforeSubmit: 0, submits: 0, firstSubmitAt: null };
 const showOut = (o: CaseOutput) => (o.ok ? show(o.value) : `Error: ${o.error}`);
 
 export default function CodingRound({ session, onUpdate, ask, busy }: RoundPanelProps) {
   const problem = getProblem(session.problemId ?? "");
+  const debug = session.round === "debugging";
   const [language, setLanguage] = useState<CodeLanguage>(session.code?.language ?? "python");
   const [codes, setCodes] = useState<Partial<Record<CodeLanguage, string>>>(() =>
     session.code ? { [session.code.language]: session.code.code } : {},
@@ -56,6 +62,18 @@ export default function CodingRound({ session, onUpdate, ask, busy }: RoundPanel
   useEffect(() => {
     latest.current = session;
   }, [session]);
+  useEffect(() => {
+    if (language === "python") preloadPython();
+  }, [language]);
+  const [slowLoad, setSlowLoad] = useState(false);
+  useEffect(() => {
+    if (!loadingPy) return;
+    const t = window.setTimeout(() => setSlowLoad(true), 6000);
+    return () => {
+      window.clearTimeout(t);
+      setSlowLoad(false);
+    };
+  }, [loadingPy]);
 
   if (!problem) {
     return (
@@ -65,7 +83,8 @@ export default function CodingRound({ session, onUpdate, ask, busy }: RoundPanel
     );
   }
 
-  const code = codes[language] ?? problem.starter[language] ?? "";
+  // TypeScript is only transpiled (no type check), so the JS starter is valid TS.
+  const code = codes[language] ?? problem.starter[language] ?? (language === "typescript" ? problem.starter.javascript : "");
   const submitted = session.code && session.code.problemId === problem.id ? session.code : null;
   const disabled = running !== null || busy;
 
@@ -87,7 +106,7 @@ export default function CodingRound({ session, onUpdate, ask, busy }: RoundPanel
     if (!res.ok && res.message === "Stopped.") return; // user pressed Stop: not an error
     if (!res.ok) {
       setRunError(res.message);
-      setStatus(`Run failed. ${res.message}`);
+      setStatus(""); // the error card below is the announcement
       return;
     }
     const graded = gradeOutputs(problem.examples, res.outputs);
@@ -101,6 +120,8 @@ export default function CodingRound({ session, onUpdate, ask, busy }: RoundPanel
     );
     setLogs(res.logs);
     setStatus(`${graded.passed} of ${graded.total} examples passed.`);
+    const st = latest.current.stats ?? NO_STATS;
+    if (!st.submits) onUpdate({ ...latest.current, stats: { ...st, runsBeforeSubmit: st.runsBeforeSubmit + 1 }, updatedAt: Date.now() });
   }
 
   async function submit() {
@@ -115,16 +136,20 @@ export default function CodingRound({ session, onUpdate, ask, busy }: RoundPanel
     if (!res.ok && res.message === "Stopped.") return;
     if (!res.ok) {
       setRunError(res.message);
-      setStatus(`Submit failed. ${res.message}`);
+      setStatus("");
       return;
     }
     const graded = gradeOutputs(problem.tests, res.outputs);
     setLogs("");
-    setStatus(`${graded.passed} of ${graded.total} hidden tests passed.`);
+    // The result line below (from session.code) is the live announcement; no second copy here.
+    setStatus("");
+    const st = latest.current.stats ?? NO_STATS;
+    const now = Date.now();
     onUpdate({
       ...latest.current,
       code: { problemId: problem.id, language, code: code.slice(0, MAX_CODE_CHARS), passed: graded.passed, total: graded.total },
-      updatedAt: Date.now(),
+      stats: { ...st, submits: st.submits + 1, firstSubmitAt: st.firstSubmitAt ?? now },
+      updatedAt: now,
     });
   }
 
@@ -167,15 +192,52 @@ export default function CodingRound({ session, onUpdate, ask, busy }: RoundPanel
   const hints = session.hints ?? [];
 
   return (
-    <div className="space-y-5">
+    // >= 1024 px: problem, plan and hints left; editor and console right. Stacks below.
+    <div className="space-y-5 lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start lg:gap-6 lg:space-y-0">
+      <div className="space-y-5">
       <section className={`${cardCls} p-5 sm:p-6`}>
         <h2 className="text-[22px] font-semibold tracking-[-0.01em]">{problem.title}</h2>
         <p className="mt-2 whitespace-pre-line break-words text-[17px] leading-relaxed">{problem.prompt}</p>
         <p className="mt-2 text-[15px] text-muted">
-          Write a function named <code className="font-mono">{problem.functionName}</code>.
+          {debug ? "Fix" : "Write a function named"} <code className="font-mono">{problem.functionName}</code>.
         </p>
       </section>
 
+      <section>
+        <label htmlFor="coding-approach" className="text-[17px] font-semibold">
+          {debug ? "What was the bug?" : "Explain your approach"}
+        </label>
+        <textarea
+          id="coding-approach"
+          value={approach}
+          maxLength={MAX_ANSWER_CHARS}
+          onChange={(e) => setApproach(e.target.value)}
+          rows={4}
+          className="mt-1.5 w-full rounded-[14px] border border-border bg-card p-4 text-[17px]"
+        />
+        <p className="mt-1 text-[13px] text-muted">
+          {approach.length} / {MAX_ANSWER_CHARS}
+        </p>
+      </section>
+
+      <section className="space-y-3">
+        <button type="button" className={btnSecondary} disabled={disabled} onClick={hint}>
+          {busy && <Spinner size={16} />} Ask for a hint
+        </button>
+        {hints.length > 0 && (
+          <ol className="space-y-2" aria-label="Hints">
+            {hints.map((h, i) => (
+              <li key={i} className={`${cardCls} p-4 text-[16px]`}>
+                <span className="text-muted">Hint {i + 1}. </span>
+                {h}
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
+      </div>
+
+      <div className="space-y-5">
       <div role="group" aria-label="Language" className="flex flex-wrap gap-2">
         {LANGS.map((l) => (
           <button
@@ -194,8 +256,9 @@ export default function CodingRound({ session, onUpdate, ask, busy }: RoundPanel
           </button>
         ))}
       </div>
+      <p className="-mt-3 text-[13px] text-muted">Java, C++, Go and Rust don&apos;t run here; explain them in your approach.</p>
 
-      <CodeEditor value={code} language={language} onChange={setCode} label={`${problem.title} code editor, ${language === "python" ? "Python" : "JavaScript"}`} />
+      <CodeEditor value={code} language={language} onChange={setCode} label={`${problem.title} code editor, ${langLabel(language)}`} />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <button type="button" className={btnSecondary} disabled={disabled} onClick={runExamples}>
@@ -211,12 +274,25 @@ export default function CodingRound({ session, onUpdate, ask, busy }: RoundPanel
         )}
       </div>
 
-      <p role="status" aria-live="polite" className="min-h-6 text-[15px] text-muted">
-        {loadingPy ? "Loading Python… (first time takes a few seconds)" : status}
+      {/* One live line: progress while running, else the last Submit result (no duplicate card). */}
+      <p
+        role="status"
+        aria-live="polite"
+        className={
+          !loadingPy && !status && submitted
+            ? `${cardCls} p-4 text-[17px] font-semibold ${submitted.passed === submitted.total ? "text-good" : "text-warn"}`
+            : "min-h-6 text-[15px] text-muted"
+        }
+      >
+        {loadingPy
+          ? slowLoad
+            ? `Still loading ${langLabel(language)}… it's a one-time download of a few MB. Your code is kept.`
+            : `Loading ${langLabel(language)}… (first time takes a few seconds)`
+          : status || (submitted ? `${submitted.passed} of ${submitted.total} hidden tests passed` : "")}
       </p>
 
       {runError && (
-        <p className="rounded-[14px] border border-border bg-bg-soft p-4 text-[15px] text-bad">
+        <p role="alert" className="rounded-[14px] border border-border bg-bg-soft p-4 text-[15px] text-bad">
           <strong>Could not run.</strong> {runError}
         </p>
       )}
@@ -254,50 +330,12 @@ export default function CodingRound({ session, onUpdate, ask, busy }: RoundPanel
         </div>
       )}
 
-      {submitted && (
-        <p className={`${cardCls} p-4 text-[17px] font-semibold ${submitted.passed === submitted.total ? "text-good" : "text-warn"}`}>
-          {submitted.passed} of {submitted.total} hidden tests passed
-        </p>
-      )}
-
-      <section className="space-y-3">
-        <button type="button" className={btnSecondary} disabled={disabled} onClick={hint}>
-          {busy && <Spinner size={16} />} Ask for a hint
-        </button>
-        {hints.length > 0 && (
-          <ol className="space-y-2" aria-label="Hints">
-            {hints.map((h, i) => (
-              <li key={i} className={`${cardCls} p-4 text-[16px]`}>
-                <span className="text-muted">Hint {i + 1}. </span>
-                {h}
-              </li>
-            ))}
-          </ol>
-        )}
-      </section>
-
-      <section>
-        <label htmlFor="coding-approach" className="text-[17px] font-semibold">
-          Explain your approach
-        </label>
-        <textarea
-          id="coding-approach"
-          value={approach}
-          maxLength={MAX_ANSWER_CHARS}
-          onChange={(e) => setApproach(e.target.value)}
-          rows={4}
-          className="mt-1.5 w-full rounded-[14px] border border-border bg-card p-4 text-[17px]"
-        />
-        <p className="mt-1 text-[13px] text-muted">
-          {approach.length} / {MAX_ANSWER_CHARS}
-        </p>
-      </section>
-
       <div>
         <button type="button" className={btnPrimary} disabled={disabled || !submitted} onClick={finish}>
           {busy && <Spinner size={16} />} Finish and get feedback
         </button>
         {!submitted && <p className="mt-2 text-[15px] text-muted">Submit your code first.</p>}
+      </div>
       </div>
     </div>
   );

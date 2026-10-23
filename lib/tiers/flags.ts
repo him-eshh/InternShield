@@ -11,11 +11,18 @@ export const TIER_FLAGS = {
   portfolio: true, // Slice 16: design portfolio walkthrough
   challenge: true, // Slice 16: timed design challenge on the board
   // v2 (tools stream flips each in the commit where it passes gates)
-  tsRunner: false, // TypeScript in the JS worker
-  sqlRound: false, // SQL problems on sql.js
-  debugRound: false, // "debugging" interview round
-  presets: false, // company-style round presets
-  scorecard: false, // per-axis interview scorecard
-  keywordGap: false, // posting keywords vs resume
-  rewriteOptions: false, // up to 3 rewrite options
+  tsRunner: true, // TypeScript in the JS worker
+  sqlRound: true, // SQL problems on sql.js
+  debugRound: true, // "debugging" interview round
+  presets: true, // company-style round presets
+  scorecard: true, // per-axis interview scorecard
+  keywordGap: true, // posting keywords vs resume
+  rewriteOptions: true, // up to 3 rewrite options
 } as const;
+
+/** v2 rounds App.tsx doesn't know about: on only with live coding and their own flag. */
+export function v2RoundOn(round: string): boolean {
+  if (round === "sql") return TIER_FLAGS.coding && TIER_FLAGS.sqlRound;
+  if (round === "debugging") return TIER_FLAGS.coding && TIER_FLAGS.debugRound;
+  return true;
+}
