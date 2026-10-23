@@ -143,8 +143,8 @@ export type NewCard = Pick<TrackerCard, "company" | "role" | "link" | "risk">;
 
 // ---------- Slice 10: screenshot ----------
 
-/** Max total data-URL length per transcribe request (all strips). Under guard.ts's 3 MiB body cap. */
-export const MAX_IMAGE_DATA_URL = 3_000_000;
+/** Max total data-URL length per transcribe request (all strips). Under guard.ts's 3.6 MiB body cap. */
+export const MAX_IMAGE_DATA_URL = 3_500_000;
 export const IMAGE_MAX_SIDE = 1600;
 
 /** POST /api/transcribe. `image` is a data:image/(jpeg|png|webp);base64 URL. */

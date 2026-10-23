@@ -11,7 +11,7 @@ export type GuardResult =
 
 const MAX_BODY_BYTES = 16 * 1024;
 /** Transcribe carries one browser-compressed screenshot as a data URL (Vercel's body limit is 4.5 MB). */
-export const MAX_IMAGE_BODY_BYTES = 3 * 1024 * 1024;
+export const MAX_IMAGE_BODY_BYTES = 3.6 * 1024 * 1024; // two-strip tall screenshots, base64 (findings A2)
 
 // Per-visitor limits for the tier AI routes: [per minute, per day].
 const VISITOR_LIMITS: Partial<Record<RouteName, [number, number]>> = {
@@ -125,7 +125,7 @@ export function takeRewrite(): { ok: true } | { ok: false; retryAfter: number } 
 
 /** Counts one live screenshot transcription against TRANSCRIBE_DAILY_CAP (site-wide). */
 export function takeTranscribe(): { ok: true } | { ok: false; retryAfter: number } {
-  const r = takeCount("global:transcribe", envInt("TRANSCRIBE_DAILY_CAP", 20), "day");
+  const r = takeCount("global:transcribe", envInt("TRANSCRIBE_DAILY_CAP", 12), "day");
   return r.ok ? { ok: true } : { ok: false, retryAfter: r.retryAfter };
 }
 

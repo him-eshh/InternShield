@@ -32,8 +32,8 @@ describe("transcribe route", () => {
     expect(h.create).not.toHaveBeenCalled();
   });
 
-  it("rejects a body over 3 MB (413)", async () => {
-    const res = await call({ image: `data:image/png;base64,${"A".repeat(3 * 1024 * 1024 + 10)}` });
+  it("rejects a body over 3.6 MB (413)", async () => {
+    const res = await call({ image: `data:image/png;base64,${"A".repeat(Math.ceil(3.6 * 1024 * 1024) + 10)}` });
     expect(res.status).toBe(413);
     expect(h.create).not.toHaveBeenCalled();
   });

@@ -158,7 +158,7 @@ export function mergeTiles(texts: string[], maxOverlapLines = 8, threshold = 0.8
 }
 
 export const JPEG_QUALITIES = [0.85, 0.7, 0.55];
-// Findings say 3.5 MB (under Vercel's 4.5 MB), but guard.ts caps a transcribe body at 3 MiB: stay under that.
+// Findings A2: 3.5 MB of strips (under Vercel's 4.5 MB); guard.ts caps a transcribe body at 3.6 MiB.
 export const MAX_PAYLOAD_BASE64 = MAX_IMAGE_DATA_URL;
 
 /**
