@@ -1,0 +1,21 @@
+{
+  "note": "Careers link on a look-alike host asking for SSN for payroll, expiring tonight.",
+  "text": "Hi Devon,\n\nGreat news from Northwind Labs. Complete your hiring profile at https://careers.northwind-labs-rnail.example/profile and enter your SSN for payroll set-up. This link expires tonight.\n\nNorthwind Labs Talent\ntalent@northwind-labs-rnail.example",
+  "expectedLevel": "high",
+  "profile": { "field": "tech", "level": "junior", "skills": ["Python"] },
+  "source": "email",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Northwind Labs", "quote": "Northwind Labs" },
+        "sender": { "name": null, "email": "talent@northwind-labs-rnail.example", "phone": null },
+        "asks": [{ "kind": "sensitive_data", "quote": "enter your SSN for payroll set-up" }],
+        "pressure": [{ "quote": "This link expires tonight" }]
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "northwindlabs.example", "careersUrl": null } },
+    "sender": { "status": "done", "data": { "email": "talent@northwind-labs-rnail.example", "domain": "northwind-labs-rnail.example", "freeEmail": false, "registeredAt": "-6d", "hasMx": true } }
+  }
+}

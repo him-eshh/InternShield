@@ -1,0 +1,23 @@
+{
+  "note": "Offer after interviews, delivered by the company; only an e-signature is asked.",
+  "text": "Hi Sasha,\n\nWe're pleased to offer you the UX Design Intern position at Fennel Health, $24 per hour, 12 weeks. Your offer letter is ready to review and e-sign in the Fennel Health HR portal. Questions? Reply or call me.\n\nLena Ortiz\nlena.ortiz@fennelhealth.example",
+  "expectedLevel": "low",
+  "profile": { "field": "design", "level": "junior", "skills": ["Figma"] },
+  "source": "email",
+  "stage": "offer",
+  "answers": { "who_first": "yes", "talked_live": "video", "signed_offer": "no" },
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Fennel Health", "quote": "Fennel Health" },
+        "role": { "value": "UX Design Intern", "quote": "UX Design Intern position" },
+        "pay": { "value": "$24 per hour", "quote": "$24 per hour" },
+        "sender": { "name": "Lena Ortiz", "email": "lena.ortiz@fennelhealth.example", "phone": null },
+        "interview": { "status": "mentioned", "quote": "We're pleased to offer you the UX Design Intern position" }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "fennelhealth.example", "careersUrl": null } },
+    "sender": { "status": "done", "data": { "email": "lena.ortiz@fennelhealth.example", "domain": "fennelhealth.example", "freeEmail": false, "registeredAt": "2013-01-01T00:00:00Z", "hasMx": true } }
+  }
+}

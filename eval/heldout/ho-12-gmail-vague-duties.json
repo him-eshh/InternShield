@@ -1,0 +1,23 @@
+{
+  "note": "Free-email recruiter, vague duties, no money ask.",
+  "text": "Hello, my name is Rachel from Maple Street Consulting. We have a flexible part-time position helping with various administrative duties and special projects. Hours are up to you. If interested, reply with your resume.",
+  "expectedLevel": "medium",
+  "profile": { "field": "business", "level": "senior", "skills": ["excel", "sql"] },
+  "source": "email",
+  "stage": null,
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "isJobMessage": true,
+        "company": { "value": "Maple Street Consulting", "quote": "Maple Street Consulting" },
+        "sender": { "name": "Rachel", "email": "rachel.mapleconsulting@gmail.example", "phone": null },
+        "dutiesVague": { "quote": "helping with various administrative duties and special projects" }
+      }
+    },
+    "sender": {
+      "status": "done",
+      "data": { "email": "rachel.mapleconsulting@gmail.example", "domain": "gmail.example", "freeEmail": true, "registeredAt": null, "hasMx": true, "hunter": null }
+    }
+  }
+}

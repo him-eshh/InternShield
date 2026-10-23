@@ -1,0 +1,17 @@
+{
+  "note": "Task-scam payout stage: a tax is due before you can withdraw your earnings.",
+  "text": "Hi Sam,\n\nGreat news, your dashboard shows $1,240 in earnings from the data-entry assistant work. To release it, you must pay a withdrawal tax before you can withdraw. Once you confirm, our payout desk will process it the same day.\n\nPayout Desk\nsupport@datadesk-pay.example",
+  "expectedLevel": "high",
+  "profile": { "field": "business", "level": "freshman", "skills": [] },
+  "source": "text_whatsapp",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "sender": { "name": null, "email": "support@datadesk-pay.example", "phone": null },
+        "asks": [{ "kind": "money_wrong_way", "quote": "you must pay a withdrawal tax before you can withdraw" }]
+      }
+    }
+  }
+}

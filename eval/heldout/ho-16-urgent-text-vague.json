@@ -1,0 +1,21 @@
+{
+  "note": "Unknown-number SMS, vague role, light urgency, no money or data ask.",
+  "text": "Hi, this is Chris with Tidewater Group. We have urgent openings for remote assistants, easy work, set your own hours. Reply YES today to get details before spots fill up.",
+  "expectedLevel": "medium",
+  "profile": { "field": "tech", "level": "junior", "skills": ["python", "react"] },
+  "source": "text_whatsapp",
+  "stage": null,
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "isJobMessage": true,
+        "company": { "value": "Tidewater Group", "quote": "Tidewater Group" },
+        "role": { "value": "remote assistants", "quote": "remote assistants" },
+        "asks": [{ "kind": "reply_yes", "quote": "Reply YES today to get details" }],
+        "pressure": [{ "quote": "before spots fill up" }],
+        "dutiesVague": { "quote": "easy work, set your own hours" }
+      }
+    }
+  }
+}

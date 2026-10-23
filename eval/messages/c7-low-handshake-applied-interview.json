@@ -1,0 +1,19 @@
+{
+  "note": "Applied on Handshake; employer invites to a video interview inside Handshake.",
+  "text": "Hi Jordan, Harrow Energy has invited you to a video interview for the Engineering Intern position you applied to on Handshake. Pick a time slot in your Handshake inbox.",
+  "expectedLevel": "low",
+  "profile": { "field": "tech", "level": "junior", "skills": ["Python"] },
+  "source": "handshake",
+  "stage": "interviewing",
+  "answers": { "who_first": "yes", "channel": "handshake" },
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Harrow Energy", "quote": "Harrow Energy" },
+        "role": { "value": "Engineering Intern", "quote": "Engineering Intern position" },
+        "interview": { "status": "mentioned", "quote": "invited you to a video interview" }
+      }
+    }
+  }
+}

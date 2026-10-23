@@ -1,0 +1,18 @@
+{
+  "note": "Task scam vocabulary: boost ratings, commission, rebate, recharge, Telegram.",
+  "text": "Hello! Part-time online job for students: boost product ratings for our merchants, 30 minutes a day, commission of $30-$80 per set. If your balance runs negative, recharge your account and the rebate returns with your commission. Contact our trainer on Telegram to get your first set.",
+  "expectedLevel": "high",
+  "profile": { "field": "business", "level": "sophomore", "skills": ["Excel"] },
+  "source": "text_whatsapp",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "asks": [{ "kind": "crypto_or_task_deposit", "quote": "recharge your account and the rebate returns with your commission" }],
+        "offPlatform": { "app": "Telegram", "quote": "Contact our trainer on Telegram" },
+        "dutiesVague": { "quote": "boost product ratings for our merchants" }
+      }
+    }
+  }
+}

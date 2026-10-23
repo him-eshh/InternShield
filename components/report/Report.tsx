@@ -1,20 +1,25 @@
 "use client";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { fetchExplanation, type Explanation as ExplanationData, type PipelineInput, type PipelineOutcome, type StepKey } from "@/lib/client/pipeline";
-import { FTC_URL } from "@/lib/client/copyReport";
+import "@/app/v2-check.css";
+import { fetchExplanation, rerunWithCompany, type Explanation as ExplanationData, type PipelineInput, type PipelineOutcome, type StepKey } from "@/lib/client/pipeline";
+import { annotate } from "@/lib/client/annotate";
+import { actionLine, goods, reds } from "@/lib/reportView";
 import { describeChange, score } from "@/lib/scoring/score";
-import { LEVEL_LABELS, type Answers, type FlagGroup, type QuestionId, type Report as ReportData } from "@/lib/types";
-import { ExternalIcon, InfoIcon } from "../icons";
-import { btnPrimary, btnSecondary, linkClass } from "../ui";
+import { LEVEL_LABELS, type Answers, type QuestionId, type Report as ReportData } from "@/lib/types";
+import { InfoIcon } from "../icons";
+import { btnSecondary } from "../ui";
+import AnnotatedMessage from "./AnnotatedMessage";
+import CompanyChip from "./CompanyChip";
 import CouldntCheck, { COULDNT_CHECK_ID } from "./CouldntCheck";
-import EvidenceGroup from "./EvidenceGroup";
+import EvidenceList from "./EvidenceList";
 import Explanation from "./Explanation";
 import PostingSection from "./PostingSection";
-import QuickQuestions from "./QuickQuestions";
+import QuickQuestions, { type AnswerValue } from "./QuickQuestions";
+import RecoveryCard from "./RecoveryCard";
+import ReportFooter from "./ReportFooter";
 import RiskRing from "./RiskRing";
-import ScamOutcome from "./ScamOutcome";
+import TopReasons from "./TopReasons";
 
-const GROUPS: FlagGroup[] = ["sender", "message", "offer"];
 const RESTING_AFTER_SECONDS = 900; // a retryAfter this long means a daily cap, not a blip
 
 interface Props {
@@ -24,8 +29,10 @@ interface Props {
   onAgain: () => void;
   /** Test/preview hook: the fetch used to re-request the explanation. */
   fetchImpl?: typeof fetch;
-  /** Optional extra actions shown above "Check another message". */
+  /** Optional extra actions, shown in the footer's secondary row. */
   extras?: ReactNode;
+  /** Slot for the recovery card ("Already sent money or shared info?"), shown after the quick questions. */
+  recovery?: ReactNode;
 }
 
 export function announcement(report: ReportData): string {
@@ -33,11 +40,70 @@ export function announcement(report: ReportData): string {
   return `${LEVEL_LABELS[report.level]}, risk ${report.score}, ${red} red flag${red === 1 ? "" : "s"}`;
 }
 
-export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, extras }: Props) {
-  const initial = outcome.report as ReportData;
+/**
+ * The report App renders. Editing the company re-runs only the company + posting lookups and swaps in
+ * the new outcome here (App.tsx is frozen), remounting the body so its state starts from the new report.
+ */
+export default function Report(props: Props) {
+  const [base, setBase] = useState(props.outcome);
+  const [rerun, setRerun] = useState<{ outcome: PipelineOutcome; input: PipelineInput; n: number } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  const [kept, setKept] = useState<Answers>({}); // quick answers survive a company recheck
+  if (base !== props.outcome) {
+    setBase(props.outcome);
+    setRerun(null);
+    setNote(null);
+    setKept({});
+  }
+  const outcome = rerun?.outcome ?? props.outcome;
+  const input = rerun?.input ?? props.input;
+
+  async function onCompany(name: string) {
+    setBusy(true);
+    setNote(null);
+    const nextInput = { ...input, form: { ...input.form, company: name } };
+    const next = await rerunWithCompany(input, outcome.steps, name, { fetch: props.fetchImpl });
+    setRerun((r) => ({ outcome: next, input: nextInput, n: (r?.n ?? 0) + 1 }));
+    setBusy(false);
+    setNote(`Rechecked with ${name}`);
+  }
+
+  // The body remounts after a recheck; put focus back on the chip (after commit) so keyboard users stay in place.
+  const reruns = rerun?.n ?? 0;
+  useEffect(() => {
+    if (reruns) document.querySelector<HTMLElement>("[data-company-edit]")?.focus();
+  }, [reruns]);
+
+  if (!outcome.report) return null;
+  return (
+    <ReportBody
+      key={rerun?.n ?? 0}
+      {...props}
+      outcome={outcome}
+      input={input}
+      company={{ busy, note, onSave: (n) => void onCompany(n) }}
+      kept={kept}
+      onAnswers={setKept}
+    />
+  );
+}
+
+interface BodyProps extends Props {
+  company?: { busy: boolean; note: string | null; onSave: (name: string) => void };
+  /** Answers given before a company recheck; the remounted body re-scores with them. */
+  kept?: Answers;
+  onAnswers?: (a: Answers) => void;
+}
+
+function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, recovery, company, kept, onAnswers }: BodyProps) {
+  const fresh = outcome.report as ReportData;
+  const [answers, setAnswers] = useState<Answers>(kept ?? {});
+  const [initial] = useState<ReportData>(() => (Object.keys(answers).length ? score({ ...outcome.scoreInput, answers }) : fresh));
   const [report, setReport] = useState<ReportData>(initial);
-  const [questions] = useState(initial.questions);
-  const [answers, setAnswers] = useState<Answers>({});
+  const [questions] = useState(fresh.questions);
+  // Kept answers that moved the level make the rechecked explanation stale: fetch one for this report.
+  const [stale] = useState(initial.level !== fresh.level);
   const [change, setChange] = useState<string | null>(null);
   const [lastId, setLastId] = useState<QuestionId | null>(null);
   const [explanation, setExplanation] = useState<ExplanationData | null>(outcome.explanation);
@@ -58,18 +124,20 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, ex
   // The explanation arrives after the report; fill it in when it does.
   const pending = outcome.pendingExplanation;
   useEffect(() => {
-    if (!pending) return;
+    const p = stale ? fetchExplanation(initial, { fetch: fetchImpl }) : pending;
+    if (!p) return;
     let live = true;
-    void pending.then((ex) => {
+    void p.then((ex) => {
       if (live && req.current === 0) setExplanation(ex);
     });
     return () => {
       live = false;
     };
-  }, [pending]);
+  }, [pending, stale, initial, fetchImpl]);
 
-  // Announce the result once it's on screen, and again if a quick question changes it.
-  const spoken = announcement(report);
+  // Announce the result once it's on screen. After an answer, only when the level moved:
+  // the ring announces the score change itself.
+  const spoken = Object.keys(answers).length === 0 || report.level !== initial.level ? announcement(report) : "";
   useEffect(() => {
     const id = setTimeout(() => setAnnounce(spoken), 400);
     return () => clearTimeout(id);
@@ -82,10 +150,11 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, ex
     return () => clearInterval(id);
   }, [counting]);
 
-  async function onAnswer(id: QuestionId, value: string) {
+  async function onAnswer(id: QuestionId, value: AnswerValue) {
     const next = { ...answers, [id]: value } as Answers;
     const nextReport = score({ ...outcome.scoreInput, answers: next });
     setAnswers(next);
+    onAnswers?.(next);
     setChange(describeChange(report, nextReport));
     setLastId(id);
     const levelChanged = nextReport.level !== report.level;
@@ -117,15 +186,22 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, ex
   const careersUrl = steps.company.status === "done" ? (steps.company.data?.careersUrl ?? null) : null;
   const officialDomain = steps.company.status === "done" ? (steps.company.data?.officialDomain ?? null) : null;
   const officialLink = careersUrl
-    ? { url: careersUrl, label: "The company's official careers page" }
+    ? { url: careersUrl, label: "Official careers page" }
     : officialDomain
-      ? { url: `https://${officialDomain}`, label: `The company's official website (${officialDomain})` }
+      ? { url: `https://${officialDomain}`, label: "Official website" }
       : null;
   const postingData = steps.posting.status === "done" ? steps.posting.data : null;
   const companyName = outcome.facts?.company?.value ?? input.form.company;
   const coverage = report.coverage;
   const missing = coverage.missingImportant.length ? ` · couldn't check ${coverage.missingImportant.join(", ")}` : "";
   const quotes = report.flags.map((f) => f.quote).filter((q): q is string => !!q);
+  // Never add questions after the first render; drop the ones that stopped mattering (answered ones stay).
+  const shownQuestions = questions.filter((q) => answers[q.id] !== undefined || report.questions.some((x) => x.id === q.id));
+  // Numbers follow the evidence list order (red flags by severity, then good signs).
+  const ordered = [...reds(report.flags), ...goods(report.flags)];
+  const annotated = annotate(input.text, ordered);
+  const numbers = Object.fromEntries(annotated.marks.map((m) => [m.flagId, m.n]));
+  const channel = answers.channel && answers.channel !== "other" ? answers.channel : null;
 
   return (
     <article className="mx-auto max-w-[960px] px-6 py-10 sm:py-16">
@@ -133,16 +209,21 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, ex
 
       <header className="flex flex-col items-center text-center">
         {(input.exampleId || outcome.usedSaved) && (
-          <span className="mb-6 rounded-full bg-accent/10 px-3 py-1 text-[13px] font-medium text-accent">
+          <span className="mb-6 rounded-full bg-accent/10 px-3 py-1 text-[13px] font-medium text-accent-fg">
             {outcome.usedSaved ? "Example (saved)" : "Example"}
           </span>
         )}
-        <RiskRing score={report.score} level={report.level} />
+        <RiskRing score={report.score} level={report.level} coverage={report.coverage} />
+        <p className="mt-3 max-w-[46ch] text-[17px] leading-snug text-fg-2">{actionLine(report.level)}</p>
+        {report.questionHint && shownQuestions.some((q) => answers[q.id] === undefined) && (
+          <p className="mt-2 text-[14px] text-muted">{report.questionHint}</p>
+        )}
+        {company && !incomplete && <CompanyChip name={companyName} busy={company.busy} note={company.note} onSave={company.onSave} />}
         <button
           type="button"
           onClick={jumpToCouldntCheck}
           disabled={report.couldntCheck.length === 0}
-          className="mt-4 rounded-full px-3 py-1 text-[14px] text-muted underline-offset-4 enabled:hover:text-text enabled:hover:underline"
+          className="mt-3 rounded-full px-3 py-1 text-[14px] text-muted underline-offset-4 enabled:hover:text-text enabled:hover:underline"
         >
           {coverage.ran} of {coverage.total} checks ran{missing}
         </button>
@@ -178,7 +259,7 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, ex
           </p>
         )}
 
-        <QuickQuestions questions={questions} answers={answers} change={change} lastId={lastId} onAnswer={onAnswer} />
+        <TopReasons flags={report.flags} />
 
         {explanation ? (
           <Explanation text={explanation.text} source={explanation.source} quotes={quotes} loading={explaining} />
@@ -186,40 +267,28 @@ export default function Report({ outcome, input, onRetry, onAgain, fetchImpl, ex
           pending && <p className="text-[17px] text-muted" aria-busy="true">Writing the explanation...</p>
         )}
 
-        <div className="space-y-10">
-          {GROUPS.map((g) => (
-            <EvidenceGroup key={g} group={g} flags={report.groups[g]} />
-          ))}
-        </div>
+        <AnnotatedMessage text={input.text} flags={ordered} annotated={annotated} />
+
+        <EvidenceList flags={report.flags} level={report.level} numbers={numbers} />
 
         <CouldntCheck items={report.couldntCheck} />
 
-        {report.level === "low" ? (
+        <QuickQuestions questions={shownQuestions} answers={answers} change={change} lastId={lastId} onAnswer={onAnswer} />
+
+        {recovery ?? <RecoveryCard level={report.level} />}
+
+        {report.level !== "high" && (
           <PostingSection checked={steps.posting.status === "done"} posting={postingData} match={report.postingMatch} company={companyName} careersUrl={careersUrl} />
-        ) : (
-          <ScamOutcome report={report} source={answers.source && answers.source !== "unknown" ? answers.source : input.source} careersUrl={careersUrl} />
         )}
 
-        <footer className="flex flex-col items-center gap-5 border-t border-border pt-10 text-center">
-          <p className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-[15px]">
-            {officialLink ? (
-              <a href={officialLink.url} target="_blank" rel="noopener noreferrer" className={`${linkClass} inline-flex items-center gap-1`}>
-                {officialLink.label} <ExternalIcon size={14} />
-                <span className="sr-only">(opens in a new tab)</span>
-              </a>
-            ) : (
-              <span className="text-muted">Check the company&apos;s own website.</span>
-            )}
-            <a href={FTC_URL} target="_blank" rel="noopener noreferrer" className={`${linkClass} inline-flex items-center gap-1`}>
-              Report a scam to the FTC <ExternalIcon size={14} />
-              <span className="sr-only">(opens in a new tab)</span>
-            </a>
-          </p>
-          {extras}
-          <button type="button" onClick={onAgain} className={btnPrimary}>
-            Check another message
-          </button>
-        </footer>
+        <ReportFooter
+          report={report}
+          careersUrl={careersUrl}
+          officialLink={officialLink}
+          source={channel ?? input.source}
+          onAgain={onAgain}
+          extras={extras}
+        />
       </div>
     </article>
   );

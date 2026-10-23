@@ -10,7 +10,10 @@ export type BackstopId =
   | "crypto_or_task_deposit"
   | "reship_or_forward"
   | "run_code_or_install"
+  | "risky_run" // remote-access tools, terminal pastes, disabling antivirus, installers: critical on their own
+  | "money_wrong_way" // the candidate sends money onward, keeps a cut, or pays to withdraw
   | "sensitive_data"
+  | "secrecy" // "don't tell your bank", "keep this between us", "don't contact HR"
   | "off_platform"
   | "reply_yes"
   | "no_interview"
@@ -32,6 +35,16 @@ const YOU_PAY = String.raw`(?:you(?:['’]ll| will)?\s+(?:need to\s+|have to\s+|
 const SENSITIVE_THING = String.raw`(?:ssn|social security(?: number)?|bank account(?: number| details| info(?:rmation)?)?|routing number|online banking|bank login|banking (?:login|credentials|details)|debit card(?: number)?|credit card(?: number)?|driver['’]?s licen[cs]e|passport(?: number| copy| photo)?|(?:photo|government[- ]issued|state) id|password|login credentials)`;
 const ASK_VERB = String.raw`(?:send|sending|share|provide|reply|respond|email (?:us|me|it|them)|text (?:us|me|it|them)|submit|upload|give (?:us|me)|forward|enter|verify|ask for your|request your|require your)`;
 const YOU_BUY = String.raw`(?:you(?:['’]ll| will)?\s+(?:need to\s+|have to\s+|must\s+)?|must\s+|required to\s+|need to\s+|please\s+|to\s+)`;
+
+// Money flowing the wrong way (research 01 > rule 2).
+const P2P = String.raw`(?:zelle|cash\s?app|venmo|paypal|apple\s?(?:cash|pay)|bitcoin|btc|crypto\w*|wire(?:\s+transfer)?|western\s+union|moneygram|gift\s*cards?)`;
+const REST = String.raw`(?:rest|remaining|remainder|balance|difference|excess|leftover|extra\s+(?:funds|money|amount))`;
+// "we will send the remaining balance via PayPal" is the employer paying you, not the other way round.
+const NOT_EMPLOYER_SENDING = String.raw`(?<!\b(?:we|company|employer|payroll|hr)(?:['’]ll)?\s+(?:(?:will|shall|can|would|then|also)\s+)*)`;
+
+// Remote-access tools and ClickFix-style commands (research 01 > rule 3).
+const RMM = String.raw`(?:any\s?desk|team\s?viewer|screen\s?connect|connectwise|simple\s?help|atera|splashtop|rust\s?desk|ultra\s?viewer|logmein|ammyy|supremo|remote\s+(?:access|control|desktop|support)\s+(?:tool|software|app|application|client|program))`;
+const OFFICIAL_MEETING_HOST = String.raw`(?:[\w-]+\.)?(?:zoom\.us|zoom\.com|microsoft\.com|office\.com|webex\.com|meet\.google\.com|google\.com)`;
 
 const PATTERNS: Record<BackstopId, Pattern[]> = {
   deposit_check: [
@@ -58,6 +71,7 @@ const PATTERNS: Record<BackstopId, Pattern[]> = {
     new RegExp(String.raw`\b${YOU_BUY}pay\b[^.!?\n]{0,40}\bfees?\b`, "gi"),
     /\b(?:one[- ]time|small|refundable|upfront|up-front)\s+(?:fee|deposit)\b/gi,
     /\bfees?\b[^.!?\n]{0,30}\b(?:to (?:start|begin|get started|secure|reserve|process)|before (?:you )?start)/gi,
+    /\bto (?:reserve|secure|hold|keep) your (?:internship |job )?(?:place|spot|seat|slot|position)\b[^.!?\n]{0,40}\b(?:pay|send|deposit)\b/gi,
   ],
   buy_equipment: [
     new RegExp(String.raw`(?:(?<=(?:^|[.!?\n:])\s{0,3})|\b${YOU_BUY})(?:buy|purchase|order|pay for)\b[^.!?\n]{0,50}\b(?:equipment|laptop|computer|software|supplies|devices?|macbook|ipad|iphone|printer|starter kit|training (?:materials|kit|course))\b`, "gi"),
@@ -76,11 +90,58 @@ const PATTERNS: Record<BackstopId, Pattern[]> = {
     /\bpip\s+install\b/gi,
     /\bgit\s+clone\b/gi,
     /\bclone\s+(?:this|the|our|my)\s+(?:repo|repository|project|codebase)\b/gi,
-    /\b(?:install|download|run|execute)\b[^.!?\n]{0,40}\b(?:drivers?|\.exe|\.dmg|\.msi|\.bat|script|npm package|browser extension|this file|the attached (?:file|project|zip)|zip file|the project locally)\b/gi,
+    /\b(?:install|download|run|execute)\b[^.!?\n]{0,40}(?:\b(?:drivers?(?!['’])|script|npm package|browser extension|this file|the attached (?:file|project|zip)|zip file|the project locally)\b|\.(?:exe|dmg|msi|bat)\b)/gi,
     /\b(?:disable|turn off|deactivate)\b[^.!?\n]{0,30}\b(?:antivirus|sandbox|docker|defender|firewall|security software)\b/gi,
     /\brun this\s+(?:command|code|script|file|program)\b/gi,
   ],
+  risky_run: [
+    // Remote-access tools, in the same sentence as an install/run/share cue.
+    new RegExp(String.raw`\b(?:install|download|run|open|launch|use|start|share|give)\w*\b[^.!?\n]{0,60}\b${RMM}\b`, "gi"),
+    new RegExp(String.raw`\b${RMM}\b[^.!?\n]{0,50}\b(?:install\w*|download\w*|link|session|access code|your (?:id|screen|computer|pc|laptop))\b`, "gi"),
+    // "Update Zoom/Teams" with a link to somewhere that isn't the real site, an installer, or a "fix".
+    new RegExp(
+      String.raw`\b(?:update|upgrade|install|download|fix)\w*\b[^.!?\n]{0,30}\b(?:zoom|(?:microsoft\s+|ms\s+)?teams|webex|google\s+meet)\b[^.!?\n]{0,60}(?:https?:\/\/(?!${OFFICIAL_MEETING_HOST}(?:[\/\s]|$))|\.(?:exe|dmg|msi|pkg)\b|\b(?:plugin|patch|outdated|error|fix)\b)`,
+      "gi",
+    ),
+    // Terminal pastes ("fix your camera driver" and similar).
+    /\b(?:paste|copy|enter|type)\b[^.!?\n]{0,40}\b(?:command|line|script|snippet|code)\b[^.!?\n]{0,40}\b(?:into|in|to|on)\s+(?:the\s+|your\s+|a\s+)?(?:terminal|powershell|command\s+prompt|cmd|shell|run\s+dialog)\b/gi,
+    /\b(?:curl|wget)\b[^\n]{0,150}\|\s*(?:sudo\s+)?(?:ba|z)?sh\b/gi,
+    /\b(?:iwr|invoke-webrequest|irm|invoke-restmethod)\b[^\n]{0,150}\|\s*iex\b/gi,
+    /\bpowershell\b[^\n]{0,40}\s-(?:enc|encodedcommand|e|w\s+hidden)\b/gi,
+    /\bwin(?:dows)?\s?(?:key\s?)?\+\s?r\b/gi,
+    /\b(?:fix|resolve|repair|update|install)\w*\b[^.!?\n]{0,30}\b(?:camera|microphone|webcam|mic|audio)\b[^.!?\n]{0,20}\b(?:driver|error|issue|problem)s?\b[^.!?\n]{0,80}\b(?:command|terminal|script|run\w*|paste|copy|download\w*|install\w*|link)\b/gi,
+    // Switching off protection, and installers.
+    /\b(?:disable|turn off|deactivate)\b[^.!?\n]{0,30}\b(?:antivirus|anti-virus|virus protection|sandbox|defender|firewall|security software|windows security)\b/gi,
+    /\b(?:install|download|run|execute)\w*\b[^.!?\n]{0,40}(?:\b(?:drivers?(?!['’])|browser extension|chrome extension)\b|\.(?:exe|dmg|msi|bat|pkg)\b)/gi,
+  ],
+  money_wrong_way: [
+    // "send the remaining balance to our supplier via Zelle"
+    new RegExp(String.raw`${NOT_EMPLOYER_SENDING}\b(?:send|transfer|wire|forward|return|remit)\w*\b[^.!?\n]{0,100}?\b${REST}\b[^.!?\n]{0,100}?\b${P2P}\b`, "gi"),
+    new RegExp(String.raw`\b(?:zelle|venmo|cash\s?app|cashapp|wire)\s+(?:us\s+|them\s+|the\s+)?${REST}\b`, "gi"),
+    // Mobile deposits and e-checks, only with money going back out (a bare "mobile deposit" is normal banking).
+    new RegExp(String.raw`\b(?:mobile[- ](?:check[- ])?deposit|e-?checks?)\b[^.!?\n]{0,100}\b(?:send|buy|purchase|transfer|wire|forward|${P2P}|vendor|supplier|${REST})\b`, "gi"),
+    // ... or paying for equipment/supplies that way (the fake-check equipment setup).
+    /\b(?:equipment|supplies|office setup)\b[^.!?\n]{0,80}\b(?:mobile[- ](?:check[- ])?deposit|e-?checks?)\b/gi,
+    // Money mule setups
+    /\buse\s+your\s+(?:own\s+|personal\s+)?(?:bank|checking|savings)\s+account\b(?![^.!?\n]{0,60}\b(?:direct deposit|payroll|paycheck|portal|workday|set up)\b)/gi,
+    /\buse\s+your\s+(?:own\s+|personal\s+)account\b[^.!?\n]{0,60}\b(?:receive|transfer|forward|send|move|payments?|funds|money)\b/gi,
+    /\bopen\s+a\s+(?:new\s+)?(?:bank|checking|savings)\s+account\b[^.!?\n]{0,60}\b(?:receive|process|transfer|forward|company|payments?)\b/gi,
+    /\b(?:become|work as|act as|serve as|hiring)\s+(?:a\s+|an\s+|our\s+)?(?:payment|rebate|funds)\s+(?:processor|agent|handler)\b/gi,
+    /\bkeep\s+(?:\$\s?\d[\d,.]*|\d{1,2}\s?%)\s+(?:of\s+\w+\s+)?(?:for|as)\b/gi,
+    // Task scams: pay to withdraw, negative balances, "combo" orders
+    /\b(?:tax(?:es)?|fees?|charges?)\b[^.!?\n]{0,30}\b(?:to|before)\s+(?:you\s+(?:can\s+)?)?(?:withdraw|cash\s?out)/gi,
+    /\bnegative\s+(?:balance|account|amount)\b/gi,
+    /\b(?:combo|merged?)\s+(?:order|task)s?\b/gi,
+    /\breset\s+(?:your\s+)?tasks?\b/gi,
+  ],
   sensitive_data: [new RegExp(String.raw`\b${ASK_VERB}\b[^.!?\n]{0,50}?\b${SENSITIVE_THING}\b`, "gi")],
+  secrecy: [
+    /\b(?:do not|don['’]?t|never|must not|should not|shouldn['’]?t)\s+(?:tell|inform|notify|mention\s+(?:this\s+)?to|speak\s+(?:to|with)|talk\s+(?:to|with)|let)\s+(?:\w+\s+){0,3}?(?:bank|banker|family|parents?|friends?|anyone|anybody|school|university|advisor|adviser|career (?:center|services)|dean)\b/gi,
+    /\bkeep\s+(?:this|it|everything|these details)\s+(?:strictly\s+|completely\s+|totally\s+)?(?:confidential|secret|private|quiet)\s+from\b/gi,
+    /\bkeep\s+(?:this|it)\s+(?:a\s+)?secret\b|\bkeep\s+(?:this|it)\s+between\s+us\b|\bbetween\s+us\s+(?:only|for now)\b/gi,
+    /\b(?:do not|don['’]?t|never)\s+(?:contact|call|email|reach out to|check with|verify with)\s+(?:\w+\s+){0,2}?(?:hr|human resources|the company|your school|your university|career (?:center|services)|your bank)\b/gi,
+    /\bif\s+(?:the\s+|your\s+)?(?:bank|teller|anyone)\s+asks\b[^.!?\n]{0,30}\b(?:say|tell|just say)\b/gi,
+  ],
   off_platform: [
     /\b(?:whatsapp|whats app|telegram|wechat|viber|google hangouts|wickr|threema)\b/gi,
     /\b(?:on|via|over|through|download|use)\s+signal\b(?!\s+processing)/gi,
@@ -114,7 +175,14 @@ const WARNING_LEAD =
 /** The employer pays: "we'll pay for your laptop", "we reimburse certification fees". Fees and equipment only. */
 const EMPLOYER_PAYS =
   /\b(?:we|the company|our company|the employer)(?:['’](?:ll|d|re))?\s+(?:\w+\s+){0,3}?(?:pay|cover|reimburse|provide|waive|order|buy|purchase|supply)\w*\b|\b(?:reimburs\w*|waived?|free of charge|at no cost|company[- ](?:paid|provided))\b/i;
+/**
+ * Equipment only: the employer ships or provides it, or it's free. "We'll reimburse you" does NOT count,
+ * because buy-first-and-get-repaid is the classic fake-equipment scam (research 01 > rule 1).
+ */
+const EQUIPMENT_PROVIDED =
+  /\b(?:we|the company|our company|the employer)(?:['’](?:ll|d|re))?\s+(?:\w+\s+){0,3}?(?:ship|provide|supply|issue|cover|pay for)\w*\b|\b(?:waived?|free of charge|at no cost|company[- ](?:paid|provided|issued))\b/i;
 const PROVIDER_IDS = new Set<BackstopId>(["pay_fee", "buy_equipment"]);
+const STRICT_PROVIDER_IDS = new Set<BackstopId>(["buy_equipment"]);
 
 const BOUNDARY = /[.!?\n]/;
 const collapse = (s: string) => s.replace(/\s+/g, " ").trim();
@@ -141,15 +209,23 @@ export function snippetAround(text: string, start: number, end: number): string 
 }
 
 /** Is this match switched off by a negation, a fraud-warning footer, or (fees/equipment) the employer paying? */
-function negated(text: string, index: number, end: number, employerPays: boolean): boolean {
+function negated(text: string, index: number, end: number, employerPays: boolean, strict: boolean): boolean {
   const [s, e] = sentenceBounds(text, index, end);
   const before = text.slice(s, index);
   if (DIRECT_NEGATION.test(before) || WARNING_LEAD.test(before)) return true;
-  return employerPays && (EMPLOYER_PAYS.test(before) || /\b(?:reimburs\w*|waived?|covered by us)\b/i.test(text.slice(index, e)));
+  if (!employerPays) return false;
+  if (strict) return EQUIPMENT_PROVIDED.test(before) || /\b(?:waived?|covered by us|at no cost|free of charge)\b/i.test(text.slice(index, e));
+  return EMPLOYER_PAYS.test(before) || /\b(?:reimburs\w*|waived?|covered by us)\b/i.test(text.slice(index, e));
 }
 
 /** First match of any pattern that isn't negated and meets its same-sentence needs, or null. */
-export function firstMatch(text: string, patterns: Pattern[], negatable = false, employerPays = false): { index: number; match: string } | null {
+export function firstMatch(
+  text: string,
+  patterns: Pattern[],
+  negatable = false,
+  employerPays = false,
+  strictProvider = false,
+): { index: number; match: string } | null {
   for (const p of patterns) {
     const source = p instanceof RegExp ? p : p.re;
     const needs = p instanceof RegExp ? null : p.needs;
@@ -161,7 +237,7 @@ export function firstMatch(text: string, patterns: Pattern[], negatable = false,
         continue;
       }
       const end = m.index + m[0].length;
-      if (negatable && negated(text, m.index, end, employerPays)) continue;
+      if (negatable && negated(text, m.index, end, employerPays, strictProvider)) continue;
       if (needs) {
         const [s, e] = sentenceBounds(text, m.index, end);
         if (!needs.test(text.slice(s, e))) continue;
@@ -175,7 +251,7 @@ export function firstMatch(text: string, patterns: Pattern[], negatable = false,
 export function backstop(text: string): BackstopHit[] {
   const hits: BackstopHit[] = [];
   for (const id of Object.keys(PATTERNS) as BackstopId[]) {
-    const m = firstMatch(text, PATTERNS[id], true, PROVIDER_IDS.has(id));
+    const m = firstMatch(text, PATTERNS[id], true, PROVIDER_IDS.has(id), STRICT_PROVIDER_IDS.has(id));
     if (m) hits.push({ id, match: m.match, snippet: snippetAround(text, m.index, m.index + m.match.length) });
   }
   return hits;

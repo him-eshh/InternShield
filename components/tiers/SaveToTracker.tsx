@@ -21,8 +21,8 @@ export default function SaveToTracker({ card, onOpen }: Props) {
   const [company, setCompany] = useState(card.company);
   const [role, setRole] = useState(card.role);
   const [error, setError] = useState<string | null>(null);
-  const [cancelled, setCancelled] = useState(false);
   const companyRef = useRef<HTMLInputElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   function commit(co: string, ro: string) {
     const before = loadCards();
@@ -57,15 +57,42 @@ export default function SaveToTracker({ card, onOpen }: Props) {
     commit(co, role.trim());
   }
 
+  function close() {
+    setState("idle");
+    triggerRef.current?.focus();
+  }
+
+  // Bug B: `contents` makes the trigger and the form flex items of the footer row; the form
+  // and confirmation take `order-last basis-full` so they sit on their own left-aligned line
+  // below every button instead of inside the centered row.
   return (
-    <div>
-      {state === "idle" && (
-        <button type="button" autoFocus={cancelled} onClick={onSave} className={btnSecondary}>
+    <div className="contents">
+      {(state === "idle" || state === "form") && (
+        <button
+          ref={triggerRef}
+          type="button"
+          aria-expanded={state === "form"}
+          aria-controls={state === "form" ? "st-form" : undefined}
+          onClick={() => (state === "form" ? close() : onSave())}
+          className={btnSecondary}
+        >
           Save to tracker
         </button>
       )}
       {state === "form" && (
-        <form onSubmit={submit} noValidate className="animate-enter grid max-w-[520px] gap-4" aria-label="Save to tracker">
+        <form
+          id="st-form"
+          onSubmit={submit}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              e.preventDefault();
+              close();
+            }
+          }}
+          noValidate
+          className="animate-enter order-last mr-auto grid w-full max-w-[520px] basis-full gap-4 text-left"
+          aria-label="Save to tracker"
+        >
           <div>
             <label htmlFor="st-company" className="text-[15px] font-medium">
               Company
@@ -73,7 +100,7 @@ export default function SaveToTracker({ card, onOpen }: Props) {
             <input
               id="st-company"
               ref={companyRef}
-              autoFocus={!company.trim()}
+              autoFocus
               value={company}
               onChange={(e) => setCompany(e.target.value)}
               maxLength={120}
@@ -87,7 +114,7 @@ export default function SaveToTracker({ card, onOpen }: Props) {
             <label htmlFor="st-role" className="text-[15px] font-medium">
               Role <span className="font-normal text-muted">(optional)</span>
             </label>
-            <input id="st-role" autoFocus={Boolean(company.trim())} value={role} onChange={(e) => setRole(e.target.value)} maxLength={120} className={fieldCls} />
+            <input id="st-role" value={role} onChange={(e) => setRole(e.target.value)} maxLength={120} className={fieldCls} />
           </div>
           {error && (
             <p id="st-error" role="alert" className="text-[15px] font-medium">
@@ -98,20 +125,13 @@ export default function SaveToTracker({ card, onOpen }: Props) {
             <button type="submit" className={btnPrimary}>
               Save
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                setCancelled(true);
-                setState("idle");
-              }}
-              className={btnSecondary}
-            >
+            <button type="button" onClick={close} className={btnSecondary}>
               Cancel
             </button>
           </div>
         </form>
       )}
-      <p role="status" className={state === "saved" || state === "already" ? "animate-enter flex flex-wrap items-center gap-x-3 gap-y-1 text-[15px]" : "sr-only"}>
+      <p role="status" className={state === "saved" || state === "already" ? "animate-enter order-last flex basis-full flex-wrap items-center gap-x-3 gap-y-1 text-left text-[15px]" : "sr-only"}>
         {(state === "saved" || state === "already") && (
           <>
             <span className="inline-flex items-center gap-1.5">

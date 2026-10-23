@@ -1,0 +1,25 @@
+{
+  "note": "Legit take-home coding test from a company the user applied to.",
+  "text": "Thanks for applying to Lakeside Analytics. Here's your take-home for the Data Engineering Intern role on our Greenhouse portal. Please complete it in the CodeSignal link within 7 days. It should take about 2 hours and you can use any language.",
+  "expectedLevel": "low",
+  "profile": { "field": "tech", "level": "junior", "skills": ["python", "react"] },
+  "source": "company_site",
+  "stage": "interviewing",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "isJobMessage": true,
+        "company": { "value": "Lakeside Analytics", "quote": "Lakeside Analytics" },
+        "role": { "value": "Data Engineering Intern", "quote": "Data Engineering Intern" },
+        "sender": { "name": null, "email": "recruiting@lakeside-analytics.example", "phone": null },
+        "interview": { "status": "mentioned", "quote": "Here's your take-home" }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "lakeside-analytics.example", "careersUrl": null } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "recruiting@lakeside-analytics.example", "domain": "lakeside-analytics.example", "freeEmail": false, "registeredAt": "-2400d", "hasMx": true, "hunter": null }
+    }
+  }
+}

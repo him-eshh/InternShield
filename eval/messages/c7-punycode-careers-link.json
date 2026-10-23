@@ -1,0 +1,21 @@
+{
+  "note": "Link host is punycode (xn--) imitating a careers site and asks for a login.",
+  "text": "Hi Noor,\n\nThanks for applying to Lumen Robotics. Please finish your application and log in with your university email and password here: https://xn--lumenrobtics-careers-4ub.example/apply\n\nLumen Robotics Recruiting\nrecruiting@lumenrobotics-hiring.example",
+  "expectedLevel": "high",
+  "profile": { "field": "tech", "level": "junior", "skills": ["C++"] },
+  "source": "email",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Lumen Robotics", "quote": "Lumen Robotics" },
+        "sender": { "name": null, "email": "recruiting@lumenrobotics-hiring.example", "phone": null },
+        "asks": [{ "kind": "sensitive_data", "quote": "log in with your university email and password" }]
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "lumenrobotics.example", "careersUrl": "https://lumenrobotics.example/careers" } },
+    "sender": { "status": "done", "data": { "email": "recruiting@lumenrobotics-hiring.example", "domain": "lumenrobotics-hiring.example", "freeEmail": false, "registeredAt": "-9d", "hasMx": true } },
+    "posting": { "status": "done", "data": { "found": false, "url": null, "title": null, "location": null, "pay": null, "postedDate": null, "onOfficialDomain": false } }
+  }
+}

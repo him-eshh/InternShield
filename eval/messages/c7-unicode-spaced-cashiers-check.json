@@ -1,0 +1,9 @@
+{
+  "note": "Spaced letters hide cashier's check and wire.",
+  "text": "Congrats on the position! We will mail you a c a s h i e r ' s  c h e c k for $2,800. After you deposit it, w i r e $2,200 to our equipment vendor and keep the rest.",
+  "expectedLevel": "high",
+  "profile": { "field": "other", "level": "senior", "skills": [] },
+  "source": "email",
+  "stage": "offer",
+  "savedSteps": { "extract": { "status": "done", "data": {} } }
+}

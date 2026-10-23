@@ -1,0 +1,25 @@
+{
+  "note": "Buy equipment from a vendor, promised reimbursement.",
+  "text": "Hi Jordan, congrats on joining Northwind Labs (northwind-labs.example) as a remote data intern! Please purchase the MacBook from our approved vendor, techsupply-direct.example, and send the receipt. We will reimburse you on your first paycheck.",
+  "expectedLevel": "high",
+  "profile": { "field": "tech", "level": "junior", "skills": ["python", "react"] },
+  "source": null,
+  "stage": null,
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "isJobMessage": true,
+        "company": { "value": "Northwind Labs", "quote": "Northwind Labs" },
+        "role": { "value": "remote data intern", "quote": "remote data intern" },
+        "sender": { "name": null, "email": "onboarding@northwind-labs.example", "phone": null },
+        "asks": [{ "kind": "buy_equipment", "quote": "Please purchase the MacBook from our approved vendor" }],
+        "interview": { "status": "none_hired_directly", "quote": "congrats on joining" }
+      }
+    },
+    "sender": {
+      "status": "done",
+      "data": { "email": "onboarding@northwind-labs.example", "domain": "northwind-labs.example", "freeEmail": false, "registeredAt": "-9d", "hasMx": true, "hunter": null }
+    }
+  }
+}

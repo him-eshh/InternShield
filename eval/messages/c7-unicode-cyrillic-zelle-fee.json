@@ -1,0 +1,9 @@
+{
+  "note": "Cyrillic look-alike letters (е, о, а) in send, deposit and Zelle.",
+  "text": "Hi! To reserve your internship place, please sеnd a dеpоsit of $120 via Zеllе to оur cооrdinatоr. It is refundable after your first paycheck.",
+  "expectedLevel": "high",
+  "profile": { "field": "business", "level": "sophomore", "skills": [] },
+  "source": "email",
+  "stage": "message",
+  "savedSteps": { "extract": { "status": "done", "data": {} } }
+}

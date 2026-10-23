@@ -1,0 +1,21 @@
+{
+  "note": "Reimbursement trap: buy a laptop on your own card, refund promised after week one.",
+  "text": "Congratulations Riley! You are hired as a Data Entry Intern at Skylark Logistics. Before day one, please buy the work laptop from our approved vendor link on your own credit card. We will reimburse you in full after your first week.\n\nHR Desk, Skylark Logistics\nhr@skylark-logistics-careers.example",
+  "expectedLevel": "high",
+  "profile": { "field": "tech", "level": "junior", "skills": ["Python"] },
+  "source": "email",
+  "stage": "offer",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Skylark Logistics", "quote": "Data Entry Intern at Skylark Logistics" },
+        "sender": { "name": null, "email": "hr@skylark-logistics-careers.example", "phone": null },
+        "asks": [{ "kind": "buy_equipment", "quote": "buy the work laptop from our approved vendor link on your own credit card" }]
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "skylarklogistics.example", "careersUrl": "https://skylarklogistics.example/careers" } },
+    "sender": { "status": "done", "data": { "email": "hr@skylark-logistics-careers.example", "domain": "skylark-logistics-careers.example", "freeEmail": false, "registeredAt": "-20d", "hasMx": true } },
+    "posting": { "status": "done", "data": { "found": false, "url": null, "title": null, "location": null, "pay": null, "postedDate": null, "onOfficialDomain": false } }
+  }
+}

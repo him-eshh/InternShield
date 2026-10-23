@@ -1,0 +1,21 @@
+{
+  "note": "Automated interview reminder text from a retailer the user applied to; 'Reply Y' is a confirmation, not a trap.",
+  "text": "Coastline Retail: Your interview for Store Associate is Thu 2:00 PM at the Harbor Mall location. Reply Y to confirm or R to reschedule.",
+  "expectedLevel": "low",
+  "profile": { "field": "other", "level": "freshman", "skills": ["customer service"] },
+  "source": "text_whatsapp",
+  "stage": "interviewing",
+  "answers": { "had_interview": "unknown" },
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "isJobMessage": true,
+        "company": { "value": "Coastline Retail", "quote": "Coastline Retail" },
+        "role": { "value": "Store Associate", "quote": "Store Associate" },
+        "asks": [{ "kind": "reply_yes", "quote": "Reply Y to confirm or R to reschedule" }],
+        "interview": { "status": "mentioned", "quote": "Your interview for Store Associate is Thu 2:00 PM" }
+      }
+    }
+  }
+}

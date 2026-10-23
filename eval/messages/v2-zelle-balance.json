@@ -1,0 +1,20 @@
+{
+  "note": "Money mule setup: receive client payments in your own bank account, Zelle the rest onward, keep a cut.",
+  "text": "Hello,\n\nWe are hiring a part-time Payment Coordinator for Cedarpoint Trading. Work from home, 5 hours a week, no experience needed. You will use your personal bank account to receive client payments. Then transfer the remaining balance to our supplier through Zelle and keep $200 as your commission.\n\nRecruiting\ncedarpoint.hiring@mail.example",
+  "expectedLevel": "high",
+  "profile": { "field": "business", "level": "junior", "skills": ["Excel"] },
+  "source": "email",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Cedarpoint Trading", "quote": "Payment Coordinator for Cedarpoint Trading" },
+        "role": { "value": "Payment Coordinator", "quote": "part-time Payment Coordinator" },
+        "sender": { "name": null, "email": "cedarpoint.hiring@mail.example", "phone": null },
+        "asks": [{ "kind": "money_wrong_way", "quote": "transfer the remaining balance to our supplier through Zelle" }],
+        "noExperienceNeeded": { "quote": "no experience needed" }
+      }
+    }
+  }
+}

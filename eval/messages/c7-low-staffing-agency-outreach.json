@@ -1,0 +1,21 @@
+{
+  "note": "Staffing agency on its own domain recruiting for a client, no fee to the candidate.",
+  "text": "Hi Morgan,\n\nThis is Priya at Summit Talent Partners, a staffing agency. We're recruiting a Junior Accounting Intern for one of our clients. There is no fee to you. If interested, send your resume and a good time to call.\n\nPriya Nair\npriya.nair@summittalentpartners.example",
+  "expectedLevel": "low",
+  "profile": { "field": "business", "level": "junior", "skills": ["Excel"] },
+  "source": "linkedin",
+  "stage": "message",
+  "answers": { "who_first": "no" },
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Summit Talent Partners", "quote": "Summit Talent Partners" },
+        "sender": { "name": "Priya Nair", "email": "priya.nair@summittalentpartners.example", "phone": null }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "summittalentpartners.example", "careersUrl": null } },
+    "sender": { "status": "done", "data": { "email": "priya.nair@summittalentpartners.example", "domain": "summittalentpartners.example", "freeEmail": false, "registeredAt": "2011-09-01T00:00:00Z", "hasMx": true } },
+    "posting": { "status": "done", "data": { "found": true, "url": "https://summittalentpartners.example/jobs/accounting-intern", "title": "Junior Accounting Intern", "location": null, "pay": null, "postedDate": null, "onOfficialDomain": true } }
+  }
+}

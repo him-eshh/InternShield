@@ -46,7 +46,7 @@ describe("runPipeline", () => {
       "/api/explain": explain,
     });
     const a = await runPipeline(input, { ...opts, fetch: first.fn });
-    expect(a.steps.company).toEqual({ status: "failed", reason: "timeout" });
+    expect(a.steps.company).toEqual({ status: "failed", reason: "timeout", code: "TIMEOUT" });
     expect(a.steps.posting).toEqual({ status: "skipped", reason: "needs step 2" });
     expect(a.steps.sender.status).toBe("done");
     expect(a.report).not.toBeNull();
@@ -73,7 +73,7 @@ describe("runPipeline", () => {
       "/api/explain": explain,
     });
     const out = await runPipeline(input, { ...opts, fetch: f.fn });
-    expect(out.steps.extract).toEqual({ status: "failed", reason: "limit", retryAfter: 30 });
+    expect(out.steps.extract).toEqual({ status: "failed", reason: "limit", retryAfter: 30, code: "RATE_LIMITED" });
     expect(out.steps.company).toEqual({ status: "skipped", reason: "needs step 1" });
     expect(out.limited).toBe(true);
     expect(out.retryAfter).toBe(30);
@@ -85,7 +85,7 @@ describe("runPipeline", () => {
       throw new TypeError("network down");
     }) as typeof fetch;
     const out = await runPipeline(input, { ...opts, fetch: fn });
-    expect(out.steps.extract).toEqual({ status: "failed", reason: "error" });
+    expect(out.steps.extract).toEqual({ status: "failed", reason: "error", code: "UNKNOWN" });
     expect(out.report).not.toBeNull();
     expect(out.explanation).toBeNull(); // the report doesn't wait for it
     expect((await out.pendingExplanation)?.source).toBe("fallback");

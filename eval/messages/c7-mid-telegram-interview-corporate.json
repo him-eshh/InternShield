@@ -1,0 +1,22 @@
+{
+  "note": "Interview held as a Telegram text chat, from an otherwise normal domain.",
+  "text": "Hello Sasha,\n\nThanks for applying to Redwood Analytics. Our hiring manager will interview you by text chat on Telegram at 4 PM. Send your Telegram handle.\n\nRedwood Recruiting\nrecruiting@redwoodanalytics.example",
+  "expectedLevel": "medium",
+  "profile": { "field": "tech", "level": "junior", "skills": ["Python"] },
+  "source": "email",
+  "stage": "interviewing",
+  "answers": { "who_first": "yes", "talked_live": "chat_only" },
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Redwood Analytics", "quote": "Redwood Analytics" },
+        "sender": { "name": null, "email": "recruiting@redwoodanalytics.example", "phone": null },
+        "offPlatform": { "app": "Telegram", "quote": "interview you by text chat on Telegram" },
+        "interview": { "status": "mentioned", "quote": "interview you by text chat on Telegram at 4 PM" }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "redwoodanalytics.example", "careersUrl": null } },
+    "sender": { "status": "done", "data": { "email": "recruiting@redwoodanalytics.example", "domain": "redwoodanalytics.example", "freeEmail": false, "registeredAt": "2015-06-01T00:00:00Z", "hasMx": true } }
+  }
+}

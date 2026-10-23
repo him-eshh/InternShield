@@ -19,6 +19,7 @@ export const ASK_KINDS = [
   "crypto_or_task_deposit",
   "reship_or_forward",
   "run_code_or_install",
+  "money_wrong_way",
   "sensitive_data",
   "reply_yes",
   "other",
@@ -32,6 +33,7 @@ const quoteOnly = obj({ quote });
 export const EXTRACT_SCHEMA = obj({
   isJobMessage: { type: "boolean" },
   company: orNull(quoted),
+  department: nstr,
   role: orNull(quoted),
   pay: orNull(quoted),
   sender: obj({ name: nstr, email: nstr, phone: nstr }),

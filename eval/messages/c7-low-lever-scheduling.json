@@ -1,0 +1,22 @@
+{
+  "note": "Lever scheduling mail after an application.",
+  "text": "Hi Mina,\n\nThanks for applying to the Data Analyst Intern position at Tern Health. We'd like to schedule a 30 minute intro call. Pick a time here: https://jobs.lever.co/ternhealth/schedule\n\nTern Health Recruiting\nnotifications@hire.lever.co",
+  "expectedLevel": "low",
+  "profile": { "field": "tech", "level": "junior", "skills": ["Python"] },
+  "source": "email",
+  "stage": "interviewing",
+  "answers": { "who_first": "yes" },
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Tern Health", "quote": "Tern Health" },
+        "role": { "value": "Data Analyst Intern", "quote": "Data Analyst Intern position" },
+        "sender": { "name": null, "email": "notifications@hire.lever.co", "phone": null },
+        "interview": { "status": "mentioned", "quote": "schedule a 30 minute intro call" }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "ternhealth.example", "careersUrl": null } },
+    "sender": { "status": "done", "data": { "email": "notifications@hire.lever.co", "domain": "lever.co", "freeEmail": false, "registeredAt": "2012-05-01T00:00:00Z", "hasMx": true } }
+  }
+}

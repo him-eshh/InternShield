@@ -34,6 +34,7 @@ export type AskKind =
   | "crypto_or_task_deposit"
   | "reship_or_forward"
   | "run_code_or_install"
+  | "money_wrong_way" // candidate sends money onward, keeps a cut, uses their own account, or pays to withdraw
   | "sensitive_data"
   | "reply_yes"
   | "other";
@@ -61,7 +62,7 @@ export type FailReason = "timeout" | "limit" | "error";
 export type SkipReason = `needs step ${number}` | "missing input";
 export type StepResult<T> =
   | { status: "done"; data: T }
-  | { status: "failed"; reason: FailReason; retryAfter?: number } // retryAfter in seconds
+  | { status: "failed"; reason: FailReason; retryAfter?: number; code?: ApiErrorCode } // retryAfter in seconds
   | { status: "skipped"; reason: SkipReason };
 
 /** Step 2. null data = search ran but no official site identified. */
@@ -99,13 +100,16 @@ export interface StepResults {
 }
 
 // ---------- Quick questions ----------
-export type QuestionId = "outside_us" | "source" | "signed_offer" | "had_interview";
-export type YesNo = "yes" | "no" | "unknown"; // "unknown" = "I don't know"
+// Findings 02 > 4.1. Ids are stable: the UI keys on them across answers.
+export type QuestionId = "asked_to_do" | "who_first" | "channel" | "talked_live" | "signed_offer";
+export type YesNo = "yes" | "no" | "unknown"; // "unknown" = "Not sure"
+export type AskedTo = "pay" | "deposit_check" | "crypto" | "run_file" | "share_data";
 export interface Answers {
-  outside_us?: YesNo;
-  source?: Source | "unknown";
+  asked_to_do?: AskedTo[] | "none" | "unknown"; // multi-select; an empty pick is "none"
+  who_first?: YesNo; // "Did you apply for this job first?"
+  channel?: "email" | "linkedin" | "handshake" | "text_whatsapp" | "other";
+  talked_live?: "video" | "phone" | "chat_only" | "not_yet";
   signed_offer?: YesNo;
-  had_interview?: YesNo;
 }
 export interface Question {
   id: QuestionId;

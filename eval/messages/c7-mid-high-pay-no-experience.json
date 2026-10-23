@@ -1,0 +1,21 @@
+{
+  "note": "Very high pay for no experience, vague duties, free email, but no money ask.",
+  "text": "Hi! We pay $45 an hour for flexible remote work. No experience needed, you will help with general office tasks. Interview is a quick chat on text. Reply to start.\n\nAnna, Coastal Office Help\ncoastal.office.help@gmail.com",
+  "expectedLevel": "high",
+  "profile": { "field": "business", "level": "sophomore", "skills": ["Excel"] },
+  "source": "email",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Coastal Office Help", "quote": "Coastal Office Help" },
+        "pay": { "value": "$45 an hour", "quote": "We pay $45 an hour" },
+        "sender": { "name": "Anna", "email": "coastal.office.help@gmail.com", "phone": null },
+        "dutiesVague": { "quote": "help with general office tasks" },
+        "noExperienceNeeded": { "quote": "No experience needed" }
+      }
+    },
+    "sender": { "status": "done", "data": { "email": "coastal.office.help@gmail.com", "domain": "gmail.com", "freeEmail": true, "registeredAt": null, "hasMx": true } }
+  }
+}

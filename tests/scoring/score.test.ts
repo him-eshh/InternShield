@@ -277,25 +277,25 @@ describe("couldn't check", () => {
 });
 
 describe("quick questions", () => {
-  it("asks where the message came from, and answering changes the score with one line", () => {
+  // v2 (findings 02 > 4.1): "source" became "channel" + "who_first"; "Not sure" replaces "I don't know".
+  it("asks what they've asked you to do, and a ticked ask switches on a critical flag", () => {
     const first = score(input({ text: MILD, facts: acmeFacts }));
-    const q = first.questions.find((x) => x.id === "source");
+    const q = first.questions.find((x) => x.id === "asked_to_do");
     expect(q).toBeDefined();
-    expect(q!.options).toContainEqual({ value: "unknown", label: "I don't know" });
-    expect(first.couldntCheck.map((c) => c.check)).toContain("Where the message came from");
+    expect(q!.options).toContainEqual({ value: "unknown", label: "Not sure" });
+    expect(first.couldntCheck.map((c) => c.check)).toContain("What they've asked you to do");
 
-    const next = score(input({ text: MILD, facts: acmeFacts, answers: { source: "text_whatsapp" } }));
-    expect(next.score).toBeGreaterThan(first.score);
-    expect(next.questions.map((x) => x.id)).not.toContain("source");
-    expect(describeChange(first, next)).toBe("Score went up because this came as a surprise text");
+    const next = score(input({ text: MILD, facts: acmeFacts, answers: { asked_to_do: ["deposit_check"] } }));
+    expect(next.level).toBe("high");
+    expect(next.questions.map((x) => x.id)).not.toContain("asked_to_do");
   });
 
-  it("\"I don't know\" keeps it under Couldn't check with no score change", () => {
+  it("\"Not sure\" keeps it under Couldn't check with no score change", () => {
     const first = score(input({ text: MILD, facts: acmeFacts }));
-    const next = score(input({ text: MILD, facts: acmeFacts, answers: { source: "unknown" } }));
+    const next = score(input({ text: MILD, facts: acmeFacts, answers: { asked_to_do: "unknown" } }));
     expect(next.score).toBe(first.score);
-    expect(next.questions.map((x) => x.id)).not.toContain("source");
-    expect(next.couldntCheck.map((c) => c.check)).toContain("Where the message came from");
+    expect(next.questions.map((x) => x.id)).not.toContain("asked_to_do");
+    expect(next.couldntCheck.map((c) => c.check)).toContain("What they've asked you to do");
     expect(describeChange(first, next)).toBeNull();
   });
 
@@ -309,27 +309,27 @@ describe("quick questions", () => {
     expect(score(input({ text, source: "email", stage: "offer" })).questions.map((x) => x.id)).not.toContain("signed_offer");
   });
 
-  it("asks if the employer is outside the US only for an off-platform move with no money asked", () => {
+  // v2: "Is the employer outside the US?" is deleted; the chat-app penalty softens only when the user applied first.
+  it("never asks about the employer's country; applying first softens the chat-app move", () => {
     const text = "Hi, I'm with Acme. Can we continue this on WhatsApp? I'd like to set up an interview.";
     const first = score(input({ text, source: "linkedin" }));
-    expect(first.questions.map((x) => x.id)).toContain("outside_us");
-    const next = score(input({ text, source: "linkedin", answers: { outside_us: "yes" } }));
-    expect(first.score - next.score).toBe(10);
-    expect(describeChange(first, next)).toMatch(/^Score went down because the employer is outside the US/);
-    const withCheck = score(input({ text: `${text} We will mail you a check for $900.`, source: "linkedin" }));
-    expect(withCheck.questions.map((x) => x.id)).not.toContain("outside_us");
+    expect(first.questions.map((x) => x.id)).not.toContain("outside_us");
+    const applied = score(input({ text, source: "linkedin", answers: { who_first: "yes" } }));
+    expect(applied.score).toBeLessThan(first.score);
   });
 
-  it("asks about an interview when the message implies a hire", () => {
+  // v2: shown only when an answer can flip the level (0 -> 20 stays low), but the answer still scores.
+  it("a 'not yet' to talking live adds the no-interview flag", () => {
     const text = "Congratulations, you have been selected for the Acme design internship. Your start date is Monday.";
     const first = score(input({ text, source: "email", stage: "offer" }));
-    expect(first.questions.map((x) => x.id)).toContain("had_interview");
-    const next = score(input({ text, source: "email", stage: "offer", answers: { had_interview: "no" } }));
+    expect(first.questions.map((x) => x.id)).not.toContain("talked_live");
+    const next = score(input({ text, source: "email", stage: "offer", answers: { talked_live: "not_yet" } }));
     expect(next.score).toBe(first.score + 20);
     expect(describeChange(first, next)).toBe("Score went up because you haven't had an interview with them");
   });
 
-  it("never asks when the source is already known", () => {
-    expect(score(fromExample(EXAMPLES.real)).questions).toEqual([]);
+  // v2: only the asks question remains (a ticked ask can switch on a critical); nothing about the source.
+  it("never asks about the source when it's already known", () => {
+    expect(score(fromExample(EXAMPLES.real)).questions.map((q) => q.id)).toEqual(["asked_to_do"]);
   });
 });

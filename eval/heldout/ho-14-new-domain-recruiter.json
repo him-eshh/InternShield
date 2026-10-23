@@ -1,0 +1,25 @@
+{
+  "note": "Sender domain registered 10 days ago and not matching the company's official site; otherwise normal-sounding.",
+  "text": "Hi Mei, I'm Daniel Park, a talent partner at Veridian Quay Software. We are hiring a Software Engineering Intern for summer and your project work stood out. Would you like to set up an intro call this week?",
+  "expectedLevel": "medium",
+  "profile": { "field": "tech", "level": "junior", "skills": ["python", "react"] },
+  "source": "linkedin",
+  "stage": null,
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "isJobMessage": true,
+        "company": { "value": "Veridian Quay Software", "quote": "Veridian Quay Software" },
+        "role": { "value": "Software Engineering Intern", "quote": "Software Engineering Intern" },
+        "sender": { "name": "Daniel Park", "email": "daniel@veridianquay-software.example", "phone": null },
+        "interview": { "status": "mentioned", "quote": "set up an intro call this week" }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "veridianquay.example", "careersUrl": null } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "daniel@veridianquay-software.example", "domain": "veridianquay-software.example", "freeEmail": false, "registeredAt": "-10d", "hasMx": true, "hunter": null }
+    }
+  }
+}

@@ -1,16 +1,19 @@
 // The scoring engine (spec.md > Scoring Engine). Pure: no network, env, or React.
 // AI facts and the raw-text backstop are combined; fixed rules decide the score.
-import { parsePhoneNumberFromString } from "libphonenumber-js/min";
-import type { AskKind, Facts, Flag, FlagGroup, Quoted, Report, RiskLevel, ScoreInput } from "../types";
-import { quoteIsReal } from "../quotes";
+import type { AskedTo, AskKind, Facts, Flag, FlagGroup, LinkIssue, Quoted, Report, RiskLevel, ScoreInput } from "../types";
+import { quoteIsReal, visibleQuote } from "../quotes";
 import { backstop, type BackstopId } from "./backstop";
 import { buildCoverage } from "./coverage";
 import { emailDomain, isFreeEmail, isHiringPlatform, lookalike, registrableDomain, type LookalikeKind } from "./domains";
+import { withFlagInfo } from "./flagInfo";
 import { roleAboveLevel } from "./level";
-import { matchFieldPattern } from "./patterns";
+import { matchFieldPattern, taskVocab } from "./patterns";
 import { matchRows, payMatch, rolesMatch } from "./posting";
-import { pickQuestions, questionGaps, type Relevance } from "./questions";
+import { pickQuestions, questionGaps, questionHint, type Relevance } from "./questions";
 import { BANNED_WORDS, CHANGE_REASONS, WEIGHTS as W } from "./rules";
+import { cleanText } from "./unicode";
+import { checkLinks } from "./links";
+import { claimedInstitution, earlyPaperwork, isInstitutionDomain, namesScheduledInterview, paymentAsk, relayQuote, visaThreat } from "./institutions";
 
 const DAY_MS = 86_400_000;
 const FTC_JOB_SCAMS = "https://consumer.ftc.gov/articles/job-scams";
@@ -51,13 +54,37 @@ const CRITICAL_COPY: Record<CriticalAsk, { title: string; why: string; sourceUrl
   },
   run_code_or_install: {
     title: "They want you to run their code or install something",
-    why: "Fake coding tests and \"drivers\" from recruiters are used to put malware on your computer.",
+    why: "Fake coding tests, remote-access tools, and \"driver fixes\" from recruiters are used to put malware on your computer or take it over.",
+  },
+  money_wrong_way: {
+    title: "They want you to send money back out",
+    why: "Real employers don't ask you to pass money on, keep a cut, use your own account, or pay a fee to withdraw. That is how scammers move money through you.",
+    sourceUrl: "https://www.fdicoig.gov/alerts/public-service-alert-money-mules",
   },
 };
-const CRITICAL_ASKS = Object.keys(CRITICAL_COPY) as CriticalAsk[];
+// run_code_or_install and money_wrong_way have their own rules below.
+const CRITICAL_ASKS = (Object.keys(CRITICAL_COPY) as CriticalAsk[]).filter((k) => k !== "run_code_or_install" && k !== "money_wrong_way");
+const TOLD_ASKS: [AskedTo, CriticalAsk][] = [
+  ["pay", "pay_fee"],
+  ["deposit_check", "deposit_check"],
+  ["crypto", "crypto_or_task_deposit"],
+  ["run_file", "run_code_or_install"],
+];
+const MONEY_FAMILY =["deposit_check", "crypto_or_task_deposit", "reship_or_forward"];
+
+const CRYPTO_THEME =
+  /\b(?:crypto(?:currency)?|blockchain|web3|dapps?|nfts?|defi|smart contracts?|solidity|metamask|binance|usdt|bitcoin|ethereum)\b/i;
+/** The recruiter found you; you didn't apply. "reviewed your resume" is deliberately not here. */
+const UNSOLICITED =
+  /\b(?:came across|found|saw|noticed|stumbled (?:up)?on|impressed by|loved)\s+(?:your|you on)\b[^.!?\n]{0,30}\b(?:profile|github|gitlab|r[eé]sum[eé]|portfolio|linkedin|repos?|projects?|work)\b/i;
 
 const STARTUP_WORDS =
   /\b(?:start-?up|small business|small team|small company|early[- ]stage|pre-seed|seed[- ]stage|family[- ]owned|stealth|just launched|co-?founder|founder)\b/i;
+/** You applied: they say so. Then "Did you apply first?" isn't worth asking. */
+const APPLIED_TEXT = /\b(?:thank(?:s| you) for (?:applying|your (?:application|interest))|your (?:recent )?application|you applied)\b/i;
+/** Any hiring talk at all; "Have they asked you to..." only makes sense on a job message. */
+const JOB_TALK = /\b(?:job|role|position|internship|intern|hire|hiring|interview|offer|recruit\w*|candidate|apply|application|salary|pay)\b/i;
+const CHAT_INTERVIEW = /\binterview\w*\b[^.!?\n]{0,30}\b(?:by|over|via|through)\s+(?:text|chat)\b|\b(?:text|chat)[- ](?:based\s+)?interview/i;
 const IMPLIES_HIRED =
   /\b(?:offer|hired|hire you|selected|congratulations|welcome aboard|welcome to the team|onboarding|start date|you have been chosen|position is yours)\b/i;
 const GENERIC_GREETING =
@@ -89,14 +116,6 @@ function ago(days: number): string {
   return `${Math.round(d / 30)} months ago`;
 }
 
-function phoneCountry(phone: string | null): string | null {
-  if (!phone) return null;
-  try {
-    return parsePhoneNumberFromString(phone, "US")?.country ?? null;
-  } catch {
-    return null;
-  }
-}
 
 function digitsIn(a: string, b: string): boolean {
   const d = a.replace(/\D/g, "");
@@ -165,9 +184,12 @@ interface Evaluated {
 }
 
 function evaluate(input: ScoreInput): Evaluated {
-  const text = input.text ?? "";
+  // `raw` is what the user sees (quotes must match it); `text` is the cleaned copy every rule reads.
+  const raw = input.text ?? "";
+  const cleaned = cleanText(raw);
+  const text = cleaned.text;
   const answers = input.answers ?? {};
-  const facts = input.facts ? verifyFacts(input.facts, text) : null;
+  const facts = input.facts ? verifyFacts(input.facts, raw) : null;
   const hits = backstop(text);
   const hit = (id: BackstopId) => hits.find((h) => h.id === id) ?? null;
   const ask = (kind: AskKind) => facts?.asks.find((a) => a.kind === kind) ?? null;
@@ -181,10 +203,28 @@ function evaluate(input: ScoreInput): Evaluated {
   const good = (id: string, group: FlagGroup, points: number, title: string, why: string, quote: string | null = null) =>
     add({ id, group, kind: "good", title, quote, why, points, critical: false });
 
-  const source = answers.source && answers.source !== "unknown" ? answers.source : input.source;
+  const source = (answers.channel && answers.channel !== "other" ? answers.channel : null) ?? input.source;
+  // "Did you apply first?" overrides the channel guess; Handshake or the company site imply it.
+  const appliedFirst = answers.who_first === "yes" || (answers.who_first !== "no" && (source === "company_site" || source === "handshake"));
+  // Rule 10: you applied (said so, or the stage is past the first message) and the text names a booked interview:
+  // "Reply YES to confirm" is then ordinary scheduling, not a surprise text.
+  const confirmedInterview =
+    (answers.who_first === "yes" || (input.stage !== null && input.stage !== "message")) && namesScheduledInterview(text);
+  const ticked = Array.isArray(answers.asked_to_do) ? answers.asked_to_do : [];
   const signed = input.stage === "signed" || answers.signed_offer === "yes";
   const company = facts?.company?.value ?? (input.form.company?.trim() || null);
   const companyLabel = named(company, "this company");
+
+  // Off-platform and the sender's address are read first: the run-code rule depends on them.
+  const offFact = facts?.offPlatform ?? null;
+  const offHit = hit("off_platform");
+  const offPlatform = offFact || offHit;
+  const chatChannel = source === "text_whatsapp" || Boolean(offPlatform);
+
+  const senderStep = input.steps.sender.status === "done" ? input.steps.sender.data : null;
+  const senderEmail = senderStep?.email ?? facts?.sender.email ?? (input.form.sender?.includes("@") ? input.form.sender.trim() : null);
+  const senderDomain = senderStep?.domain ?? emailDomain(senderEmail);
+  const free = senderDomain ? Boolean(senderStep?.freeEmail) || isFreeEmail(senderDomain) : false;
 
   // ----- Offer: critical asks (facts ∪ backstop) -----
   for (const kind of CRITICAL_ASKS) {
@@ -194,18 +234,61 @@ function evaluate(input: ScoreInput): Evaluated {
     const c = CRITICAL_COPY[kind];
     red(kind, "offer", W.critical, c.title, c.why, fact?.quote ?? h!.snippet, { critical: true, sourceUrl: c.sourceUrl });
   }
+  // What the user told us they were asked to do. Same criticals, no quote. (Sensitive data is below: it's stage-aware.)
+  for (const [tick, kind] of TOLD_ASKS) {
+    if (!ticked.includes(tick)) continue;
+    const c = CRITICAL_COPY[kind];
+    red(kind, "offer", W.critical, c.title, `You told us they asked for this. ${c.why}`, null, { critical: true, sourceUrl: c.sourceUrl });
+  }
 
-  // ----- Off-platform (needed for sensitive-data channel and the abroad rule) -----
-  const offFact = facts?.offPlatform ?? null;
-  const offHit = hit("off_platform");
-  const offPlatform = offFact || offHit;
-  const chatChannel = source === "text_whatsapp" || Boolean(offPlatform);
+  // Money flowing the wrong way. One critical in the money family is enough; no double count.
+  const wayFact = ask("money_wrong_way");
+  const wayHit = hit("money_wrong_way");
+  if ((wayFact || wayHit) && !flags.some((f) => MONEY_FAMILY.includes(f.id))) {
+    const c = CRITICAL_COPY.money_wrong_way;
+    red("money_wrong_way", "offer", W.critical, c.title, c.why, wayFact?.quote ?? wayHit!.snippet, { critical: true, sourceUrl: c.sourceUrl });
+  }
+
+  // Run their code: critical for remote-access tools, terminal pastes, switching off protection, and installers,
+  // or when the ask comes with something else suspicious. A plain take-home from a company you applied to is +15.
+  const codeFact = ask("run_code_or_install");
+  const codeHit = hit("run_code_or_install");
+  const riskyRun = hit("risky_run");
+  if ((codeFact || codeHit || riskyRun) && !flags.some((f) => f.id === "run_code_or_install")) {
+    const suspicious = chatChannel || free || CRYPTO_THEME.test(text) || (!appliedFirst && UNSOLICITED.test(text));
+    const quote = codeFact?.quote ?? riskyRun?.snippet ?? codeHit?.snippet ?? null;
+    if (riskyRun || suspicious) {
+      const c = CRITICAL_COPY.run_code_or_install;
+      red("run_code_or_install", "offer", W.critical, c.title, c.why, quote, { critical: true });
+    } else {
+      red(
+        "untrusted_code",
+        "offer",
+        W.untrustedCode,
+        "They want you to run their code",
+        "Take-home projects are normal, but code from a recruiter can hide malware. Confirm it with the company first and run it somewhere disposable.",
+        quote,
+      );
+    }
+  }
+
+  // Invisible or look-alike characters were mixed into the message.
+  if (cleaned.stripped + cleaned.replaced >= W.hiddenCharactersMin) {
+    red(
+      "hidden_characters",
+      "message",
+      W.hiddenCharacters,
+      "The message hides characters",
+      "Invisible or look-alike letters were mixed into the text. Scammers do this to slip past filters, so we read it with them removed.",
+      null,
+    );
+  }
 
   const sensFact = ask("sensitive_data");
   const sensHit = hit("sensitive_data");
-  const sensitiveAsked = Boolean(sensFact || sensHit);
+  const sensitiveAsked = Boolean(sensFact || sensHit || ticked.includes("share_data"));
   if (sensitiveAsked) {
-    const quote = sensFact?.quote ?? sensHit!.snippet;
+    const quote = sensFact?.quote ?? sensHit?.snippet ?? null;
     // After a signed offer it's only a caution when they point you to an official portal,
     // not when they want it by reply, email, chat, or text.
     const viaPortal = HR_PORTAL.test(text);
@@ -216,28 +299,43 @@ function evaluate(input: ScoreInput): Evaluated {
     }
   }
 
-  const moneyOrData = flags.some((f) => f.critical) || sensitiveAsked;
+  // Rule 9: tax, work-eligibility, and payroll forms belong after a signed offer. A fee for them is already pay_fee.
+  // An onboarding note ("welcome aboard, complete your I-9") from a hiring platform or the company's own domain is normal.
+  const earlyOfficial = input.steps.company.status === "done" ? input.steps.company.data?.officialDomain ?? null : null;
+  const onboardingNote = senderDomain !== null && (isHiringPlatform(senderDomain) || senderDomain === earlyOfficial) && IMPLIES_HIRED.test(text);
+  const papers = signed || input.stage === "offer" || onboardingNote ? null : earlyPaperwork(text);
+  if (papers && !flags.some((f) => f.id === "pay_fee")) {
+    const withFee = papers.fee || ticked.includes("pay");
+    red(
+      "paperwork_too_early",
+      "offer",
+      withFee ? W.critical : W.paperwork,
+      withFee ? "They want a fee for hiring paperwork" : "They want hiring paperwork before an offer",
+      withFee
+        ? "Real employers never charge for hiring forms, and these forms come after a signed offer."
+        : "Forms like the I-9, W-4, or direct deposit come after you sign an offer, through the company's HR system. Asking early is a way to collect your details.",
+      papers.quote,
+      withFee ? { critical: true, sourceUrl: FTC_JOB_SCAMS } : {},
+    );
+  }
 
-  // Employer country: answer first, else the AI's hint, else the phone's country code.
-  const hint = facts?.employerCountryHint?.trim() || null;
-  const hintAbroad = hint ? !/^(?:us|u\.s\.?|usa|u\.s\.a\.?|united states|america)\b/i.test(hint) : null;
-  const phone = facts?.sender.phone ?? /\+\d[\d\s().-]{7,18}\d/.exec(text)?.[0] ?? null;
-  const country = phoneCountry(phone);
-  const autoAbroad = hintAbroad ?? (country ? country !== "US" : null);
-  const abroad = answers.outside_us === "yes" ? true : answers.outside_us === "no" ? false : autoAbroad;
+  const moneyOrData = flags.some((f) => f.critical) || sensitiveAsked;
 
   if (offPlatform) {
     const appRaw = offFact?.app ?? offHit?.match ?? "";
     const app = APP_NAMES.find(([re]) => re.test(appRaw))?.[1] ?? null;
-    const soft = abroad === true && !moneyOrData;
+    // Softer only when you applied first and they want no money or data (brief C4; the employer-abroad softening is gone).
+    // A chat-only interview (by answer or in the text) is never softened and counts more than a channel move.
+    const chatInterview = answers.talked_live === "chat_only" || CHAT_INTERVIEW.test(text);
+    const soft = appliedFirst && !moneyOrData && !chatInterview;
     red(
       "off_platform",
       "message",
-      soft ? W.offPlatformAbroad : W.offPlatform,
+      chatInterview ? W.offPlatform + W.chatInterview : soft ? W.offPlatformAbroad : W.offPlatform,
       app ? `They want to move you to ${app}` : "They want a chat-only interview",
       soft
-        ? "Chat apps are common for work in some countries, so this counts for less. Still keep hiring on official channels."
-        : "Real recruiters rarely move hiring to WhatsApp, Telegram, or chat-only interviews. Scammers do it to avoid platform checks.",
+        ? "You applied first, so this counts for less. Still keep hiring on official channels."
+        :"Real recruiters rarely move hiring to WhatsApp, Telegram, or chat-only interviews. Scammers do it to avoid platform checks.",
       offFact?.quote ?? offHit!.snippet,
     );
   }
@@ -245,13 +343,18 @@ function evaluate(input: ScoreInput): Evaluated {
   // ----- Message signals -----
   const yesFact = ask("reply_yes");
   const yesHit = hit("reply_yes");
-  if (yesFact || yesHit) {
+  if ((yesFact || yesHit) && !confirmedInterview) {
     red("reply_yes", "message", W.replyYes, "It asks you to reply YES", "Messages asking you to reply YES are a common way scammers find people who will answer.", yesFact?.quote ?? yesHit!.snippet);
   }
 
   const pressureQuote = facts?.pressure[0]?.quote ?? hit("pressure")?.snippet ?? null;
   if (pressureQuote) {
     red("pressure", "message", W.pressure, "They're rushing you", "Pressure to act fast is meant to stop you from checking. Real offers give you time to think.", pressureQuote);
+  }
+
+  const secrecy = hit("secrecy");
+  if (secrecy) {
+    red("secrecy", "message", W.secrecy, "They ask you to keep it secret", "Real employers don't ask you to hide a job from your bank, school, or family, or to avoid checking with them. Secrecy keeps people from spotting a scam.", secrecy.snippet);
   }
 
   const greeting = GENERIC_GREETING.exec(text);
@@ -277,16 +380,23 @@ function evaluate(input: ScoreInput): Evaluated {
   const noInterviewFact = facts?.interview.status === "none_hired_directly" ? facts.interview.quote : null;
   const noInterviewHit = hit("no_interview")?.snippet ?? null;
   const interviewUnclear = !noInterviewFact && !noInterviewHit && (facts === null || facts.interview.status === "unclear");
-  if (noInterviewFact || noInterviewHit || (interviewUnclear && impliesHired && answers.had_interview === "no")) {
+  if (noInterviewFact || noInterviewHit || (interviewUnclear && impliesHired && answers.talked_live === "not_yet")) {
     red("no_interview", "offer", W.noInterview, "You'd be hired without an interview", "Real employers interview you before making an offer.", noInterviewFact ?? noInterviewHit);
+  }
+  // A chat-only "interview" shares its cap with the off-platform flag: a WhatsApp chat interview counts once.
+  if (answers.talked_live === "chat_only" && !flags.some((f) => f.id === "off_platform")) {
+    red("chat_only_interview", "message", W.offPlatform, "You've only talked by chat", "Real employers talk to you on a call or video before hiring. Chat-only interviews are a common scam setup.", null);
   }
 
   if (facts?.dutiesVague && facts.noExperienceNeeded && facts.pay) {
     red("vague_easy_pay", "offer", W.vagueEasyPayCombo, "Vague duties, easy pay, no experience needed", "This mix of unclear work, easy money, and no experience needed is a classic scam pattern.", facts.dutiesVague.quote);
   }
 
-  const pattern = matchFieldPattern(text, input.profile?.field ?? null, source);
-  if (pattern) {
+  const tasks = taskVocab(text);
+  const pattern = tasks ? null : matchFieldPattern(text, input.profile?.field ?? null, source);
+  if (tasks) {
+    red("field_pattern", "offer", W.taskVocab, "This looks like a task scam", "Liking videos, boosting products, or finishing sets of tasks for commission is a known task scam. The money you see is bait for a deposit later.", tasks.quote, { sourceUrl: "https://consumer.ftc.gov/consumer-alerts/2025/08/how-spot-avoid-task-scams" });
+  } else if (pattern) {
     red("field_pattern", "offer", W.fieldPattern, `This looks like ${pattern.label}`, pattern.why, pattern.quote);
   }
 
@@ -296,18 +406,28 @@ function evaluate(input: ScoreInput): Evaluated {
   }
 
   // ----- Sender -----
-  if (source === "text_whatsapp") {
+  if (source === "text_whatsapp" && !appliedFirst && !confirmedInterview) {
     red("surprise_text", "sender", W.surpriseText, "This came as a surprise text", "Unexpected job texts and WhatsApp messages are one of the most common ways job scams start.", null);
-  } else if (source === "company_site" || source === "handshake") {
-    good("applied_first", "sender", W.appliedFirst, "You applied first", source === "handshake" ? "You started this on Handshake, so this isn't a surprise message out of nowhere." : "You applied on the company's own site, so this isn't a surprise message out of nowhere.");
+  } else if (appliedFirst) {
+    good(
+      "applied_first",
+      "sender",
+      W.appliedFirst,
+      "You applied first",
+      answers.who_first === "yes"
+        ? "You told us you applied first, so this isn't a surprise message out of nowhere."
+        : source === "handshake"
+          ? "You started this on Handshake, so this isn't a surprise message out of nowhere."
+          : "You applied on the company's own site, so this isn't a surprise message out of nowhere.",
+    );
+  }
+  // Not every unsolicited contact is fraud (FTC), so this stays small.
+  if (answers.who_first === "no") {
+    red("unsolicited", "sender", W.unsolicited, "They reached out first", "You didn't apply. Most job scams start with an offer out of nowhere, though real recruiters do this too.", null);
   }
 
-  const senderStep = input.steps.sender.status === "done" ? input.steps.sender.data : null;
-  const senderEmail = senderStep?.email ?? facts?.sender.email ?? (input.form.sender?.includes("@") ? input.form.sender.trim() : null);
-  const senderDomain = senderStep?.domain ?? emailDomain(senderEmail);
   const official = input.steps.company.status === "done" ? input.steps.company.data?.officialDomain ?? null : null;
-  const emailQuote = senderEmail && quoteIsReal(senderEmail, text) ? senderEmail : null;
-  const free = senderDomain ? Boolean(senderStep?.freeEmail) || isFreeEmail(senderDomain) : false;
+  const emailQuote = senderEmail && quoteIsReal(senderEmail, raw) ? senderEmail : null;
   const platform = senderDomain ? isHiringPlatform(senderDomain) : false;
   const domainLabel = named(senderDomain, "this email's website");
   const officialLabel = named(official, "the company's website");
@@ -361,6 +481,42 @@ function evaluate(input: ScoreInput): Evaluated {
     red("no_mx", "sender", W.noMx, "This email's website can't receive email", `${domainLabel} isn't set up to receive email, which is odd for a real company.`, emailQuote);
   }
 
+  // ----- Impersonated institution and visa threats (rule 8) -----
+  // Only the exact .edu/.gov (or a country form) is a match. Hiring platforms and an unknown sender are never flagged for this alone.
+  const claim = claimedInstitution(text);
+  const relay = relayQuote(text);
+  const threat = visaThreat(text);
+  const senderIsInstitution = senderDomain ? isInstitutionDomain(senderDomain) : false;
+  // A real .edu/.gov sender using a bulk-mail relay is fine; the relay only counts when the sender is unknown.
+  const wrongSender = senderDomain !== null ? !platform && !senderIsInstitution : relay !== null;
+  const payNow = flags.some((f) => ["pay_fee", "gift_cards", "crypto_or_task_deposit", "money_wrong_way", "deposit_check"].includes(f.id)) || paymentAsk(text) !== null;
+  if (claim && wrongSender && !flags.some((f) => f.id === "lookalike_domain")) {
+    const overlap = flags.some((f) => f.id === "free_email");
+    const who = claim.kind === "immigration" ? "an immigration office" : claim.kind === "government" ? "a government office" : "a university office";
+    red(
+      "impersonation",
+      "sender",
+      payNow ? W.critical : overlap ? W.impersonationOverlap : W.impersonation,
+      `It says it's from ${who}, but the sender doesn't match`,
+      relay
+        ? "The message was sent through a bulk-mail service, not from the school or agency's own address. Real offices write from their .edu or .gov address."
+        : "Real university and government offices write from their own .edu or .gov address. This sender uses a different one.",
+      relay ?? claim.quote,
+      payNow ? { critical: true, sourceUrl: FTC_JOB_SCAMS } : {},
+    );
+  }
+  if (threat && !senderIsInstitution) {
+    red(
+      "visa_threat",
+      "message",
+      payNow ? W.critical : W.visaThreat,
+      "It threatens your visa or student status",
+      "Real offices don't threaten to end your OPT, visa, or status by message, or ask for money to keep it. Scammers use fear of losing status to rush people.",
+      threat,
+      payNow ? { critical: true, sourceUrl: FTC_JOB_SCAMS } : {},
+    );
+  }
+
   // ----- Posting -----
   let postingMatch: Report["postingMatch"] = null;
   if (input.steps.posting.status === "done" && input.steps.posting.data.found) {
@@ -380,9 +536,39 @@ function evaluate(input: ScoreInput): Evaluated {
     }
   }
 
+  // ----- Links (local checks only; the link is never opened) -----
+  const links = checkLinks(text, { company, officialDomain: official });
+  const firstWith = (issue: LinkIssue) => links.find((l) => l.issues.includes(issue))?.url ?? null;
+  const fakeSite = firstWith("lookalike") ?? firstWith("brand-careers-offsite");
+  // A look-alike sender already covers the same trick; don't count it twice.
+  if (fakeSite && !flags.some((f) => f.id === "lookalike_domain")) {
+    red("link_lookalike", "message", W.linkLookalike, "A link copies the company's website", `This link isn't on ${officialLabel}, but it's made to look like it.`, fakeSite);
+  }
+  const puny = firstWith("punycode");
+  if (puny) red("link_punycode", "message", W.linkPunycode, "A link uses disguised letters", "The web address uses special characters that can make a fake site look like a real one.", puny);
+  const ip = firstWith("raw-ip");
+  if (ip) red("link_raw_ip", "message", W.linkRawIp, "A link is a bare number address", "Real companies link to their named website, not a string of numbers.", ip);
+  const form = firstWith("google-form");
+  if (form) {
+    red(
+      "link_google_form",
+      "message",
+      sensitiveAsked ? W.critical : W.linkGoogleForm,
+      "They use a Google Form for hiring",
+      sensitiveAsked
+        ? "Real employers never collect your SSN or bank details through a Google Form."
+        : "Real companies collect applications through their own careers site, not a free form anyone can make.",
+      form,
+      { critical: sensitiveAsked },
+    );
+  }
+  const short = firstWith("shortener");
+  if (short) red("link_shortener", "message", W.linkShortener, "A link hides where it goes", "Short links hide the real address until you click.", short);
+
   // ----- Score -----
   const anyCritical = flags.some((f) => f.critical);
-  const kept = anyCritical ? flags.filter((f) => f.kind === "red") : flags;
+  // Quotes read from the cleaned text are shown as the user's own wording; every flag gets severity, a step, and a link.
+  const kept = (anyCritical ? flags.filter((f) => f.kind === "red") : flags).map((f) => withFlagInfo({ ...f, quote: visibleQuote(f.quote, raw) }));
   const redSum = kept.filter((f) => f.kind === "red").reduce((n, f) => n + f.points, 0);
   const goodSum = anyCritical ? 0 : Math.max(W.goodSignCap, kept.filter((f) => f.kind === "good").reduce((n, f) => n + f.points, 0));
   let total = redSum + goodSum;
@@ -397,15 +583,25 @@ function evaluate(input: ScoreInput): Evaluated {
   const groups: Record<FlagGroup, Flag[]> = { sender: [], message: [], offer: [] };
   for (const f of kept) groups[f.group].push(f);
 
+  // Findings 02 > 4.1 triggers. pickQuestions then keeps only the ones whose answers matter.
   const relevant: Relevance = {
-    outside_us: Boolean(offPlatform) && !moneyOrData && autoAbroad === null,
-    source: input.source === null,
+    asked_to_do: !anyCritical && finalScore < W.highFrom && (finalScore >= W.mediumFrom || impliesHired || JOB_TALK.test(text)),
+    who_first: input.source === null && answers.channel !== "handshake" && !APPLIED_TEXT.test(text),
+    channel: input.source === null && !senderEmail && !facts?.sender.phone,
+    talked_live: interviewUnclear && impliesHired,
     signed_offer: sensitiveAsked && input.stage === null,
-    had_interview: interviewUnclear && impliesHired,
   };
 
   const thinMessage = text.trim().split(/\s+/).filter(Boolean).length < 20;
   const { couldntCheck, coverage } = buildCoverage(input, { senderEmailKnown: Boolean(senderEmail), thinMessage });
+
+  // "How sure": separate from the risk itself (research 01 > 3.4). A critical flag is enough on its own;
+  // otherwise it depends on how many of the weighted checks could run.
+  const confidence: NonNullable<Report["confidence"]> = {
+    level: anyCritical ? "high" : thinMessage ? "low" : coverage.ran >= W.sureFrom ? "high" : coverage.ran >= W.fairlySureFrom ? "medium" : "low",
+    checked: coverage.ran,
+    total: coverage.total,
+  };
 
   return {
     relevant,
@@ -418,15 +614,21 @@ function evaluate(input: ScoreInput): Evaluated {
       coverage,
       postingMatch,
       thinMessage,
+      confidence,
+      links,
     },
   };
 }
 
 export function score(input: ScoreInput): Report {
   const { report, relevant } = evaluate(input);
-  const questions = pickQuestions(input, relevant, (i) => evaluate(i).report.score);
+  const outcomeOf = (i: ScoreInput) => {
+    const r = evaluate(i).report;
+    return { level: r.level, critical: r.flags.some((f) => f.critical) };
+  };
+  const questions = pickQuestions(input, relevant, outcomeOf);
   const couldntCheck = [...report.couldntCheck, ...questionGaps(relevant, input.answers ?? {}, questions)];
-  return { ...report, couldntCheck, questions };
+  return { ...report, couldntCheck, questions, questionHint: questionHint(input, questions, outcomeOf) };
 }
 
 /** One line saying why the score changed after a quick-question answer, or null if it didn't. */

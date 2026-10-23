@@ -44,7 +44,7 @@ function Highlighted({ text, quotes }: { text: string; quotes: string[] }) {
   return (
     <>
       {highlightParts(text, quotes).map((p, i) => (
-        <Fragment key={i}>{p.hit ? <mark className="rounded bg-accent/15 px-0.5 text-text">{p.text}</mark> : p.text}</Fragment>
+        <Fragment key={i}>{p.hit ? <mark className="quote-mark">{p.text}</mark> : p.text}</Fragment>
       ))}
     </>
   );

@@ -1,0 +1,20 @@
+{
+  "note": "Secrecy request plus SSN asked up front.",
+  "text": "Hi Alex,\n\nYou have been selected for a confidential internship with Meridian Capital Partners. This is a private hiring round, so please do not tell your career center, professors or other recruiters. Reply with your full name, date of birth and SSN so we can hold your slot.\n\nMeridian Recruiting\nrecruiting@meridiancap-partners.example",
+  "expectedLevel": "high",
+  "profile": { "field": "business", "level": "sophomore", "skills": ["Excel"] },
+  "source": "email",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Meridian Capital Partners", "quote": "Meridian Capital Partners" },
+        "sender": { "name": null, "email": "recruiting@meridiancap-partners.example", "phone": null },
+        "asks": [{ "kind": "sensitive_data", "quote": "Reply with your full name, date of birth and SSN" }],
+        "pressure": [{ "quote": "please do not tell your career center, professors or other recruiters" }]
+      }
+    },
+    "sender": { "status": "done", "data": { "email": "recruiting@meridiancap-partners.example", "domain": "meridiancap-partners.example", "freeEmail": false, "registeredAt": "-30d", "hasMx": true } }
+  }
+}

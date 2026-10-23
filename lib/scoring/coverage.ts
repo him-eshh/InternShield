@@ -89,7 +89,9 @@ export function buildCoverage(
 
   // Posting
   if (steps.posting.status === "failed") {
-    gaps.push({ check: CHECKS.posting.name, reason: failText(steps.posting.reason, "the search service") });
+    // Daily search cap (retryAfter > 1 h): say so briefly.
+    const capped = steps.posting.reason === "limit" && (steps.posting.retryAfter ?? 0) > 3600;
+    gaps.push({ check: CHECKS.posting.name, reason: capped ? "Not checked: today's search limit was reached." : failText(steps.posting.reason, "the search service") });
   } else if (steps.posting.status === "skipped") {
     gaps.push({
       check: CHECKS.posting.name,

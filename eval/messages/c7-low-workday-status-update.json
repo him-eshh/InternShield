@@ -1,0 +1,21 @@
+{
+  "note": "Workday-style status update on an application.",
+  "text": "Dear Sam,\n\nYour application for Software Engineering Intern at Kestrel Networks has moved to the Assessment stage. Log in to your candidate home at kestrelnetworks.wd5.myworkdayjobs.com to continue.\n\nKestrel Networks Talent Acquisition\nkestrelnetworks@myworkday.com",
+  "expectedLevel": "low",
+  "profile": { "field": "tech", "level": "junior", "skills": ["Python"] },
+  "source": "email",
+  "stage": "interviewing",
+  "answers": { "who_first": "yes" },
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Kestrel Networks", "quote": "Kestrel Networks" },
+        "role": { "value": "Software Engineering Intern", "quote": "Software Engineering Intern" },
+        "sender": { "name": null, "email": "kestrelnetworks@myworkday.com", "phone": null }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "kestrelnetworks.example", "careersUrl": null } },
+    "sender": { "status": "done", "data": { "email": "kestrelnetworks@myworkday.com", "domain": "myworkday.com", "freeEmail": false, "registeredAt": "2005-01-01T00:00:00Z", "hasMx": true } }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "note": "Legit onsite interview: company books travel, receipts reimbursed afterward. Hard negative for 'reimburse' wording.",
+  "text": "Hi Luis, we'd love to bring you onsite to Copperfield Devices for your final interview on Nov 6. Our travel team will book your flight and hotel directly. For meals and local transit, please keep your receipts and we will reimburse you within two weeks through Workday expenses. Nothing is needed from you upfront beyond your availability.",
+  "expectedLevel": "low",
+  "profile": { "field": "tech", "level": "junior", "skills": ["python", "react"] },
+  "source": "company_site",
+  "stage": "interviewing",
+  "answers": { "had_interview": "yes" },
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "isJobMessage": true,
+        "company": { "value": "Copperfield Devices", "quote": "Copperfield Devices" },
+        "sender": { "name": null, "email": "recruiting@copperfield-devices.example", "phone": null },
+        "interview": { "status": "mentioned", "quote": "final interview on Nov 6" }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "copperfield-devices.example", "careersUrl": null } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "recruiting@copperfield-devices.example", "domain": "copperfield-devices.example", "freeEmail": false, "registeredAt": "-3600d", "hasMx": true, "hunter": null }
+    }
+  }
+}

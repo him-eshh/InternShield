@@ -1,0 +1,9 @@
+{
+  "note": "Spaced letters hide AnyDesk in a remote-access request.",
+  "text": "Hi Chris, to finish onboarding our IT person will connect to your laptop. Please install A n y D e s k and read out the 9-digit code to us on a call.",
+  "expectedLevel": "high",
+  "profile": { "field": "tech", "level": "junior", "skills": ["Python"] },
+  "source": "email",
+  "stage": "offer",
+  "savedSteps": { "extract": { "status": "done", "data": {} } }
+}

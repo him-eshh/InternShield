@@ -1,0 +1,23 @@
+{
+  "note": "Legit near-miss: after a signed offer, payroll by direct deposit set up in the HR portal.",
+  "text": "Hi Alex,\n\nThanks for signing your offer letter for the Finance Intern role at Willowbrook Partners. Interns are paid every two weeks by direct deposit. On your first day, use your personal bank account for direct deposit setup in the Workday portal, where HR will walk you through payroll.\n\nSee you soon,\nPeople Operations\npeopleops@willowbrookpartners.example",
+  "expectedLevel": "low",
+  "profile": { "field": "business", "level": "junior", "skills": ["Excel"] },
+  "source": "company_site",
+  "stage": "signed",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Willowbrook Partners", "quote": "Finance Intern role at Willowbrook Partners" },
+        "role": { "value": "Finance Intern", "quote": "the Finance Intern role" },
+        "sender": { "name": null, "email": "peopleops@willowbrookpartners.example", "phone": null }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "willowbrookpartners.example", "careersUrl": null } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "peopleops@willowbrookpartners.example", "domain": "willowbrookpartners.example", "freeEmail": false, "registeredAt": "2009-11-03T00:00:00Z", "hasMx": true }
+    }
+  }
+}

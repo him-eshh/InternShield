@@ -1,0 +1,27 @@
+{
+  "note": "Onboarding check, keep part, Zelle the rest.",
+  "text": "Hi Priya, welcome to Harbor Peak Logistics (harborpeak-logistics.example)! Your onboarding check for $2,800 is attached. Mobile-deposit it today, keep $400 for your time, and send the remaining balance to our equipment supplier via Zelle. Reply once it clears.",
+  "expectedLevel": "high",
+  "profile": { "field": "tech", "level": "junior", "skills": ["python", "react"] },
+  "source": null,
+  "stage": null,
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "isJobMessage": true,
+        "company": { "value": "Harbor Peak Logistics", "quote": "Harbor Peak Logistics" },
+        "sender": { "name": null, "email": "hr@harborpeak-logistics.example", "phone": null },
+        "asks": [
+          { "kind": "deposit_check", "quote": "Mobile-deposit it today, keep $400 for your time" },
+          { "kind": "reship_or_forward", "quote": "send the remaining balance to our equipment supplier via Zelle" }
+        ],
+        "pressure": [{ "quote": "Mobile-deposit it today" }]
+      }
+    },
+    "sender": {
+      "status": "done",
+      "data": { "email": "hr@harborpeak-logistics.example", "domain": "harborpeak-logistics.example", "freeEmail": false, "registeredAt": "-25d", "hasMx": true, "hunter": null }
+    }
+  }
+}

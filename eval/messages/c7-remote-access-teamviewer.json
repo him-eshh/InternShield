@@ -1,0 +1,17 @@
+{
+  "note": "Asks to install remote-access software and share the session password.",
+  "text": "Hello Jamie,\n\nThanks for applying to Cedar Ridge Analytics. For your onboarding, our IT agent needs to configure your account. Please download and install TeamViewer, then send the session ID and password to this number.\n\nCedar Ridge HR\n+1 555 010 4477",
+  "expectedLevel": "high",
+  "profile": { "field": "tech", "level": "junior", "skills": ["Python"] },
+  "source": "text_whatsapp",
+  "stage": "offer",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Cedar Ridge Analytics", "quote": "Cedar Ridge Analytics" },
+        "asks": [{ "kind": "run_code_or_install", "quote": "download and install TeamViewer, then send the session ID and password" }]
+      }
+    }
+  }
+}

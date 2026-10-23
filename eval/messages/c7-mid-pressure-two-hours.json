@@ -1,0 +1,22 @@
+{
+  "note": "Established-looking sender, but a two-hour deadline and a role the user never applied for.",
+  "text": "Hello Kai,\n\nWe have one remaining Sales Intern slot at Ironbridge Software. You must reply within 2 hours to keep it, otherwise we move to the next candidate.\n\nIronbridge Talent\ntalent@ironbridgesoftware.example",
+  "expectedLevel": "low",
+  "profile": { "field": "business", "level": "sophomore", "skills": ["Excel"] },
+  "source": "email",
+  "stage": "message",
+  "answers": { "who_first": "no" },
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Ironbridge Software", "quote": "Ironbridge Software" },
+        "sender": { "name": null, "email": "talent@ironbridgesoftware.example", "phone": null },
+        "pressure": [{ "quote": "You must reply within 2 hours to keep it" }]
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "ironbridgesoftware.example", "careersUrl": null } },
+    "sender": { "status": "done", "data": { "email": "talent@ironbridgesoftware.example", "domain": "ironbridgesoftware.example", "freeEmail": false, "registeredAt": "2003-03-02T00:00:00Z", "hasMx": true } },
+    "posting": { "status": "done", "data": { "found": false, "url": null, "title": null, "location": null, "pay": null, "postedDate": null, "onOfficialDomain": false } }
+  }
+}

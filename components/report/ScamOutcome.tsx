@@ -5,7 +5,7 @@ import { CheckIcon, ExternalIcon } from "../icons";
 import { btnPrimary, btnSecondary, card } from "../ui";
 import CopyReportButton from "./CopyReportButton";
 
-const PLATFORM: Partial<Record<Source, { label: string; url: string }>> = {
+export const PLATFORM:Partial<Record<Source, { label: string; url: string }>> = {
   linkedin: { label: "LinkedIn help", url: "https://www.linkedin.com/help/linkedin" },
   handshake: { label: "Handshake help", url: "https://support.joinhandshake.com" },
 };

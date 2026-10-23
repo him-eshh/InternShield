@@ -1,0 +1,27 @@
+{
+  "note": "Very high pay for an entry role, hired without interview, young domain.",
+  "text": "Hi Ben, Aurora Field Digital is offering a Junior Data Entry Intern role at $85/hour, remote, 10 hours a week. No interview and no experience needed, we will send your contract this afternoon. Let us know if you accept.",
+  "expectedLevel": "medium",
+  "profile": { "field": "tech", "level": "junior", "skills": ["python", "react"] },
+  "source": null,
+  "stage": null,
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "isJobMessage": true,
+        "company": { "value": "Aurora Field Digital", "quote": "Aurora Field Digital" },
+        "role": { "value": "Junior Data Entry Intern", "quote": "Junior Data Entry Intern" },
+        "pay": { "value": "$85/hour", "quote": "$85/hour" },
+        "sender": { "name": null, "email": "hiring@aurorafield-digital.example", "phone": null },
+        "interview": { "status": "none_hired_directly", "quote": "No interview" },
+        "noExperienceNeeded": { "quote": "no experience needed" }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "aurorafield-digital.example", "careersUrl": null } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "hiring@aurorafield-digital.example", "domain": "aurorafield-digital.example", "freeEmail": false, "registeredAt": "-30d", "hasMx": true, "hunter": null }
+    }
+  }
+}

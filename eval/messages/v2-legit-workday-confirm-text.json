@@ -1,0 +1,20 @@
+{
+  "note": "Legit near-miss: the user applied; a Workday-style text names the booked interview and asks to reply YES to confirm.",
+  "text": "Northwind Labs: Hi Sam, your interview for the Software Engineering Intern role is scheduled for Tuesday at 2:00 PM. Reply YES to confirm or call us to reschedule.",
+  "expectedLevel": "low",
+  "profile": { "field": "tech", "level": "junior", "skills": ["Python"] },
+  "source": "text_whatsapp",
+  "stage": "interviewing",
+  "answers": { "who_first": "yes" },
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Northwind Labs", "quote": "Northwind Labs" },
+        "role": { "value": "Software Engineering Intern", "quote": "Software Engineering Intern role" },
+        "asks": [{ "kind": "reply_yes", "quote": "Reply YES to confirm" }],
+        "interview": { "status": "mentioned", "quote": "your interview for the Software Engineering Intern role is scheduled for Tuesday at 2:00 PM" }
+      }
+    }
+  }
+}

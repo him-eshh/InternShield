@@ -1,0 +1,20 @@
+{
+  "note": "Pay-processing job: candidate moves client money through own account and keeps a cut.",
+  "text": "Hi Casey,\n\nBrightleaf Payments is hiring a remote Payment Processing Assistant. You will receive client payments into your personal bank account, keep 10% as your pay, and forward the rest to our overseas partners by wire. No interview needed, we hire fast.\n\nDaniel Ross\nbrightleaf.payments.hr@gmail.com",
+  "expectedLevel": "high",
+  "profile": { "field": "business", "level": "sophomore", "skills": ["Excel"] },
+  "source": "email",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Brightleaf Payments", "quote": "Brightleaf Payments" },
+        "sender": { "name": "Daniel Ross", "email": "brightleaf.payments.hr@gmail.com", "phone": null },
+        "asks": [{ "kind": "money_wrong_way", "quote": "receive client payments into your personal bank account, keep 10% as your pay, and forward the rest to our overseas partners by wire" }],
+        "interview": { "status": "none_hired_directly", "quote": "No interview needed" }
+      }
+    },
+    "sender": { "status": "done", "data": { "email": "brightleaf.payments.hr@gmail.com", "domain": "gmail.com", "freeEmail": true, "registeredAt": null, "hasMx": true } }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "note": "Offer with no interview from a 3-week-old domain.",
+  "text": "Hi Ari,\n\nYou are hired as a Social Media Intern at Birchwood Studio, no interview needed. Start Monday. Please reply to confirm.\n\nBirchwood Studio\nteam@birchwoodstudio.example",
+  "expectedLevel": "medium",
+  "profile": { "field": "design", "level": "junior", "skills": ["Figma"] },
+  "source": "email",
+  "stage": "offer",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Birchwood Studio", "quote": "Birchwood Studio" },
+        "sender": { "name": null, "email": "team@birchwoodstudio.example", "phone": null },
+        "interview": { "status": "none_hired_directly", "quote": "no interview needed" }
+      }
+    },
+    "company": { "status": "done", "data": null },
+    "sender": { "status": "done", "data": { "email": "team@birchwoodstudio.example", "domain": "birchwoodstudio.example", "freeEmail": false, "registeredAt": "-21d", "hasMx": true } }
+  }
+}

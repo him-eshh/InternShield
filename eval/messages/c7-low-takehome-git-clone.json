@@ -1,0 +1,22 @@
+{
+  "note": "Applied candidate gets a normal take-home: git clone a public starter repo.",
+  "text": "Hi Jordan,\n\nThanks for the great chat. As the next step for the Backend Intern role at Vireo Software, here is a take-home (about 3 hours). Clone the starter repo with git clone https://github.com/vireo-software/intern-takehome.git, add your solution and push to a private fork. Due Sunday.\n\nVireo Engineering Recruiting\nrecruiting@vireosoftware.example",
+  "expectedLevel": "low",
+  "profile": { "field": "tech", "level": "junior", "skills": ["Python", "Git"] },
+  "source": "email",
+  "stage": "interviewing",
+  "answers": { "who_first": "yes", "talked_live": "video" },
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Vireo Software", "quote": "Vireo Software" },
+        "role": { "value": "Backend Intern", "quote": "Backend Intern role" },
+        "sender": { "name": null, "email": "recruiting@vireosoftware.example", "phone": null },
+        "interview": { "status": "mentioned", "quote": "Thanks for the great chat" }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "vireosoftware.example", "careersUrl": null } },
+    "sender": { "status": "done", "data": { "email": "recruiting@vireosoftware.example", "domain": "vireosoftware.example", "freeEmail": false, "registeredAt": "2014-02-01T00:00:00Z", "hasMx": true } }
+  }
+}

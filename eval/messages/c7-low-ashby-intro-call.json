@@ -1,0 +1,22 @@
+{
+  "note": "Ashby scheduling invite after the user applied.",
+  "text": "Hi Priya,\n\nThanks for applying to the Growth Intern role at Marlin Cloud. We'd like to set up a 25 minute call with our recruiter. Book a slot: https://jobs.ashbyhq.com/marlin-cloud/schedule/abc123\n\nMarlin Cloud Recruiting\nno-reply@ashbyhq.com",
+  "expectedLevel": "low",
+  "profile": { "field": "business", "level": "junior", "skills": ["Excel"] },
+  "source": "email",
+  "stage": "interviewing",
+  "answers": { "who_first": "yes" },
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Marlin Cloud", "quote": "Marlin Cloud" },
+        "role": { "value": "Growth Intern", "quote": "Growth Intern role" },
+        "sender": { "name": null, "email": "no-reply@ashbyhq.com", "phone": null },
+        "interview": { "status": "mentioned", "quote": "set up a 25 minute call with our recruiter" }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "marlincloud.example", "careersUrl": null } },
+    "sender": { "status": "done", "data": { "email": "no-reply@ashbyhq.com", "domain": "ashbyhq.com", "freeEmail": false, "registeredAt": "2019-04-01T00:00:00Z", "hasMx": true } }
+  }
+}

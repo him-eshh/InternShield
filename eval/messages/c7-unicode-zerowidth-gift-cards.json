@@ -1,0 +1,9 @@
+{
+  "note": "Zero-width characters inside the words gift cards and codes.",
+  "text": "Hello! Your offer from Oakline Media is approved. For the equipment bundle, purchase g​i​f​t​ ​c​a​r​d​s worth $300 and send the c​o​d​e​s back to me by reply.",
+  "expectedLevel": "high",
+  "profile": { "field": "design", "level": "junior", "skills": ["Figma"] },
+  "source": "email",
+  "stage": "offer",
+  "savedSteps": { "extract": { "status": "done", "data": {} } }
+}

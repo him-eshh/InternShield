@@ -120,14 +120,15 @@ async function call<T>(key: StepKey, url: string, body: unknown, deps: PipelineD
     } catch {
       json = null;
     }
+    const err = json && json.status === "failed" ? json : null;
     if (res.status === 429) {
-      return { status: "failed", reason: "limit", retryAfter: json && json.status === "failed" ? json.retryAfter : undefined };
+      return { status: "failed", reason: "limit", retryAfter: err?.retryAfter, code: err?.code ?? "RATE_LIMITED" };
     }
     if (json && json.status === "done" && res.ok) return { status: "done", data: json.data };
-    if (json && json.status === "failed") return { status: "failed", reason: json.reason, retryAfter: json.retryAfter };
-    return { status: "failed", reason: "error" };
+    if (err) return { status: "failed", reason: err.reason, retryAfter: err.retryAfter, code: err.code };
+    return { status: "failed", reason: "error", code: "UNKNOWN" };
   } catch {
-    return { status: "failed", reason: timedOut ? "timeout" : "error" };
+    return { status: "failed", reason: timedOut ? "timeout" : "error", code: timedOut ? "TIMEOUT" : "UNKNOWN" };
   } finally {
     clearTimeout(timer);
   }
@@ -165,6 +166,25 @@ export async function fetchExplanation(
   const res = await call<{ text: string; source: "ai" | "fallback" }>("explain", "/api/explain", req, deps);
   if (res.status === "done" && res.data?.text) return { text: res.data.text, source: res.data.source };
   return { text: fallbackExplanation(req), source: "fallback" };
+}
+
+/**
+ * Editable company chip: re-runs only the company and posting lookups (and scoring) with the user's
+ * company name. Extraction and the sender lookup are reused, never re-run.
+ */
+export function rerunWithCompany(
+  input: PipelineInput,
+  steps: StepResults,
+  company: string,
+  deps: PipelineDeps = {},
+): Promise<PipelineOutcome> {
+  const name = company.trim();
+  const ex = steps.extract;
+  const extract: StepResults["extract"] =
+    ex.status === "done" && ex.data
+      ? { status: "done", data: { ...ex.data, company: ex.data.company ? { ...ex.data.company, value: name } : null } }
+      : ex;
+  return runPipeline({ ...input, form: { ...input.form, company: name || null } }, deps, { extract, sender: steps.sender });
 }
 
 /**

@@ -1,0 +1,20 @@
+{
+  "note": "Rule 8: fake immigration office threatens OPT status and asks for a reinstatement payment. Critical.",
+  "text": "Dear student,\n\nThis is the Student Immigration Services office. Your OPT status will be terminated within 48 hours because of a reporting error. To keep your record active you must pay a $180 reinstatement amount today. Reply with your full name and student ID.\n\nOfficer R. Dale\nimmigration.review@usvisa-help.example",
+  "expectedLevel": "high",
+  "profile": { "field": "tech", "level": "senior", "skills": ["Python"] },
+  "source": "email",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "sender": { "name": "Officer R. Dale", "email": "immigration.review@usvisa-help.example", "phone": null }
+      }
+    },
+    "sender": {
+      "status": "done",
+      "data": { "email": "immigration.review@usvisa-help.example", "domain": "usvisa-help.example", "freeEmail": false, "registeredAt": "-30d", "hasMx": true }
+    }
+  }
+}

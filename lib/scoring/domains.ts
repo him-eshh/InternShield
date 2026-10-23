@@ -17,7 +17,12 @@ export function emailDomain(email: string | null | undefined): string | null {
 }
 
 export const isFreeEmail = (domain: string) => FREE_EMAIL_DOMAINS.has(domain);
-export const isHiringPlatform = (domain: string) => HIRING_PLATFORM_DOMAINS.has(domain);
+/** More hiring platforms (research 01 > rule 10). lib/constants.ts is orchestrator-owned; mirror these there at integration. */
+const MORE_HIRING_PLATFORMS = new Set([
+  "rippling.com", "gem.com", "jazzhr.com", "applytojob.com", "breezy.hr", "pinpointhq.com",
+  "teamtailor.com", "recruitee.com", "workable.com", "myworkdayjobs.com", "myworkdaysite.com",
+]);
+export const isHiringPlatform = (domain: string) => HIRING_PLATFORM_DOMAINS.has(domain) || MORE_HIRING_PLATFORMS.has(domain);
 
 export function editDistance(a: string, b: string): number {
   const prev = Array.from({ length: b.length + 1 }, (_, i) => i);

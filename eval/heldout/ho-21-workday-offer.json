@@ -1,0 +1,27 @@
+{
+  "note": "Offer letter after two interviews, via Workday, background check by vendor, no payment ask.",
+  "text": "Dear Elena, we are pleased to offer you the Product Analyst Intern position at Eastgate Health Systems at $29/hour, following your two interviews last week. Your offer letter is available in your Workday candidate portal. Please review and e-sign by Friday. Background check consent will be sent separately by our vendor.",
+  "expectedLevel": "low",
+  "profile": { "field": "business", "level": "senior", "skills": ["excel", "sql"] },
+  "source": "email",
+  "stage": "offer",
+  "answers": { "had_interview": "yes" },
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "isJobMessage": true,
+        "company": { "value": "Eastgate Health Systems", "quote": "Eastgate Health Systems" },
+        "role": { "value": "Product Analyst Intern", "quote": "Product Analyst Intern" },
+        "pay": { "value": "$29/hour", "quote": "$29/hour" },
+        "sender": { "name": null, "email": "campus@eastgate-health.example", "phone": null },
+        "interview": { "status": "mentioned", "quote": "following your two interviews last week" }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "eastgate-health.example", "careersUrl": null } },
+    "sender": {
+      "status": "done",
+      "data": { "email": "campus@eastgate-health.example", "domain": "eastgate-health.example", "freeEmail": false, "registeredAt": "-4000d", "hasMx": true, "hunter": null }
+    }
+  }
+}

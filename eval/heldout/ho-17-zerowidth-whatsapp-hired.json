@@ -1,0 +1,22 @@
+{
+  "note": "Zero-width characters inside 'interview' and 'WhatsApp'; hired directly, high pay, no payment ask.",
+  "text": "Hello Imani, Glassmere Interactive wants to hire you as a Content Reviewer, $45/hour, start Monday. No inter​view required. Please continue on Whats​App: +1 555 0177 so I can send your first assignment.",
+  "expectedLevel": "medium",
+  "profile": { "field": "tech", "level": "junior", "skills": ["python", "react"] },
+  "source": null,
+  "stage": null,
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "isJobMessage": true,
+        "company": { "value": "Glassmere Interactive", "quote": "Glassmere Interactive" },
+        "role": { "value": "Content Reviewer", "quote": "Content Reviewer" },
+        "pay": { "value": "$45/hour", "quote": "$45/hour" },
+        "sender": { "name": null, "email": null, "phone": "+1 555 0177" },
+        "offPlatform": { "app": "WhatsApp", "quote": "Please continue on Whats​App: +1 555 0177" },
+        "interview": { "status": "none_hired_directly", "quote": "No inter​view required" }
+      }
+    }
+  }
+}

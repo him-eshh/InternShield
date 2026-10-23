@@ -1,0 +1,19 @@
+{
+  "note": "University recruiting coordinator on the exact .edu domain announcing an employer drive.",
+  "text": "Hello Taylor,\n\nI'm Dana Whitfield, recruiting coordinator at the Eastfield University Career Center. Two employers are interviewing sophomores for summer internships next week. Reserve a slot in Handshake and bring your resume.\n\nDana Whitfield\ndana.whitfield@eastfield.edu",
+  "expectedLevel": "low",
+  "profile": { "field": "business", "level": "sophomore", "skills": ["Excel"] },
+  "source": "email",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Eastfield University Career Center", "quote": "Eastfield University Career Center" },
+        "sender": { "name": "Dana Whitfield", "email": "dana.whitfield@eastfield.edu", "phone": null }
+      }
+    },
+    "company": { "status": "done", "data": { "officialDomain": "eastfield.edu", "careersUrl": null } },
+    "sender": { "status": "done", "data": { "email": "dana.whitfield@eastfield.edu", "domain": "eastfield.edu", "freeEmail": false, "registeredAt": "1990-01-01T00:00:00Z", "hasMx": true } }
+  }
+}

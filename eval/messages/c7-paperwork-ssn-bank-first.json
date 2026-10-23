@@ -1,0 +1,20 @@
+{
+  "note": "SSN, bank details and ID photo requested with no interview step.",
+  "text": "Hi Morgan,\n\nWelcome to Pinecrest Solutions. To finish your internship file, please send your SSN, bank routing and account number and a photo of your driver's license by reply. We have no interview step for this role.\n\nPinecrest Onboarding\nonboarding@pinecrest-solutions.example",
+  "expectedLevel": "high",
+  "profile": { "field": "business", "level": "sophomore", "skills": ["Excel"] },
+  "source": "email",
+  "stage": "message",
+  "savedSteps": {
+    "extract": {
+      "status": "done",
+      "data": {
+        "company": { "value": "Pinecrest Solutions", "quote": "Pinecrest Solutions" },
+        "sender": { "name": null, "email": "onboarding@pinecrest-solutions.example", "phone": null },
+        "asks": [{ "kind": "sensitive_data", "quote": "send your SSN, bank routing and account number and a photo of your driver's license" }],
+        "interview": { "status": "none_hired_directly", "quote": "We have no interview step for this role" }
+      }
+    },
+    "sender": { "status": "done", "data": { "email": "onboarding@pinecrest-solutions.example", "domain": "pinecrest-solutions.example", "freeEmail": false, "registeredAt": "-40d", "hasMx": true } }
+  }
+}
