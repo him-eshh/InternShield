@@ -11,15 +11,13 @@
 
 - I4: live smoke done, 9/10 calls used (NO more live calls). Log table in integration log.
 
-## Current
-- I5 screenshot pass: rerunning all qa/v2-check-*.mjs + qa/v2-tools-t*.mjs via qa/v2-integration-run.mjs (shots -> integration/check|tools/, output qa/out-int-<script>.txt). Then review images, write integration/INDEX.md.
+- I5: all check + tools QA scripts rerun on merged app (shots land in integration/ root since QA_SHOTS is preset; names don't collide). overflow 0 everywhere; spot-reviewed, no fixes needed. INDEX.md written (via node; Write/mv into .git blocked). Server stopped.
 
-## Next
-- I5 screenshots + INDEX.md; I6 final + devpost/v2-summary.md
+- I6: gates green (vitest 73/1191, eval 88/88, held-out 24/27), eval/messages diff empty, secret scan clean, no servers on 3000. devpost/v2-summary.md written; committed `V2 summary`. DONE.
 
 ## Gotchas
 - Vault Context-Card missing; ignore.
 - Bash: don't `cd` before git; no `cat .env*`; no nested $(...); python heredoc blocked -> use Edit.
 - PowerShell: Select-String -Context blocked; "$LASTEXITCODE" in strings blocked.
 - Gates: vitest 73 files / 1191 tests; eval 88/88; lint 2 pre-existing warnings.
-- Dev server PID 30468 (cmd.exe, port 3000, started in I2). Stop: node processes listening on 3000. Log: QA_SHOTS/dev-server.log.
+- Dev server PID 72768 (cmd.exe, port 3000, restarted in I5 after rotation). Stop: node processes listening on 3000. Log: QA_SHOTS/dev-server.log.

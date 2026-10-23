@@ -1,62 +1,72 @@
 # InternShield v2 summary
 
-Branch `v2` (from `v2-base` 36ad123), merging `v2-check` (fe84e11) and `v2-tools` (afb173d). Not merged into `main`, not pushed. Details: `devpost/v2-integration-log.md`, `v2-check-summary.md`, `v2-tools-summary.md`.
+Branch `v2` (from `v2-base` 36ad123), merging `v2-check` (fe84e11) and `v2-tools` (afb173d) plus integration fixes. Details: `devpost/v2-integration-log.md`, `v2-check-summary.md`, `v2-tools-summary.md`.
 
 ## 1. Approved plan
 | Item | Status | Note |
 |---|---|---|
-| Bug A tall screenshots | ✓ | Cut into ≤ 2 strips, one request; body cap 3.6 MiB. Live: works, but a 34-message chat lost ~6 of 35 lines (known issues) |
-| Bug B tracker form at 1440 | ✓ | |
+| Bug A tall screenshots | ✓ | Tiled into strips; body cap 3.6 MiB; over-long image asks for two parts. A3 line protocol (optional) not built |
+| Bug B tracker form at 1440 | ✓ | Opens below the button, focus in/out correct |
 | Bug C "$1.2 million" -> 1,200,000% | ✓ | Unit-aware numbers, 19-case table |
-| Bug D company = department | ✓ | `department` split out in extraction (live: "University Recruiting" kept apart from Stripe) |
-| Bug E resume line breaks | ✓ | |
-| Bug F CRLF fixtures | ✓ | `.gitattributes` LF + `readFixture` normalizer (setup) |
-| Tavily cap ~30/day + Wikidata official site first | ✓ | Live: Stripe resolved in 307 ms with no Tavily delay |
-| Design groundwork (Calm Instrument tokens, readable dark, motion/react reducedMotion=user, cards always visible) | ✓ | |
-| Scoring rules 1-4, 6 | ✓ | Reimbursement trap, wrong-way money, run-code split, Unicode cleanup, task vocab |
-| Rules 5, 7-10 | ✓ all | 5 local link checks, 7 secrecy, 8 impersonation, 9 paperwork, 10 platforms + reply YES |
-| Eval ~90 cases | ✓ | 88/88 main set, every original case correct; held-out 24/27 |
-| Report redesign (ring with ticks + visible 0, action line, top 3, one sorted list, one primary footer button, Tailor/Practice hidden on high, ring animates) | ✓ | Tailor/Practice follow the live level after quick answers |
-| Quick questions (only if they can change level/critical/advice, max 3, "Not sure", recovery card, editable company chip, no "employer outside US") | ✓ | Title "A few quick questions"; confirmation under the answer |
-| Local link checks | ✓ | Live: look-alike careers URL flagged High |
-| Annotated message view | ✓ | |
-| Tailoring: keyword gap, 3 options, stronger guard, more presets | ✓ | Live call returned 3 identical texts (shown as 1); prompt now demands distinct texts (mock test, not re-run live) |
-| Interview: 4-area scorecard, TS + SQL in browser, debugging round, company-style presets, wide coding layout + dark code theme, duplicate "hidden tests passed" fixed | ✓ | |
-| Java/C++/Go/Rust execution | out | As planned |
-| Logo / favicon / OG | ✓ | Ring-with-ticks mark, apple icon, OG image |
-| A11y + reduced motion | ✓ | 8 screens x 2 themes: 0 contrast failures, visible focus on every Tab stop, Escape closes menus, reduced motion = no running animations |
-| Screenshots of every feature | ✓ | See 4 |
+| Bug D company = department | ✓ | Extraction separates them |
+| Bug E resume line breaks | ✓ | PDF + DOCX previews |
+| Bug F CRLF fixtures | ✓ | `tests/shared/readFixture.ts` (setup) |
+| Tavily cap ~30/day + Wikidata first | ✓ | Live: Stripe lookup 307 ms via Wikidata, no Tavily |
+| Design groundwork (tokens, dark mode, motion reducedMotion=user, always-visible cards) | ✓ | a11y pass: 0 text under 4.5:1 |
+| Scoring rules 1-4 + 6 | ✓ | Reimbursement, wrong-way money, run-code split, Unicode cleanup, task vocab |
+| Rules 5, 7-10 | ✓ all | 5 link checks; 7 secrecy, 8 impersonation, 9 paperwork, 10 platforms + reply YES |
+| Eval ~90 cases | ✓ | 88 main, original 26 untouched; 27 held-out |
+| Report redesign | ✓ | Ring with ticks + score 0, action line, top 3 reasons, one severity list, one primary footer button, Tailor/Practice hidden on high (live level) |
+| Quick questions v2 | ✓ | Max 3, only if an answer can change the result, "Not sure", recovery card, editable company chip |
+| Local link checks | ✓ | No fetch of the link itself |
+| Annotated message view | ✓ | Numbered passages jump to their flag |
+| Tailoring | ✓ | Keyword gap, 3 options, guard v2, presets. Ask-for-the-number slots (optional) not built |
+| Interview | ✓ | 4-area scorecard, TS + SQL in browser, debugging round, company-style presets, wide coding layout, dark code theme, duplicate "hidden tests passed" fixed |
+| Logo / favicon / OG | ✓ | Ring logo, icon, apple icon (code-made), OG |
+| a11y + reduced motion | ✓ | Focus rings, Escape handling, no animation under reduced motion |
+| Screenshots | ✓ | Every feature, 1440 + 390, light + dark, reduced-motion shots |
 
 ## 2. Dropped
-Nothing from the drop order (intro, resume diff, logo, tracker polish) was dropped. Optional items left out: ask-for-the-number slots, Accept "morph" animation, A3 line protocol for transcription.
+Nothing from the drop order (intro, resume diff, logo, tracker polish): all four shipped. Small optional bits left out: A3 line protocol, ask-for-the-number slots, Accept "morph" animation (enter animation only), moving sql/debugging rounds into App's maps (they work inside Interview), checking screen inside the report layout.
 
 ## 3. Numbers
-- Tests: TESTS. Eval: 88/88 main set (low FP 0/35); held-out 24/27 (misses ho-11, ho-15, ho-16).
-- Live calls: 9 of 10 (table in the integration log, I4).
+- Tests: vitest 73 files / 1191 passing (v2-base had 39 / 645).
+- Eval main: 88/88, false positives on low 0/35. Held-out (not gating): 24/27, FP 0/9; misses `ho-11-whatsapp-only` and `ho-15-telegram-interview` (medium->low), `ho-16-urgent-text-vague` (medium->high).
+- Live API calls: 9 of 10 (I4). 8 passed. Rewrite came back with 3 identical texts, so the prompt was fixed and covered by a mock test, with no live re-run. One transcribe hit Groq 429 and the UI showed the retry copy correctly.
+- Gates: lint 0 errors (2 warnings in a QA script), tsc clean, build OK.
 
 ## 4. Screenshots
-`C:\my_projects\projects\InternShield\.git\internshield-relay\v2-shots\integration\INDEX.md`. Top 10:
-TOP10
+Index: `.git/internshield-relay/v2-shots/integration/INDEX.md` (outside git). Top 10:
+1. `11-report-scam-1440-light.png`: redesigned report, high risk
+2. `11-report-real-390-dark.png`: low risk on phone, dark
+3. `60-level-linkscam-390-dark.png`: link-scam evidence + annotated message
+4. `20-annotated-1440-light-jump.png`: passage -> flag jump
+5. `32-ring-after-answer-1440-light.png`: quick question changes the score
+6. `00-seam-answer-raises-high-1440-light.png`: Tailor/Practice hide when the level goes high
+7. `11-tailor-three-1440-light.png`: tailoring options with warnings + held-back option
+8. `09-setup-cards-1440-dark.png`: interview round cards
+9. `06-scorecard-1440-light.png`: 4-area scorecard
+10. `80-live-check-link-scam-1440-light.png`: live check of a lookalike careers URL
 
 ## 5. Check by hand before merging
-- Paste a real (non-repo) recruiter message and a known scam; read the report top to bottom.
-- Upload a long phone screenshot of a chat: check no lines are missing.
-- Tailor one resume line with a posting: do you get 3 different options?
-- Run a TypeScript and a SQL interview problem (first run downloads from jsDelivr).
-- Design board canvas is dark in both themes on purpose; check you like it in light mode.
+- Paste one real recruiter message of your own (don't save it in the repo) and read the report wording.
+- Upload a tall phone screenshot of a chat. Live, it dropped about 6 of 35 lines.
+- Tailor: run one live rewrite and confirm the 3 options now differ.
+- Design board canvas is dark in both themes: check it looks right in light.
+- Confirm the C7 relabels (`c7-mid-high-pay-no-experience` medium->high; `c7-mid-new-domain-interview`, `c7-mid-pressure-two-hours`, `c7-mid-unpaid-trial-project` medium->low) and whether to tune for the 3 held-out misses.
+- Medium label is now "Some warning signs" (prd.md says the longer form).
 
 ## 6. Pending Himesh
-- Merge `v2` into `main` with `--no-ff` (your OK).
-- Push (Coder, after a secret scan).
-- Deploy (your OK): set `DAILY_CHECK_CAP=100`, confirm `TAVILY_DAILY_CAP=30` in Vercel; check the Stripe posting used by the real example is still live.
-- New optional env vars for Vercel (names only): `VISION_MODEL`, `INTERVIEW_MODEL`, `REWRITE_MODEL`; `TRANSCRIBE_DAILY_CAP` default is now 12.
-- Decide on the optional items in 2.
+- Merge `v2` into `main` with `--no-ff` (needs your OK).
+- Push: Coder handles it after a secret scan.
+- Deploy (needs your OK): set `DAILY_CHECK_CAP=100`, confirm `TAVILY_DAILY_CAP=30` in Vercel, and check that the Stripe posting in the real example is still live.
+- New optional env vars for Vercel: `VISION_MODEL`, `INTERVIEW_MODEL`, `REWRITE_MODEL`. `TRANSCRIBE_DAILY_CAP` now defaults to 12.
 
 ## 7. Known issues
-- Tall screenshot (34 messages, 2 strips) came back with ~6 lines missing in the live run; no duplicates.
-- Two screenshots back to back can hit Groq's rate limit; the UI says "Screenshot reading is busy. Try again in 8 seconds."
-- The explainer sometimes puts a flag title in quotes as if the message said it.
-- Held-out misses: WhatsApp-only and Telegram-interview messages score low (20) instead of medium; one vague urgent text scores high (60) instead of medium.
-- `tests/tiers/pdf.test.ts` can time out under full-suite load (timeout raised to 20 s; passes).
-- Header chip Tailor/Practice use the first report level; the in-report buttons use the live one.
-- Dev-only "Cache disabled" badge shows in screenshots.
+- The explainer sometimes quotes a flag title as if it were message text (live call 3).
+- Tall chat transcription can drop a few lines (live call 6).
+- The rewrite no-invented-facts guard runs only in the browser. A raw API caller just gets text about their own resume.
+- The header Tailor/Practice chips use the first report level. The in-report buttons use the live level.
+- `tests/tiers/pdf.test.ts` and the resume-lines PDF test can be slow under load (timeouts raised to 20 s).
+- The "Cache disabled" badge in the shots comes from next dev only.
+- Possible duplicate test files: `tests/ui/v2-check-annotate.test.ts` / `.tsx`.
