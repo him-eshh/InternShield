@@ -28,16 +28,19 @@ Branch `v2-tools` from `v2-base` 36ad123. Brief: `devpost/v2-brief-tools.md`. Pr
 - [x] company-style presets (lib/tiers/presets.ts: Google/Meta/Amazon/McKinsey/Goldman "-style", official 04 §1a links only, "Practice only; not affiliated"), context.preset -> server style line; Amazon LP bank (8 made-up prompts, LP tag shown on the question), scorecard: I/we + numbers (existing) + "Leadership Principles: ..." line. Flip `presets` (QA 09-setup-amazon-*, 09-amazon-question-*)
 - [x] round cards on setup (title, ~min, blurb, "Feedback: ..."; ✓ on selected, not color-only); company/role still pre-filled from target (QA 09-setup-cards-*)
 ### T6 Resume tailoring
-- [ ] keyword-gap panel, flip `keywordGap`
-- [ ] 3 rewrite options + heldBack, flip `rewriteOptions`
-- [ ] guard v2 + 40-pair eval
-- [ ] more options + one-line summary
+- [x] keyword-gap panel, flip `keywordGap` (QA 11-tailor-gap-*)
+- [x] 3 rewrite options + heldBack, flip `rewriteOptions` (QA 11-tailor-three-*, 11-tailor-blocked-*)
+- [x] guard v2 + 40-pair eval (tests/tiers/v2-guard-eval.test.ts)
+- [x] more options + one-line summary + saved presets
+- [ ] ask-for-the-number slots (item 5, optional): not built
 ### T7 Resume diff
-- [ ] side-by-side diff, accept, sticky bar
+- [x] side-by-side Before / options (md+), word marks not color-only, sticky "N changes" + Download PDF bar, PDF bold name/section titles, name-based file name (QA 11-tailor-three-*, 11-tailor-accepted-*)
+- [ ] Accept "morph" animation: not built (enter animation only)
 ### T8 Polish
-- [ ] Pyodide preload + staged text; board 14 px labels, 8 px snap, dot grid; tracker empty states, compact cards, undo
+- [x] Pyodide preload when Python is selected + slow-load message after 6 s; board 14 px labels, 8 px drag snap, 24 px dot grid; tracker designed empty states, compact cards (one "Move to X" + "…" menu), Delete with Undo (QA 12-tracker-*)
 ### T9 Final
-- [ ] reviewer pass, screenshot pass, gates, summary
+- [x] reviewer pass (no blockers; see Decisions), gates + eval 26/26, summary
+- [ ] full re-shoot of every screen: not redone; per-phase shots from T1-T8 stand. Not shot: design board, case, portfolio, timed challenge, recruiter/behavioral, reduced-motion variants
 
 ## Bugs
 - E: pdf text joined with spaces, DOCX raw text, early whitespace collapse -> y-grouped lines + hasEOL, mammoth HTML -> lines, normalize last. Tests: tests/tiers/v2-resumeLines.test.ts. QA 01-resume-*.
