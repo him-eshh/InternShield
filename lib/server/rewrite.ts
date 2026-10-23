@@ -133,7 +133,7 @@ export function parseFacts(v: unknown): string[] | null {
 }
 
 const MULTI_SYSTEM =
-  `${SYSTEM} Return JSON with exactly 3 options: "closest" (minimal edit, original verbs kept), "results_first" (result, then how, then tools, using only numbers already in the text), "posting_words" (the posting's wording, only for concepts already in the text). USER FACTS are things the user confirmed they have; you may use them. In held_back, list each posting skill or tool you did not use because neither the text nor USER FACTS supports it.`;
+  `${SYSTEM} Return JSON with exactly 3 options: "closest" (minimal edit, original verbs kept), "results_first" (result, then how, then tools, using only numbers already in the text), "posting_words" (the posting's wording, only for concepts already in the text). The 3 texts must differ from each other and from the original line: change order, verbs or emphasis, never the facts. USER FACTS are things the user confirmed they have; you may use them. In held_back, list each posting skill or tool you did not use because neither the text nor USER FACTS supports it.`;
 
 const MULTI_SCHEMA = {
   type: "object",

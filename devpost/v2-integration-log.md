@@ -33,5 +33,21 @@
 - Logo/icon/apple icon/OG done by check C9 (`app/apple-icon.tsx` is code-made, kept).
 - Copy: medium label "Some warning signs, double check before you reply" -> "Some warning signs" (the action line under it says what to do; matches the brief's terms; prd.md wording differs). Tracker empty state cut to one sentence.
 
+## I4 live smoke (qa/v2-integration-live.mjs, next dev :3000, made-up content). 9 live calls of 10.
+| # | Call | Result | Latency |
+|---|---|---|---|
+| 1 | Check: scam example (UI) | pass: Risk 100 "Strong signs of a scam", 2 critical; company null; explain AI | 8.2 s |
+| 2 | Check: real example (Stripe) | pass: Risk 0 "No red flags found", posting found on stripe.com, 13/14 checks; company 307 ms (Wikidata, no Tavily latency); explain = fallback by design (0 flags) | 7.3 s |
+| 3 | Check: made-up link scam (stripe-careers-onboarding.com, gmail) | pass: Risk 95 high, "A link copies the company's website" High, private-details Critical | 6.7 s |
+| 4 | Transcribe: multi-paragraph email | pass: 11 lines, 0 dupes | 1.4 s |
+| 5 | Transcribe: tall 34-message chat (right after #4) | 429 RATE_LIMITED from Groq (retryAfter 8); UI: "Screenshot reading is busy. Try again in 8 seconds." | 1.1 s |
+| - | retry 10 s later | local per-IP limiter 429 in 32 ms (no upstream call, not counted) | - |
+| 6 | Transcribe: tall chat, 65 s later | pass: 2 strips, 1946 chars, 29 lines (35 expected), 0 dupes. ~6 lines missing; full text wasn't logged -> known issue | 3.0 s |
+| 7 | Rewrite count 3 | partial: 200, but the 3 texts were identical, deduped to 1 option; heldBack SQL/Tableau/present findings (correct) | 1.0 s |
+| 8 | Interview question (behavioral) | pass | 0.5 s |
+| 9 | Interview feedback | pass: summary + STAR items with quote | 1.0 s |
+- Fix (mock + test, no live re-run): multi-rewrite prompt now requires the 3 texts to differ from each other and the original; `tests/api/v2-tools-rewrite.test.ts` asserts it.
+- Known: the explainer sometimes quotes a flag title as if it were message text (call 3). Transcribe tall chat drops a few lines (call 6).
+
 ## Assertions changed (test, old, new, why)
 - `tests/api/transcribe.test.ts` "rejects a body over 3 MB" -> over 3.6 MB. Why: body cap raised for two-strip tall screenshots.

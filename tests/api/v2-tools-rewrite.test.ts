@@ -53,6 +53,8 @@ describe("rewrite v2: three options", () => {
     const user = params.messages[1].content as string;
     expect(user).toContain("USER FACTS:\n- HTML");
     expect(user).toContain("No buzzwords");
+    // I4 live smoke: the model once sent 3 identical texts (deduped to 1).
+    expect(params.messages[0].content).toContain("must differ from each other");
   });
 
   it("fails cleanly on unusable JSON", async () => {

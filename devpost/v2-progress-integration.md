@@ -9,11 +9,12 @@
 
 - I3: a11y clean, copy pass (commit "V2 integrate: a11y, reduced motion, brand").
 
+- I4: live smoke done, 9/10 calls used (NO more live calls). Log table in integration log.
+
 ## Current
-- I4 live smoke.
+- I5 screenshot pass.
 
 ## Next
-- I4 live smoke (max 10 calls, log each in devpost/v2-integration-log.md)
 - I5 screenshots + INDEX.md; I6 final + devpost/v2-summary.md
 
 ## Gotchas
