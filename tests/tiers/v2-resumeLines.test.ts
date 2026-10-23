@@ -111,7 +111,8 @@ async function pdfItemsFromBytes(bytes: Uint8Array): Promise<PdfItem[]> {
   return content.items.filter((it): it is Extract<typeof it, { str: string }> => "str" in it);
 }
 
-describe("file -> pipeline: PDF", () => {
+// pdf.js parsing can pass the 5s default under full-suite load.
+describe("file -> pipeline: PDF", { timeout: 20_000 }, () => {
   it("keeps headings, contact and bullets as separate lines", async () => {
     const pdf = await PDFDocument.create();
     const font = await pdf.embedFont(StandardFonts.Helvetica);

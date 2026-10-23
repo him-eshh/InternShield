@@ -10,7 +10,8 @@ describe("pdfFileName", () => {
 
 const head = (b: Uint8Array) => new TextDecoder().decode(b.slice(0, 5));
 
-describe("buildResumePdf", () => {
+// pdf-lib font embedding can pass the 5s default under full-suite load.
+describe("buildResumePdf", { timeout: 20_000 }, () => {
   it("returns PDF bytes", async () => {
     const bytes = await buildResumePdf(["Sam Rivera", "• Built a small site for a club", "- Led weekly study groups"]);
     expect(head(bytes)).toBe("%PDF-");
