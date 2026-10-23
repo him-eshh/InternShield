@@ -9,11 +9,12 @@
 - T4 TS + SQL runners, worker hardening (commit "V2 tools 4")
 - T5 debugging round, presets, round cards (commit "V2 tools 5")
 
+- T6 resume tailoring (commit "V2 tools 6"; gates + eval green; QA shots v2-shots/tools/11-*)
+
 ## Current
-- T6 resume tailoring. Logic+server done (WIP 1f1e0e5: keywordGap.ts, guardRewrite v2, rewrite.ts count:3/facts/level/region; tests v2-keywordGap, v2-guard-eval, tests/api/v2-tools-rewrite). Now: UI in components/tiers/ResumeTailor.tsx (gap panel w/ I have this/Leave out, 3 options + heldBack via guardRewrite, more options + one-line summary collapse, saved presets in localStorage), flip keywordGap + rewriteOptions, test tests/ui/v2-tools-tailor.test.tsx, QA qa/v2-tools-t6.mjs.
+- T7 resume diff (starting). No dev server running.
 
 ## Next
-- T6 resume tailoring
 - T7 diff, T8 polish, T9 final
 
 ## Gotchas

@@ -37,8 +37,8 @@ for (const v of variants) {
   console.log(`== gap ${t} overflow ${await overflowX(page)} "${await page.locator("#tl-gap + p").innerText()}"`);
   await shot(page, `11-tailor-gap-${t}`);
 
-  await page.getByRole("button", { name: "I have this: Git" }).click();
-  await page.getByRole("button", { name: "Leave out: AWS" }).click();
+  await page.getByRole("button", { name: /I have this\s*: Git/ }).click();
+  await page.getByRole("button", { name: /Leave out\s*: AWS/ }).click();
   await page.locator("summary").click();
   await page.waitForTimeout(300);
   console.log(`== options ${t} overflow ${await overflowX(page)} "${await page.locator("#tl-gap + p").innerText()}"`);
