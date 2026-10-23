@@ -12,7 +12,7 @@
 - I4: live smoke done, 9/10 calls used (NO more live calls). Log table in integration log.
 
 ## Current
-- I5 screenshot pass.
+- I5 screenshot pass: rerunning all qa/v2-check-*.mjs + qa/v2-tools-t*.mjs via qa/v2-integration-run.mjs (shots -> integration/check|tools/, output qa/out-int-<script>.txt). Then review images, write integration/INDEX.md.
 
 ## Next
 - I5 screenshots + INDEX.md; I6 final + devpost/v2-summary.md
