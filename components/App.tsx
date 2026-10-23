@@ -8,7 +8,7 @@ import {
   type StepKey,
 } from "@/lib/client/pipeline";
 import { clearMyData, loadProfile, loadResume } from "@/lib/client/storage";
-import type { Profile, ResumeData, StepResult, StepResults } from "@/lib/types";
+import type { Profile, ResumeData, RiskLevel, StepResult, StepResults } from "@/lib/types";
 import { TIER_FLAGS } from "@/lib/tiers/flags";
 import type { NewCard, PostingContext } from "@/lib/tiers/types";
 import ResumeTailor from "./tiers/ResumeTailor";
@@ -25,7 +25,7 @@ import ProfileChip from "./ProfileChip";
 import ProfileSteps from "./ProfileSteps";
 import ThemeToggle from "./ThemeToggle";
 import Report from "./report/Report";
-import { btnPrimary, btnSecondary, subhead } from "./ui";
+import { btnPrimary, btnSecondary, pillOff, subhead } from "./ui";
 
 type Screen = "loading" | "intro" | "profile" | "check" | "checking" | "report" | "notjob" | "resume" | "tracker" | "interview";
 
@@ -101,7 +101,8 @@ export default function App() {
         onLine: (key: StepKey, state: LineState, r?: StepResult<unknown>) => {
           if (id !== runId.current) return;
           const reason = r && r.status !== "done" ? r.reason : undefined;
-          setLines((l) => ({ ...l, [key]: { state, reason } }));
+          const code = r && r.status === "failed" ? r.code : undefined;
+          setLines((l) => ({ ...l, [key]: { state, reason, code } }));
         },
       },
       prev,
@@ -181,30 +182,32 @@ export default function App() {
     ...(TIER_FLAGS.tracker ? [{ label: "My applications", onClick: () => setScreen("tracker") }] : []),
     ...(TIER_FLAGS.interview ? [{ label: "Practice an interview", onClick: () => openPractice(lastTarget) }] : []),
   ];
-  const reportExtras =
+  // Gated on the live level: a quick answer that raises the report to high hides Tailor/Practice.
+  const liveTarget = target && { company: target.company, role: target.role, description: null };
+  const reportExtras = (level: RiskLevel) =>
     target && (TIER_FLAGS.tracker || TIER_FLAGS.resume || TIER_FLAGS.interview) ? (
       <div className="flex flex-wrap items-center justify-center gap-3">
-        {TIER_FLAGS.tracker && <SaveToTracker key={reportKey} card={target} onOpen={() => setScreen("tracker")} />}
-        {TIER_FLAGS.resume && target.risk !== "high" && (
+        {TIER_FLAGS.tracker && <SaveToTracker key={reportKey} card={{ ...target, risk: level }} onOpen={() => setScreen("tracker")} />}
+        {TIER_FLAGS.resume && level !== "high" && (
           <button
             type="button"
             className={btnSecondary}
-            onClick={() => openTailor(lastTarget)}
+            onClick={() => openTailor(liveTarget)}
           >
             Tailor my resume for this
           </button>
         )}
         {/* No interview coaching on high-risk reports: we don't prep people for a likely scam. */}
-        {TIER_FLAGS.interview && target.risk !== "high" && (
-          <button type="button" className={btnSecondary} onClick={() => openPractice(lastTarget)}>
+        {TIER_FLAGS.interview && level !== "high" && (
+          <button type="button" className={btnSecondary} onClick={() => openPractice(liveTarget)}>
             Practice an interview for this
           </button>
         )}
       </div>
     ) : null;
 
-  const showChip =
-    profile && (screen === "check" || screen === "report" || screen === "notjob" || screen === "resume" || screen === "tracker" || screen === "interview");
+  const inApp = screen === "check" || screen === "report" || screen === "notjob" || screen === "resume" || screen === "tracker" || screen === "interview";
+  const showChip = profile && inApp;
 
   return (
     <div className="min-h-dvh">
@@ -212,16 +215,22 @@ export default function App() {
         <Logo />
         <div className="flex items-center gap-2">
           {showChip && <ProfileChip profile={profile} items={chipItems} onEdit={() => setScreen("profile")} onClear={onClear} />}
+          {/* Intro goes straight to Check; the profile is asked lazily. */}
+          {!profile && inApp && (
+            <button type="button" className={pillOff} onClick={() => setScreen("profile")}>
+              Add profile
+            </button>
+          )}
           <ThemeToggle />
         </div>
       </header>
       <main ref={mainRef} key={screen === "loading" ? "loading" : `${screen}-${reportKey}`} className={screen === "loading" ? "" : "animate-enter"}>
-        {screen === "intro" && <Intro onStart={() => setScreen("profile")} />}
+        {screen === "intro" && <Intro onStart={() => setScreen("check")} />}
         {screen === "profile" && (
           <ProfileSteps
             initial={profile}
             initialResume={resume}
-            onCancel={profile ? () => setScreen("check") : () => setScreen("intro")}
+            onCancel={() => setScreen(outcome?.report ? "report" : "check")}
             onDone={(p, r) => {
               setProfile(p);
               setResume(r);

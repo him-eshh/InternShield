@@ -127,6 +127,11 @@ describe("footer per level", () => {
     const html = render(mediumReport, <button type="button">Tailor my resume for this</button>);
     expect(html.indexOf("Tailor my resume")).toBeGreaterThan(html.indexOf("Check another message"));
   });
+  it("passes the live level to function extras", () => {
+    const extras = (level: string) => (level === "high" ? null : <button type="button">Tailor my resume for this</button>);
+    expect(renderToStaticMarkup(<ReportFooter report={mediumReport} careersUrl={null} officialLink={null} source={null} onAgain={() => {}} extras={extras} />)).toContain("Tailor my resume");
+    expect(renderToStaticMarkup(<ReportFooter report={scamReport} careersUrl={null} officialLink={null} source={null} onAgain={() => {}} extras={extras} />)).not.toContain("Tailor my resume");
+  });
 });
 
 describe("Report order", () => {

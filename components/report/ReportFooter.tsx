@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { FTC_URL, IC3_URL } from "@/lib/client/copyReport";
-import type { Report, Source } from "@/lib/types";
+import type { Report, RiskLevel, Source } from "@/lib/types";
 import { ExternalIcon } from "../icons";
 import { btnPrimary } from "../ui";
 import CopyReportButton, { secondaryItem } from "./CopyReportButton";
@@ -12,8 +12,8 @@ interface Props {
   officialLink: { url: string; label: string } | null;
   source: Source | null;
   onAgain: () => void;
-  /** Extra actions from the app shell (save to tracker, tailor, practice). */
-  extras?: ReactNode;
+  /** Extra actions from the app shell (save to tracker, tailor, practice); a function gets the live level. */
+  extras?: ReactNode | ((level: RiskLevel) => ReactNode);
 }
 
 function Out({ href, label }: { href: string; label: string }) {
@@ -35,14 +35,13 @@ export default function ReportFooter({ report, careersUrl, officialLink, source,
       <button type="button" onClick={onAgain} className={btnPrimary}>
         Check another message
       </button>
-      {/* data-level: the live level (after quick answers); App gates Tailor/Practice on the first report only. */}
-      <div role="group" aria-label="More actions" data-level={report.level} className="rf-extras flex flex-wrap items-center justify-center gap-2">
+      <div role="group" aria-label="More actions" className="rf-extras flex flex-wrap items-center justify-center gap-2">
         {!low && <CopyReportButton report={report} careersUrl={careersUrl} compact />}
         {officialLink && <Out href={officialLink.url} label={officialLink.label} />}
         <Out href={FTC_URL} label="Report to the FTC" />
         {!low && <Out href={IC3_URL} label="Report to the FBI (IC3)" />}
         {platform && <Out href={platform.url} label={platform.label} />}
-        {extras}
+        {typeof extras === "function" ? extras(report.level) : extras}
       </div>
     </footer>
   );

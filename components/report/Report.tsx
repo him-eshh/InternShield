@@ -5,7 +5,7 @@ import { fetchExplanation, rerunWithCompany, type Explanation as ExplanationData
 import { annotate } from "@/lib/client/annotate";
 import { actionLine, goods, reds } from "@/lib/reportView";
 import { describeChange, score } from "@/lib/scoring/score";
-import { LEVEL_LABELS, type Answers, type QuestionId, type Report as ReportData } from "@/lib/types";
+import { LEVEL_LABELS, type Answers, type QuestionId, type Report as ReportData, type RiskLevel } from "@/lib/types";
 import { InfoIcon } from "../icons";
 import { btnSecondary } from "../ui";
 import AnnotatedMessage from "./AnnotatedMessage";
@@ -29,8 +29,8 @@ interface Props {
   onAgain: () => void;
   /** Test/preview hook: the fetch used to re-request the explanation. */
   fetchImpl?: typeof fetch;
-  /** Optional extra actions, shown in the footer's secondary row. */
-  extras?: ReactNode;
+  /** Optional extra actions, shown in the footer's secondary row; a function gets the live level. */
+  extras?: ReactNode | ((level: RiskLevel) => ReactNode);
   /** Slot for the recovery card ("Already sent money or shared info?"), shown after the quick questions. */
   recovery?: ReactNode;
 }

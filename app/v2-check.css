@@ -23,10 +23,6 @@
   font-size: 0.9375rem;
   font-weight: 500;
 }
-/* High risk after a quick answer: hide Tailor/Practice (direct buttons); Save to tracker sits inside .contents. */
-.rf-extras[data-level="high"] > div > button {
-  display: none;
-}
 
 /* Annotated message: red flags get a solid underline, good signs a dashed one; every mark is numbered. */
 .am-body {
