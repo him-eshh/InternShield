@@ -24,7 +24,7 @@ import type { ResumeData } from "@/lib/types";
 import { postRewrite } from "@/lib/tiers/client";
 import { TIER_FLAGS } from "@/lib/tiers/flags";
 import { gapCount, keywordGap } from "@/lib/tiers/keywordGap";
-import { buildResumePdf, downloadPdf } from "@/lib/tiers/pdf";
+import { buildResumePdf, downloadPdf, pdfFileName } from "@/lib/tiers/pdf";
 import { guardRewrite, wordDiff } from "@/lib/tiers/resumeGuard";
 import {
   lineKinds,
@@ -190,6 +190,7 @@ function Editor({ resume, target, onBack }: { resume: ResumeData; target: Postin
     [lines, original, kinds],
   );
   const shown = section === "all" ? null : new Set(sections.find((sec) => sec.title === section)?.lines ?? []);
+  const changes = lines.filter((l, i) => l !== original[i]).length;
   const edited = lines.length !== original.length || lines.some((l, i) => l !== original[i]);
   const lineRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
@@ -275,8 +276,9 @@ function Editor({ resume, target, onBack }: { resume: ResumeData; target: Postin
     setPdfBusy(true);
     setPdfNote("");
     try {
-      downloadPdf(await buildResumePdf(lines, "Tailored resume"), "resume-tailored.pdf");
-      setPdfNote("Downloaded resume-tailored.pdf.");
+      const file = pdfFileName(lines);
+      downloadPdf(await buildResumePdf(lines, "Tailored resume"), file);
+      setPdfNote(`Downloaded ${file}.`);
     } catch {
       setPdfNote("Couldn't make the PDF. Try again.");
     } finally {
@@ -493,7 +495,6 @@ function Editor({ resume, target, onBack }: { resume: ResumeData; target: Postin
                   {outcome && outcome.kind !== "error" && outcome.index === i && (
                     <Result
                       outcome={outcome}
-                      original={body}
                       onPick={(pick) => setOutcome((o) => (o?.kind === "ok" ? { ...o, pick } : o))}
                       onAccept={accept}
                       onKeep={() => keepOriginal(i)}
@@ -519,7 +520,10 @@ function Editor({ resume, target, onBack }: { resume: ResumeData; target: Postin
         {status}
       </p>
 
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+      <div className="sticky bottom-0 -mx-6 mt-8 flex flex-col gap-3 border-t border-border bg-bg/95 px-6 py-3 backdrop-blur sm:flex-row sm:items-center">
+        <p className="text-[15px] font-medium sm:mr-auto">
+          {changes === 0 ? "No changes yet" : `${changes} ${changes === 1 ? "change" : "changes"}`}
+        </p>
         <button type="button" onClick={() => void download()} disabled={pdfBusy} className={btnPrimary}>
           {pdfBusy && <Spinner />}
           Download PDF
@@ -549,11 +553,13 @@ function OptionRow({ label, hint, children }: { label: string; hint?: string; ch
   );
 }
 
-function DiffText({ diff }: { diff: DiffPart[] }) {
+/** `before` shows only the original's words (removed ones struck through); default shows the suggestion with both marks. */
+function DiffText({ diff, before }: { diff: DiffPart[]; before?: boolean }) {
   return (
     <>
       {diff.map((p, i) => {
         if (p.kind === "same") return <span key={i}>{p.text}</span>;
+        if (before && p.kind === "added") return null;
         if (p.kind === "added")
           return (
             <span key={i} className="underline decoration-accent decoration-2 underline-offset-4">
@@ -576,14 +582,12 @@ const OPTION_NAMES = ["Closest to yours", "Results first", "Posting's words"];
 
 function Result({
   outcome,
-  original,
   onPick,
   onAccept,
   onKeep,
   onHave,
 }: {
   outcome: Extract<Outcome, { kind: "ok" | "blocked" }>;
-  original: string;
   onPick: (i: number) => void;
   onAccept: () => void;
   onKeep: () => void;
@@ -619,9 +623,15 @@ function Result({
   const chosen = outcome.choices[outcome.pick];
   return (
     <div className={`${cardCls} animate-enter mt-4 p-4`}>
+      <div className="md:grid md:grid-cols-[1fr_1.4fr] md:gap-6">
+      <div>
       <h3 className="text-[14px] font-semibold uppercase tracking-wide text-muted">Before</h3>
-      <p className="mt-1 break-words text-[16px] leading-snug text-muted">{original}</p>
-      <h3 className="mt-4 text-[14px] font-semibold uppercase tracking-wide text-muted">{many ? "Options" : "Suggested"}</h3>
+      <p className="mt-1 break-words text-[16px] leading-snug text-muted">
+        <DiffText diff={chosen.diff} before />
+      </p>
+      </div>
+      <div>
+      <h3 className="mt-4 text-[14px] font-semibold uppercase tracking-wide text-muted md:mt-0">{many ? "Options" : "Suggested"}</h3>
       {many ? (
         <div role="radiogroup" aria-label="Rewrite options" className="mt-2 space-y-2">
           {outcome.choices.map((c, i) => {
@@ -651,6 +661,8 @@ function Result({
           <Warnings warnings={chosen.warnings} />
         </>
       )}
+      </div>
+      </div>
       {outcome.hidden > 0 && (
         <p className="mt-2 text-[14px] text-muted">
           {outcome.hidden === 1 ? "1 option" : `${outcome.hidden} options`} hidden: added things not in your resume.

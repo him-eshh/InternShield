@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { buildResumePdf, toWinAnsi } from "@/lib/tiers/pdf";
+import { buildResumePdf, pdfFileName, toWinAnsi } from "@/lib/tiers/pdf";
+
+describe("pdfFileName", () => {
+  it("names the file after the resume's name line", () => {
+    expect(pdfFileName(["Sam Rivera", "x"])).toBe("Sam-Rivera-resume.pdf");
+    expect(pdfFileName(["sam@x.com"])).toBe("resume-tailored.pdf");
+  });
+});
 
 const head = (b: Uint8Array) => new TextDecoder().decode(b.slice(0, 5));
 

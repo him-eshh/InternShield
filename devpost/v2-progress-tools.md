@@ -11,11 +11,13 @@
 
 - T6 resume tailoring (commit "V2 tools 6"; gates + eval green; QA shots v2-shots/tools/11-*)
 
+- T7 side-by-side diff, sticky "N changes" bar, PDF bold name/headers + name-based file name (commit "V2 tools 7"; Accept morph animation skipped, enter animation only)
+
 ## Current
-- T7 resume diff (starting). No dev server running.
+- T8 polish (Pyodide preload + staged text, board labels/snap/dot grid, tracker empty states + compact cards + "…" menu with Delete-undo). No dev server running.
 
 ## Next
-- T7 diff, T8 polish, T9 final
+- T8 polish, T9 final
 
 ## Gotchas
 - Shell: Bash tool works for `cd ... && cmd | tail`; `sed -i` needs approval, use Edit. PowerShell Select-String pipes blocked. Bash `;` chains with head/env need approval: one command per call.

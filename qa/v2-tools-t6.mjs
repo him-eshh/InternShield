@@ -51,6 +51,10 @@ for (const v of variants) {
   console.log(`== three ${t} radios ${await page.getByRole("radio").count()} overflow ${await overflowX(page)}`);
   await page.getByRole("radiogroup").scrollIntoViewIfNeeded();
   await shot(page, `11-tailor-three-${t}`);
+  await page.getByRole("button", { name: "Use this option" }).click();
+  await page.waitForTimeout(300);
+  console.log(`== accepted ${t} bar "${await page.locator("p", { hasText: /^\d+ changes?$/ }).innerText()}"`);
+  await shot(page, `11-tailor-accepted-${t}`);
 
   await page.getByRole("button", { name: /Wrote JavaScript tests/ }).click();
   await page.getByRole("button", { name: "Suggest a rewrite" }).click();
