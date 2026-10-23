@@ -13,11 +13,18 @@ const RISK: Record<RiskLevel, { label: string; cls: string }> = {
   high: { label: LEVEL_LABELS.high, cls: "border-bad/40 text-bad" },
 };
 
+const EMPTY: Record<string, string> = {
+  saved: "Jobs you want to look at later land here.",
+  applied: "Move a job here after you send your application.",
+  interviewing: "Got an interview? Move it here to practice for it.",
+};
+
 /** Display fallback only; never stored. */
 const nameOf = (c: TrackerCard) => c.company.trim() || "Untitled application";
 
 const small =
   "inline-flex min-h-10 items-center rounded-full border border-border bg-card px-3.5 text-[14px] font-medium transition-colors duration-200 hover:bg-bg-soft disabled:opacity-40";
+const menuItem = "min-h-10 rounded-[10px] px-3 text-left text-[15px] hover:bg-bg-soft";
 const fieldCls = "mt-1.5 min-h-12 w-full rounded-[14px] border border-border bg-card px-4 text-[17px] placeholder:text-muted";
 
 function isHttp(s: string): boolean {
@@ -50,7 +57,7 @@ export default function Tracker({
   };
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
-  const [confirming, setConfirming] = useState<string | null>(null);
+  const [undo, setUndo] = useState<{ card: TrackerCard; index: number } | null>(null);
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
   const [link, setLink] = useState("");
@@ -89,6 +96,21 @@ export default function Tracker({
     refocus.current = c.id;
     commit(moveCard(cards, c.id, dir));
     setAnnounce(`Moved ${nameOf(c)} to ${target.label}`);
+  }
+
+  function remove(c: TrackerCard) {
+    setUndo({ card: c, index: cards.findIndex((x) => x.id === c.id) });
+    commit(removeCard(cards, c.id));
+    setAnnounce(`Deleted ${nameOf(c)}`);
+  }
+
+  function undoDelete() {
+    if (!undo) return;
+    const next = [...cards];
+    next.splice(undo.index, 0, undo.card);
+    commit(next);
+    setAnnounce(`Restored ${nameOf(undo.card)}`);
+    setUndo(null);
   }
 
   function onKey(e: KeyboardEvent<HTMLElement>, c: TrackerCard) {
@@ -137,7 +159,7 @@ export default function Tracker({
 
       {ready && cards.length === 0 && (
         <p className={`${cardCls} mt-8 p-6 text-[17px] text-muted`}>
-          Nothing here yet. Add one below, or save one from a report.
+          Nothing here yet. Add a job below, or use Save to tracker on a report. Cards move Saved, Applied, Interviewing.
         </p>
       )}
 
@@ -215,67 +237,72 @@ export default function Tracker({
                       ) : (
                         c.notes && <p className="mt-3 whitespace-pre-wrap break-words text-[15px]">{c.notes}</p>
                       )}
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {prev && (
-                          <button type="button" className={small} onClick={() => move(c, -1)}>
-                            Move to {prev.label}
-                          </button>
-                        )}
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
                         {next && (
                           <button type="button" className={small} onClick={() => move(c, 1)}>
                             Move to {next.label}
+                            <span aria-hidden="true" className="ml-1.5">→</span>
                           </button>
                         )}
-                        {onPractice && c.column === "interviewing" && (
-                          <button type="button" className={`${small} border-accent text-accent`} onClick={() => onPractice(c)}>
-                            Practice interview
-                          </button>
-                        )}
-                        {editing !== c.id && (
-                          <button
-                            type="button"
-                            className={small}
-                            onClick={() => {
-                              setDraft(c.notes);
-                              setEditing(c.id);
-                            }}
+                        <details className="relative">
+                          <summary
+                            aria-label={`More actions for ${nameOf(c)}`}
+                            className={`${small} cursor-pointer list-none [&::-webkit-details-marker]:hidden`}
                           >
-                            Edit notes
-                          </button>
-                        )}
-                        {confirming === c.id ? (
-                          <span role="group" aria-label={`Delete ${nameOf(c)}?`} className="flex flex-wrap items-center gap-2 text-[14px]">
-                            Delete this?
-                            <button
-                              type="button"
-                              className={`${small} border-accent text-accent`}
-                              onClick={() => {
-                                commit(removeCard(cards, c.id));
-                                setConfirming(null);
-                                setAnnounce(`Deleted ${nameOf(c)}`);
-                              }}
-                            >
+                            <span aria-hidden="true">…</span>
+                          </summary>
+                          <div className="absolute left-0 z-10 mt-1 flex w-52 flex-col gap-1 rounded-[14px] border border-border bg-card p-2 shadow-lg">
+                            {prev && (
+                              <button type="button" className={menuItem} onClick={() => move(c, -1)}>
+                                Move to {prev.label}
+                              </button>
+                            )}
+                            {onPractice && c.column === "interviewing" && (
+                              <button type="button" className={`${menuItem} text-accent`} onClick={() => onPractice(c)}>
+                                Practice interview
+                              </button>
+                            )}
+                            {editing !== c.id && (
+                              <button
+                                type="button"
+                                className={menuItem}
+                                onClick={() => {
+                                  setDraft(c.notes);
+                                  setEditing(c.id);
+                                }}
+                              >
+                                Edit notes
+                              </button>
+                            )}
+                            <button type="button" className={menuItem} onClick={() => remove(c)}>
                               Delete
                             </button>
-                            <button type="button" className={small} onClick={() => setConfirming(null)}>
-                              Keep
-                            </button>
-                          </span>
-                        ) : (
-                          <button type="button" className={small} onClick={() => setConfirming(c.id)}>
-                            Delete
-                          </button>
-                        )}
+                          </div>
+                        </details>
                       </div>
                     </li>
                   );
                 })}
               </ul>
-              {items.length === 0 && <p className="mt-3 text-[15px] text-muted">None yet.</p>}
+              {items.length === 0 && (
+                <p className="mt-3 rounded-[14px] border border-dashed border-border p-4 text-[15px] text-muted">{EMPTY[col.id]}</p>
+              )}
             </section>
           );
         })}
       </div>
+
+      {undo && (
+        <div role="status" className="animate-enter fixed bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3 rounded-full border border-border bg-card px-5 py-2 shadow-lg">
+          <span className="text-[15px]">Deleted {nameOf(undo.card)}</span>
+          <button type="button" onClick={undoDelete} className={`${linkClass} min-h-10 text-[15px] font-semibold`}>
+            Undo
+          </button>
+          <button type="button" onClick={() => setUndo(null)} aria-label="Dismiss" className="min-h-10 px-1 text-muted">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+      )}
 
       <form onSubmit={submit} className={`${cardCls} mt-10 max-w-[640px] p-5 sm:p-6`} noValidate>
         <h2 className="text-[20px] font-semibold">Add an application</h2>

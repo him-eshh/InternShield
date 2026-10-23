@@ -13,11 +13,13 @@
 
 - T7 side-by-side diff, sticky "N changes" bar, PDF bold name/headers + name-based file name (commit "V2 tools 7"; Accept morph animation skipped, enter animation only)
 
+- T8 Pyodide preload + slow-load text, board 14px labels/8px snap/24px dots, tracker empty states + compact cards + "…" menu + Delete/Undo (commit "V2 tools 8"; QA t8 shots 12-*)
+
 ## Current
-- T8 polish (Pyodide preload + staged text, board labels/snap/dot grid, tracker empty states + compact cards + "…" menu with Delete-undo). No dev server running.
+- T9 final: reviewer pass on `git diff v2-base...v2-tools`, full screenshot pass, devpost/v2-tools-summary.md. No dev server running.
 
 ## Next
-- T8 polish, T9 final
+- T9 final
 
 ## Gotchas
 - Shell: Bash tool works for `cd ... && cmd | tail`; `sed -i` needs approval, use Edit. PowerShell Select-String pipes blocked. Bash `;` chains with head/env need approval: one command per call.

@@ -148,6 +148,26 @@ function runJs(code: string, functionName: string, cases: unknown[][], typescrip
   });
 }
 
+/** Starts loading Pyodide in the background so the first Run is quick. Safe to call repeatedly. */
+export function preloadPython(): void {
+  if (pyWorker || typeof window === "undefined" || typeof Worker === "undefined") return;
+  try {
+    const w = new Worker("/workers/py-runner.js", { type: "module" });
+    pyWorker = w;
+    pyReady = false;
+    active.add(w);
+    w.onmessage = (e: MessageEvent) => {
+      if (e.data?.type === "ready") pyReady = true;
+      else if (e.data?.type === "error" && pyWorker === w) killPython(); // next Run retries with a fresh worker
+    };
+    w.onerror = () => {
+      if (pyWorker === w) killPython();
+    };
+  } catch {
+    /* Run reports the failure */
+  }
+}
+
 function runPython(code: string, functionName: string, cases: unknown[][], options: RunOptions): Promise<RunResult> {
   return new Promise((resolve) => {
     if (!pyWorker) {

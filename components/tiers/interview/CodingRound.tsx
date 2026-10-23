@@ -10,7 +10,7 @@ import {
   type RoundPanelProps,
 } from "@/lib/tiers/types";
 import { getProblem, gradeOutputs } from "@/lib/tiers/problems";
-import { runCode, stopRunners } from "@/lib/tiers/runner";
+import { preloadPython, runCode, stopRunners } from "@/lib/tiers/runner";
 import { TIER_FLAGS } from "@/lib/tiers/flags";
 import { Spinner } from "../../icons";
 import { btnPrimary, btnSecondary, card as cardCls, pillOff, pillOn } from "../../ui";
@@ -62,6 +62,18 @@ export default function CodingRound({ session, onUpdate, ask, busy }: RoundPanel
   useEffect(() => {
     latest.current = session;
   }, [session]);
+  useEffect(() => {
+    if (language === "python") preloadPython();
+  }, [language]);
+  const [slowLoad, setSlowLoad] = useState(false);
+  useEffect(() => {
+    if (!loadingPy) return;
+    const t = window.setTimeout(() => setSlowLoad(true), 6000);
+    return () => {
+      window.clearTimeout(t);
+      setSlowLoad(false);
+    };
+  }, [loadingPy]);
 
   if (!problem) {
     return (
@@ -273,7 +285,9 @@ export default function CodingRound({ session, onUpdate, ask, busy }: RoundPanel
         }
       >
         {loadingPy
-          ? `Loading ${langLabel(language)}… (first time takes a few seconds)`
+          ? slowLoad
+            ? `Still loading ${langLabel(language)}… it's a one-time download of a few MB. Your code is kept.`
+            : `Loading ${langLabel(language)}… (first time takes a few seconds)`
           : status || (submitted ? `${submitted.passed} of ${submitted.total} hidden tests passed` : "")}
       </p>
 

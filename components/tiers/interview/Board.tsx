@@ -26,7 +26,8 @@ interface Props {
 }
 
 const kindLabel = (k: BoardKind) => BOARD_KINDS.find((x) => x.id === k)?.label ?? k;
-const shorten = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
+const snap = (v: number) => Math.round(v / 8) * 8; // drag snaps to the 8 px grid
+const shorten =(s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
 
 /** Point where the ray from `a`'s center toward `b`'s center leaves a's rectangle. */
 function edgePoint(a: BoardNode, b: BoardNode) {
@@ -157,7 +158,7 @@ export default function Board({ board, onChange, defaultKind = "server" }: Props
     if (!d) return;
     const p = svgPoint(e);
     d.moved = true;
-    onChange(setNodePosition(board, d.id, p.x - d.dx, p.y - d.dy));
+    onChange(setNodePosition(board, d.id, snap(p.x - d.dx), snap(p.y - d.dy)));
   };
   const onUp = (e: PointerEvent<SVGGElement>, n: BoardNode) => {
     const d = drag.current;
@@ -277,7 +278,7 @@ export default function Board({ board, onChange, defaultKind = "server" }: Props
           style={{ display: "block", touchAction: "none", width: "100%", height: "auto", fontFamily: "-apple-system, BlinkMacSystemFont, system-ui, sans-serif" }}
         >
           <defs>
-            <pattern id={`${markerId}-grid`} width="30" height="30" patternUnits="userSpaceOnUse">
+            <pattern id={`${markerId}-grid`} width="24" height="24" patternUnits="userSpaceOnUse">
               <circle cx="1" cy="1" r="1" style={{ fill: "var(--border)" }} />
             </pattern>
             <marker id={markerId} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
@@ -309,7 +310,7 @@ export default function Board({ board, onChange, defaultKind = "server" }: Props
                     x={(p1.x + p2.x) / 2}
                     y={(p1.y + p2.y) / 2 - 6}
                     textAnchor="middle"
-                    fontSize={13}
+                    fontSize={14}
                     strokeWidth={4}
                     strokeLinejoin="round"
                     paintOrder="stroke"
@@ -364,10 +365,10 @@ export default function Board({ board, onChange, defaultKind = "server" }: Props
                   strokeWidth={isSel ? 3 : 1.5}
                   style={{ fill: "var(--card)", stroke: isSel ? "var(--accent)" : "var(--border)" }}
                 />
-                <text x={NODE_W / 2} y={25} textAnchor="middle" fontSize={15} fontWeight={600} style={{ fill: "var(--text)" }}>
+                <text x={NODE_W / 2} y={24} textAnchor="middle" fontSize={15} fontWeight={600} style={{ fill: "var(--text)" }}>
                   {shorten(n.label || "Untitled", 17)}
                 </text>
-                <text x={NODE_W / 2} y={43} textAnchor="middle" fontSize={11} style={{ fill: "var(--muted)" }}>
+                <text x={NODE_W / 2} y={43} textAnchor="middle" fontSize={14} style={{ fill: "var(--muted)" }}>
                   {kindLabel(n.kind)}
                 </text>
               </g>
