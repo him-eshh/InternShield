@@ -15,11 +15,13 @@
 
 - T8 Pyodide preload + slow-load text, board 14px labels/8px snap/24px dots, tracker empty states + compact cards + "…" menu + Delete/Undo (commit "V2 tools 8"; QA t8 shots 12-*)
 
+- T9 final: reviewer pass, gates green, round shots 13-*, summary written (commit "V2 tools summary")
+
 ## Current
-- T9 final: reviewer pass on `git diff v2-base...v2-tools`, full screenshot pass, devpost/v2-tools-summary.md. No dev server running.
+- Done. No dev server running.
 
 ## Next
-- T9 final
+- Nothing.
 
 ## Gotchas
 - Shell: Bash tool works for `cd ... && cmd | tail`; `sed -i` needs approval, use Edit. PowerShell Select-String pipes blocked. Bash `;` chains with head/env need approval: one command per call.
