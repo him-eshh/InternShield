@@ -10,9 +10,9 @@ async function post<T extends { status: string }>(url: string, body: unknown): P
     });
     const json = (await res.json()) as T;
     if (json && typeof json === "object" && (json.status === "done" || json.status === "failed")) return json;
-    return { status: "failed", reason: "error" } as unknown as T;
+    return { status: "failed", reason: "error", code: "UNKNOWN" } as unknown as T;
   } catch {
-    return { status: "failed", reason: "error" } as unknown as T;
+    return { status: "failed", reason: "error", code: "UNKNOWN" } as unknown as T;
   }
 }
 

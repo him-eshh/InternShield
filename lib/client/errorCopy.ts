@@ -10,6 +10,8 @@ const COPY: Partial<Record<ApiErrorCode, string>> = {
   TOO_LARGE: "That message is too long to check.",
   MODEL_UNAVAILABLE: "The AI is unavailable right now. Try again soon.",
   NOT_FOUND: "Nothing found.",
+  TRANSCRIBE_FAILED: "We couldn't read that screenshot. Paste the text instead.",
+  TRANSCRIBE_PARTIAL: "Part of the screenshot couldn't be read. Check the text.",
 };
 const GENERIC = "Something went wrong. Try again.";
 

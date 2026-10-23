@@ -17,5 +17,15 @@
 - CSP (`next.config.ts`): all three workers load only from jsDelivr; header value already allows them (runtime check in I5).
 - Not done (optional): moving sql/debugging rounds into App's maps (they work inside Interview.tsx); checking screen inside the report layout.
 
+## I2 seams (qa/v2-integration-seams.mjs, mocked)
+- Intro "Get started" -> Check, "Add profile" pill shown. Scam example: Risk 100 "Strong signs of a scam", no Tailor/Practice, Save present. Real example: Risk 0 "No red flags found", Tailor/Practice/Save present. Overflow 0.
+- Quick answer "Deposit a check" on the real example: 0 -> 85 high, Tailor/Practice disappear (live level).
+- Practice from the report: Company=Stripe, Role=Software Engineering Intern (Summer 2027) prefilled. Tailor without resume asks for one.
+- TS + SQL runners work under the pinned worker CSP (qa/v2-tools-t4.mjs via qa/v2-integration-run.mjs).
+
+## I2 reviewer (Opus, read-only): no blockers
+- Fixed: errorCopy for TRANSCRIBE_FAILED/PARTIAL; tier client network failure carries `code: "UNKNOWN"`; worker CSP pinned to the three package folders; types comment "Not sure".
+- Accepted: the rewrite no-invented-facts guard runs in the browser only (every option shown in the UI passes `guardRewrite`; a raw API caller only gets text about their own resume). `@codemirror/*`, `sql.js`, `motion` came from the approved V2 setup 2 commit. `motion-safe:animate-pulse` on "Thinking" stays (CSS, reduced-motion gated). Header chip Tailor/Practice still use the first report level (in-report buttons use the live one).
+
 ## Assertions changed (test, old, new, why)
 - `tests/api/transcribe.test.ts` "rejects a body over 3 MB" -> over 3.6 MB. Why: body cap raised for two-strip tall screenshots.

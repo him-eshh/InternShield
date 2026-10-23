@@ -114,7 +114,7 @@ export interface Answers {
 export interface Question {
   id: QuestionId;
   text: string;
-  options: { value: string; label: string }[]; // always includes { value: "unknown", label: "I don't know" } (the "Not sure" value)
+  options: { value: string; label: string }[]; // always includes { value: "unknown", label: "Not sure" }
   kind?: "single" | "multi"; // default "single"
   couldChange?: { level?: boolean; critical?: boolean; advice?: boolean }; // what an answer could move
 }
