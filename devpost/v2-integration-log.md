@@ -27,5 +27,11 @@
 - Fixed: errorCopy for TRANSCRIBE_FAILED/PARTIAL; tier client network failure carries `code: "UNKNOWN"`; worker CSP pinned to the three package folders; types comment "Not sure".
 - Accepted: the rewrite no-invented-facts guard runs in the browser only (every option shown in the UI passes `guardRewrite`; a raw API caller only gets text about their own resume). `@codemirror/*`, `sql.js`, `motion` came from the approved V2 setup 2 commit. `motion-safe:animate-pulse` on "Thinking" stays (CSS, reduced-motion gated). Header chip Tailor/Practice still use the first report level (in-report buttons use the live one).
 
+## I3 a11y, reduced motion, brand, copy (qa/v2-integration-a11y.mjs, mocked, 1440 light+dark)
+- 8 screens (intro, check, both reports, tracker, tailor, interview setup, profile): 0 text below 4.5:1 (rendered colors), every Tab stop has a visible ring, 0 console errors. Only "unnamed" hit is the aria-hidden file input behind "Upload a screenshot" (by design).
+- Profile menu: Escape closes, focus returns to its button. Reduced motion: no running animations on the report, nothing left at opacity 0 (shot 70-reduced-motion-report-instant-1440-*).
+- Logo/icon/apple icon/OG done by check C9 (`app/apple-icon.tsx` is code-made, kept).
+- Copy: medium label "Some warning signs, double check before you reply" -> "Some warning signs" (the action line under it says what to do; matches the brief's terms; prd.md wording differs). Tracker empty state cut to one sentence.
+
 ## Assertions changed (test, old, new, why)
 - `tests/api/transcribe.test.ts` "rejects a body over 3 MB" -> over 3.6 MB. Why: body cap raised for two-strip tall screenshots.

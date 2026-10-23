@@ -5,12 +5,14 @@
 - I1.1/1.2 merges clean (no conflicts): 0ff… `V2 merge: check stream`, 484b1bf `V2 merge: tools stream`.
 - I1.3: 53fd96e PDF test timeouts; 203bafb extras live level + onLine code + intro->Check; 2c8d468 caps/env.
 
+- I2: f430320 seams + reviewer fixes (no blockers).
+
+- I3: a11y clean, copy pass (commit "V2 integrate: a11y, reduced motion, brand").
+
 ## Current
-- I2: reviewer (background agent) on git diff main...v2; me: seam checks (error codes per route, examples, ring).
+- I4 live smoke.
 
 ## Next
-- I2 fix reviewer blockers/should-fix -> gates -> commit
-- I3 a11y/reduced motion pass (qa script qa/v2-integration-*.mjs), copy pass
 - I4 live smoke (max 10 calls, log each in devpost/v2-integration-log.md)
 - I5 screenshots + INDEX.md; I6 final + devpost/v2-summary.md
 

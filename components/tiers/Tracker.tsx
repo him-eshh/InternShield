@@ -159,7 +159,7 @@ export default function Tracker({
 
       {ready && cards.length === 0 && (
         <p className={`${cardCls} mt-8 p-6 text-[17px] text-muted`}>
-          Nothing here yet. Add a job below, or use Save to tracker on a report. Cards move Saved, Applied, Interviewing.
+          Nothing here yet. Add a job below or save one from a report.
         </p>
       )}
 

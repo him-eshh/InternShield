@@ -160,7 +160,7 @@ export interface LinkCheck {
 export type RiskLevel = "low" | "medium" | "high"; // 0-24 / 25-59 / 60-100
 export const LEVEL_LABELS: Record<RiskLevel, string> = {
   low: "No red flags found",
-  medium: "Some warning signs, double check before you reply",
+  medium: "Some warning signs",
   high: "Strong signs of a scam",
 };
 
