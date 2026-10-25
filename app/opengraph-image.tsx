@@ -13,7 +13,7 @@ export default function Image() {
           display: "flex",
           width: "100%",
           height: "100%",
-          background: "#FFFFFF",
+          background: "#FBF8F3",
           alignItems: "center",
           justifyContent: "center",
         }}
@@ -25,7 +25,7 @@ export default function Image() {
             gap: 48,
           }}
         >
-          <RingMark size={200} color="#2F6FD6" />
+          <RingMark size={200} tri={["#ea5a31", "#0d7d74", "#6b4eff"]} />
           <div
             style={{
               display: "flex",
@@ -38,7 +38,7 @@ export default function Image() {
                 display: "flex",
                 fontSize: 96,
                 fontWeight: 700,
-                color: "#1D1D1F",
+                color: "#1C1A17",
               }}
             >
               InternShield
@@ -47,7 +47,7 @@ export default function Image() {
               style={{
                 display: "flex",
                 fontSize: 48,
-                color: "#6E6E73",
+                color: "#57514A",
               }}
             >
               Is this offer real?
