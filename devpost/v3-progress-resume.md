@@ -3,20 +3,22 @@
 Dev server: none; QA trees 45528/39380/48048 stopped after rounds (port 3100). Never use port 3000.
 
 ## Done
+- R2/R3: cited company/role plan, required/preferred keywords, capped/error fallback; guarded edits API + client, <=6 bullets, fact/tell/style/+3% checks, PDF row widths, confirmed posting skills only. Closing commit contains this update.
+- Latest gates: lint/tsc/build/eval green; 79 files / 1248 tests; eval 88/88, held-out 24/27.
 - R1: structure-preserving model + made-up fixtures; PDF/DOCX zero-edit byte identity, section/text/page round trips, PDF resource cleanup. Closed in 4665e74.
 - Prior work preserved: 4c36675 (parser/render WIP), b1a42ca (handoff updates + shared edit checks WIP).
 - R1 gates: lint 0 errors (2 existing QA warnings), tsc clean after stale suppression removed, 76 files / 1215 tests, build green, eval 88/88 and held-out 24/27.
 
 ## Current
-- R2 implementation: resumePlan.ts + PlanPanel.tsx + 9 mocked tests pass. Required/preferred terms, confirmed facts, safe source links, capped/error fallback, cancellation. Needs R5 wiring + visual verification before item closure.
-- R3 server/shared sub-item: mode=edits in rewriteEdits.ts; model output filtered server-side by checkedEdits; 28 new adversarial tests + 29 existing rewrite tests pass (57 total). Typecheck passed before last punctuation/fact tightening; rerun. Checkpoint b6e7289.
-- R3 width validation + plan guidance now wired server/browser (resumeWidth.ts); route test proves too-wide suggestions dropped. Skill toggles reversible; extra suggestions respect combined budget. 31 focused tests pass. R4 row-fit fix now implemented; 17 parser/render tests pass incl. per-row widths + literal DOCX bullet preservation. Checkpoint cbc116c. UI wired: resumeEditor.ts + DocumentPreview/EditCard + replaced ResumeTailor.tsx. Real steps/cancel, accept/reject/edit, source panel, original bytes preview, download gating. Typecheck + scoped lint green; 52 related tests pass. Checkpoint 3056009. Quick Playwright flow passed at 1440/390 light; viewed both resume-review shots in QA_SHOTS. Current long task: qa/v3-resume-states.mjs + flow timing (no new quick shots), DOCX/cancel/fallback/manual guard/skill reversal pass. Timing regression fixed via persistent PDFWorker + atomic canvas swap: loading 210/214ms; accept-to-preview 118/50ms at 1440/390. Flow passes. Next full gates, close R2/R3 where proven; R4 DOCX pagination still not proven. Shared width/plan checkpoint ab0ef08.
+- R4/R5/R6 finish: guarded editor/preview wired (3056009), width checks (ab0ef08), PDF worker optimization + DOCX/cancel tests (324acf0).
+- Quick review shots at 1440/390 light viewed; mocked PDF flow and DOCX/cancel/skill reversal pass. Loading 210/214ms, first accept 118/50ms before final bytes/highlight snapshot pairing fix. Rerun timing now that pairing is corrected.
+- Next long task: final screenshot matrix via qa/v3-resume-flow.mjs --full, inspect every shot. Start hidden port 3100; stop after round. QA_SHOTS is in user prompt.
 
 ## Next
-- R2/R3 item closure waits for UI wiring and full gates; commits are WIP meanwhile.
-- R4 finish render checks: variable PDF row widths, DOCX pagination limitation, export alternatives.
-- R5 UI: components/resume/**, replace components/tiers/ResumeTailor.tsx; update old tier2 tests.
-- R6 QA + screenshot matrix; R7 integration live-call instructions; summary only after all quality checks pass.
+- R4: DOCX pagination remains unproven (stored page metadata only); no local soffice. Need conservative handling/explicit limitation; do not claim full quality bar.
+- R5/R6: final 1440/390 light/dark matrix + too-long/glow/download states; cancellation/DOCX QA in qa/v3-resume-states.mjs. Add tests for unsafe DOCX preview HTML, preserve hyperlink text.
+- R7: document integration live-call recipes (no calls here); integration needs illustration replacement when shell supplies it.
+- Final summary commit ONLY if every brief item and Quality bar actually complete.
 
 ## Gotchas
 - Personal vault intentionally not read (user instruction).

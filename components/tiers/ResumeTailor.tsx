@@ -3,11 +3,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Check, Download, Eye, FilePenLine, FileUp, LoaderCircle, X } from "lucide-react";
 import type { ResumeData } from "@/lib/types";
 import type { PostingContext } from "@/lib/tiers/types";
-import type { ResumeEdit } from "@/lib/tiers/resumeTypes";
+import type { ResumeEdit, ResumeLine } from "@/lib/tiers/resumeTypes";
 import { docLines, docText, parseTextResume } from "@/lib/tiers/resumeModel";
 import { keywordGap } from "@/lib/tiers/keywordGap";
 import { checkEdit, withinTotalBudget } from "@/lib/tiers/resumeEdits";
-import { loadResumePlan, type ResumePlan } from "@/lib/tiers/resumePlan";
+import { buildResumePlan, loadResumePlan, type ResumePlan } from "@/lib/tiers/resumePlan";
 import { lengthCheck, renderEdited, renderPlainText, TOO_LONG, type Rendered } from "@/lib/tiers/resumeRender";
 import { draftResumeEdits, openResumeFile, saveResumeBytes, type ResumeFile } from "@/lib/client/resumeEditor";
 import { PlanPanel } from "../resume/PlanPanel";
@@ -37,7 +37,7 @@ export default function ResumeTailor({ resume, target, onOpenProfile, onBack }: 
   const [outcomes, setOutcomes] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [generated, setGenerated] = useState<{ version: string; output: Rendered } | null>(null);
+  const [generated, setGenerated] = useState<{ version: string; output: Rendered; highlights: ResumeLine[] } | null>(null);
   const [previewReady, setPreviewReady] = useState("");
   const [renderError, setRenderError] = useState("");
   const controller = useRef<AbortController | null>(null);
@@ -60,10 +60,10 @@ export default function ResumeTailor({ resume, target, onOpenProfile, onBack }: 
       if (stale) return;
       const check = lengthCheck(file.doc, accepted.map((e) => ({ lineId: e.lineId, text: e.proposed })), output);
       if (!check.ok) { setRenderError(check.problems.join(". ")); return; }
-      setRenderError(""); setGenerated({ version: previewVersion, output });
+      setRenderError(""); setGenerated({ version: previewVersion, output, highlights: highlight });
     }).catch(() => { if (!stale) setRenderError("Couldn't prepare your preview. Try again."); });
     return () => { stale = true; };
-  }, [file, accepted, previewVersion]);
+  }, [file, accepted, previewVersion, highlight]);
 
   function cancel() {
     controller.current?.abort();
@@ -81,7 +81,8 @@ export default function ResumeTailor({ resume, target, onOpenProfile, onBack }: 
       setOutcomes([`${original.doc.pageCount} ${original.doc.pageCount === 1 ? "page" : "pages"} read`]); setStage(1);
       const input = { resume: docText(original.doc), posting, company, role, facts: nextFacts };
       if (input.resume.length > 10000) throw new Error("Use a resume shorter than 10,000 characters for targeted edits.");
-      setOutcomes((o) => [...o, "Posting keywords identified"]); setStage(2);
+      const postingPlan = buildResumePlan(input);
+      setOutcomes((o) => [...o, `${postingPlan.keywords.length} posting keywords identified`]); setStage(2);
       const nextPlan = await loadResumePlan(input, abort.signal);
       abort.signal.throwIfAborted();
       setPlan(nextPlan); setOutcomes((o) => [...o, nextPlan.limited ? "Using the job post only" : `${nextPlan.sources.length} company sources`]); setStage(3);
@@ -155,7 +156,7 @@ export default function ResumeTailor({ resume, target, onOpenProfile, onBack }: 
       <section aria-label="Posting keyword gaps" className="rounded-2xl border border-border bg-surface p-5"><h2 className="text-sm font-semibold">Posting keywords</h2><p className="mt-1 text-xs text-fg-2">Only add a missing skill if you have it.</p><div className="mt-3 flex flex-wrap gap-2">{[...plan.gap.required, ...plan.gap.preferred].map((term) => <div key={term.term} className="flex min-h-11 items-center gap-2 rounded-xl border border-border px-3 text-sm">{term.bucket !== "missing" && <Check size={15} className="text-tool-strong" />}<span>{term.term}</span>{(term.bucket === "missing" || facts.includes(term.term)) && <button type="button" onClick={() => toggleFact(term.term)} aria-pressed={facts.includes(term.term)} className="min-h-11 text-xs font-medium text-tool-strong">{facts.includes(term.term) ? "Confirmed" : "I have this"}</button>}</div>)}</div></section>
       <div className="flex gap-2 lg:hidden"><button type="button" className={secondary} aria-pressed={!previewOpen} onClick={() => setPreviewOpen(false)}>Edits</button><button type="button" className={secondary} aria-pressed={previewOpen} onClick={() => setPreviewOpen(true)}><Eye size={16} />Preview</button></div>
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]"><section aria-label="Suggested edits" className={`${previewOpen ? "hidden lg:block" : "block"} space-y-4`}>{edits.length ? edits.map((edit) => <EditCard key={edit.id} edit={edit} onStatus={status} onEdit={editText} />) : <div className="rounded-2xl border border-border bg-surface p-6"><h2 className="font-display text-lg font-semibold">Your wording already fits</h2><p className="mt-2 text-sm text-fg-2">No suggestions passed all the checks. You can confirm a missing skill above or try another posting.</p></div>}</section>
-        <section className={`${previewOpen ? "block" : "hidden lg:block"} min-w-0 space-y-3 lg:sticky lg:top-24`} aria-label="Live preview"><div className="flex items-center justify-between gap-3"><h2 className="font-display text-lg font-semibold">Your resume</h2><span className="text-xs text-fg-2">{file.doc.pageCount} {file.doc.pageCount === 1 ? "page" : "pages"}</span></div>{generated && <DocumentPreview output={generated.output} version={generated.version} onReady={markReady} highlights={highlight} />}{renderError && <p role="alert" className="text-sm">{renderError}</p>}<p className="text-xs text-fg-2">{file.doc.source === "docx" ? "Original Word layout kept. Check page breaks in Word." : "Same length as your original"}</p>{file.doc.source === "pdf" && <p className="text-xs text-fg-3">PDF changes cover the old text visually. Use plain text for a clean text layer.</p>}<div className="flex flex-wrap gap-2"><button type="button" disabled={!ready} className={primary} onClick={() => generated && saveResumeBytes(generated.output.bytes, generated.output.mime, `${baseName}-tailored.${generated.output.ext}`)}><Download size={16} />Download {generated?.output.ext.toUpperCase() ?? "resume"}</button><button type="button" disabled={!ready} className={secondary} onClick={() => saveResumeBytes(new TextEncoder().encode(renderPlainText(file.doc, accepted.map((e) => ({ lineId: e.lineId, text: e.proposed })))), "text/plain", `${baseName}-tailored.txt`)}>Plain text</button></div>{!ready && <p className="text-xs text-fg-2">Preview first, then download.</p>}</section>
+        <section className={`${previewOpen ? "block" : "hidden lg:block"} min-w-0 space-y-3 lg:sticky lg:top-24`} aria-label="Live preview"><div className="flex items-center justify-between gap-3"><h2 className="font-display text-lg font-semibold">Your resume</h2><span className="text-xs text-fg-2">{file.doc.pageCount} {file.doc.pageCount === 1 ? "page" : "pages"}</span></div>{generated && <DocumentPreview output={generated.output} version={generated.version} onReady={markReady} highlights={generated.highlights} />}{renderError && <p role="alert" className="text-sm">{renderError}</p>}<p className="text-xs text-fg-2">{file.doc.source === "docx" ? "Original Word layout kept. Check page breaks in Word." : "Same length as your original"}</p>{file.doc.source === "pdf" && <p className="text-xs text-fg-3">PDF changes cover the old text visually. Use plain text for a clean text layer.</p>}<div className="flex flex-wrap gap-2"><button type="button" disabled={!ready} className={primary} onClick={() => generated && saveResumeBytes(generated.output.bytes, generated.output.mime, `${baseName}-tailored.${generated.output.ext}`)}><Download size={16} />Download {generated?.output.ext.toUpperCase() ?? "resume"}</button><button type="button" disabled={!ready} className={secondary} onClick={() => saveResumeBytes(new TextEncoder().encode(renderPlainText(file.doc, accepted.map((e) => ({ lineId: e.lineId, text: e.proposed })))), "text/plain", `${baseName}-tailored.txt`)}>Plain text</button></div>{!ready && <p className="text-xs text-fg-2">Preview first, then download.</p>}</section>
       </div></div>}
   </main>;
 }
