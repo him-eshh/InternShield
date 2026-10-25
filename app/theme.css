@@ -1,0 +1,208 @@
+/* InternShield v3 theme: the ONE file that holds design tokens (devpost/v3-brief-setup.md > Design system).
+   Components never use hex colors; they use these variables (or the Tailwind names in globals.css).
+   References: Linear (polish, motion, dark elevation from one hue), Raycast (vivid per-tool color, crisp icons),
+   Duolingo (session flow, progress bars, end-of-session moment), Notion (home and onboarding clarity).
+   Shell may tune values here, never names. Contrast for every text/background pair is checked by
+   tests/shared/v3-theme.test.ts (text >= 4.5:1, UI marks >= 3:1). */
+
+:root {
+  /* Canvas: warm off-white page, white cards, warm grey borders. */
+  --bg: #fbf8f3;
+  --bg-subtle: #f5f1ea;
+  --surface: #ffffff;
+  --surface-2: #fdfbf8;
+  --surface-3: #f8f4ee;
+  --sunken: #f1ece4;
+  --border: #e6dfd4;
+  --border-strong: #8f877b; /* field edges and UI marks: >= 3:1 on surface */
+  --fg: #1c1a17;
+  --fg-2: #57514a;
+  --fg-3: #6b655d; /* meta text */
+
+  /* Ink: brand neutral (Tracker, Profile, report chrome). */
+  --ink: #1e2a47;
+  --ink-strong: #1e2a47;
+  --ink-tint: #eceef4;
+  --on-ink: #ffffff;
+
+  /* Tool identities. fill = buttons/marks, strong = text/icons on page or tint, tint = soft backgrounds, on = text on fill. */
+  --coral: #ea5a31; /* Check: orange-leaning and light so it never reads as risk red */
+  --coral-strong: #b0401c;
+  --coral-tint: #ffefe8;
+  --on-coral: #3a1306;
+  --teal: #0d7d74; /* Tailor: teal-leaning so it never reads as risk green */
+  --teal-strong: #0a6760;
+  --teal-tint: #e2f4f1;
+  --on-teal: #ffffff;
+  --violet: #6b4eff; /* Practice */
+  --violet-strong: #5838e0;
+  --violet-tint: #efebff;
+  --on-violet: #ffffff;
+
+  /* Risk: reserved for risk results only, always with an icon + words. */
+  --good: #1d7a4c;
+  --good-tint: #e6f4ec;
+  --warn: #8f5509;
+  --warn-tint: #fcf1df;
+  --bad: #bf3a2b;
+  --bad-tint: #fcebe8;
+
+  /* Neutral ink ramp (Radix step semantics: 1-2 bg, 3-5 states, 6-8 borders, 9-10 solids, 11-12 text).
+     Old --blue-N names alias it so v2 report chrome turns neutral. */
+  --ink-1: #fbfbfd; --ink-2: #f5f6f9; --ink-3: #eceef4; --ink-4: #e1e5ee; --ink-5: #d5dae6; --ink-6: #c5ccdb;
+  --ink-7: #aeb7ca; --ink-8: #8a95ad; --ink-9: #1e2a47; --ink-10: #2b385a; --ink-11: #3a4766; --ink-12: #141c30;
+
+  /* Code editor syntax (interview). */
+  --code-keyword: #0b4f9c;
+  --code-string: #0f6b3a;
+  --code-number: #8a4b00;
+  --code-comment: #5f6670;
+  --code-function: #005f73;
+  --code-type: #7a3e00;
+  --code-property: #24486e;
+
+  /* Depth: gentle layered warm shadows (light only). */
+  --shadow-1: 0 1px 1px rgb(60 40 20 / 0.04), 0 1px 3px rgb(60 40 20 / 0.06);
+  --shadow-2: 0 1px 2px rgb(60 40 20 / 0.05), 0 4px 10px -2px rgb(60 40 20 / 0.08), 0 12px 24px -12px rgb(60 40 20 / 0.1);
+  --shadow-3: 0 2px 4px rgb(60 40 20 / 0.05), 0 12px 28px -8px rgb(60 40 20 / 0.14), 0 28px 56px -24px rgb(60 40 20 / 0.16);
+
+  /* Home hero mesh (and faint empty states only). */
+  --mesh: radial-gradient(60% 80% at 10% 10%, var(--coral-tint) 0%, transparent 60%),
+    radial-gradient(50% 70% at 90% 20%, var(--violet-tint) 0%, transparent 60%),
+    radial-gradient(60% 80% at 50% 100%, var(--teal-tint) 0%, transparent 60%);
+
+  /* Type */
+  --font-display: var(--font-bricolage), var(--font-inter), system-ui, sans-serif;
+  --font-body: var(--font-inter), system-ui, -apple-system, sans-serif;
+
+  /* Radii: child <= parent. */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+
+  /* Motion (findings 06 §4): page transitions <= 250ms, celebration <= 1.2s. */
+  --dur-press: 90ms;
+  --dur-micro: 150ms;
+  --dur-base: 220ms;
+  --dur-page: 220ms;
+  --dur-screen: 280ms;
+  --dur-reveal: 800ms;
+  --dur-celebrate: 1200ms;
+  --stagger: 40ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-exit: cubic-bezier(0.3, 0, 0.8, 0.15);
+  --ease-reveal: cubic-bezier(0.05, 0.7, 0.1, 1);
+
+  color-scheme: light;
+}
+
+/* Dark: deep ink-navy, never black; elevation = surface steps from one hue (no shadows). */
+.dark {
+  --bg: #0d1220;
+  --bg-subtle: #111728;
+  --surface: #151c2e;
+  --surface-2: #1b2338;
+  --surface-3: #222b43;
+  --sunken: #1b2338;
+  --border: #283149;
+  --border-strong: #6e7a96;
+  --fg: #e9edf5;
+  --fg-2: #aab3c5;
+  --fg-3: #8d97ab;
+
+  --ink: #c7d2ea;
+  --ink-strong: #d5def0;
+  --ink-tint: #1c2540;
+  --on-ink: #0d1220;
+
+  --coral: #ffa77a;
+  --coral-strong: #ffbb98;
+  --coral-tint: #2e1d1c;
+  --on-coral: #2a0c04;
+  --teal: #2cc9b5;
+  --teal-strong: #5fdccb;
+  --teal-tint: #0f2a2c;
+  --on-teal: #03231f;
+  --violet: #a48bff;
+  --violet-strong: #bca9ff;
+  --violet-tint: #221c45;
+  --on-violet: #170b3b;
+
+  --good: #5bbf8a;
+  --good-tint: #12271c;
+  --warn: #e3a94f;
+  --warn-tint: #2a200f;
+  --bad: #f2777a;
+  --bad-tint: #2d1618;
+
+  --ink-1: #0f1424; --ink-2: #131a2b; --ink-3: #1c2540; --ink-4: #222c4a; --ink-5: #283355; --ink-6: #313d62;
+  --ink-7: #3e4b74; --ink-8: #55638f; --ink-9: #c7d2ea; --ink-10: #d5def0; --ink-11: #b9c4dc; --ink-12: #e9edf5;
+
+  --code-keyword: #7fb3ff;
+  --code-string: #8fd19e;
+  --code-number: #f0b46a;
+  --code-comment: #98a1ad;
+  --code-function: #6fd3d8;
+  --code-type: #e8c07a;
+  --code-property: #b5cbe6;
+
+  --shadow-1: none;
+  --shadow-2: none;
+  --shadow-3: none;
+
+  color-scheme: dark;
+}
+
+/* Tool color mechanism: <div data-tool="check|tailor|practice|neutral"> sets --tool/--tool-tint/--tool-strong/--on-tool,
+   and the old --accent names follow, so bg-accent buttons, focus rings and links inside a tool take its color.
+   Set on the same element as the var() so each wrapper re-resolves (custom properties inherit computed values). */
+:root,
+[data-tool="neutral"] {
+  --tool: var(--ink);
+  --tool-tint: var(--ink-tint);
+  --tool-strong: var(--ink-strong);
+  --on-tool: var(--on-ink);
+}
+[data-tool="check"] {
+  --tool: var(--coral);
+  --tool-tint: var(--coral-tint);
+  --tool-strong: var(--coral-strong);
+  --on-tool: var(--on-coral);
+}
+[data-tool="tailor"] {
+  --tool: var(--teal);
+  --tool-tint: var(--teal-tint);
+  --tool-strong: var(--teal-strong);
+  --on-tool: var(--on-teal);
+}
+[data-tool="practice"] {
+  --tool: var(--violet);
+  --tool-tint: var(--violet-tint);
+  --tool-strong: var(--violet-strong);
+  --on-tool: var(--on-violet);
+}
+:root,
+[data-tool] {
+  --accent: var(--tool);
+  --accent-hover: color-mix(in oklab, var(--tool) 88%, var(--fg));
+  --accent-fg: var(--tool-strong);
+  --accent-tint: var(--tool-tint);
+  --accent-contrast: var(--on-tool);
+}
+
+/* Old raw names some v2 components read with var() (they were never defined before v3). */
+/* var() aliases resolve on <html>, which also carries .dark, so one :root block serves both themes. */
+:root {
+  --text: var(--fg);
+  --muted: var(--fg-2);
+  --card: var(--surface);
+  --bg-soft: var(--bg-subtle);
+}
+:root {
+  --blue-1: var(--ink-1); --blue-2: var(--ink-2); --blue-3: var(--ink-3); --blue-4: var(--ink-4);
+  --blue-5: var(--ink-5); --blue-6: var(--ink-6); --blue-7: var(--ink-7); --blue-8: var(--ink-8);
+  --blue-9: var(--ink-9); --blue-10: var(--ink-10); --blue-11: var(--ink-11); --blue-12: var(--ink-12);
+}

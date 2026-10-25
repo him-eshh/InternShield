@@ -1,74 +1,25 @@
 @import "tailwindcss";
+/* All design tokens (light + dark, tool accents, risk colors, motion, fonts) live in app/theme.css. */
+@import "./theme.css";
 
 /* Dark mode is class-based: the no-flash script in layout.tsx sets .dark on <html>. */
 @custom-variant dark (&:where(.dark, .dark *));
-
-/* Direction A "Calm Instrument" (findings 06 §2, §12): blue-tinted neutrals (hue ~258), one blue accent,
-   green/amber/red only for results. Old names (--bg-soft, --card, --text, --muted, --accent-contrast) alias the new ones. */
-:root {
-  --bg: #ffffff;
-  --bg-subtle: #f6f7f9;
-  --surface: #ffffff;
-  --sunken: #f1f3f6;
-  --border: #e3e6eb;
-  --border-strong: #c5cad3;
-  --fg: #14171c;
-  --fg-2: #555c68;
-  --fg-3: #6c737f; /* meta text, on --bg only */
-  --accent: #2466c3;
-  --accent-hover: #1657af;
-  --accent-fg: #2460b7; /* links */
-  --accent-tint: #e3f0ff;
-  --accent-contrast: #ffffff;
-  --good: #1d7a4c;
-  --good-tint: #e6f4ec;
-  --warn: #95590a;
-  --warn-tint: #fcf1df;
-  --bad: #bf3a2b;
-  --bad-tint: #fcebe8;
-  --shadow-1: 0 1px 0 rgb(20 23 28 / 0.04), 0 1px 2px rgb(20 23 28 / 0.06);
-  --shadow-2: 0 1px 2px rgb(20 23 28 / 0.06), 0 4px 12px -2px rgb(20 23 28 / 0.08);
-  --shadow-3: 0 2px 4px rgb(20 23 28 / 0.06), 0 12px 32px -8px rgb(20 23 28 / 0.14);
-  /* Accent ramp, Radix step semantics: 1-2 bg, 3-5 states, 6-8 borders, 9-10 solids, 11-12 text. */
-  --blue-1: #f9fcff; --blue-2: #f2f7ff; --blue-3: #e3f0ff; --blue-4: #d2e6ff; --blue-5: #c1dbff; --blue-6: #adcdfc;
-  --blue-7: #94b9f1; --blue-8: #6ea0e8; --blue-9: #2466c3; --blue-10: #1657af; --blue-11: #2460b7; --blue-12: #0c2c5a;
-  color-scheme: light;
-}
-
-.dark {
-  --bg: #0e1013;
-  --bg-subtle: #13161a;
-  --surface: #171a1f;
-  --sunken: #1d2127;
-  --border: #272c33;
-  --border-strong: #3d444f;
-  --fg: #eceef2;
-  --fg-2: #a4abb6;
-  --fg-3: #868e9a;
-  --accent: #6ea0e8;
-  --accent-hover: #82b0f3;
-  --accent-fg: #8fb9f7;
-  --accent-tint: #152235;
-  --accent-contrast: #0e1013;
-  --good: #5bbf8a;
-  --good-tint: #12271c;
-  --warn: #e3a94f;
-  --warn-tint: #2a200f;
-  --bad: #f0857a;
-  --bad-tint: #2d1614;
-  /* Dark mode: hairlines and surface steps instead of shadows. */
-  --shadow-1: 0 0 0 1px rgb(255 255 255 / 0.04);
-  --shadow-2: 0 0 0 1px rgb(255 255 255 / 0.06), 0 8px 24px -8px rgb(0 0 0 / 0.6);
-  --shadow-3: 0 0 0 1px rgb(255 255 255 / 0.06), 0 12px 32px -8px rgb(0 0 0 / 0.7);
-  --blue-1: #0b1016; --blue-2: #10161f; --blue-3: #152235; --blue-4: #172b49; --blue-5: #1d3559; --blue-6: #26426c;
-  --blue-7: #345687; --blue-8: #4772b1; --blue-9: #6ea0e8; --blue-10: #82b0f3; --blue-11: #8fb9f7; --blue-12: #dce9fc;
-  color-scheme: dark;
-}
 
 @theme inline {
   /* colors (new names) */
   --color-bg: var(--bg);
   --color-bg-subtle: var(--bg-subtle);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  /* tool color: whatever data-tool wrapper is nearest (bg-tool, text-tool-strong, bg-tool-tint, text-on-tool) */
+  --color-tool: var(--tool);
+  --color-tool-tint: var(--tool-tint);
+  --color-tool-strong: var(--tool-strong);
+  --color-on-tool: var(--on-tool);
+  --color-coral: var(--coral); --color-coral-strong: var(--coral-strong); --color-coral-tint: var(--coral-tint);
+  --color-teal: var(--teal); --color-teal-strong: var(--teal-strong); --color-teal-tint: var(--teal-tint);
+  --color-violet: var(--violet); --color-violet-strong: var(--violet-strong); --color-violet-tint: var(--violet-tint);
+  --color-ink: var(--ink); --color-ink-strong: var(--ink-strong); --color-ink-tint: var(--ink-tint);
   --color-surface: var(--surface);
   --color-sunken: var(--sunken);
   --color-border: var(--border);
@@ -96,7 +47,8 @@
   --color-text: var(--fg);
   --color-muted: var(--fg-2);
 
-  --font-sans: system-ui, -apple-system, "SF Pro Text", var(--font-inter), sans-serif;
+  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-bricolage), var(--font-inter), system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   /* type scale (weights: 400 body, 600 headline, 680-700 display) */
@@ -128,16 +80,6 @@
   --ease-reveal: cubic-bezier(0.05, 0.7, 0.1, 1);
 }
 
-/* Durations and spacing rhythm as plain variables (4 pt base: 4 8 12 16 20 24 32 40 56 72 96 = Tailwind 1..24). */
-:root {
-  --dur-press: 90ms;
-  --dur-micro: 150ms;
-  --dur-base: 220ms;
-  --dur-screen: 280ms;
-  --dur-reveal: 800ms;
-  --stagger: 40ms;
-}
-
 html {
   background: var(--bg);
   color: var(--fg);
@@ -151,7 +93,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3 { text-wrap: balance; }
+h1, h2, h3 { text-wrap: balance; font-family: var(--font-display); }
 p { text-wrap: pretty; }
 
 @utility num {

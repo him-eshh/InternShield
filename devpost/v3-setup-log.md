@@ -9,5 +9,12 @@
 - Fonts via `next/font/google` (Bricolage Grotesque, Inter): no package.
 - `npm ci --dry-run` passes; `@emnapi/runtime` + `@emnapi/core` 1.11.3 lockfile entries still present (needed by Linux `npm ci`). Full `npm ci` skipped on Windows (EPERM on locked next-swc .node file); `npm ls` resolves all three.
 
+## Step 2: theme tokens
+- `app/theme.css` holds every token (canvas, surfaces 1-3, borders, text levels, ink + coral/teal/violet with fill/strong/tint/on, risk good/warn/bad, ink ramp, code syntax, shadows, mesh, fonts, radii, motion). `globals.css` imports it; old names (`--blue-N`, `--accent*`, `--text`, `--card`, `--muted`, `--bg-soft`) alias the new values, so v2 report chrome turns neutral ink.
+- `data-tool="check|tailor|practice|neutral"` sets `--tool/--tool-tint/--tool-strong/--on-tool`, and `--accent*` follow it. Tailwind names: `bg-tool`, `text-tool-strong`, `bg-tool-tint`, `text-on-tool`, `bg-coral` etc., `font-display`.
+- Contrast (`node qa/v3-contrast.mjs`, 194 pairs, all pass; enforced by `tests/shared/v3-theme.test.ts`). Tightest: light `--coral` mark on `--bg-subtle` 3.11 (min 3), `--on-coral` on `--coral` 4.71, `--good` on `--good-tint` 4.70, `--bad` on `--bad-tint` 4.72, `--good` on `--bg-subtle` 4.73; dark `--fg-3` on `--surface-3` 4.78, `--border-strong` on `--surface-3` 3.27. Coral vs risk red: 1.56 light / 1.44 dark (distinct hue, coral is orange and lighter).
+- Fonts: Bricolage Grotesque (`--font-bricolage`, headings + `font-display`) and Inter (`--font-inter`, body) via next/font in `app/layout.tsx`.
+- Code syntax tokens moved from `app/v2-tools.css` into theme.css; Board.tsx `#888` fallback -> `gray`. Hex-free components enforced by the same test.
+
 ## Pending Himesh
 - (none yet)

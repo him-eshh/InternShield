@@ -1,11 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Bricolage_Grotesque, Inter } from "next/font/google";
 import MotionProvider from "@/components/MotionProvider";
 import "./globals.css";
 import "./v2-check.css";
 import "./v2-tools.css";
+import "./v3-shell.css";
+import "./v3-resume.css";
+import "./v3-interview.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"], axes: ["opsz"] });
+const bricolage = Bricolage_Grotesque({ variable: "--font-bricolage", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   // Vercel sets VERCEL_PROJECT_PRODUCTION_URL; locally the share image resolves against localhost.
@@ -16,8 +20,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0e1013" },
+    { media: "(prefers-color-scheme: light)", color: "#fbf8f3" }, // = --bg in app/theme.css
+    { media: "(prefers-color-scheme: dark)", color: "#0d1220" },
   ],
 };
 
@@ -26,7 +30,7 @@ const themeScript = `(function(){try{var t=JSON.parse(localStorage.getItem("is:t
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${bricolage.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>

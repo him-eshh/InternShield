@@ -193,7 +193,7 @@ export default function Board({ board, onChange, defaultKind = "server" }: Props
     if (!svg) return;
     const root = getComputedStyle(document.documentElement);
     let xml = new XMLSerializer().serializeToString(svg);
-    xml = xml.replace(/var\((--[a-z-]+)\)/g, (_, name: string) => root.getPropertyValue(name).trim() || "#888");
+    xml = xml.replace(/var\((--[a-z-]+)\)/g, (_, name: string) => root.getPropertyValue(name).trim() || "gray");
     if (!/xmlns=/.test(xml.slice(0, 200))) xml = xml.replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg"');
     xml = xml.replace(/<svg([^>]*?)\swidth="[^"]*"/, "<svg$1").replace("<svg", `<svg width="${BOARD_W}" height="${BOARD_H}"`);
     const img = new Image();
