@@ -1,3 +1,4 @@
+[data-resume-editor] { overflow-wrap: anywhere; }
 .resume-document p { margin: 0 0 0.7em; }
 .resume-document h1, .resume-document h2, .resume-document h3 { margin: 1em 0 0.5em; font-weight: 600; }
 .resume-document ul, .resume-document ol { padding-inline-start: 1.2em; }

@@ -6,6 +6,7 @@
 - Later WIP checkpoints add reviewed screenshot fixes and further QA. Follow v3-progress-resume.md for current status.
 
 ## Needs integration
+- At 768px, shared shell Nav/ThemeToggle extends to x=873 (105px page overflow). Tailor root is 768/768 with no internal overflow, including long bounded company/role inputs. Shell should adjust its desktop header breakpoint/spacing. No shell-owned files were changed.
 - Shell illustrations were absent in this worktree. Tailor uses the allowed lucide FilePenLine fallback; swap in TailorIllustration when supplied by shell.
 - Profile currently persists resume text, not bytes. Tailor explicitly asks for the original PDF/DOCX to preserve its layout. Pasted/profile text exports as text.
 - Company lookup uses existing cached/capped POST /api/intel; no changes to shared intel, Groq, scoring, configs or dependencies.

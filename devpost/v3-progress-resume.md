@@ -1,6 +1,6 @@
 # v3 resume progress
 
-Dev server: none. All owned 3100 QA trees stopped (last 27768). Never use port 3000.
+Dev server: none. All owned 3100 QA trees stopped (last 2440). Never use port 3000.
 
 ## Done
 - R1: 4665e74; PDF/DOCX/text model, fixtures, zero-edit byte/text/order/page round trips, PDF cleanup.
@@ -15,7 +15,7 @@ Dev server: none. All owned 3100 QA trees stopped (last 27768). Never use port 3
 - R4 complete with conservative Word edits: only whole-word deletion, surviving order/run/paragraph formatting preserved. Enforced shared/API/export; PDF used for broader wording. Actual Word QA: 1 page -> 1 page, 3 supported edits present, within original margins; before/after images viewed. Closing commit contains this update.
 - Latest gates ALL GREEN: lint/tsc, 81 files / 1265 tests, build, eval 88/88; held-out 24/27. Typography follow-up included.
 - All Word instances and owned 3100 QA servers closed. Optional actual-Word QA: npx tsx qa/v3-resume-word.ts (Windows, existing Word; cold start can be slow; COM needs [ref] + .NET string paths).
-- Next: final artifact/scope checks, write v3-resume-summary.md, exact final summary commit if no remaining work.
+- R4 closed d732ae1. Final responsive check found unbroken company/role overflow at 320; fixed with overflow-wrap:anywhere in owned CSS. qa/v3-resume-responsive.mjs tests 320/768 empty/review/preview. 320 fix passes. At 768 Tailor root fits 768/768; shared Nav/ThemeToggle overflows 105px outside our ownership (Needs integration log). 320/768 Tailor empty/review/preview checks now pass, with shared 768 header issue explicitly logged for integration. Nested main landmark also corrected to a named section. All QA servers stopped. Final gates running for this CSS/markup follow-up.
 
 ## Next
 - Final summary: brief/quality checklist, 1265 tests, screenshot index, integration seams + exact live-call recipes, conservative Word restriction and PDF old text layer.
