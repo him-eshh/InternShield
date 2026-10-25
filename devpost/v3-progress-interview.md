@@ -2,23 +2,24 @@
 
 ## Done
 - I1 bank: d341e03 (1130 metadata-only questions, MIT sources); full gates pending.
-- Preserved inherited engine/API + launcher brief changes: 0a353b0 (WIP).
+- Inherited engine/API + launcher brief changes preserved: 0a353b0.
+- I4 engine regression tests/fixes: 695900e (15 bank/engine tests pass).
 
 ## Current
-- I4 engine validation: lib/tiers/session.ts, sessionPools.ts and tests/tiers/v3-session.test.ts.
-- Inherited engine repeats runnable problems because completed turns lose problem IDs; fix before UI.
-- API review combines feedback + follow-up; needs route tests before closing I6.
+- I2-I6 implementation in components/interview/{Setup,IntelCard,Runner,Summary}.tsx and PracticePage.tsx.
+- Intel adapter: lib/tiers/sessionIntel.ts. API review now rejects reviews of earlier turns.
+- Validate focused tests + TypeScript, then full gates. No item closed yet.
 
 ## Next
-1. Test/fix engine: no repeats, chosen filters, follow-up limit, adaptive difficulty, persistence.
-2. I2 intel adapter/card, I3 setup, I4 runner in components/interview; wire PracticePage.
-3. I5 summary/history + I6 API caps, then full gates for closing items.
-4. I7 mocked browser QA + inspected theme/mobile shots; summary only after all quality checks.
+1. Fix typing/lint/test failures, commit setup/runner sub-items as WIP.
+2. Browser QA: qa/v3-interview-*.mjs, mocked intel/interview, real local Python/TS/SQL runners.
+3. Inspect shots 1440/390 both themes; fix usability and persistence gaps.
+4. Close items only with full green gates; write summary only after ALL quality checks pass.
 
 ## Gotchas
-- No dev servers started; never touch port 3000. Allowed 3200-3299, hidden, stop after shots.
-- No personal vault read (explicit user instruction). No keys/live API calls.
-- rg unavailable; use Select-String/Get-ChildItem.
-- Use require_escalated for writes/commits/tests (read-only sandbox); preservation commit approved.
-- Runnable panels reuse InterviewSession; intercept feedback in runner. Keep old Interview for tests.
-- Current tsc passed. No item marked complete yet; final summary commit is NOT authorized until all done.
+- No dev servers started. Allowed ports 3200-3299 hidden only; never touch 3000.
+- No personal vault, keys or live API calls. rg unavailable; use Select-String.
+- Writes/commits/tests require require_escalated (read-only sandbox); approved so far.
+- Vitest has no jsdom; engine persistence tests stub localStorage (no dependency added).
+- Runnable panels reuse InterviewSession; Runner intercepts feedback. Old Interview stays for tests.
+- First tsc passed on inherited engine; newer UI tsc is being checked.
