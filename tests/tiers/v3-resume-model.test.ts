@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { parseDocx, applyDocxEdits, distributeText, replaceParagraphText } from "@/lib/tiers/resumeDocx";
 import { docLines, docText, parseTextResume } from "@/lib/tiers/resumeModel";
 import { parsePdf } from "@/lib/tiers/resumePdf";
-import { fitInBoxes, lengthCheck, renderEdited, renderPlainText, TOO_LONG, type Measure } from "@/lib/tiers/resumeRender";
+import { fitInBoxes, lengthCheck, renderEdited, renderPlainText, TOO_LONG, UNSUPPORTED_TEXT, type Measure } from "@/lib/tiers/resumeRender";
 import { ONE_PAGE } from "../fixtures/resume/content";
 
 const fx = (name: string) => new Uint8Array(readFileSync(join(__dirname, "../fixtures/resume", name)));
@@ -165,6 +165,24 @@ describe("PDF in-place render (R4)", () => {
     const wide: Measure = (_f, size, s) => s.length * size * 0.5;
     const fit = fitInBoxes(l, l.text, wide);
     expect(fit === null || fit.size >= l.boxes![0].h * 0.95 - 1e-9).toBe(true);
+  });
+});
+
+describe("PDF text integrity", () => {
+  it("preserves encodable punctuation rather than rewriting it for the font", () => {
+    const line = docLines(parseTextResume("- Built a tool for the team."))[0];
+    line.boxes = [{ pageIndex: 0, x: 10, y: 100, w: 500, h: 10, family: "Times", bold: false, italic: false }];
+    const text = "Built a tool for the team\u2019s review.";
+    expect(fitInBoxes(line, text, (_font, _size, value) => value.length)?.rows.join(" ")).toBe(text);
+  });
+  it("rejects unsupported glyphs instead of replacing resume facts with question marks", async () => {
+    const bytes = fx("one-page.pdf");
+    const doc = await parsePdf(bytes, await pdfjs());
+    const line = docLines(doc).find((l) => l.text.startsWith("Wrote a short"))!;
+    const output = await renderEdited(doc, bytes, [{ lineId: line.id, text: line.text + " \u6570\u636e" }]);
+    expect(output.rejected).toEqual([{ lineId: line.id, reason: UNSUPPORTED_TEXT }]);
+    expect(lengthCheck(doc, [], output).problems).toContain(UNSUPPORTED_TEXT);
+    expect(output.pageCount).toBe(1);
   });
 });
 

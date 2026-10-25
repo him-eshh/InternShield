@@ -2,10 +2,10 @@ import { keepsWordLayout, WORD_LAYOUT } from "./resumeLayout";
 // Render accepted edits back into the user's own file (brief R4) and check the result is no longer.
 import { applyDocxEdits } from "./resumeDocx";
 import { docLines, docText } from "./resumeModel";
-import { toWinAnsi } from "./pdf";
 import { TOTAL_GROWTH, type LineBox, type ResumeDoc, type ResumeLine } from "./resumeTypes";
 
 export const TOO_LONG = "Too long for this line";
+export const UNSUPPORTED_TEXT = "This font cannot show those characters. Keep your original wording or use Word.";
 
 export type Measure = (font: Pick<LineBox, "family" | "bold" | "italic">, size: number, text: string) => number;
 
@@ -43,12 +43,13 @@ export function fitInBoxes(line: ResumeLine, text: string, measure: Measure): Fi
   if (!boxes?.length) return null;
   if (boxes.some((b) => !Number.isFinite(b.w) || b.w <= 0 || !Number.isFinite(b.h) || b.h <= 0)) return null;
   const font = boxes[0];
-  const body = toWinAnsi(text);
-  for (const f of [1, 0.975, 0.95]) {
-    const size = font.h * f;
-    const rows = wrap(body, boxes.map((b) => b.w), (s) => measure(font, size, s));
-    if (rows && rows.length <= boxes.length) return { size, rows };
-  }
+  try {
+    for (const f of [1, 0.975, 0.95]) {
+      const size = font.h * f;
+      const rows = wrap(text, boxes.map((b) => b.w), (s) => measure(font, size, s));
+      if (rows && rows.length <= boxes.length) return { size, rows };
+    }
+  } catch { return null; }
   return null;
 }
 
@@ -91,6 +92,10 @@ async function renderPdf(doc: ResumeDoc, bytes: Uint8Array, edits: EditText[]): 
   const rejected: Rendered["rejected"] = [];
   for (const e of edits) {
     const line = lines.get(e.lineId);
+    if (line?.boxes?.length) {
+      try { measure(line.boxes[0], line.boxes[0].h, e.text); }
+      catch { rejected.push({ lineId: e.lineId, reason: UNSUPPORTED_TEXT }); continue; }
+    }
     const fit = line ? fitInBoxes(line, e.text, measure) : null;
     if (!line || !line.boxes || !fit) {
       rejected.push({ lineId: e.lineId, reason: TOO_LONG });
@@ -161,7 +166,7 @@ export function lengthCheck(doc: ResumeDoc, edits: EditText[], rendered: Pick<Re
   const charsAfter = charCount(doc, by);
   const problems: string[] = [];
   if (rendered.pageCount > doc.pageCount) problems.push("More pages than your original");
-  if (rendered.rejected.length) problems.push(TOO_LONG);
+  for (const { reason } of rendered.rejected) if (!problems.includes(reason)) problems.push(reason);
   if (charsAfter > charsBefore * TOTAL_GROWTH) problems.push("Longer than your original");
   return { ok: problems.length === 0, pagesBefore: doc.pageCount, pagesAfter: rendered.pageCount, charsBefore, charsAfter, problems };
 }
