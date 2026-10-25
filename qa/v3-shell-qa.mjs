@@ -98,4 +98,3 @@ for (const width of [320, 768]) {
   } finally { await browser.close(); }
 }
 console.log(`ALL OK: ${checks} checks`);
-

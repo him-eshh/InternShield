@@ -13,3 +13,11 @@
 
 ## Pending Himesh
 - None.
+
+## Validation (Oct 25, Codex continuation)
+- Final gates all green: lint (2 existing warnings in qa/v2-check-heldout-lint.mjs), tsc, 76 test files / 1204 tests, build, eval 88/88 (held-out 24/27, zero low false positives).
+- Mocked browser QA: 132 route/state checks plus 16 accessibility/profile checks; every API intercepted, no live API calls.
+- Reviewed 29 shell screenshots across six routes, 1440/390 light/dark, completed Profile, returning Home, filled Tracker, reduced-motion 320/768 Home.
+- Fixed findings: missing Tailwind on-ink alias (use token directly), Home animation hydration mismatch (start controls after hydration), mobile control sizes and wrapping undo toast.
+- Hidden server on 3300 stopped by verified process tree. No listener remains on 3300.
+- Updated stream briefs/report brief were inherited launcher work, preserved in 04d2016; no report-owned source edits.

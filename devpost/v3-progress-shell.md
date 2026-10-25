@@ -1,26 +1,25 @@
 # v3 shell progress
 
 ## Done
-- S1 implementation: 8bbf788; Home/Profile inherited work: 04d2016.
-- S3 Nav/completeness/tablet/mobile: f6b0296; S7 Tracker/S4 save feedback: f71cb4f.
-- QA/storage regressions: ba530e0; visual contrast/touch/reduced-motion fixes: be32798.
-- Home hydration fix: 1ecc2ef. All implementations still WIP until final green gates.
-- Browser QA: 132 checks pass; accessibility/Profile: 16 checks pass. 29 screenshots personally reviewed.
+- S1: illustrations, tri-arc logo/favicon/share images, lucide wrappers, UI primitives (8bbf788; visual fixes be32798).
+- S2: Home hero, illustrated tool cards, how-it-works, returning items (04d2016; hydration fix 1ecc2ef).
+- S3: Nav active indicator, completeness avatar, 44px controls, mobile/tablet tabs (f6b0296).
+- S4: optional guided Profile, resume summary, target prefs, inline Saved, 0->4 progress (04d2016/f71cb4f).
+- S7: Tracker empty state, cards/status/risk icons, quick moves, notes/delete/undo (f71cb4f/be32798).
+- S8/S9: responsive/reduced motion/contrast fixes; 132 browser + 16 a11y checks, 29 screenshots reviewed (ba530e0/b448508).
+- All five final gates GREEN: lint, tsc, 76 files/1204 tests, build, eval 88/88; held-out 24/27, zero low false positives.
 
 ## Current
-- Final full gates running via node qa/v3-gates.mjs (qa/gates-out.txt).
-- Earlier gates: lint/tsc/build/eval green; PDF timeout under parallel load passed isolated (10/10 incl storage tests).
-- Final code includes hydration-safe mount animation and explicit on-ink text tokens.
+- Closing all shell brief items with green gates. Prepare final summary/done-signal commit next.
 
 ## Next
-- Finish final gates; item-close S1/S2/S3/S4/S7/S8/S9 with green evidence.
-- Confirm server stopped, ownership clean, screenshot index and integration notes.
-- Write summary and exact V3 shell summary commit only if all Quality bar lines proven.
+- Integration consumes is:prefs in Tailor/Practice, adopts illustrations in their empty states, audits report-owned profile loops.
+- See devpost/v3-shell-log.md and forthcoming summary. No remaining shell implementation work.
 
 ## Gotchas
-- v3-shell only; personal vault/report-owned files untouched; no theme value changes.
-- Hidden 3300 server round complete; cleanup requested for known cmd PID 27860 (verified command first).
+- v3-shell only; personal vault/report-owned source untouched; no theme value changes.
+- Hidden 3300 dev server STOPPED (verified cmd PID 27860 tree); no 3300 listener.
 - QA_SHOTS=C:\my_projects\projects\InternShield\.git\internshield-relay\v3-shots\shell
-- QA: QA_BASE=http://localhost:3300; node qa/v3-shell-qa.mjs / qa/v3-shell-accessibility.mjs. All APIs mocked.
-- Profile prefs use is:prefs; other streams must consume roles/companies/preferences at integration (see shell log).
-- rg unavailable. Next docs use .md. Never overlap gates with dev-server compilation if avoidable.
+- QA scripts: qa/v3-shell-qa.mjs, qa/v3-shell-accessibility.mjs (explicit QA_BASE 3300-3399 required, mocked APIs).
+- Gates: node qa/v3-gates.mjs -> qa/gates-out.txt. Initial PDF timeout passed isolated and in final full run.
+- Two pre-existing lint warnings remain in qa/v2-check-heldout-lint.mjs.
