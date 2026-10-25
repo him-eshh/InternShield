@@ -3,11 +3,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import Explanation from "@/components/report/Explanation";
 import Report from "@/components/report/Report";
-import ResumeTailor, { optionsSummary } from "@/components/tiers/ResumeTailor";
 import { fixtureOutcome } from "@/fixtures/outcome";
 import { explanationPlain, explanationSections, fallbackExplanation, FALLBACK_TITLES, hasBannedWord } from "@/lib/explainFallback";
 import { lineKinds, resumeLines, resumeSections, splitBullet } from "@/lib/tiers/tailored";
-import { DEFAULT_TAILOR } from "@/lib/tiers/types";
 
 async function renderReport(name: "real" | "scam" | "medium") {
   const fx = (await fixtureOutcome(name))!;
@@ -120,37 +118,3 @@ describe("which resume lines can be reworded", () => {
   });
 });
 
-describe("ResumeTailor options panel", () => {
-  const html = renderToStaticMarkup(
-    <ResumeTailor resume={{ text: RESUME, fileName: "r.pdf" }} target={null} onOpenProfile={() => {}} onBack={() => {}} />,
-  );
-
-  it("shows the options with sensible defaults", () => {
-    expect(html).toContain("How to tailor");
-    for (const label of ["Emphasize", "Skills", "Impact and results", "Leadership", "Technical depth", "Tone", "How much to change", "Keep about the same length"]) {
-      expect(html).toContain(label);
-    }
-    expect(html).toMatch(/aria-pressed="true"[^>]*>Confident</);
-    expect(html).toMatch(/aria-pressed="true"[^>]*>Light touch</);
-    expect(html).toMatch(/type="checkbox"[^>]*checked/);
-  });
-
-  it("only bullets are buttons; name, email and headers are plain text", () => {
-    const buttons = [...html.matchAll(/<button[^>]*aria-pressed="false"[^>]*>([^<]*)<\/button>/g)].map((m) => m[1]);
-    expect(buttons.some((b) => b.startsWith("• Resolved"))).toBe(true);
-    expect(buttons.some((b) => b.includes("Jordan Lee") || b.includes("@example.edu") || b === "EDUCATION")).toBe(false);
-    expect(html).toContain("Pick a bullet to reword.");
-  });
-
-  it("offers a section filter", () => {
-    expect(html).toContain("All sections");
-    expect(html).toMatch(/>Experience<\/button>/);
-  });
-
-  it("summarizes the options in one line", () => {
-    expect(optionsSummary(DEFAULT_TAILOR)).toBe("Confident · light touch · same length");
-    expect(optionsSummary({ ...DEFAULT_TAILOR, emphasis: ["impact", "technical"] })).toBe(
-      "Emphasizing impact and results, technical depth · Confident · light touch · same length",
-    );
-  });
-});

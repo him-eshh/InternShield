@@ -10,7 +10,7 @@ Dev server: none started in Codex continuation; never use port 3000.
 ## Current
 - R2 implementation: resumePlan.ts + PlanPanel.tsx + 9 mocked tests pass. Required/preferred terms, confirmed facts, safe source links, capped/error fallback, cancellation. Needs R5 wiring + visual verification before item closure.
 - R3 server/shared sub-item: mode=edits in rewriteEdits.ts; model output filtered server-side by checkedEdits; 28 new adversarial tests + 29 existing rewrite tests pass (57 total). Typecheck passed before last punctuation/fact tightening; rerun. Checkpoint b6e7289.
-- R3 remaining: rendered-width validation shared browser/server; plan guidance in model prompt; UI rechecks. R4 row-fit fix now implemented; 17 parser/render tests pass incl. per-row widths + literal DOCX bullet preservation. Next: preview/UI wiring.
+- R3 remaining: rendered-width validation shared browser/server; plan guidance in model prompt; UI rechecks. R4 row-fit fix now implemented; 17 parser/render tests pass incl. per-row widths + literal DOCX bullet preservation. Checkpoint cbc116c. UI wired: resumeEditor.ts + DocumentPreview/EditCard + replaced ResumeTailor.tsx. Real steps/cancel, accept/reject/edit, source panel, original bytes preview, download gating. Typecheck + scoped lint green; 52 related tests pass. Next long task: Playwright upload/review/download + quick 1440/390 screenshots; inspect and fix.
 
 ## Next
 - R2/R3 item closure waits for UI wiring and full gates; commits are WIP meanwhile.
