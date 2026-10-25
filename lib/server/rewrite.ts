@@ -1,3 +1,4 @@
+import { handleEdits } from "./rewriteEdits";
 // Resume line rewrite (tier2-spec.md > Slice 8). Only the selected line and posting details reach the AI.
 import {
   DEFAULT_TAILOR,
@@ -245,6 +246,7 @@ function buildUser(r: RewriteRequest): string {
 
 /** Runs after guard(): parse, count against the daily cap, call the model, clean the text. */
 export async function handleRewrite(body: Record<string, unknown>): Promise<Response> {
+  if (body.mode === "edits") return handleEdits(body);
   const input = parseRewrite(body);
   if (!input) return failed("error", { status: 400, message: MESSAGES.bad });
 

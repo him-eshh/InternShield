@@ -79,8 +79,9 @@ export function styleIssues(original: string, proposed: string): StyleIssue["kin
   const a = openingTense(original);
   const b = openingTense(proposed);
   if (a && b && a !== b) out.push("tense");
-  if (!FIRST_PERSON.test(original) && FIRST_PERSON.test(proposed)) out.push("person");
-  const endsDot = (s: string) => /[.!?]$/.test(s.trim());
+  const person = (s: string) => s.match(FIRST_PERSON)?.[0].toLowerCase() ?? "";
+  if (person(original) !== person(proposed)) out.push("person");
+  const endsDot = (s: string) => s.trim().match(/[.!?]$/)?.[0] ?? "";
   if (endsDot(original) !== endsDot(proposed)) out.push("punctuation");
   const cap = (s: string) => /^[A-Z]/.test(s.trim());
   if (cap(original) !== cap(proposed)) out.push("case");

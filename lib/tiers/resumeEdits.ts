@@ -2,9 +2,9 @@
 // Order of cost: cheap string rules first, the fact guard last.
 import { guardRewrite } from "./resumeGuard";
 import { canon, termRe } from "./resumeGuard";
-import { docLines } from "./resumeModel";
+import { docLines, docText, sectionOf } from "./resumeModel";
 import { adjectiveStack, bannedIn, emDashCount, styleIssues } from "./resumeTells";
-import { LINE_GROWTH, MAX_EDITS, TOTAL_GROWTH, type ResumeDoc, type ResumeLine } from "./resumeTypes";
+import { LINE_GROWTH, MAX_EDITS, TOTAL_GROWTH, type ResumeDoc, type ResumeLine, type ResumeEdit } from "./resumeTypes";
 
 export type EditFailure = "empty" | "unchanged" | "multiline" | "length" | "rewrite" | "fact" | "tell" | "dash" | "stack" | "style";
 
@@ -92,3 +92,37 @@ export function withinTotalBudget(doc: ResumeDoc, texts: Map<string, string>): b
 }
 
 export { MAX_EDITS };
+
+/** Treat model JSON as untrusted. Metadata always comes from the original document. */
+export function checkedEdits(doc: ResumeDoc, candidates: unknown, keywords: string[], facts: string[] = [], posting = ""): ResumeEdit[] {
+  if (!Array.isArray(candidates)) return [];
+  const lines = docLines(doc);
+  const allowed = new Map(editableLines(doc).map((l) => [l.id, l]));
+  const texts = new Map<string, string>();
+  const out: ResumeEdit[] = [];
+  const resume = docText(doc);
+  for (const raw of candidates.slice(0, 30)) {
+    if (out.length >= MAX_EDITS) break;
+    if (!raw || typeof raw !== "object") continue;
+    const c = raw as Record<string, unknown>;
+    if (typeof c.lineId !== "string" || typeof c.proposed !== "string" || texts.has(c.lineId)) continue;
+    const line = allowed.get(c.lineId);
+    if (!line) continue;
+    const proposed = c.proposed.trim();
+    if (!checkEdit({ resume, original: line.text, proposed, facts, posting }).ok) continue;
+    const next = new Map(texts).set(line.id, proposed);
+    if (!withinTotalBudget(doc, next)) continue;
+    const dashes = lines.reduce((n, l) => n + emDashCount(next.get(l.id) ?? l.text), 0);
+    if (dashes > 1) continue;
+    texts.set(line.id, proposed);
+    const added = addedKeywords(keywords, line.text, proposed);
+    out.push({
+      id: `edit-${line.id}`, lineId: line.id, lineIndex: lines.indexOf(line),
+      section: sectionOf(doc, line.id)?.heading ?? "", original: line.text,
+      proposed, keywords: added, status: "pending",
+      // Do not display an unchecked model-authored explanation as a factual claim.
+      reason: added.length ? `Brings forward ${added.join(", ")}.` : "Tightens the wording while keeping your facts.",
+    });
+  }
+  return out;
+}
