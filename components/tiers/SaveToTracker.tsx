@@ -2,8 +2,8 @@
 import { useRef, useState, type FormEvent } from "react";
 import { addCard, loadCards, saveCards } from "@/lib/tiers/tracker";
 import type { NewCard, TrackerCard } from "@/lib/tiers/types";
-import { CheckIcon } from "../icons";
-import { btnPrimary, btnSecondary, linkClass } from "../ui";
+import { Check as CheckIcon } from "lucide-react";
+import { btnSecondary, linkClass } from "../ui";
 
 interface Props {
   card: NewCard;
@@ -122,7 +122,7 @@ export default function SaveToTracker({ card, onOpen }: Props) {
             </p>
           )}
           <div className="flex flex-wrap gap-3">
-            <button type="submit" className={btnPrimary}>
+            <button type="submit" className={btnSecondary}>
               Save
             </button>
             <button type="button" onClick={close} className={btnSecondary}>

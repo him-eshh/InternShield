@@ -29,8 +29,8 @@ describe("report banner", () => {
 
 describe("QuickQuestions confirmation placement", () => {
   const qs = [
-    { id: "source", text: "First question?", options: [{ value: "a", label: "Opt A" }, { value: "b", label: "Opt B" }] },
-    { id: "stage", text: "Second question?", options: [{ value: "c", label: "Opt C" }, { value: "d", label: "Opt D" }] },
+    { id: "source", text: "First question?", options: [{ value: "a", label: "Opt A" }, { value: "b", label: "Opt A" }] },
+    { id: "stage", text: "Second question?", options: [{ value: "c", label: "Opt C" }, { value: "d", label: "Opt C" }] },
   ] as unknown as Question[];
   const render = (answers: Answers, lastId: QuestionId | null) =>
     renderToStaticMarkup(<QuickQuestions questions={qs} answers={answers} change={null} lastId={lastId} onAnswer={() => {}} />);
@@ -41,11 +41,11 @@ describe("QuickQuestions confirmation placement", () => {
   });
   it("moves the confirmation under the most recently answered question", () => {
     const first = render({ source: "a" } as unknown as Answers, "source" as QuestionId);
-    expect(first.indexOf("Thanks.")).toBeGreaterThan(first.indexOf("Opt B"));
-    expect(first.indexOf("Thanks.")).toBeLessThan(first.indexOf("Second question?"));
+    expect(first.indexOf("Added: answer.")).toBeGreaterThan(first.indexOf("Opt A"));
+    expect(first.indexOf("Added: answer.")).toBeLessThan(first.indexOf("Second question?"));
     const both = render({ source: "a", stage: "c" } as unknown as Answers, "stage" as QuestionId);
-    expect(both.match(/Thanks\./g)).toHaveLength(2); // visible line plus the screen-reader live region
-    expect(both.indexOf("Thanks.")).toBeGreaterThan(both.indexOf("Opt D"));
+    expect(both.match(/Added: answer\./g)).toHaveLength(2); // visible line plus the screen-reader live region
+    expect(both.indexOf("Added: answer.")).toBeGreaterThan(both.indexOf("Opt C"));
   });
 });
 

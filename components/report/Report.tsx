@@ -1,12 +1,13 @@
 "use client";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import "@/app/v2-check.css";
-import { fetchExplanation, rerunWithCompany, type Explanation as ExplanationData, type PipelineInput, type PipelineOutcome, type StepKey } from "@/lib/client/pipeline";
+import { fetchExplanation, rerunWithCompany, runPipeline, type Explanation as ExplanationData, type PipelineInput, type PipelineOutcome, type StepKey } from "@/lib/client/pipeline";
 import { annotate } from "@/lib/client/annotate";
 import { actionLine, goods, reds } from "@/lib/reportView";
-import { describeChange, score } from "@/lib/scoring/score";
-import { LEVEL_LABELS, type Answers, type QuestionId, type Report as ReportData, type RiskLevel } from "@/lib/types";
-import { InfoIcon } from "../icons";
+import { diffReports, impactCopy } from "@/lib/impact";
+import { score } from "@/lib/scoring/score";
+import { MAX_MESSAGE_CHARS, LEVEL_LABELS, type Answers, type QuestionId, type Report as ReportData, type RiskLevel } from "@/lib/types";
+import { Info as InfoIcon } from "lucide-react";
 import { btnSecondary } from "../ui";
 import AnnotatedMessage from "./AnnotatedMessage";
 import CompanyChip from "./CompanyChip";
@@ -19,12 +20,14 @@ import RecoveryCard from "./RecoveryCard";
 import ReportFooter from "./ReportFooter";
 import RiskRing from "./RiskRing";
 import TopReasons from "./TopReasons";
+import AddInformation from "./AddInformation";
 
 const RESTING_AFTER_SECONDS = 900; // a retryAfter this long means a daily cap, not a blip
 
 interface Props {
   outcome: PipelineOutcome;
   input: PipelineInput;
+  onPersist?: (outcome: PipelineOutcome, input: PipelineInput) => void;
   onRetry: () => void;
   onAgain: () => void;
   /** Test/preview hook: the fetch used to re-request the explanation. */
@@ -42,71 +45,105 @@ export function announcement(report: ReportData): string {
 
 /**
  * The report App renders. Editing the company re-runs only the company + posting lookups and swaps in
- * the new outcome here (App.tsx is frozen), remounting the body so its state starts from the new report.
+ * the new outcome in place. Answers and the ring survive each recheck.
  */
 export default function Report(props: Props) {
   const [base, setBase] = useState(props.outcome);
   const [rerun, setRerun] = useState<{ outcome: PipelineOutcome; input: PipelineInput; n: number } | null>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
-  const [kept, setKept] = useState<Answers>({}); // quick answers survive a company recheck
+  const liveReport = useRef(props.outcome.report);
+  const [additionNote, setAdditionNote] = useState<string | null>(null);
+  const [kept, setKept] = useState<Answers>(props.outcome.scoreInput.answers); // quick answers survive a company recheck
   if (base !== props.outcome) {
     setBase(props.outcome);
     setRerun(null);
     setNote(null);
-    setKept({});
+    setKept(props.outcome.scoreInput.answers);
   }
   const outcome = rerun?.outcome ?? props.outcome;
   const input = rerun?.input ?? props.input;
 
   async function onCompany(name: string) {
+    if (busy) return;
     setBusy(true);
     setNote(null);
     const nextInput = { ...input, form: { ...input.form, company: name } };
     const next = await rerunWithCompany(input, outcome.steps, name, { fetch: props.fetchImpl });
-    setRerun((r) => ({ outcome: next, input: nextInput, n: (r?.n ?? 0) + 1 }));
+    if (next.report && liveReport.current) {
+      const after = Object.keys(kept).length ? score({ ...next.scoreInput, answers: kept }) : next.report;
+      const pendingExplanation = after.level !== next.report.level ? fetchExplanation(after, { fetch: props.fetchImpl }) : next.pendingExplanation;
+      setNote(impactCopy(diffReports(liveReport.current, after, "detail", `Company: ${name}`)));
+      setRerun((r) => ({ outcome: { ...next, report: after, pendingExplanation }, input: nextInput, n: (r?.n ?? 0) + 1 }));
+    } else setNote("We couldn't recheck that company. Your previous report is still here.");
     setBusy(false);
-    setNote(`Rechecked with ${name}`);
   }
 
-  // The body remounts after a recheck; put focus back on the chip (after commit) so keyboard users stay in place.
-  const reruns = rerun?.n ?? 0;
-  useEffect(() => {
-    if (reruns) document.querySelector<HTMLElement>("[data-company-edit]")?.focus();
-  }, [reruns]);
+  async function onAdd(text: string, sender: string) {
+    if (busy) return;
+    const combined = text ? `${input.text}\n\nAdditional message:\n${text}` : input.text;
+    if (combined.length > MAX_MESSAGE_CHARS) {
+      setAdditionNote(`Keep the original and added message under ${MAX_MESSAGE_CHARS.toLocaleString()} characters in total. Shorten the addition and try again.`);
+      return;
+    }
+    setBusy(true);
+    setAdditionNote(null);
+    const nextInput = { ...input, text: combined,
+      form: { ...input.form, sender: sender || input.form.sender }, exampleId: null };
+    const next = await runPipeline(nextInput, { fetch: props.fetchImpl });
+    if (next.report && liveReport.current) {
+      const after = score({ ...next.scoreInput, answers: kept });
+      setAdditionNote(impactCopy(diffReports(liveReport.current, after, text ? "message" : "detail", [text ? "Additional message" : "", sender ? `Sender: ${sender}` : ""].filter(Boolean).join(", "))));
+      const pendingExplanation = after.level !== next.report.level ? fetchExplanation(after, { fetch: props.fetchImpl }) : next.pendingExplanation;
+      setRerun((r) => ({ outcome: { ...next, report: after, pendingExplanation }, input: nextInput, n: (r?.n ?? 0) + 1 }));
+    } else setAdditionNote("We couldn't read that addition. Your previous report is still here. Try pasting the full message.");
+    setBusy(false);
+  }
 
   if (!outcome.report) return null;
   return (
     <ReportBody
-      key={rerun?.n ?? 0}
       {...props}
       outcome={outcome}
       input={input}
       company={{ busy, note, onSave: (n) => void onCompany(n) }}
       kept={kept}
       onAnswers={setKept}
+      onLiveReport={(r) => { liveReport.current = r; }}
+      additions={<AddInformation busy={busy} note={additionNote} onSave={(text, sender) => void onAdd(text, sender)} />}
     />
   );
 }
 
 interface BodyProps extends Props {
+  additions?: ReactNode;
+  onLiveReport?: (report: ReportData) => void;
   company?: { busy: boolean; note: string | null; onSave: (name: string) => void };
   /** Answers given before a company recheck; the remounted body re-scores with them. */
   kept?: Answers;
   onAnswers?: (a: Answers) => void;
 }
 
-function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, recovery, company, kept, onAnswers }: BodyProps) {
+function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, recovery, company, kept, onAnswers, additions, onLiveReport, onPersist }: BodyProps) {
   const fresh = outcome.report as ReportData;
   const [answers, setAnswers] = useState<Answers>(kept ?? {});
   const [initial] = useState<ReportData>(() => (Object.keys(answers).length ? score({ ...outcome.scoreInput, answers }) : fresh));
   const [report, setReport] = useState<ReportData>(initial);
-  const [questions] = useState(fresh.questions);
+  const [questions, setQuestions] = useState(fresh.questions);
+  const [seen, setSeen] = useState(fresh);
+  const [confirmations, setConfirmations] = useState<Partial<Record<QuestionId, string>>>({});
+  if (seen !== fresh) {
+    setSeen(fresh);
+    setReport(Object.keys(answers).length ? score({ ...outcome.scoreInput, answers }) : fresh);
+    setQuestions((old) => [...old, ...fresh.questions.filter((q) => !old.some((x) => x.id === q.id))].slice(0, 3));
+  }
   // Kept answers that moved the level make the rechecked explanation stale: fetch one for this report.
   const [stale] = useState(initial.level !== fresh.level);
   const [change, setChange] = useState<string | null>(null);
   const [lastId, setLastId] = useState<QuestionId | null>(null);
   const [explanation, setExplanation] = useState<ExplanationData | null>(outcome.explanation);
+  const [exSeen, setExSeen] = useState(outcome);
+  if (exSeen !== outcome) { setExSeen(outcome); setExplanation(outcome.explanation); }
   const [explaining, setExplaining] = useState(false);
   const [announce, setAnnounce] = useState("");
   // Per step: a limited step with a long retryAfter hit a daily cap; the others can still be retried.
@@ -124,16 +161,17 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, recov
   // The explanation arrives after the report; fill it in when it does.
   const pending = outcome.pendingExplanation;
   useEffect(() => {
-    const p = stale ? fetchExplanation(initial, { fetch: fetchImpl }) : pending;
+    const p = stale ? fetchExplanation(initial, { fetch: fetchImpl }) : pending && typeof pending.then === "function" ? pending : !outcome.explanation ? fetchExplanation(initial, { fetch: fetchImpl }) : null;
     if (!p) return;
     let live = true;
+    const request = req.current;
     void p.then((ex) => {
-      if (live && req.current === 0) setExplanation(ex);
+      if (live && req.current === request) setExplanation(ex);
     });
     return () => {
       live = false;
     };
-  }, [pending, stale, initial, fetchImpl]);
+  }, [pending, stale, initial, fetchImpl, outcome.explanation]);
 
   // Announce the result once it's on screen. After an answer, only when the level moved:
   // the ring announces the score change itself.
@@ -150,12 +188,22 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, recov
     return () => clearInterval(id);
   }, [counting]);
 
+  useEffect(() => { onLiveReport?.(report); }, [report, onLiveReport]);
+  useEffect(() => {
+    onPersist?.({ ...outcome, explanation, pendingExplanation: null, report: { ...report, questions }, scoreInput: { ...outcome.scoreInput, answers } }, input);
+  }, [report, questions, answers, outcome, input, explanation, onPersist]);
+
   async function onAnswer(id: QuestionId, value: AnswerValue) {
     const next = { ...answers, [id]: value } as Answers;
     const nextReport = score({ ...outcome.scoreInput, answers: next });
     setAnswers(next);
     onAnswers?.(next);
-    setChange(describeChange(report, nextReport));
+    const question = questions.find((q) => q.id === id);
+    const values = Array.isArray(value) ? value : [value];
+    const label = values.map((v) => question?.options.find((o) => o.value === v)?.label ?? v).join(", ");
+    const copy = impactCopy(diffReports(report, nextReport, "question", label));
+    setChange(copy);
+    setConfirmations((old) => ({ ...old, [id]: copy }));
     setLastId(id);
     const levelChanged = nextReport.level !== report.level;
     setReport(nextReport);
@@ -204,10 +252,11 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, recov
   const channel = answers.channel && answers.channel !== "other" ? answers.channel : null;
 
   return (
-    <article className="mx-auto max-w-[960px] px-6 py-10 sm:py-16">
+    <article data-tool="neutral" className="[&_button]:!min-h-11 [&_summary]:!min-h-11 mx-auto max-w-[960px] px-4 sm:px-6 py-10 sm:py-16">
       <p role="status" aria-live="polite" className="sr-only">{announce}</p>
 
-      <header className="flex flex-col items-center text-center">
+      <header className="flex flex-col items-center rounded-[28px] border border-border bg-card px-4 py-8 text-center shadow-[var(--shadow-2)] sm:px-10 sm:py-10">
+        <p className="mb-5 text-[12px] font-semibold uppercase tracking-[0.16em] text-muted">Message risk report</p>
         {(input.exampleId || outcome.usedSaved) && (
           <span className="mb-6 rounded-full bg-accent/10 px-3 py-1 text-[13px] font-medium text-accent-fg">
             {outcome.usedSaved ? "Example (saved)" : "Example"}
@@ -223,7 +272,7 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, recov
           type="button"
           onClick={jumpToCouldntCheck}
           disabled={report.couldntCheck.length === 0}
-          className="mt-3 rounded-full px-3 py-1 text-[14px] text-muted underline-offset-4 enabled:hover:text-text enabled:hover:underline"
+          className="mt-3 min-h-11 rounded-full px-3 py-1 text-[14px] text-muted underline-offset-4 enabled:hover:text-text enabled:hover:underline"
         >
           {coverage.ran} of {coverage.total} checks ran{missing}
         </button>
@@ -273,7 +322,9 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, recov
 
         <CouldntCheck items={report.couldntCheck} />
 
-        <QuickQuestions questions={shownQuestions} answers={answers} change={change} lastId={lastId} onAnswer={onAnswer} />
+        <QuickQuestions questions={shownQuestions} answers={answers} change={change} lastId={lastId} onAnswer={onAnswer} disabled={company?.busy} confirmations={confirmations} />
+
+        {additions}
 
         {recovery ?? <RecoveryCard level={report.level} />}
 

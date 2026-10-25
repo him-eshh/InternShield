@@ -103,7 +103,12 @@ export default function App() {
             if (id !== runId.current) return;
             const reason = r && r.status !== "done" ? r.reason : undefined;
             const code = r && r.status === "failed" ? r.code : undefined;
-            setLines((l) => ({ ...l, [key]: { state, reason, code } }));
+            const data = r?.status === "done" ? r.data as Record<string, unknown> : null;
+            const outcome = data ? key === "extract" ? "Message read" : key === "company"
+              ? data.officialDomain ? `Company site: ${data.officialDomain}` : "No official company site found"
+              : key === "sender" ? "Sender domain checked" : key === "posting"
+                ? data.found ? "Job posting found" : "No matching posting found" : "Explanation ready" : undefined;
+            setLines((l) => ({ ...l, [key]: { state, reason, code, outcome } }));
           },
         },
         prev,
@@ -157,7 +162,11 @@ export default function App() {
     router.push(`/${tool}`);
   };
 
-  const target = outcome?.report && runInput ? reportTarget(outcome, runInput) : null;
+  const persistReport = useCallback((updated: PipelineOutcome, updatedInput: PipelineInput) => {
+    setLastCheck({ outcome: updated, input: updatedInput, submit: last });
+  }, [setLastCheck, last]);
+  const currentCheck = lastCheck ?? (outcome && runInput ? { outcome, input: runInput } : null);
+  const target = currentCheck?.outcome.report ? reportTarget(currentCheck.outcome, currentCheck.input) : null;
   // Gated on the live level: a quick answer that raises the report to high hides Tailor/Practice.
   const liveTarget = target && { company: target.company, role: target.role, description: null };
   const reportExtras = (level: RiskLevel) =>
@@ -187,6 +196,7 @@ export default function App() {
       {screen === "report" && outcome?.report && runInput && (
         <div data-tool="neutral">
           <Report
+            onPersist={persistReport}
             outcome={outcome}
             input={runInput}
             onRetry={onRetry}

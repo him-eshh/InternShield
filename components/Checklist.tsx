@@ -3,11 +3,12 @@ import { useEffect, useState } from "react";
 import { STEP_LABELS, type LineState, type StepKey } from "@/lib/client/pipeline";
 import { stepNote } from "@/lib/client/errorCopy";
 import type { ApiErrorCode } from "@/lib/types";
-import { CheckIcon, InfoIcon, Spinner } from "./icons";
+import { Check as CheckIcon, Info as InfoIcon, LoaderCircle } from "lucide-react";
 import { subhead } from "./ui";
 
 export interface LineInfo {
   state: LineState;
+  outcome?: string;
   reason?: string; // "timeout" | "limit" | "error" | skip reason
   code?: ApiErrorCode; // set once App passes it through (Needs integration)
 }
@@ -15,7 +16,7 @@ export interface LineInfo {
 export const KEYS_IN_ORDER: StepKey[] = ["extract", "company", "sender", "posting", "explain"];
 
 /** Spinners wait this long before showing, so instant steps never flicker. */
-export const SHOW_DELAY_MS = 300;
+export const SHOW_DELAY_MS = 200;
 /** A step running longer than this gets the slow-step note. */
 export const SLOW_AFTER_MS = 4000;
 export const SLOW_COPY = "Still checking…";
@@ -28,7 +29,7 @@ export function initialLines(): Record<StepKey, LineInfo> {
 export function lineNote(info: LineInfo): string | null {
   if (info.state === "failed") return stepNote(info.code, info.reason);
   if (info.state === "skipped") return "skipped";
-  return null;
+  return info.state === "done" ? info.outcome ?? null : null;
 }
 
 const STATE_WORD: Record<LineState, string> = { pending: "", running: ", in progress", done: ", done", failed: ", failed", skipped: ", skipped" };
@@ -48,11 +49,11 @@ function Marker({ state }: { state: LineState }) {
     <span className="flex h-7 w-7 shrink-0 items-center justify-center" aria-hidden="true">
       {state === "running" && (
         <span className="animate-enter flex" style={{ animationDelay: `${SHOW_DELAY_MS}ms` }}>
-          <Spinner size={22} className="text-accent" />
+          <LoaderCircle size={22} className="animate-spin text-accent motion-reduce:animate-none" />
         </span>
       )}
       {state === "done" && (
-        <span className="animate-enter flex h-7 w-7 items-center justify-center rounded-full bg-good/15 text-good">
+        <span className="animate-enter flex h-7 w-7 items-center justify-center rounded-full bg-tool-tint text-tool-strong">
           <CheckIcon size={16} />
         </span>
       )}
@@ -68,9 +69,10 @@ function Marker({ state }: { state: LineState }) {
 
 export default function Checklist({ lines, example, slowAfterMs = SLOW_AFTER_MS }: { lines: Record<StepKey, LineInfo>; example?: boolean; slowAfterMs?: number }) {
   return (
-    <section className="mx-auto max-w-[640px] px-6 py-16 sm:py-24">
+    <section data-tool="check" className="mx-auto max-w-[640px] px-6 py-16 sm:py-24">
       <h2 className={subhead}>Checking the message</h2>
       {example && <p className="mt-2 text-[15px] text-muted">Example</p>}
+      <p className="mt-3 text-[17px] leading-relaxed text-muted">Following the evidence, one check at a time.</p>
       <ol aria-live="polite" aria-label="Checks in progress" className="mt-10 space-y-3">
         {KEYS_IN_ORDER.map((k) => {
           const info = lines[k];
@@ -79,7 +81,7 @@ export default function Checklist({ lines, example, slowAfterMs = SLOW_AFTER_MS 
             <li
               key={k}
               data-state={info.state}
-              className={`flex min-h-14 items-start gap-4 transition-opacity duration-300 ease-out ${info.state === "pending" ? "opacity-40" : ""}`}
+              className={`flex min-h-14 items-start gap-4 transition-opacity duration-300 ease-out ${info.state === "pending" ? "text-muted" : ""}`}
             >
               <Marker key={info.state} state={info.state} />
               <span className="block pt-0.5">

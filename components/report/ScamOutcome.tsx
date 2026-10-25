@@ -1,7 +1,7 @@
 "use client";
 import { FTC_URL, IC3_URL } from "@/lib/client/copyReport";
 import type { Report, Source } from "@/lib/types";
-import { CheckIcon, ExternalIcon } from "../icons";
+import { Check as CheckIcon, ExternalLink as ExternalIcon } from "lucide-react";
 import { btnPrimary, btnSecondary, card } from "../ui";
 import CopyReportButton from "./CopyReportButton";
 

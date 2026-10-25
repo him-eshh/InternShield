@@ -2,12 +2,12 @@
 import { useEffect, useRef, useState } from "react";
 import { copyReport } from "@/lib/client/copyReport";
 import type { Report } from "@/lib/types";
-import { CopyIcon } from "../icons";
+import { Copy as CopyIcon } from "lucide-react";
 import { btnSecondary } from "../ui";
 
 /** Compact outlined item for the footer's secondary row. */
 export const secondaryItem =
-  "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full border border-border bg-card px-4 py-1.5 text-[15px] font-medium text-text transition-colors duration-200 ease-out hover:bg-bg-soft";
+  "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full border border-border bg-card px-4 py-1.5 text-[15px] font-medium text-text transition-colors duration-200 ease-out hover:bg-bg-soft";
 
 /** "Copy report" for every risk level: a plain-text summary to share with a career center or keep. */
 export default function CopyReportButton({ report, careersUrl, compact = false }: { report: Report; careersUrl: string | null; compact?: boolean }) {

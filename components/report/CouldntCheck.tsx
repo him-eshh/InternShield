@@ -1,4 +1,4 @@
-import { ChevronIcon } from "../icons";
+import { ChevronDown as ChevronIcon } from "lucide-react";
 
 export const COULDNT_CHECK_ID = "couldnt-check";
 

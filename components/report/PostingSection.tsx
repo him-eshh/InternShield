@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
 import type { MatchRow, PostingData } from "@/lib/types";
-import { CheckCircleIcon, ChevronIcon, ExternalIcon, WarningIcon } from "../icons";
-import { btnPrimary, btnSecondary, card } from "../ui";
+import { CircleCheck as CheckCircleIcon, ChevronDown as ChevronIcon, ExternalLink as ExternalIcon, TriangleAlert as WarningIcon } from "lucide-react";
+import { btnSecondary, card } from "../ui";
 
 const ROW_LABEL: Record<MatchRow["row"], string> = {
   company: "Company",
@@ -138,7 +138,7 @@ export default function PostingSection({ checked = true, posting, match, company
             </div>
           )}
           {posting.url && (
-            <a href={posting.url} target="_blank" rel="noopener noreferrer" className={`${btnPrimary} mt-8`}>
+            <a href={posting.url} target="_blank" rel="noopener noreferrer" className={`${btnSecondary} mt-8`}>
               {posting.onOfficialDomain ? "Apply on the official site" : "Open the posting"} <ExternalIcon size={16} />
               <span className="sr-only">(opens in a new tab)</span>
             </a>

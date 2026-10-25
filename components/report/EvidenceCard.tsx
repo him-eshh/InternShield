@@ -1,7 +1,7 @@
 import { SEVERITY_LABEL, severityOf, type Severity } from "@/lib/reportView";
 import type { Flag, FlagGroup } from "@/lib/types";
 import { showInMessage } from "./AnnotatedMessage";
-import { AlertIcon, CheckCircleIcon, ExternalIcon, WarningIcon } from "../icons";
+import { CircleAlert as AlertIcon, CircleCheck as CheckCircleIcon, ExternalLink as ExternalIcon, TriangleAlert as WarningIcon } from "lucide-react";
 
 const GROUP_LABEL: Record<FlagGroup, string> = { sender: "Sender", message: "Message", offer: "Offer" };
 
@@ -61,13 +61,13 @@ export default function EvidenceCard({ flag, n }: { flag: Flag; n?: number }) {
           {(flag.learnMore || flag.sourceUrl) && (
             <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[14px]">
               {flag.learnMore && (
-                <a href={flag.learnMore.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-accent-fg hover:underline">
+                <a href={flag.learnMore.url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-1 text-accent-fg hover:underline">
                   {flag.learnMore.label} <ExternalIcon size={13} />
                   <span className="sr-only">(opens in a new tab)</span>
                 </a>
               )}
               {flag.sourceUrl && (
-                <a href={flag.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-accent-fg hover:underline">
+                <a href={flag.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-1 text-accent-fg hover:underline">
                   Source <ExternalIcon size={13} />
                   <span className="sr-only">(opens in a new tab)</span>
                 </a>
