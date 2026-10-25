@@ -6,7 +6,7 @@ import { useReducedMotion } from "motion/react";
 export function useReveal() {
   const reduce = useReducedMotion();
   return (i: number) =>
-    reduce
+    reduce !== false
       ? { initial: false as const }
       : {
           initial: { opacity: 0, y: 14 },

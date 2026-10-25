@@ -25,7 +25,7 @@ const EMPTY: Record<string, string> = {
 const nameOf = (c: TrackerCard) => c.company.trim() || "Untitled application";
 
 const small =
-  "inline-flex min-h-11 items-center rounded-full border border-border bg-card px-3.5 text-[14px] font-medium transition-colors duration-200 hover:bg-bg-soft disabled:opacity-40";
+  "inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-border bg-card px-3.5 text-[14px] font-medium transition-colors duration-200 hover:bg-bg-soft disabled:opacity-40";
 const menuItem = "min-h-11 rounded-[10px] px-3 text-left text-[15px] hover:bg-bg-soft";
 const fieldCls = `${fieldInput} mt-1.5`;
 
@@ -163,7 +163,7 @@ export default function Tracker({
         <div className={`${cardCls} mt-8 flex flex-col items-center gap-4 p-6 text-center sm:flex-row sm:text-left`}>
           <EmptyIllustration size={144} />
           <div>
-            <h2 className="font-display text-[24px] font-bold">Your next opportunity starts here</h2>
+            <h2 className="font-display text-[24px] font-bold">Your next move starts here</h2>
             <p className="mt-1 max-w-[42ch] text-[16px] text-fg-2">Nothing here yet. Add a job below or save one from a report.</p>
           </div>
         </div>
@@ -202,13 +202,13 @@ export default function Tracker({
                       <p className={`${chip} mt-2 bg-ink-tint text-ink-strong`}>{col.label}</p>
                       {risk && (
                         <p className={`mt-2 inline-flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[13px] font-medium ${risk.cls}`}>
-                          {c.risk === "high" ? <CircleAlert size={14} aria-hidden="true" /> : c.risk === "medium" ? <TriangleAlert size={14} aria-hidden="true" /> : <CircleCheck size={14} aria-hidden="true" />}
+                          {c.risk === "high" ? <CircleAlert size={14} strokeWidth={1.75} aria-hidden="true" /> : c.risk === "medium" ? <TriangleAlert size={14} strokeWidth={1.75} aria-hidden="true" /> : <CircleCheck size={14} strokeWidth={1.75} aria-hidden="true" />}
                           {risk.label}
                         </p>
                       )}
                       {c.link && (
                         <p className="mt-2 break-all text-[14px]">
-                          <a href={c.link} target="_blank" rel="noopener noreferrer" className={`${linkClass} inline-flex items-center gap-1`}>
+                          <a href={c.link} target="_blank" rel="noopener noreferrer" className={`${linkClass} inline-flex min-h-11 items-center gap-1`}>
                             {c.link.replace(/^https?:\/\//, "")}
                             <ExternalIcon size={13} />
                             <span className="sr-only">(opens in a new tab)</span>
@@ -309,7 +309,7 @@ export default function Tracker({
           <button type="button" onClick={undoDelete} className={`${linkClass} min-h-11 text-[15px] font-semibold`}>
             Undo
           </button>
-          <button type="button" onClick={() => setUndo(null)} aria-label="Dismiss" className="min-h-11 px-1 text-muted">
+          <button type="button" onClick={() => setUndo(null)} aria-label="Dismiss" className="min-h-11 min-w-11 px-1 text-muted">
             <span aria-hidden="true">×</span>
           </button>
         </div>

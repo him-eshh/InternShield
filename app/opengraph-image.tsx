@@ -25,7 +25,7 @@ export default function Image() {
             gap: 48,
           }}
         >
-          <RingMark size={200} tri={["#ea5a31", "#0d7d74", "#6b4eff"]} />
+          <RingMark size={200} color="#1e2a47" tri={["#ea5a31", "#0d7d74", "#6b4eff"]} />
           <div
             style={{
               display: "flex",

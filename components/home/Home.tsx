@@ -169,7 +169,7 @@ export default function Home() {
           <ol className="mt-4 grid gap-6 sm:grid-cols-3">
             {STEPS.map(([t, d], i) => (
               <li key={t} className="flex gap-4">
-                <span aria-hidden="true" className="num grid size-9 shrink-0 place-items-center rounded-full bg-ink text-[15px] font-semibold text-on-ink">{i + 1}</span>
+                <span aria-hidden="true" className="num grid size-9 shrink-0 place-items-center rounded-full bg-ink text-[15px] font-semibold text-[var(--on-ink)]">{i + 1}</span>
                 <span>
                   <span className="block font-display text-[18px] font-bold">{t}</span>
                   <span className="mt-1 block text-[15px] text-fg-2">{d}</span>

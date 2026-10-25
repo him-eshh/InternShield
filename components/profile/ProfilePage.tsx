@@ -296,7 +296,7 @@ export default function ProfilePage() {
                   onClick={() => setOpen(isOpen ? null : s.id)}
                   className="flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left sm:px-5"
                 >
-                  <span aria-hidden="true" className={`num grid size-8 shrink-0 place-items-center rounded-full text-[14px] font-semibold ${done ? "bg-ink text-on-ink" : "border border-border-strong text-fg-2"}`}>
+                  <span aria-hidden="true" className={`num grid size-8 shrink-0 place-items-center rounded-full text-[14px] font-semibold ${done ? "bg-ink text-[var(--on-ink)]" : "border border-border-strong text-fg-2"}`}>
                     {done ? <Check size={16} strokeWidth={2.25} /> : i + 1}
                   </span>
                   <span className="min-w-0 flex-1">

@@ -5,7 +5,7 @@ assert.ok(/^http:\/\/(localhost|127\.0\.0\.1):33\d\d$/.test(BASE), "Set QA_BASE 
 const labels = { "/": "Home", "/check": "Check", "/tailor": "Tailor", "/practice": "Practice", "/tracker": "Tracker", "/profile": "Profile" };
 let checks = 0;
 function check(value, message) { assert.ok(value, message); checks++; console.log(`ok ${message}`); }
-async function ready(page) { await page.getByRole("heading", { level: 1 }).first().waitFor(); await page.waitForTimeout(600); }
+async function ready(page) { await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" }); await page.getByRole("heading", { level: 1 }).first().waitFor(); await page.waitForTimeout(600); }
 for (const v of variants) {
   const { browser, page, log } = await openRoute("/", v);
   try {
@@ -13,6 +13,11 @@ for (const v of variants) {
     check(await page.getByRole("link", { name: /Check.*Start/ }).count() === 1, `${tag(v)} Check card`);
     check(await page.getByRole("link", { name: /Tailor.*Start/ }).count() === 1, `${tag(v)} Tailor card`);
     check(await page.getByRole("link", { name: /Practice.*Start/ }).count() === 1, `${tag(v)} Practice card`);
+    check(await page.locator("#how-h + ol > li > span").first().evaluate(el => {
+      const marker = document.createElement("span"); marker.style.color = "var(--on-ink)"; el.append(marker);
+      const expected = getComputedStyle(marker).color; marker.remove();
+      return getComputedStyle(el).color === expected;
+    }), `${tag(v)} step number foreground`);
     await shot(page, `shell-home-new-${tag(v)}`);
     for (const route of ROUTES) {
       await page.goto(BASE + route, { waitUntil: "load" });
@@ -53,7 +58,13 @@ for (const v of variants) {
     await shot(page, "shell-profile-complete-390-light");
     await page.reload(); await ready(page);
     check(await page.getByText("4 of 4 done", { exact: true }).isVisible(), "profile reload persists");
+    await page.evaluate(() => {
+      localStorage.setItem("is:tailored", JSON.stringify({ saved: true }));
+      localStorage.setItem("is:interviews", JSON.stringify([{ round: "coding", status: "done" }]));
+    });
     await page.goto(BASE); await ready(page);
+    check(await page.getByRole("link", { name: /Resume edits saved/ }).isVisible(), "returning resume continuation");
+    check(await page.getByRole("link", { name: /Last practice/ }).isVisible(), "returning practice continuation");
     await shot(page, "shell-home-returning-390-light");
   } finally { await browser.close(); }
 }
@@ -63,7 +74,7 @@ for (const v of variants) {
   try {
     await ready(page);
     await page.getByLabel("Company", { exact: true }).fill("Example Labs");
-    await page.getByLabel("Role", { exact: true }).fill("Engineering intern");
+    await page.getByLabel("Role (optional)", { exact: true }).fill("Engineering intern");
     await page.getByRole("button", { name: "Add application", exact: true }).click();
     await page.getByRole("button", { name: "Move to Applied" }).click();
     check(await page.locator('[id^="card-"]').getByText("Applied", { exact: true }).isVisible(), "tracker moved");
