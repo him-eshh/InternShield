@@ -8,8 +8,8 @@ export const contentType = "image/png";
 export default function AppleIcon() {
   return new ImageResponse(
     (
-      <div style={{ display: "flex", width: "100%", height: "100%", alignItems: "center", justifyContent: "center", background: "#2F6FD6" }}>
-        <RingMark size={128} color="#FFFFFF" />
+      <div style={{ display: "flex", width: "100%", height: "100%", alignItems: "center", justifyContent: "center", background: "#FBF8F3" }}>
+        <RingMark size={128} color="#1e2a47" tri={["#ea5a31", "#0d7d74", "#6b4eff"]} />
       </div>
     ),
     { ...size },

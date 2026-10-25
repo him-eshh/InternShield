@@ -1,7 +1,9 @@
 "use client";
 // Skeleton nav (shell stream polishes it): desktop top bar + mobile bottom tab bar, on every route.
 import { FilePen, House, MessagesSquare, ShieldCheck, SquareKanban, UserRound, type LucideIcon } from "lucide-react";
+import { m, useReducedMotion } from "motion/react";
 import Link from "next/link";
+import { initialsOf, useProfileProgress } from "../profile/progress";
 import { usePathname } from "next/navigation";
 import Logo from "../Logo";
 import ThemeToggle from "../ThemeToggle";
@@ -29,6 +31,7 @@ function isActive(href: string, path: string) {
 
 function TabLink({ tab, path, mobile }: { tab: Tab; path: string; mobile?: boolean }) {
   const on = isActive(tab.href, path);
+  const reduce = useReducedMotion();
   const { Icon } = tab;
   return (
     <Link
@@ -37,12 +40,13 @@ function TabLink({ tab, path, mobile }: { tab: Tab; path: string; mobile?: boole
       aria-current={on ? "page" : undefined}
       className={
         mobile
-          ? `flex min-h-[56px] flex-1 flex-col items-center justify-center gap-0.5 text-[12px] font-medium ${on ? "text-tool-strong" : "text-fg-2"}`
-          : `inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-[15px] font-medium transition-colors ${
-              on ? "bg-tool-tint text-tool-strong" : "text-fg-2 hover:bg-sunken hover:text-fg"
+          ? `relative flex min-h-[56px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 text-[12px] font-medium ${on ? "text-tool-strong" : "text-fg-2"}`
+          : `relative isolate inline-flex h-11 items-center gap-1.5 rounded-full px-3 text-[15px] font-medium transition-colors ${
+              on ? "text-tool-strong" : "text-fg-2 hover:bg-sunken hover:text-fg"
             }`
       }
     >
+      {on && <m.span aria-hidden="true" layoutId={mobile ? "mobile-tab" : "desktop-tab"} transition={reduce ? { duration: 0 } : { duration: 0.2 }} className={mobile ? "absolute inset-x-3 top-0 h-0.5 rounded-full bg-tool" : "absolute inset-0 -z-10 rounded-full bg-tool-tint"} />}
       <Icon size={mobile ? 22 : 18} strokeWidth={1.75} aria-hidden="true" />
       {tab.label}
     </Link>
@@ -51,25 +55,36 @@ function TabLink({ tab, path, mobile }: { tab: Tab; path: string; mobile?: boole
 
 export default function Nav() {
   const path = usePathname() ?? "/";
+  const progress = useProfileProgress();
+  const initials = initialsOf(progress.name);
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-border bg-bg/90 backdrop-blur">
         <nav aria-label="Main" className="mx-auto flex h-14 max-w-[1200px] items-center justify-between gap-3 px-4 sm:px-6">
-          <Link href="/" aria-label="InternShield home" className="rounded-full">
+          <Link href="/" aria-label="InternShield home" className="inline-flex min-h-11 min-w-11 items-center rounded-full">
             <Logo />
           </Link>
-          <div className="hidden items-center gap-1 md:flex">
+          <div className="hidden items-center gap-0.5 lg:flex">
             {TABS.map((t) => (
               <TabLink key={t.href} tab={t} path={path} />
             ))}
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Link href="/profile" aria-label={`Profile, ${progress.count} of ${progress.total} steps done`} title="Your profile" className="relative grid size-11 shrink-0 place-items-center rounded-full text-ink-strong">
+              <svg viewBox="0 0 44 44" className="absolute inset-0 size-11 -rotate-90" aria-hidden="true">
+                <circle cx="22" cy="22" r="19" fill="none" stroke="var(--border)" strokeWidth="2" />
+                <circle cx="22" cy="22" r="19" fill="none" stroke="var(--ink-strong)" strokeWidth="2" strokeDasharray={`${(progress.count / progress.total) * 119.38} 119.38`} strokeLinecap="round" />
+              </svg>
+              {initials ? <span className="text-[13px] font-semibold">{initials}</span> : <UserRound size={18} strokeWidth={1.75} aria-hidden="true" />}
+            </Link>
+          </div>
         </nav>
       </header>
       {/* Mobile: Home is the logo, so the bar holds the five tools. */}
       <nav
         aria-label="Tools"
-        className="fixed inset-x-0 bottom-0 z-40 flex border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 flex border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden"
       >
         {TABS.slice(1).map((t) => (
           <TabLink key={t.href} tab={t} path={path} mobile />
