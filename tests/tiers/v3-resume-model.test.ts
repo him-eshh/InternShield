@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import JSZip from "jszip";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { parseDocx, applyDocxEdits, distributeText, replaceParagraphText } from "@/lib/tiers/resumeDocx";
 import { docLines, docText, parseTextResume } from "@/lib/tiers/resumeModel";
 import { parsePdf } from "@/lib/tiers/resumePdf";
@@ -9,10 +9,12 @@ import { fitInBoxes, lengthCheck, renderEdited, renderPlainText, TOO_LONG, type 
 import { ONE_PAGE } from "../fixtures/resume/content";
 
 const fx = (name: string) => new Uint8Array(readFileSync(join(__dirname, "../fixtures/resume", name)));
-async function pdfjs() {
-  // @ts-expect-error legacy build has no type entry
-  return (await import("pdfjs-dist/legacy/build/pdf.mjs")) as never;
-}
+let pdfEngine: never;
+beforeAll(async () => {
+  // Initialize the expensive legacy engine outside each round-trip test.
+  pdfEngine = (await import("pdfjs-dist/legacy/build/pdf.mjs")) as never;
+}, 30000);
+async function pdfjs() { return pdfEngine; }
 const expectedText = (lines = ONE_PAGE) => lines.map((l) => (l.kind === "bullet" ? `• ${l.text}` : l.text)).join("\n");
 
 describe("PDF parse (R1)", () => {
@@ -46,6 +48,7 @@ describe("PDF parse (R1)", () => {
     const original = fx("one-page.pdf");
     const doc = await parsePdf(original, await pdfjs());
     const out = await renderEdited(doc, original, []);
+    expect(out.bytes).toBe(original);
     const again = await parsePdf(out.bytes, await pdfjs());
     expect(docText(again)).toBe(docText(doc));
     expect(again.sections.map((s) => s.heading)).toEqual(doc.sections.map((s) => s.heading));
@@ -54,6 +57,13 @@ describe("PDF parse (R1)", () => {
 });
 
 describe("DOCX parse and in-place edit (R1, R4)", () => {
+  it("round trips zero edits with identical bytes, text, sections and pages", async () => {
+    const original = fx("one-page.docx");
+    const doc = await parseDocx(original);
+    const out = await renderEdited(doc, original, []);
+    expect(out.bytes).toBe(original);
+    expect(await parseDocx(out.bytes)).toEqual(doc);
+  });
   it("parses paragraphs, list bullets and headings in order", async () => {
     const doc = await parseDocx(fx("one-page.docx"));
     expect(doc.source).toBe("docx");

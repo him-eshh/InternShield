@@ -116,7 +116,10 @@ export function renderPlainText(doc: ResumeDoc, edits: EditText[]): string {
 
 /** Applies the edits to the original bytes. PDF: cover and redraw. DOCX: in place. Text: replace lines. */
 export async function renderEdited(doc: ResumeDoc, original: Uint8Array | null, edits: EditText[]): Promise<Rendered> {
-  if (doc.source === "pdf" && original) return renderPdf(doc, original, edits);
+  if (doc.source === "pdf" && original) {
+    if (!edits.length) return { bytes: original, mime: "application/pdf", ext: "pdf", pageCount: doc.pageCount, rejected: [] };
+    return renderPdf(doc, original, edits);
+  }
   if (doc.source === "docx" && original) {
     const lines = new Map(docLines(doc).map((l) => [l.id, l]));
     const list = edits.flatMap((e) => {

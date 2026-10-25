@@ -99,6 +99,7 @@ interface PdfjsLike {
 }
 interface PdfDocLike {
   numPages: number;
+  destroy?: () => Promise<void>;
   getPage: (n: number) => Promise<PdfPageLike>;
 }
 interface PdfPageLike {
@@ -110,27 +111,31 @@ interface PdfPageLike {
 export async function parsePdf(bytes: Uint8Array, pdfjs: PdfjsLike): Promise<ResumeDoc> {
   const doc = await pdfjs.getDocument({ data: bytes.slice() }).promise;
   const pages: PdfPageItems[] = [];
-  for (let n = 1; n <= doc.numPages; n++) {
-    const page = await doc.getPage(n);
-    const content = await page.getTextContent();
-    // Loading the operator list makes pdf.js resolve real font names (needed for bold/serif detection).
-    try {
-      await page.getOperatorList();
-    } catch {
-      /* fonts stay generic */
+  try {
+    for (let n = 1; n <= doc.numPages; n++) {
+      const page = await doc.getPage(n);
+      const content = await page.getTextContent();
+      // Loading the operator list makes pdf.js resolve real font names (needed for bold/serif detection).
+      try {
+        await page.getOperatorList();
+      } catch {
+        /* fonts stay generic */
+      }
+      const items = content.items.filter((it): it is PdfTextItem => !!it && typeof (it as PdfTextItem).str === "string");
+      pages.push({
+        items,
+        fontNameOf: (id) => {
+          try {
+            const real = page.commonObjs.has(id) ? page.commonObjs.get(id)?.name : undefined;
+            return real ?? content.styles[id]?.fontFamily;
+          } catch {
+            return content.styles[id]?.fontFamily;
+          }
+        },
+      });
     }
-    const items = content.items.filter((it): it is PdfTextItem => !!it && typeof (it as PdfTextItem).str === "string");
-    pages.push({
-      items,
-      fontNameOf: (id) => {
-        try {
-          const real = page.commonObjs.has(id) ? page.commonObjs.get(id)?.name : undefined;
-          return real ?? content.styles[id]?.fontFamily;
-        } catch {
-          return content.styles[id]?.fontFamily;
-        }
-      },
-    });
+    return parsePdfPages(pages);
+  } finally {
+    await doc.destroy?.();
   }
-  return parsePdfPages(pages);
 }
