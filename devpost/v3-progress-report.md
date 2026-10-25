@@ -1,25 +1,21 @@
 # V3 report progress
 Done
-- Preserved incoming approved briefs: ebcb4c0.
-- P1 form/checklist sub-item: 6e1b559 (WIP; gates pending).
+- Incoming briefs preserved: ebcb4c0.
+- P1 form/checklist: 6e1b559 + a09485a; coral form, real outcomes, 200ms spinner, screenshot upload, useful validation.
+- P2 report: bee484b + 2e1f5e2 + a09485a; neutral hero, lucide icons, animated ring, one primary, live risk actions, inline tracker confirmation.
+- P3 impact: bee484b + 2e1f5e2 + a09485a; named diffs, changed weights, confirmations, collapsed answers, in-place additions and persistence.
+- P4 QA: a09485a + closing commit; 77 files / 1,212 tests, all five gates green.
+- Browser matrix PASS at 1440/390 light/dark; all 56 final screenshots inspected.
+- Motion reveal/update PASS normal/reduced. 320 page fits; 768 report content fits.
+- QA server stopped; no listener on report port 3600.
 Current
-- P2/P3 implementation: bee484b (WIP). Mocked flow passed all assertions.
-- Persistence/mobile sub-items: 2e1f5e2 (WIP).
-- P4 all four variants PASS incl. 44px controls; 56 screenshots inspected.
-- Shared shell overflow at 768px logged for integration; report fits.
-- Final matrix PASS incl. 44px report controls; reviewing all 56 shots.
-- Pending-step text contrast corrected; recapture 4 checking shots only.
-- Motion reveal/update PASS normal/reduced. Final full gates next.
-- Only checking shot recapture running; stop 3600 when done.
-- Files: components/CheckForm.tsx, Checklist.tsx, report/**, lib/impact.ts.
+- P1-P4 complete in report ownership. Recording closing commit and writing final summary.
 Next
-- Finish P4 browser coverage (refresh, sender, screenshot, reduced motion).
-- Gates 2: lint/tsc green; new test used a question-free fixture; fixed to explicit question.
-- Await build/eval, then final QA on port 3600.
-- P4 mocked browser QA and full screenshot matrix; inspect every shot.
-- Summary only after all quality checks pass.
+- Write devpost/v3-report-summary.md and exact V3 report summary commit.
 Gotchas
-- Branch v3-report. No personal vault, keys, main tree, port 3000, pushes.
-- Shell ownership excludes shared files; brief overrides CLAUDE ownership.
-- rg unavailable; use PowerShell Select-String.
-- Writes require sandbox escalation. Scoring stays unchanged.
+- Shared shell has 95px overflow at 768px (theme control); logged Needs integration.
+- Shell may swap the form lucide placeholder for CheckIllustration as approved.
+- Inline message marks stay inline; standalone report controls are >=44px.
+- No scoring rules changed. Eval 88/88; held-out 24/27, same three baseline misses.
+- No vault, keys, main-tree changes, port 3000 use, push, merge or deploy.
+- Gate runner exits 0 even on failures: check each exit line in qa/gates-out.txt.

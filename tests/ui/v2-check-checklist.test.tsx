@@ -28,7 +28,7 @@ describe("Checklist (C8)", () => {
     const lines = initialLines();
     lines.extract = { state: "running" };
     const html = renderToStaticMarkup(<Checklist lines={lines} />);
-    expect(html).toContain("animation-delay:300ms");
+    expect(html).toContain("animation-delay:200ms");
     expect(html).not.toContain("Still checking");
   });
 

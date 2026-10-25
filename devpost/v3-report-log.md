@@ -26,3 +26,12 @@
 - Under reduced motion reveal samples are [100]; answer update samples are [0,85], with no intermediate values.
 - Refresh keeps updated score and answered questions. Both company and sender/message/screenshot additions stay in the report.
 - Save confirmation remains inline; Copy is absent on low, Tailor/Practice absent on live high, one primary even while company editing.
+
+## Closing gates (all green)
+- npm run lint: exit 0; only the two pre-existing v2-check-heldout-lint warnings.
+- npx tsc --noEmit: exit 0.
+- npx vitest run: 77 files / 1,212 tests passed (12 report-stream tests in tests/report).
+- npm run build: exit 0.
+- npm run eval: 88/88; low false positives 0/35. Held-out 24/27; low false positives 0/9.
+- All 56 final screenshots reviewed, including the four final checking recaptures.
+- Port 3600 stopped after QA; no push, merge, deploy, key access or scoring-rule edits.

@@ -21,7 +21,7 @@ describe("v3 report rules", () => {
   }
   it("places the full impact directly below its collapsed answer", () => {
     const q = { id: "channel" as const, text: "Where did it reach you?", options: [{ value: "email", label: "Email" }] };
-    const value = q.options[0].value;
+    const value = "email" as const;
     const copy = impactCopy(diffReports(realReport, realReport, "question", q.options[0].label));
     const html = renderToStaticMarkup(<QuickQuestions questions={[q]} answers={{ [q.id]: value }} change={copy} lastId={q.id} confirmations={{ [q.id]: copy }} onAnswer={() => {}} />);
     const fieldset = html.slice(html.indexOf("<fieldset"), html.indexOf("</fieldset>"));
