@@ -2,7 +2,6 @@ import type { CompanyIntel } from "../server/companyIntel";
 import { getPreset, PRESETS } from "./presets";
 import { SETUP_ROUNDS } from "./session";
 import type { RoundKind } from "./types";
-
 /** Map cited stage names to the app's supported practice rounds. */
 export function intelRounds(intel: CompanyIntel | null, preset?: string): RoundKind[] {
   const matches: RoundKind[] = [];

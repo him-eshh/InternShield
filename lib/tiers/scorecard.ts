@@ -46,7 +46,7 @@ function quoted(id: string, label: string, band: ScoreBand, quotes: string[], no
 }
 
 function completeness(s: InterviewSession): Axis {
-  const want = QUESTIONS_PER_ROUND[s.round];
+  const want = s.plannedQuestions ?? QUESTIONS_PER_ROUND[s.round];
   const done = s.turns.filter((t) => t.answer.trim()).length;
   return axis("complete", "Completeness", ratioBand(done / want, 1, 0.75, 0.5), [`${done} of ${want} questions answered`]);
 }

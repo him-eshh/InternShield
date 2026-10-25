@@ -44,10 +44,10 @@ const show = (v: unknown) => {
 const NO_STATS: CodeStats = { runsBeforeSubmit: 0, submits: 0, firstSubmitAt: null };
 const showOut = (o: CaseOutput) => (o.ok ? show(o.value) : `Error: ${o.error}`);
 
-export default function CodingRound({ session, onUpdate, ask, busy }: RoundPanelProps) {
+export default function CodingRound({ session, onUpdate, ask, busy, initialLanguage, runnableLanguages }: RoundPanelProps) {
   const problem = getProblem(session.problemId ?? "");
   const debug = session.round === "debugging";
-  const [language, setLanguage] = useState<CodeLanguage>(session.code?.language ?? "python");
+  const [language, setLanguage] = useState<CodeLanguage>(session.code?.language ?? initialLanguage ?? "python");
   const [codes, setCodes] = useState<Partial<Record<CodeLanguage, string>>>(() =>
     session.code ? { [session.code.language]: session.code.code } : {},
   );
@@ -239,7 +239,7 @@ export default function CodingRound({ session, onUpdate, ask, busy }: RoundPanel
 
       <div className="space-y-5">
       <div role="group" aria-label="Language" className="flex flex-wrap gap-2">
-        {LANGS.map((l) => (
+        {LANGS.filter((l) => !runnableLanguages || runnableLanguages.includes(l.id)).map((l) => (
           <button
             key={l.id}
             type="button"

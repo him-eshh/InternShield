@@ -294,6 +294,7 @@ export interface InterviewSession {
   hints: string[];
   /** Coding/debugging rounds (v2): counted by the app, feeds the scorecard. Absent on older sessions. */
   stats?: CodeStats;
+  plannedQuestions?: number;
   feedback: InterviewFeedback | null;
   status: "active" | "done";
   createdAt: number;
@@ -484,6 +485,8 @@ export interface BoardJson {
 // ---------- Round panels (components/tiers/interview/CodingRound.tsx, DesignRound.tsx) ----------
 
 export interface RoundPanelProps {
+  initialLanguage?: CodeLanguage;
+  runnableLanguages?: CodeLanguage[];
   session: InterviewSession;
   /** Persist an updated session (the shell saves it to is:interviews). */
   onUpdate: (s: InterviewSession) => void;
@@ -522,6 +525,7 @@ export interface SessionTurn {
   answer: string;
   /** Code rounds: local grading result. */
   code?: CodeAttempt;
+  stats?: CodeStats;
   hintsUsed: number;
   skipped: boolean;
   feedback?: AnswerFeedback;
@@ -544,7 +548,7 @@ export interface SessionSummary {
   answered: number;
   skipped: number;
   /** Per-round band, rules-graded where possible. */
-  rounds: { round: RoundKind; band: ScoreBand; note: string }[];
+  rounds: { round: RoundKind; band: ScoreBand; note: string; axes?: Scorecard["axes"] }[];
   /** 2-3 concrete things to practice next. */
   next: string[];
   strengths?: string[];
