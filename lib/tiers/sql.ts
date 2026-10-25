@@ -1,11 +1,11 @@
-// SQL round (v2): made-up school data, 6 questions, result-set grader (findings 04 section 3d).
+// SQL round: made-up school data, 6 questions, result-set grader (findings 04 section 3d).
 // The user's query and the reference query run on the same seeded sql.js DB in public/workers/sql-runner.js.
 
 export interface ResultSet {
   columns: string[];
   rows: unknown[][];
 }
-export interface SqlProblem {
+interface SqlProblem {
   id: string;
   title: string;
   prompt: string;
@@ -22,12 +22,6 @@ export interface SqlGrade {
   /** Up to 5 differing rows. */
   diffs: string[];
 }
-
-export const SQL_TABLES: { name: string; columns: string }[] = [
-  { name: "students", columns: "id, name, major, year" },
-  { name: "courses", columns: "id, title, dept, credits" },
-  { name: "enrollments", columns: "student_id, course_id, grade (NULL = in progress)" },
-];
 
 // All names and grades are made up.
 export const SQL_SCHEMA = `
@@ -109,12 +103,6 @@ export function getSqlProblem(id: string | null | undefined): SqlProblem | null 
   return SQL_PROBLEMS.find((p) => p.id === id) ?? null;
 }
 
-/** Same seed rule as pickProblem: non-finite -> 0, negative -> absolute value. */
-export function pickSqlProblem(seed: number): SqlProblem {
-  const n = Number.isFinite(seed) ? Math.abs(Math.floor(seed)) : 0;
-  return SQL_PROBLEMS[n % SQL_PROBLEMS.length];
-}
-
 /** One cell as shown to the user. */
 export const showCell = (v: unknown): string => (v === null || v === undefined ? "NULL" : typeof v === "string" ? v : String(v));
 const showRow = (r: unknown[]) => `(${r.map(showCell).join(", ")})`;
@@ -165,7 +153,7 @@ export function compareResults(want: ResultSet, got: ResultSet, ordered: boolean
   return { ok: false, message: `Rows: ${missing.length} missing, ${extra.length} extra`, diffs };
 }
 
-export interface SampleTable {
+interface SampleTable {
   name: string;
   columns: string[];
   rows: string[][];

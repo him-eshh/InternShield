@@ -34,7 +34,7 @@ export const STEP_LABELS: Record<StepKey, string> = {
   explain: "Writing the explanation",
 };
 
-export const TIMEOUTS: Record<StepKey, number> = {
+const TIMEOUTS: Record<StepKey, number> = {
   extract: 20_000,
   company: 10_000,
   sender: 10_000,
@@ -57,7 +57,7 @@ export interface Explanation {
   source: "ai" | "fallback";
 }
 
-export interface PipelineDeps {
+interface PipelineDeps {
   fetch?: typeof fetch;
   /** Called as each line changes. `result` is the StepResult when the line settles. */
   onLine?: (key: StepKey, state: LineState, result?: StepResult<unknown>) => void;

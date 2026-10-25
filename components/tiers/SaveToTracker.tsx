@@ -6,17 +6,20 @@ import { Check as CheckIcon } from "lucide-react";
 import { btnSecondary, linkClass } from "../ui";
 
 interface Props {
-  card: NewCard;
+  /** `notes` rides along into the saved card (Practice puts its score there). */
+  card: NewCard & { notes?: string };
   onOpen: () => void;
+  /** Button text; the report says "Save to tracker", Practice says "Add to tracker". */
+  label?: string;
 }
 
 const fieldCls = "mt-1.5 min-h-12 w-full rounded-[14px] border border-border bg-card px-4 text-[17px] placeholder:text-muted";
 /** Company/role as the user confirmed them; a blank role stays blank (never a placeholder). */
-export function addToTracker(before: TrackerCard[], company: string, role: string, base: NewCard): TrackerCard[] {
+export function addToTracker(before: TrackerCard[], company: string, role: string, base: NewCard & { notes?: string }): TrackerCard[] {
   return addCard(before, { ...base, company, role });
 }
 
-export default function SaveToTracker({ card, onOpen }: Props) {
+export default function SaveToTracker({ card, onOpen, label = "Save to tracker" }: Props) {
   const [state, setState] = useState<"idle" | "form" | "saved" | "already">("idle");
   const [company, setCompany] = useState(card.company);
   const [role, setRole] = useState(card.role);
@@ -76,7 +79,7 @@ export default function SaveToTracker({ card, onOpen }: Props) {
           onClick={() => (state === "form" ? close() : onSave())}
           className={btnSecondary}
         >
-          Save to tracker
+          {label}
         </button>
       )}
       {state === "form" && (

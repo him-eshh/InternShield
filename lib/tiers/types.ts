@@ -22,9 +22,9 @@ export interface RewriteRequest {
   posting: PostingContext;
   /** How to tailor. Fixed choices only; the server turns them into its own wording. Missing = DEFAULT_TAILOR. */
   options?: TailorOptions;
-  /** v2: 3 = three options in one strict-JSON call plus heldBack. Missing = one plain rewrite. */
+  /** 3 = three options in one strict-JSON call plus heldBack. Missing = one plain rewrite. */
   count?: 1 | 3;
-  /** v2: terms the user confirmed ("I have this"), at most MAX_FACTS of MAX_FACT_CHARS each. */
+  /** Terms the user confirmed ("I have this"), at most MAX_FACTS of MAX_FACT_CHARS each. */
   facts?: string[];
 }
 export const MAX_FACTS = 12;
@@ -46,7 +46,7 @@ export interface TailorOptions {
   strength: Strength;
   /** Keep about the same length as the original line. */
   keepLength: boolean;
-  // v2 (all optional; missing = not sent, the server adds no line)
+  // Optional ( missing = not sent, the server adds no line)
   level?: TargetLevel;
   region?: Region;
   /** Prefer the posting's word for a concept the line already covers. */
@@ -59,12 +59,10 @@ export const REGIONS = ["us", "uk", "canada", "europe", "other"] as const;
 export type Region = (typeof REGIONS)[number];
 
 export const DEFAULT_TAILOR: TailorOptions = { emphasis: [], tone: "confident", strength: "light", keepLength: true };
-/** v2 defaults (findings 03 section 3): posting's words and no buzzwords on. */
-export const DEFAULT_TAILOR_V2: TailorOptions = { ...DEFAULT_TAILOR, level: "internship", region: "us", postingWords: true, noBuzzwords: true };
 /** options: up to 3 alternative rewrites; heldBack: posting terms the model left out because the line doesn't support them. */
 export type RewriteResponse = ApiResponse<{ text: string; options?: string[]; heldBack?: string[] }>;
 
-// ---------- v2: keyword gap (job posting terms vs resume) ----------
+// ---------- keyword gap (job posting terms vs resume) ----------
 export interface GapTerm {
   term: string;
   bucket: "found" | "alias" | "missing"; // alias = resume has a synonym
@@ -81,10 +79,10 @@ export interface GuardIssue {
   kind: GuardIssueKind;
   token: string;
 }
-/** tier (v2): "block" = never show, "check" = show with a warning, "ok" = clean. */
+/** tier: "block" = never show, "check" = show with a warning, "ok" = clean. */
 export type GuardTier = "block" | "check" | "ok";
 export type GuardResult = { ok: true; tier?: GuardTier } | { ok: false; issues: GuardIssue[]; tier?: GuardTier };
-/** v2 soft warnings (Check tier): stronger verb, dropped qualifier, new scope/seniority word, buzzword. */
+/** Soft warnings (Check tier): stronger verb, dropped qualifier, new scope/seniority word, buzzword. */
 export type GuardWarningKind = "inflated" | "qualifier" | "scope" | "seniority" | "buzzword";
 export interface GuardWarning {
   kind: GuardWarningKind;
@@ -92,7 +90,7 @@ export interface GuardWarning {
   /** inflated: the original's weaker verb, when there was one. */
   was?: string;
 }
-export interface GuardV2 {
+export interface GuardReport {
   tier: GuardTier;
   issues: GuardIssue[];
   warnings: GuardWarning[];
@@ -106,15 +104,6 @@ export interface GuardV2 {
 export interface DiffPart {
   kind: "same" | "added" | "removed";
   text: string;
-}
-
-/** Accepted edits, applied over the stored resume text (is:tailored). */
-export interface TailoredResume {
-  /** Fingerprint of the resume text these edits belong to; mismatched = discard. */
-  resumeKey: string;
-  /** Resume lines after accepted edits (lines split on \n, blanks dropped). */
-  lines: string[];
-  updatedAt: number;
 }
 
 // ---------- Slice 9: tracker ----------
@@ -150,11 +139,11 @@ export type TranscribeResponse = ApiResponse<{ text: string; partial?: boolean }
 
 // ---------- Tier 3: mock interview ----------
 
-export type InterviewRound = "screen" | "behavioral" | "coding" | "design" | "case" | "finance" | "portfolio" | "challenge" | "debugging" | "sql";
+export type InterviewRound = "screen" | "behavioral" | "coding" | "design" | "case" | "portfolio" | "debugging" | "sql";
 /** Rounds graded by running code locally (one local problem, hints allowed, no AI questions). */
 export const CODE_ROUNDS: InterviewRound[] = ["coding", "debugging", "sql"];
 
-// ---------- v2: scorecard and company-style presets ----------
+// ---------- scorecard and company-style presets ----------
 export type ScoreBand = "Strong" | "Solid" | "Developing" | "Not yet";
 export interface Scorecard {
   axes: { id: string; label: string; band: ScoreBand; evidence: string[]; byCode: boolean }[]; // byCode = graded by rules, not AI
@@ -176,10 +165,9 @@ export const INTERVIEW_ROUNDS: { id: InterviewRound; label: string; field: Field
   { id: "debugging", label: "Debugging", field: "tech" },
   { id: "design", label: "System design", field: "tech" },
   { id: "case", label: "Case interview", field: "business" },
-  { id: "finance", label: "Technical questions", field: "finance" },
   { id: "portfolio", label: "Portfolio walkthrough", field: "design" },
-  { id: "challenge", label: "Design challenge", field: "design" },
 ];
+export const roundLabel = (r: InterviewRound): string => INTERVIEW_ROUNDS.find((x) => x.id === r)?.label ?? r;
 /** Questions per round, including the local first question. */
 export const QUESTIONS_PER_ROUND: Record<InterviewRound, number> = {
   screen: 4,
@@ -187,16 +175,12 @@ export const QUESTIONS_PER_ROUND: Record<InterviewRound, number> = {
   coding: 1,
   design: 3,
   case: 3,
-  finance: 4,
   portfolio: 4,
-  challenge: 3,
   debugging: 1,
   sql: 1,
 };
 /** Rounds whose questions all come from a local script (no AI questions; AI only for feedback). */
-export const SCRIPTED_ROUNDS: InterviewRound[] = ["case", "finance"];
-/** Rounds drawn on the board (DesignRound panel). */
-export const BOARD_ROUNDS: InterviewRound[] = ["design", "challenge"];
+export const SCRIPTED_ROUNDS: InterviewRound[] = ["case"];
 /** AI calls per session (questions + hints + feedback); one is always kept for feedback. */
 export const MAX_SESSION_TURNS = 12;
 export const MAX_TURNS = 8;
@@ -205,7 +189,6 @@ export const MAX_ANSWER_CHARS = 1200;
 export const MAX_CODE_CHARS = 4000;
 export const MAX_RESUME_CONTEXT_CHARS = 1500;
 export const MAX_CONTEXT_FIELD = 120; // company, role
-export const MAX_SESSIONS = 20;
 
 /** What the interviewer knows. description capped at MAX_JOB_CHARS, resume at MAX_RESUME_CONTEXT_CHARS. */
 export interface InterviewContext {
@@ -214,13 +197,9 @@ export interface InterviewContext {
   description: string | null;
   resume: string | null;
   field: Field | null;
-  /** Portfolio round (Tier 4): http(s) links the user typed. Only shown and sent as text; never fetched. */
-  links?: string[];
-  /** v2 company-style preset (lib/tiers/presets.ts). Absent on older sessions. */
+  /** Company-style preset (lib/tiers/presets.ts). Absent on older sessions. */
   preset?: import("./presets").PresetId;
 }
-export const MAX_LINKS = 5;
-export const MAX_LINK_CHARS = 200;
 
 export interface InterviewTurn {
   question: string;
@@ -283,11 +262,9 @@ export interface InterviewSession {
   /** Coding round: problem id (set at creation) and latest attempt. */
   problemId: string | null;
   code: CodeAttempt | null;
-  /** Design round: latest board. */
-  board: BoardJson | null;
-  /** Coding round: hints received, oldest first (applyReply pushes hint text here). */
+  /** Coding round: hints received, oldest first (Practice pushes hint text here). */
   hints: string[];
-  /** Coding/debugging rounds (v2): counted by the app, feeds the scorecard. Absent on older sessions. */
+  /** Coding/debugging rounds: counted by the app, feeds the scorecard. Absent on older sessions. */
   stats?: CodeStats;
   editorDraft?: { language: CodeLanguage; code: string; approach: string };
   plannedQuestions?: number;
@@ -297,9 +274,9 @@ export interface InterviewSession {
   updatedAt: number;
 }
 
-/** "review" (v3 practice sessions): feedback on the last turn plus an optional follow-up question, in one call. */
+/** "review" (practice sessions): feedback on the last turn plus an optional follow-up question, in one call. */
 export type InterviewAsk = "question" | "hint" | "feedback" | "review";
-/** AI calls per v3 practice session (reviews + hints + AI questions). */
+/** AI calls per practice session (reviews + hints + AI questions). */
 export const MAX_PRACTICE_CALLS = 30;
 export const MAX_FOLLOWUPS = 2;
 
@@ -313,12 +290,9 @@ export interface InterviewRequest {
   /** session.used before this call; server rejects >= MAX_SESSION_TURNS. */
   used: number;
   code: CodeAttempt | null;
-  board: BoardJson | null;
   /** Coding round: the problem prompt (hint/feedback need it). */
   problem: string | null;
-  /** Challenge feedback only: the CHALLENGE_MINUTES timer had run out. */
-  timeUp?: boolean;
-  /** v3 practice: lifts the call cap to MAX_PRACTICE_CALLS. */
+  /** Practice: lifts the call cap to MAX_PRACTICE_CALLS. */
   practice?: boolean;
   /** review only: follow-ups still allowed for this question (0-2). */
   followUpsLeft?: number;
@@ -330,27 +304,7 @@ export type InterviewReply =
   | { text: null; feedback: InterviewFeedback; followUp?: string | null; level?: AnswerLevel };
 export type InterviewResponse = ApiResponse<InterviewReply>;
 
-// lib/tiers/interview.ts exports (engine-builder):
-//   newSession(round, context, opts: { id: string; now: number; seed: number }): InterviewSession  // pending = firstQuestion(...)
-//   firstQuestion(round, context, seed): string                     // local, no AI
-//   answerPending(s, answer, now): InterviewSession                 // pending -> turns, pending = null
-//   nextStep(s): "answer" | "ask" | "feedback" | "done"            // answer: pending set; ask: AI follow-up allowed; feedback: time to get feedback
-//   canCall(s, ask): boolean                                        // respects MAX_SESSION_TURNS, keeps 1 for feedback; hint only coding
-//   buildRequest(s, ask): InterviewRequest                         // problem = getProblem(s.problemId)?.prompt
-//   applyReply(s, ask, reply, now): InterviewSession                // used+1; question -> pending; hint -> hints.push; feedback -> status done
-//   validateFeedback(raw: unknown, turns: InterviewTurn[], round): InterviewFeedback | null
-//   loadSessions(): InterviewSession[]; saveSession(s): void; removeSession(id): void   // KEYS.interviews, max MAX_SESSIONS
-// Tier 4 additions to lib/tiers/interview.ts:
-//   CHALLENGE_PROMPTS: string[]; PORTFOLIO_FIRST: string                // made up
-//   answerPending in a SCRIPTED round sets pending to the next scripted question (scriptFor) until the script ends
-//   canCall(s, "question") is false for SCRIPTED_ROUNDS and coding
-//   buildRequest sends board for BOARD_ROUNDS, context.links (capped MAX_LINKS x MAX_LINK_CHARS) when present
-//   challengeLeft(s, now): number   // ms left of CHALLENGE_MINUTES from s.createdAt, never below 0
-//   cleanLinks(raw: string): string[] // split on whitespace/newlines, keep http(s) URLs only, <= MAX_LINK_CHARS, dedupe, first MAX_LINKS
-
-// ---------- Tier 4: scripted rounds (case, finance) ----------
-
-export const CHALLENGE_MINUTES = 20;
+// ---------- Scripted rounds (case) ----------
 
 /** How an answer is checked in code. number: the LAST number in the answer vs expected (absolute tolerance). */
 export type AnswerCheck =
@@ -379,9 +333,7 @@ export type CheckResult =
   | { kind: "rubric"; covered: string[]; missed: string[] };
 // lib/tiers/scripted.ts exports (engine-builder):
 //   CASES: { id: string; title: string; questions: ScriptedQuestion[] }[]   // >= 4 made-up cases, 3 questions each: structure (rubric), math (number), recommendation (rubric)
-//   FINANCE_BANK: ScriptedQuestion[]                                         // >= 12 made-up accounting/valuation questions, >= 5 numeric
-//   scriptFor(round, seed): ScriptedQuestion[] | null   // case -> one case's questions; finance -> 4 distinct bank questions; other rounds null. Deterministic.
-//   findQuestion(prompt: string): ScriptedQuestion | null   // exact prompt match across CASES and FINANCE_BANK
+//   findQuestion(prompt: string): ScriptedQuestion | null   // exact prompt match across CASES
 //   extractNumber(answer: string): number | null   // the stated answer (cue phrase > "=" / "so" > "about" > last), ranges -> midpoint, number words; handles $, commas, %, k/m/million/billion, negatives, decimals
 //   checkAnswer(check: AnswerCheck, answer: string): CheckResult
 //   checkTurn(turn: InterviewTurn): CheckResult | null   // findQuestion(turn.question)?.check -> checkAnswer
@@ -399,7 +351,7 @@ export interface CodingProblem {
   /** Shown to the user; also the interview question. */
   prompt: string;
   functionName: string;
-  starter: Record<"python" | "javascript", string> & Partial<Record<CodeLanguage, string>>; // v2 languages are optional
+  starter: Record<"python" | "javascript", string> & Partial<Record<CodeLanguage, string>>; // the other languages are optional
   /** Shown with input/expected/got. */
   examples: CodeTest[];
   /** Never shown: only the pass count. */
@@ -425,76 +377,23 @@ export interface GradeResult {
 //   in  { code: string, functionName: string, cases: unknown[][] }
 //   out { type: "ready" } (python, after load) | { type: "result", outputs: CaseOutput[], logs: string } | { type: "error", message: string }
 
-// ---------- Slice 13: system design board ----------
-
-export type BoardKind = "client" | "server" | "database" | "cache" | "queue" | "storage" | "service" | "screen" | "other";
-export const BOARD_KINDS: { id: BoardKind; label: string }[] = [
-  { id: "client", label: "Client" },
-  { id: "server", label: "Server" },
-  { id: "database", label: "Database" },
-  { id: "cache", label: "Cache" },
-  { id: "queue", label: "Queue" },
-  { id: "storage", label: "File storage" },
-  { id: "service", label: "Service" },
-  { id: "screen", label: "Screen" }, // Tier 4 design challenge (user flows)
-  { id: "other", label: "Other" },
-];
-export const BOARD_W = 960;
-export const BOARD_H = 600;
-export const NODE_W = 140;
-export const NODE_H = 56;
-export const MAX_NODES = 30;
-export const MAX_EDGES = 60;
-export const MAX_NODE_LABEL = 40;
-export const MAX_EDGE_LABEL = 30;
-
-export interface BoardNode {
-  id: string;
-  kind: BoardKind;
-  label: string;
-  /** Top-left corner, clamped to [0, BOARD_W - NODE_W] x [0, BOARD_H - NODE_H]. */
-  x: number;
-  y: number;
-}
-export interface BoardEdge {
-  id: string;
-  from: string;
-  to: string;
-  label: string;
-}
-export interface Board {
-  nodes: BoardNode[];
-  edges: BoardEdge[];
-}
-/** Compact wire/storage form. */
-export interface BoardJson {
-  n: [id: string, kind: BoardKind, label: string, x: number, y: number][];
-  e: [from: string, to: string, label: string][];
-}
-// lib/tiers/board.ts exports (engine-builder):
-//   emptyBoard(): Board
-//   addNode(b, kind, label?): { board: Board; id: string }   // ids n1, n2...; placed on a free grid slot
-//   moveNode(b, id, dx, dy): Board; setNodePosition(b, id, x, y): Board; renameNode(b, id, label): Board
-//   removeNode(b, id): Board; connect(b, from, to, label?): Board; removeEdge(b, id): Board
-//   toJson(b): BoardJson; fromJson(raw: unknown): Board | null; describe(b): string
-
-// ---------- Round panels (components/tiers/interview/CodingRound.tsx, DesignRound.tsx) ----------
+// ---------- Round panels (components/tiers/interview/CodingRound.tsx, SqlRound.tsx) ----------
 
 export interface RoundPanelProps {
   initialLanguage?: CodeLanguage;
   runnableLanguages?: CodeLanguage[];
   session: InterviewSession;
-  /** Persist an updated session (the shell saves it to is:interviews). */
+  /** Persist an updated session (Practice saves the whole session). */
   onUpdate: (s: InterviewSession) => void;
-  /** Calls /api/interview for `s` (buildRequest + applyReply + save are done by the shell). Null = failed; the shell shows the message. */
+  /** Calls /api/interview for `s` (Practice builds the request and applies the reply). Null = failed; the shell shows the message. */
   ask: (s: InterviewSession, ask: InterviewAsk) => Promise<InterviewSession | null>;
   /** True while a call is in flight. */
   busy: boolean;
-  /** Practice sessions: skips this question (shown next to Hint). Omitted in the single-round flow. */
+  /** Practice sessions: skips this question (shown next to Hint). */
   onSkip?: () => void;
 }
 
-// ---------- v3: continuous practice sessions + question bank (interview stream owns after setup) ----------
+// ---------- continuous practice sessions + question bank (interview stream owns after setup) ----------
 export type RoundKind = InterviewRound;
 export type SessionLanguage = "python" | "typescript" | "sql" | "java" | "cpp" | "go" | "javascript";
 
@@ -529,7 +428,7 @@ export interface SessionTurn {
   hintsUsed: number;
   skipped: boolean;
   feedback?: AnswerFeedback;
-  /** v3: bank/app metadata for the recap, and follow-ups asked after the main answer. */
+  /** Bank/app metadata for the recap, and follow-ups asked after the main answer. */
   title?: string;
   problemId?: string;
   url?: string;

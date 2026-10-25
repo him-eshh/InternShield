@@ -1,12 +1,13 @@
-// v2 interview scorecard (findings 04 sections 0, 2b, (c) #1). Pure.
+// Interview scorecard (findings 04 sections 0, 2b, (c) #1). Pure.
 // Bands come from code-measured signals; the AI only adds quotes (already checked word for word by validateFeedback).
 // Evidence-or-cap: an AI-judged axis without a quote is capped at "Developing".
 import { lpTags } from "./presets";
 import { checkTurn } from "./scripted";
+import { words } from "./sessionFeedback";
 import { QUESTIONS_PER_ROUND, type InterviewSession, type ScoreBand, type Scorecard } from "./types";
 
 type Axis = Scorecard["axes"][number];
-export const BANDS: ScoreBand[] = ["Strong", "Solid", "Developing", "Not yet"];
+const BANDS: ScoreBand[] = ["Strong", "Solid", "Developing", "Not yet"];
 
 const DRILLS: Record<string, string> = {
   coding: "Do one more problem and get every hidden test to pass.",
@@ -32,7 +33,6 @@ function ratioBand(r: number, hi = 1, mid = 0.75, lo = 0.4): ScoreBand {
   return "Not yet";
 }
 const worse = (a: ScoreBand, b: ScoreBand): ScoreBand => (BANDS.indexOf(a) >= BANDS.indexOf(b) ? a : b);
-const words = (s: string) => (s.match(/[\p{L}\p{N}'’]+/gu) ?? []).length;
 const HAS_NUMBER = /\d|%|\b(?:one|two|three|four|five|six|seven|eight|nine|ten|hundred|thousand|million|billion|half|double|twice)\b/i;
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
@@ -137,17 +137,6 @@ function behavioralAxes(s: InterviewSession, quotes: string[]): Axis[] {
   ];
 }
 
-function boardAxes(s: InterviewSession): Axis[] {
-  const nodes = s.board?.n.length ?? 0;
-  const edges = s.board?.e.length ?? 0;
-  return [
-    axis("components", "Components", ratioBand(nodes, 6, 4, 2), [`${plural(nodes, "part")} on the board`]),
-    axis("connections", "Connections", nodes > 1 ? ratioBand(edges / (nodes - 1), 1, 0.5, 0) : "Not yet", [`${plural(edges, "connection")}`]),
-    depth(s),
-    completeness(s),
-  ];
-}
-
 /** The scorecard for a finished session, or null when there is nothing to grade. */
 export function buildScorecard(s: InterviewSession): Scorecard | null {
   if (!s.turns.length && !s.code) return null;
@@ -155,28 +144,9 @@ export function buildScorecard(s: InterviewSession): Scorecard | null {
   let axes: Axis[];
   if (s.round === "coding" || s.round === "debugging") axes = techAxes(s, quotes);
   else if (s.round === "behavioral") axes = behavioralAxes(s, quotes);
-  else if (s.round === "design" || s.round === "challenge") axes = boardAxes(s);
-  else if (s.round === "case" || s.round === "finance") axes = [...checkedAxes(s), depth(s), completeness(s)];
-  else axes = [numbers(s), depth(s), completeness(s)]; // screen, portfolio
+  else if (s.round === "case") axes = [...checkedAxes(s), depth(s), completeness(s)];
+  else axes = [numbers(s), depth(s), completeness(s)]; // screen, design, portfolio
   // Weakest axis (first on ties) picks the drill; all Strong -> no drill, the UI falls back to the AI's tip.
   const weakest = axes.reduce((w, a) => (BANDS.indexOf(a.band) > BANDS.indexOf(w.band) ? a : w), axes[0]);
   return { axes, ...(weakest.band !== "Strong" ? { nextDrill: DRILLS[weakest.id] } : {}) };
-}
-
-/** [start, end) of the quote inside the answer, ignoring spacing, case and curly quotes; null if not found. */
-export function findQuote(answer: string, quote: string): [number, number] | null {
-  const q = quote.trim();
-  if (q.length < 3) return null;
-  const src = q
-    .split(/\s+/)
-    .map((w) =>
-      w
-        .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-        .replace(/['‘’‚‛′]/g, "['‘’‚‛′]")
-        .replace(/["“”„‟″]/g, '["“”„‟″]')
-        .replace(/[-–—]/g, "[-–—]"),
-    )
-    .join("\\s+");
-  const m = new RegExp(src, "i").exec(answer);
-  return m ? [m.index, m.index + m[0].length] : null;
 }

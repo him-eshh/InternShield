@@ -2,7 +2,7 @@
 // Shown at medium/high only; never changes the score. URLs are the ones Research checked.
 import type { RiskLevel } from "@/lib/types";
 
-export interface RecoveryStep {
+interface RecoveryStep {
   id: string;
   title: string;
   body: string;

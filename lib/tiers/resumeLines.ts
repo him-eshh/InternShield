@@ -1,7 +1,7 @@
 // Bug E: rebuild resume lines from PDF text items and mammoth HTML. Pure; no DOM globals at import time.
 
 export type PdfItem = { str: string; transform: number[]; width?: number; hasEOL?: boolean };
-export type LineKind = "heading" | "bullet" | "contact" | "text";
+type LineKind = "heading" | "bullet" | "contact" | "text";
 
 type Row = { y: number; h: number; items: { x: number; w: number; str: string; eol: boolean }[] };
 

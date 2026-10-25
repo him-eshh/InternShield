@@ -1,4 +1,4 @@
-// Resume header detection (shared by resumeModel). Rewording and tailored-line storage moved to the v3 resume pipeline.
+// Resume header detection (shared by resumeModel). Rewording and tailored-line storage moved to the resume pipeline.
 
 const BULLET = /^[•\-*●▪◦‣·–]\s*/;
 const HEADER_WORDS =

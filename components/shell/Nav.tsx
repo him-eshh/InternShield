@@ -8,10 +8,10 @@ import { usePathname } from "next/navigation";
 import Logo from "../Logo";
 import ThemeToggle from "../ThemeToggle";
 
-export type Tool = "check" | "tailor" | "practice" | "neutral";
+type Tool = "check" | "tailor" | "practice" | "neutral";
 type Tab = { href: string; label: string; Icon: LucideIcon; tool: Tool };
 
-export const TABS: Tab[] = [
+const TABS: Tab[] = [
   { href: "/", label: "Home", Icon: House, tool: "neutral" },
   { href: "/check", label: "Check", Icon: ShieldCheck, tool: "check" },
   { href: "/tailor", label: "Tailor", Icon: FilePen, tool: "tailor" },

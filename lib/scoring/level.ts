@@ -11,7 +11,7 @@ const LEVEL_YEARS: Record<UserLevel, number> = {
   new_grad: 1,
 };
 
-export const LEVEL_WORDS: Record<UserLevel, string> = {
+const LEVEL_WORDS: Record<UserLevel, string> = {
   freshman: "first-year student",
   sophomore: "second-year student",
   junior: "third-year student",
@@ -26,7 +26,7 @@ const YEARS_REQUIRED = [/\b(\d{1,2})\s*\+?\s*(?:or more\s+)?years?['’]?\s+(?:o
 const DATE_RANGE = /\b((?:19|20)\d{2})\s*(?:-|–|—|to)\s*((?:19|20)\d{2}|present|current|now)\b/gi;
 
 /** Rough years of experience: sum of date ranges on the resume, capped. */
-export function resumeYears(resume: string, now = new Date()): number {
+function resumeYears(resume: string, now = new Date()): number {
   let total = 0;
   for (const m of resume.matchAll(DATE_RANGE)) {
     const from = Number(m[1]);

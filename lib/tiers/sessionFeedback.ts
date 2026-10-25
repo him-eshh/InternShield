@@ -4,7 +4,7 @@ import { getSqlProblem } from "./sql";
 import type { Current, PlanItem } from "./session";
 import type { AnswerFeedback, AnswerLevel, RoundKind, SessionSummary, SessionTurn } from "./types";
 
-export type QuestionType = "coding" | "sql" | "behavioral" | "discussion";
+type QuestionType = "coding" | "sql" | "behavioral" | "discussion";
 export interface Check {
   id: string;
   ok: boolean;
@@ -16,7 +16,7 @@ export interface Check {
 export function questionType(item: Pick<PlanItem, "kind" | "round">): QuestionType {
   if (item.kind === "sql" || item.round === "sql") return "sql";
   if (item.kind === "code" || item.kind === "debug" || item.round === "coding" || item.round === "debugging") return "coding";
-  if (item.round === "design" || item.round === "case" || item.round === "challenge" || item.round === "finance") return "discussion";
+  if (item.round === "design" || item.round === "case") return "discussion";
   return "behavioral";
 }
 export const TYPE_LABEL: Record<QuestionType, string> = { coding: "Code review", sql: "SQL review", behavioral: "Answer feedback (STAR)", discussion: "Answer feedback" };
@@ -72,7 +72,8 @@ export function fitFollowUp(type: QuestionType, q: string, key: string, asked: s
 
 // ---------- Checks ----------
 const approachOf = (answer: string) => answer.split(/\n\n(?:Code|Query):\n/)[0].trim();
-const words = (s: string) => (s.match(/[\p{L}\p{N}'’]+/gu) ?? []).length;
+/** Number of words in an answer (letters/digits with inner apostrophes). */
+export const words = (s: string) => (s.match(/[\p{L}\p{N}'’]+/gu) ?? []).length;
 const HAS_NUMBER = /\d|%|\b(?:one|two|three|four|five|ten|hundred|thousand|million|half|double|twice)\b/i;
 const EDGE = /edge|empty|none|null|zero|negative|duplicate|single|corner|boundary|one element|no match|nothing/i;
 const COMPLEXITY = /\bO\s*\(|linear|quadratic|constant time|logarithmic|log n|time complexity|space complexity/i;
@@ -171,7 +172,7 @@ export function localReview(c: Current): { feedback: AnswerFeedback; level: Answ
 }
 
 // ---------- Summary numbers ----------
-export interface RoundNumbers {
+interface RoundNumbers {
   round: RoundKind;
   asked: number;
   answered: number;
@@ -179,7 +180,7 @@ export interface RoundNumbers {
   solved: { done: number; of: number } | null;
   tests: { passed: number; total: number } | null;
 }
-export interface SummaryNumbers extends Omit<RoundNumbers, "round"> {
+interface SummaryNumbers extends Omit<RoundNumbers, "round"> {
   skipped: number;
   seconds: number;
   hints: number;

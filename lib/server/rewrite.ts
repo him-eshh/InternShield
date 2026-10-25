@@ -23,7 +23,7 @@ import { callGroq } from "./groq";
 import { takeRewrite } from "./guard";
 import { done, failed, fromOutcome, MESSAGES } from "./http";
 
-export const DEFAULT_INSTRUCTION = "Make it match the posting";
+const DEFAULT_INSTRUCTION = "Make it match the posting";
 const MAX_FIELD = 120;
 
 const SYSTEM =
@@ -64,7 +64,7 @@ export function parseOptions(v: unknown): TailorOptions | null {
     strength: strength as TailorOptions["strength"],
     keepLength,
   };
-  // v2 fields: only copied when sent, so v1 requests read exactly as before.
+  // Optional fields: only copied when sent, so a bare request reads exactly as before.
   if (o.level !== undefined) {
     if (!(TARGET_LEVELS as readonly unknown[]).includes(o.level)) return null;
     out.level = o.level as TargetLevel;
@@ -126,7 +126,7 @@ export function styleLines(o: TailorOptions): string[] {
 }
 
 /** Terms the user confirmed: short strings only, deduped, capped. Anything else is a bad request. */
-export function parseFacts(v: unknown): string[] | null {
+function parseFacts(v: unknown): string[] | null {
   if (v === undefined || v === null) return [];
   if (!Array.isArray(v) || v.length > MAX_FACTS) return null;
   if (!v.every((f) => typeof f === "string" && f.trim().length > 0 && f.length <= MAX_FACT_CHARS)) return null;
@@ -174,7 +174,7 @@ export function parseMulti(raw: string, original: string): { options: string[]; 
   return options.length ? { options, heldBack } : null;
 }
 
-export function parseRewrite(body: Record<string, unknown>): RewriteRequest | null {
+function parseRewrite(body: Record<string, unknown>): RewriteRequest | null {
   const text = str(body.text, 1, MAX_REWRITE_CHARS);
   if (!text) return null;
   const options = parseOptions(body.options);

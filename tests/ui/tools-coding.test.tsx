@@ -15,7 +15,6 @@ const session: InterviewSession = {
   seed: 1,
   problemId: "count-vowels",
   code: { problemId: "count-vowels", language: "python", code: "x", passed: 6, total: 6 },
-  board: null,
   hints: [],
   feedback: null,
   status: "active",

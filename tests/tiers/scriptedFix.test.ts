@@ -1,9 +1,9 @@
 // Regression tests for devpost/fix-log.md B10 (rubric matching) and B11 (number reading).
 import { describe, expect, it } from "vitest";
-import { CASES, FINANCE_BANK, checkAnswer, extractNumber } from "@/lib/tiers/scripted";
+import { CASES, checkAnswer, extractNumber } from "@/lib/tiers/scripted";
 import type { AnswerCheck, ScriptedQuestion } from "@/lib/tiers/types";
 
-const ALL: ScriptedQuestion[] = [...CASES.flatMap((c) => c.questions), ...FINANCE_BANK];
+const ALL: ScriptedQuestion[] = CASES.flatMap((c) => c.questions);
 const byId = (id: string) => ALL.find((q) => q.id === id)!;
 
 describe("B11 extractNumber: units, words, percents", () => {
@@ -82,8 +82,10 @@ describe("B11 checkAnswer number: tolerance unchanged", () => {
   });
 
   it("percent answers keep the percent value", () => {
-    expect(checkAnswer(byId("fin-wacc-math").check!, "7.5 percent")).toMatchObject({ found: 7.5, correct: true });
-    expect(checkAnswer(byId("fin-margin-math").check!, "about twenty-five percent")).toMatchObject({ found: 25, correct: true });
+    const rate: AnswerCheck = { kind: "number", expected: 7.5, tolerance: 0.05, unit: "%" };
+    const margin: AnswerCheck = { kind: "number", expected: 25, tolerance: 0.05, unit: "%" };
+    expect(checkAnswer(rate, "7.5 percent")).toMatchObject({ found: 7.5, correct: true });
+    expect(checkAnswer(margin, "about twenty-five percent")).toMatchObject({ found: 25, correct: true });
   });
 });
 

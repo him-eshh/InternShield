@@ -20,7 +20,7 @@ export function StatusLine({ text, result, ok }: { text: string; result: boolean
   );
 }
 
-export interface ActionBarProps {
+interface ActionBarProps {
   runLabel: string;
   running: string | null;
   disabled: boolean;

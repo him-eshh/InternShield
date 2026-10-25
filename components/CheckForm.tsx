@@ -3,7 +3,6 @@ import { MessageSquareText, ChevronRight } from "lucide-react";
 import { useRef, useState } from "react";
 import { autofill } from "@/lib/autofill";
 import { EXAMPLES } from "@/lib/examples";
-import { TIER_FLAGS } from "@/lib/tiers/flags";
 import { MAX_MESSAGE_CHARS, type Source, type Stage } from "@/lib/types";
 import ScreenshotUpload from "./tiers/ScreenshotUpload";
 import { btnPrimary, linkClass, pillOff, pillOn } from "./ui";
@@ -32,7 +31,7 @@ const STAGES: { value: Stage; label: string }[] = [
 
 type Tracked = "sender" | "company";
 
-export const MIN_MESSAGE_CHARS = 20;
+const MIN_MESSAGE_CHARS = 20;
 
 /** Inline hint for text that can't be checked yet; null when it can. */
 export function messageIssue(text: string): string | null {
@@ -147,13 +146,11 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
             {example && <FilledTag label="Example" />}
             {fromShot && !example && <FilledTag label="from screenshot" />}
           </label>
-          {TIER_FLAGS.screenshot && (
-            <ScreenshotUpload
-              onText={(t) => {
-                onTextChange(t, true);
-              }}
-            />
-          )}
+          <ScreenshotUpload
+            onText={(t) => {
+              onTextChange(t, true);
+            }}
+          />
         </div>
         <textarea
           id="message"

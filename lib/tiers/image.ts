@@ -27,7 +27,7 @@ async function decode(file: File): Promise<{ source: CanvasImageSource; width: n
   }
 }
 
-export type PreparedStrips = { ok: true; images: string[] } | { ok: false; code: "BAD_INPUT" | "TOO_LARGE" | "TOO_TALL" };
+type PreparedStrips = { ok: true; images: string[] } | { ok: false; code: "BAD_INPUT" | "TOO_LARGE" | "TOO_TALL" };
 
 /** Tall-screenshot path: scale to the planned width, cut at quiet seams, encode each strip as JPEG. Short images give 1 strip. */
 export async function prepareStrips(file: File): Promise<PreparedStrips> {

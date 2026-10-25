@@ -3,9 +3,7 @@
 import type { CompanyData } from "@/lib/types";
 import { cacheGet, cacheSet, DAY } from "./cache";
 import { takeWikidata } from "./guard";
-import { getDomain } from "tldts";
-
-const registrable = (url: string) => getDomain(url);
+import { registrableDomain } from "@/lib/scoring/domains";
 
 const API = "https://www.wikidata.org/w/api.php";
 const TIMEOUT_MS = 3000;
@@ -53,7 +51,7 @@ export async function wikidataCompany(company: string): Promise<CompanyData | nu
       const sites = (e.claims?.P856 ?? []).filter((c) => c.rank !== "deprecated");
       const preferred = sites.find((c) => c.rank === "preferred") ?? sites[0];
       const url = preferred?.mainsnak?.datavalue?.value;
-      const domain = typeof url === "string" ? registrable(url) : null;
+      const domain = typeof url === "string" ? registrableDomain(url) : null;
       if (domain) return remember(key, { officialDomain: domain, careersUrl: null });
     }
     return remember(key, null);

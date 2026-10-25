@@ -12,7 +12,7 @@ const SYSTEM =
 
 const IMAGE_RE = /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
 
-export const NO_TEXT = "We couldn't find any text in that image.";
+const NO_TEXT = "We couldn't find any text in that image.";
 export const TRANSCRIBE_FAILED = "We couldn't read that screenshot right now. Try again in a moment, or paste the text instead.";
 const BAD_IMAGE = "That doesn't look like a PNG, JPEG or WebP image. Try another screenshot, or paste the text instead.";
 const BIG_IMAGE = "That screenshot is too large. Try a smaller one, or paste the text instead.";

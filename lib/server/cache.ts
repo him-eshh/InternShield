@@ -3,7 +3,6 @@ const store = new Map<string, { v: unknown; exp: number }>();
 const counters = new Map<string, { count: number; resetAt: number }>();
 
 export const MINUTE = 60_000;
-export const HOUR = 3_600_000;
 export const DAY = 86_400_000;
 
 export function cacheGet<T>(key: string): T | undefined {

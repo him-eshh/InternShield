@@ -1,16 +1,13 @@
 // Pure view helpers for the report screen (ordering, short copy, ring ticks).
+import { severityOf as flagSeverity } from "@/lib/scoring/flagInfo";
 import type { Flag, Report, RiskLevel } from "@/lib/types";
 
 export type Severity = "critical" | "high" | "medium" | "low";
 const RANK: Record<Severity, number> = { critical: 0, high: 1, medium: 2, low: 3 };
 
-/** Severity of a red flag. Uses the flag's own value; older fixtures fall back to critical/points. */
+/** Severity of a flag. Uses the flag's own value; older fixtures get the same default lib/scoring/flagInfo assigns. */
 export function severityOf(flag: Flag): Severity {
-  if (flag.severity && flag.severity in RANK) return flag.severity;
-  if (flag.critical) return "critical";
-  if (flag.points >= 25) return "high";
-  if (flag.points >= 10) return "medium";
-  return "low";
+  return flag.severity && flag.severity in RANK ? flag.severity : flagSeverity(flag);
 }
 
 export const SEVERITY_LABEL: Record<Severity, string> = { critical: "Critical", high: "High", medium: "Medium", low: "Low" };

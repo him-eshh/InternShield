@@ -9,18 +9,13 @@ vi.mock("groq-sdk", () => ({
     chat = { completions: { create: h.create } };
   },
 }));
-vi.mock("@/lib/tiers/flags", () => ({
-  TIER_FLAGS: { resume: true, tracker: true, screenshot: true, interview: true, coding: true, design: true, case: true, finance: true, portfolio: true, challenge: true },
-  v2RoundOn: () => true,
-}));
-
 import { POST } from "@/app/api/interview/route";
 
 const context = { company: null, role: null, description: null, resume: null, field: "tech" };
 const reviewJson = JSON.stringify({ summary: "ok", level: "ok", followUp: "", items: [{ index: 0, strength: "s", improve: "i", quote: "", star: { situation: false, task: false, action: false, result: false } }] });
 let ip = 0;
 const review = (round: string, extra: Record<string, unknown> = {}) =>
-  POST(req("interview", { ask: "review", round, context, turns: [{ question: "Q", answer: "An answer" }], used: 1, board: null, problem: null, practice: true, followUpsLeft: 2, code: null, ...extra }, { ip: `16.0.0.${++ip}` }));
+  POST(req("interview", { ask: "review", round, context, turns: [{ question: "Q", answer: "An answer" }], used: 1, problem: null, practice: true, followUpsLeft: 2, code: null, ...extra }, { ip: `16.0.0.${++ip}` }));
 const systemOf = () => h.create.mock.calls[0][0].messages[0].content as string;
 
 beforeEach(() => {

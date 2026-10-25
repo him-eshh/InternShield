@@ -3,10 +3,10 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Code2, Database, Bug, Network, MessagesSquare, Phone, ChartNoAxesCombined, PanelsTopLeft, ArrowRight, Check, ChevronDown, Info, Search, X, TrendingUp } from "lucide-react";
 import { bankCompanies, bankTopics, filterBank } from "@/lib/tiers/bank";
 import { companyScope, groupTopics } from "@/lib/tiers/bankPool";
-import { defaultConfig, roundLabel, SETUP_ROUNDS } from "@/lib/tiers/session";
+import { defaultConfig, SETUP_ROUNDS } from "@/lib/tiers/session";
 import { intelRounds, intelValues, presetForCompany } from "@/lib/tiers/sessionIntel";
 import { PRESETS } from "@/lib/tiers/presets";
-import type { BankQuestion, SessionConfig, SessionLanguage } from "@/lib/tiers/types";
+import { roundLabel, type BankQuestion, type SessionConfig, type SessionLanguage } from "@/lib/tiers/types";
 import type { CompanyIntel } from "@/lib/server/companyIntel";
 import IntelCard from "./IntelCard";
 import { btnPrimary, btnSecondary } from "../ui";
@@ -26,7 +26,7 @@ function SelectField({ label, value, onChange, children, className = "" }: { lab
   );
 }
 
-export default function Setup({ bank, initial, onStart }: { bank: BankQuestion[]; initial?: SessionConfig; onStart: (config: SessionConfig, values: string[]) => void }) {
+export default function Setup({ bank, initial, autoResearch = true, onStart }: { bank: BankQuestion[]; initial?: SessionConfig; /** Look up a prefilled company on mount. Off for a company that only came from the profile (no surprise lookups). */ autoResearch?: boolean; onStart: (config: SessionConfig, values: string[]) => void }) {
   const [config, setConfig] = useState(() => initial ?? defaultConfig());
   const [customError, setCustomError] = useState("");
   const [custom, setCustom] = useState(config.customQuestions.join("\n"));
@@ -43,7 +43,7 @@ export default function Setup({ bank, initial, onStart }: { bank: BankQuestion[]
   function change(patch: Partial<SessionConfig>) { setConfig((c) => ({ ...c, ...patch })); }
   const toggleTopic = (t: string) => change({ topics: config.topics.includes(t) ? config.topics.filter((x) => x !== t) : [...config.topics, t] });
   useEffect(() => {
-    if (!initial?.company) return;
+    if (!autoResearch || !initial?.company) return;
     // A prefilled company is researched once; typing uses the explicit research button.
     void research(initial.company, initial.role);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- initial target is fixed for this setup mount

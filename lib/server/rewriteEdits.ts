@@ -1,5 +1,5 @@
 import { attachResumeBoxes, fittingResumeEdits } from "@/lib/tiers/resumeWidth";
-// v3 suggestions: selected existing bullets, shared deterministic checks before returning JSON.
+// Suggestions: selected existing bullets, shared deterministic checks before returning JSON.
 import { canon } from "@/lib/tiers/resumeGuard";
 import { checkedEdits, editableLines } from "@/lib/tiers/resumeEdits";
 import { parseTextResume, docLines } from "@/lib/tiers/resumeModel";
@@ -30,7 +30,7 @@ const SCHEMA = {
   } } },
 };
 
-export function parseEditsRequest(body: Record<string, unknown>) {
+function parseEditsRequest(body: Record<string, unknown>) {
   if (typeof body.resume !== "string" || !body.resume.trim() || body.resume.length > 10000) return null;
   if (typeof body.posting !== "string" || !body.posting.trim() || body.posting.length > MAX_JOB_CHARS) return null;
   for (const key of ["company", "role"] as const) {

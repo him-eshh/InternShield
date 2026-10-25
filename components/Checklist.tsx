@@ -13,13 +13,13 @@ export interface LineInfo {
   code?: ApiErrorCode; // set once App passes it through (Needs integration)
 }
 
-export const KEYS_IN_ORDER: StepKey[] = ["extract", "company", "sender", "posting", "explain"];
+const KEYS_IN_ORDER: StepKey[] = ["extract", "company", "sender", "posting", "explain"];
 
 /** Spinners wait this long before showing, so instant steps never flicker. */
-export const SHOW_DELAY_MS = 200;
+const SHOW_DELAY_MS = 200;
 /** A step running longer than this gets the slow-step note. */
-export const SLOW_AFTER_MS = 4000;
-export const SLOW_COPY = "Still checking…";
+const SLOW_AFTER_MS = 4000;
+const SLOW_COPY = "Still checking…";
 
 export function initialLines(): Record<StepKey, LineInfo> {
   return { extract: { state: "pending" }, company: { state: "pending" }, sender: { state: "pending" }, posting: { state: "pending" }, explain: { state: "pending" } };

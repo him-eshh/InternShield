@@ -1,4 +1,4 @@
-/* InternShield v3 theme: the ONE file that holds design tokens (devpost/v3-brief-setup.md > Design system).
+/* InternShield theme: the ONE file that holds design tokens (devpost/design-direction.md).
    Components never use hex colors; they use these variables (or the Tailwind names in globals.css).
    References: Linear (polish, motion, dark elevation from one hue), Raycast (vivid per-tool color, crisp icons),
    Duolingo (session flow, progress bars, end-of-session moment), Notion (home and onboarding clarity).
@@ -48,7 +48,7 @@
   --bad-tint: #fcebe8;
 
   /* Neutral ink ramp (Radix step semantics: 1-2 bg, 3-5 states, 6-8 borders, 9-10 solids, 11-12 text).
-     Old --blue-N names alias it so v2 report chrome turns neutral. */
+     Old --blue-N names alias it so the report chrome turns neutral. */
   --ink-1: #fbfbfd; --ink-2: #f5f6f9; --ink-3: #eceef4; --ink-4: #e1e5ee; --ink-5: #d5dae6; --ink-6: #c5ccdb;
   --ink-7: #aeb7ca; --ink-8: #8a95ad; --ink-9: #1e2a47; --ink-10: #2b385a; --ink-11: #3a4766; --ink-12: #141c30;
 
@@ -193,7 +193,7 @@
   --accent-contrast: var(--on-tool);
 }
 
-/* Old raw names some v2 components read with var() (they were never defined before v3). */
+/* Old raw names some components read with var() (they were never defined originally). */
 /* var() aliases resolve on <html>, which also carries .dark, so one :root block serves both themes. */
 :root {
   --text: var(--fg);

@@ -5,7 +5,7 @@
 import { filterBank, normCompany, type BankFilter } from "./bank";
 import type { BankQuestion } from "./types";
 
-export interface CompanyFamily {
+interface CompanyFamily {
   id: string;
   label: string;
   /** Lowercase names. A company outside the bank lands in a family by name; members with questions are borrowed from. */
@@ -36,7 +36,7 @@ export function companyFamily(name: string): CompanyFamily | null {
   return kw ? (FAMILIES.find((f) => f.id === kw[1]) ?? null) : null;
 }
 
-export interface CompanyScope {
+interface CompanyScope {
   /** none: no company chosen; exact: the bank tags it; similar: a company group stands in; top: the most-asked questions overall stand in. */
   kind: "none" | "exact" | "similar" | "top";
   /** Normalized company names whose questions are in scope (empty for none and top). */
@@ -79,14 +79,7 @@ export function askedScore(q: BankQuestion, companies: string[] = []): number {
 }
 const byAsked = (companies: string[]) => (a: BankQuestion, b: BankQuestion) => askedScore(b, companies) - askedScore(a, companies) || a.id.localeCompare(b.id, "en", { numeric: true });
 
-/** Questions most asked at `company` first (or across all lists when no company is given). */
-export function rankMostAsked(bank: BankQuestion[], company?: string | null): BankQuestion[] {
-  const scope = companyScope(bank, company);
-  const pool = scope.kind === "exact" || scope.kind === "similar" ? taggedWith(bank, scope.companies) : bank;
-  return [...pool].sort(byAsked(scope.companies));
-}
-
-export interface PoolPick {
+interface PoolPick {
   pool: BankQuestion[];
   scope: CompanyScope;
   /** What was substituted, in plain words. */

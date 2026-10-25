@@ -7,16 +7,16 @@ import { docLines, docText, sectionOf } from "./resumeModel";
 import { adjectiveStack, bannedIn, emDashCount, styleIssues } from "./resumeTells";
 import { LINE_GROWTH, MAX_EDITS, TOTAL_GROWTH, type ResumeDoc, type ResumeLine, type ResumeEdit, type ResumeSource } from "./resumeTypes";
 
-export type EditFailure = "empty" | "unchanged" | "multiline" | "length" | "rewrite" | "fact" | "tell" | "dash" | "stack" | "style" | "width";
+type EditFailure = "empty" | "unchanged" | "multiline" | "length" | "rewrite" | "fact" | "tell" | "dash" | "stack" | "style" | "width";
 
-export interface EditCheck {
+interface EditCheck {
   ok: boolean;
   failures: EditFailure[];
   /** Short detail for logs and the retry prompt ("number 40%", "word leveraged"). */
   details: string[];
 }
 
-export interface CheckInput {
+interface CheckInput {
   /** The whole resume as text (facts live here). */
   resume: string;
   original: string;
@@ -30,7 +30,7 @@ export interface CheckInput {
 const words = (s: string) => canon(s).trim().split(" ").filter(Boolean);
 
 /** The share of the original's words that survive in the proposed line (0..1). */
-export function keptShare(original: string, proposed: string): number {
+function keptShare(original: string, proposed: string): number {
   const a = words(original);
   if (!a.length) return 1;
   const b = new Set(words(proposed));

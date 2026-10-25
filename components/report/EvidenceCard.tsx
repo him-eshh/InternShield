@@ -13,7 +13,7 @@ const BADGE: Record<Severity, string> = {
   low: "bg-sunken text-fg-2",
 };
 
-export const flagDomId = (flag: Flag) => `flag-${flag.id}`;
+const flagDomId = (flag: Flag) => `flag-${flag.id}`;
 
 // Always visible: no scroll-reveal (findings 05 standing #12). Severity is spelled out, never color alone.
 export default function EvidenceCard({ flag, n }: { flag: Flag; n?: number }) {

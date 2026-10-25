@@ -19,7 +19,7 @@ interface Para {
   xml: string;
 }
 /** Every paragraph of document.xml in order (empty ones included, so indexes stay stable). */
-export function docxParagraphs(xml: string): Para[] {
+function docxParagraphs(xml: string): Para[] {
   return [...xml.matchAll(PARA_RE)].map((m) => ({ start: m.index!, end: m.index! + m[0].length, xml: m[0] }));
 }
 
@@ -39,7 +39,7 @@ function paragraphRuns(pxml: string): Run[] {
   return runs;
 }
 
-export function paragraphText(pxml: string): string {
+function paragraphText(pxml: string): string {
   return paragraphRuns(pxml).map((r) => r.text).join("");
 }
 
@@ -119,7 +119,7 @@ export function replaceParagraphText(pxml: string, next: string): string {
   return out + pxml.slice(pos);
 }
 
-export interface DocxEdit {
+interface DocxEdit {
   paragraph: number;
   text: string;
 }

@@ -60,8 +60,3 @@ export function keywordGap(posting: string, resume: string, facts: string[] = []
   for (const { preferred: p, ...t } of seen.values()) (p ? preferred : required).push(t);
   return { required, preferred };
 }
-
-/** "6 of 8 required terms in your resume" (an alias counts as in it). */
-export function gapCount(terms: GapTerm[]): { have: number; total: number } {
-  return { have: terms.filter((t) => t.bucket !== "missing").length, total: terms.length };
-}

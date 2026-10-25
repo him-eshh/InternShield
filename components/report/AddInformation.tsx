@@ -5,7 +5,6 @@ import { impactCopy, type AnswerImpact } from "@/lib/impact";
 import ImpactCard from "./ImpactCard";
 import { MAX_MESSAGE_CHARS } from "@/lib/types";
 import ScreenshotUpload from "../tiers/ScreenshotUpload";
-import { TIER_FLAGS } from "@/lib/tiers/flags";
 import { btnSecondary } from "../ui";
 
 /** Keep additions next to their confirmation; the report and answered questions stay mounted. */
@@ -27,7 +26,7 @@ export default function AddInformation({ busy, note, onSave }: {
       }}>
         <div><label htmlFor="additional-message">Another message</label>
           <textarea id="additional-message" value={text} maxLength={MAX_MESSAGE_CHARS} onChange={(e) => setText(e.target.value)} rows={4} className={field} placeholder="Paste the next message" />
-          {TIER_FLAGS.screenshot && <ScreenshotUpload disabled={busy} onText={(value) => setText(value.slice(0, MAX_MESSAGE_CHARS))} />}
+          <ScreenshotUpload disabled={busy} onText={(value) => setText(value.slice(0, MAX_MESSAGE_CHARS))} />
         </div>
         <div><label htmlFor="additional-sender">Sender&apos;s email or phone</label><input id="additional-sender" value={sender} maxLength={200} onChange={(e) => setSender(e.target.value)} className={field} placeholder="name@company.com" /></div>
         <button type="submit" disabled={busy} className={btnSecondary}>{busy ? "Checking addition..." : "Update this check"}</button>

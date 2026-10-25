@@ -84,7 +84,7 @@ export function fallbackExplanation({ level, flags }: ExplainRequest): string {
   return hasBannedWord(text) ? [verdict, next].join("\n\n") : text;
 }
 
-export interface ExplanationSection {
+interface ExplanationSection {
   title: string;
   /** "text" = short sentences shown as a paragraph; "list" = bullet points. */
   kind: "text" | "list";
@@ -105,13 +105,6 @@ export function explanationSections(text: string): ExplanationSection[] | null {
     if (items.join("").trim()) out.push({ title, kind: isList ? "list" : "text", items });
   }
   return out.length ? out : null;
-}
-
-/** Plain text for copying or announcing: titles become "Title:" lines, bullets stay as "- ". */
-export function explanationPlain(text: string): string {
-  const secs = explanationSections(text);
-  if (!secs) return text;
-  return secs.map((s) => [s.title ? `${s.title}:` : "", ...(s.kind === "list" ? s.items.map((i) => `- ${i}`) : s.items)].filter(Boolean).join("\n")).join("\n\n");
 }
 
 const QUOTED = /"([^"\n]+)"|“([^”\n]+)”/g;

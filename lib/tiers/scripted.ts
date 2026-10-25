@@ -1,7 +1,7 @@
 // Scripted interview rounds: case and finance (devpost/tier4-spec.md > Scripted rounds). Pure.
 // Every case, question and answer key is made up. Number keys equal the arithmetic from their own prompt.
 import { checkUnit, extractCandidates, formatInUnit, pickFinal } from "./numbers";
-import type { AnswerCheck, CheckResult, InterviewRound, InterviewTurn, ScriptedQuestion } from "./types";
+import type { AnswerCheck, CheckResult, InterviewTurn, ScriptedQuestion } from "./types";
 
 type Point = { label: string; any: string[] };
 
@@ -139,134 +139,9 @@ export const CASES: { id: string; title: string; questions: ScriptedQuestion[] }
   },
 ];
 
-/** Made-up accounting and valuation questions. Numeric ones carry all their data in the prompt. */
-export const FINANCE_BANK: ScriptedQuestion[] = [
-  {
-    id: "fin-three-statements",
-    prompt: "Walk me through the three financial statements and how they link together.",
-    check: rubric([
-      { label: "income statement", any: ["income statement", "p&l", "profit and loss", "profit & loss"] },
-      { label: "balance sheet", any: ["balance sheet", "assets", "liabilit"] },
-      { label: "cash flow statement", any: ["cash flow statement", "statement of cash flows", "cash flow"] },
-      { label: "how they link", any: ["net income flows", "net income goes", "starts with net income", "retained earnings", "ending cash", "cash balance", "flows into", "flows to"] },
-    ]),
-  },
-  {
-    id: "fin-depreciation",
-    prompt: "Depreciation goes up by $10 and the tax rate is 25%. Walk me through the effect on the three statements.",
-    check: rubric([
-      { label: "net income falls by 7.5", any: ["7.5", "7.50"] },
-      { label: "cash goes up by 2.5", any: ["2.5", "2.50", "add back", "added back", "non-cash", "non cash"] },
-      { label: "balance sheet balances", any: ["pp&e", "ppe", "property", "fixed asset", "retained earnings", "balances"] },
-    ]),
-  },
-  {
-    id: "fin-ev-vs-equity",
-    prompt: "What is the difference between enterprise value and equity value?",
-    check: rubric([
-      { label: "enterprise value covers all investors", any: ["all investors", "whole business", "entire business", "debt and equity", "all capital", "core operations", "operating business", "whole company", "entire company"] },
-      { label: "equity value is for shareholders", any: ["shareholder", "stockholder", "equity holder", "owners", "market cap"] },
-      { label: "the bridge: debt and cash", any: ["net debt", "minus cash", "less cash", "subtract cash", "plus debt", "add debt", "debt minus cash", "debt less cash"] },
-    ]),
-  },
-  {
-    id: "fin-dcf",
-    prompt: "Walk me through a discounted cash flow (DCF) valuation.",
-    check: rubric([
-      { label: "project free cash flows", any: ["free cash flow", "fcf", "project", "forecast", "cash flows"] },
-      { label: "discount rate", any: ["discount rate", "wacc", "cost of capital"] },
-      { label: "terminal value", any: ["terminal", "exit multiple", "perpetuity", "gordon"] },
-      { label: "present value to enterprise value", any: ["present value", "pv", "discount back", "sum of", "sum up", "add up", "enterprise value"] },
-    ]),
-  },
-  {
-    id: "fin-wacc-concept",
-    prompt: "What is WACC, and why is it used?",
-    check: rubric([
-      { label: "weighted mix of capital", any: ["weighted", "weight", "mix", "proportion", "blend"] },
-      { label: "cost of equity", any: ["cost of equity", "capm", "beta", "required return"] },
-      { label: "after-tax cost of debt", any: ["cost of debt", "after-tax", "after tax", "tax shield", "interest"] },
-      { label: "used as a discount rate", any: ["discount", "dcf", "hurdle", "present value"] },
-    ]),
-  },
-  {
-    id: "fin-working-capital",
-    prompt: "What is working capital, and why does an increase in it reduce cash flow?",
-    check: rubric([
-      { label: "definition", any: ["current assets", "current liabilit"] },
-      { label: "examples", any: ["receivable", "inventory", "payable", "a/r", "a/p"] },
-      { label: "cash is tied up", any: ["tied up", "uses cash", "use of cash", "less cash", "reduces cash", "not collected", "not yet collected", "haven't collected", "cash out", "spent"] },
-    ]),
-  },
-  {
-    id: "fin-valuation-methods",
-    prompt: "What are the three common ways to value a company?",
-    check: rubric([
-      { label: "DCF", any: ["dcf", "discounted cash flow", "intrinsic"] },
-      { label: "comparable companies", any: ["comparable", "comps", "trading multiple", "peer"] },
-      { label: "precedent transactions", any: ["precedent", "transaction", "acquisition", "m&a", "past deals"] },
-    ]),
-  },
-  {
-    id: "fin-ev-math",
-    prompt:
-      "A small company has an equity value of $800,000, debt of $300,000 and cash of $100,000, with no preferred stock or minority interest. What is its enterprise value? End with your final number.",
-    check: num(1_000_000, "$", 1),
-  },
-  {
-    id: "fin-wacc-math",
-    prompt:
-      "A company is funded 60% by equity and 40% by debt. Its cost of equity is 10%, its pre-tax cost of debt is 5%, and its tax rate is 25%. What is its WACC, in percent? End with your final number.",
-    check: num(7.5, "%", 0.05),
-  },
-  {
-    id: "fin-growth-math",
-    prompt: "A company has revenue of $200,000 this year. If revenue grows 10% a year, what will it be after 2 years? End with your final number.",
-    check: num(242_000, "$", 1),
-  },
-  {
-    id: "fin-margin-math",
-    prompt:
-      "A company has $400,000 of revenue, $240,000 of cost of goods sold and $60,000 of operating expenses. What is its operating margin, in percent? End with your final number.",
-    check: num(25, "%", 0.05),
-  },
-  {
-    id: "fin-multiple-math",
-    prompt:
-      "Similar companies trade at 8 times EBITDA. A company has EBITDA of $250,000, debt of $500,000 and cash of $100,000. What is its implied equity value? End with your final number.",
-    check: num(1_600_000, "$", 1),
-  },
-  {
-    id: "fin-receivables-math",
-    prompt:
-      "During the year a company's accounts receivable rise by $30,000 and nothing else changes. By how many dollars does its cash flow from operations fall? End with your final number.",
-    check: num(30_000, "$", 1),
-  },
-];
+const ALL = CASES.flatMap((c) => c.questions);
 
-/** Same seed rule as interview.ts pick: non-finite -> 0, negative -> absolute value. */
-const seedIndex = (seed: number) => (Number.isFinite(seed) ? Math.abs(Math.floor(seed)) : 0);
-
-/** The local questions for a scripted round, in order. Other rounds: null. Deterministic. */
-export function scriptFor(round: InterviewRound, seed: number): ScriptedQuestion[] | null {
-  const n = seedIndex(seed);
-  if (round === "case") return [...CASES[n % CASES.length].questions];
-  if (round !== "finance") return null;
-  const len = FINANCE_BANK.length;
-  const step = 1 + (Math.floor(n / len) % (len - 1));
-  const picked: number[] = [];
-  let i = n % len;
-  while (picked.length < Math.min(4, len)) {
-    while (picked.includes(i)) i = (i + 1) % len;
-    picked.push(i);
-    i = (i + step) % len;
-  }
-  return picked.map((k) => FINANCE_BANK[k]);
-}
-
-const ALL = [...CASES.flatMap((c) => c.questions), ...FINANCE_BANK];
-
-/** Exact prompt match across CASES and FINANCE_BANK. */
+/** Exact prompt match across CASES. */
 export function findQuestion(prompt: string): ScriptedQuestion | null {
   return ALL.find((q) => q.prompt === prompt) ?? null;
 }
@@ -279,7 +154,7 @@ export function extractNumber(answer: string): number | null {
 }
 
 /** Extra wording per rubric keyword: any point listing the key also accepts these. Data only; keys are lowercase bank keywords. */
-export const SYNONYMS: Record<string, string[]> = {
+const SYNONYMS: Record<string, string[]> = {
   revenue: ["top line", "turnover", "money coming in", "earnings"],
   sales: ["sold", "cups sold", "orders", "transactions", "purchases", "how many cups", "cups per day", "cups a day"],
   price: ["charge", "fee", "willingness to pay"],

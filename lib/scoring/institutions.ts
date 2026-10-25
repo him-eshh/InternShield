@@ -3,7 +3,7 @@
 // Pure text checks. Quotes are always real sentences from the message.
 import { firstMatch, snippetAround } from "./backstop";
 
-export type OrgKind = "university" | "government" | "immigration";
+type OrgKind = "university" | "government" | "immigration";
 
 const IDENTITY =
   String.raw`\b(?:this is|i am|i['’]m|we are|we['’]re|my name is|writing (?:to you )?(?:from|on behalf of)|(?:message|email|notice|notification|letter) from|on behalf of|from the|representing|official)\b(?:(?!\b(?:your|with|via|through|partner\w*|found)\b)[^.!?\n]){0,40}?`;

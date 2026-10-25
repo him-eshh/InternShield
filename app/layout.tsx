@@ -5,9 +5,9 @@ import AppStateProvider from "@/components/shell/AppStateProvider";
 import Nav from "@/components/shell/Nav";
 import PageTransition from "@/components/shell/PageTransition";
 import "./globals.css";
-import "./v2-check.css";
-import "./v3-shell.css";
-import "./v3-resume.css";
+import "./report.css";
+import "./shell.css";
+import "./resume.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"], axes: ["opsz"] });
 const bricolage = Bricolage_Grotesque({ variable: "--font-bricolage", subsets: ["latin"] });

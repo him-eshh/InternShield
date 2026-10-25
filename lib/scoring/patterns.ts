@@ -2,7 +2,7 @@
 import type { Field, Source } from "../types";
 import { firstMatch, snippetAround } from "./backstop";
 
-export interface FieldPattern {
+interface FieldPattern {
   label: string;
   why: string;
   fields: Field[] | "any";
@@ -11,7 +11,7 @@ export interface FieldPattern {
   re: RegExp[];
 }
 
-export const FIELD_PATTERNS: FieldPattern[] = [
+const FIELD_PATTERNS: FieldPattern[] = [
   {
     label: "a fake coding test",
     why: "Fake coding tests that send you a repo or zip to run are a common way to put malware on students' computers.",

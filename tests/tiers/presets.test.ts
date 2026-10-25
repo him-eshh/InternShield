@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { getPreset, LP_PROMPTS, lpTags, PRESETS } from "@/lib/tiers/presets";
-import { answerPending, buildRequest, newSession } from "@/lib/tiers/interview";
+import { textPool } from "@/lib/tiers/sessionPools";
 import { buildScorecard } from "@/lib/tiers/scorecard";
 import { parseInterview } from "@/lib/server/interview";
-import { INTERVIEW_ROUNDS, type InterviewContext } from "@/lib/tiers/types";
+import { INTERVIEW_ROUNDS, type InterviewContext, type InterviewSession } from "@/lib/tiers/types";
 
 const ctx = (preset?: InterviewContext["preset"]): InterviewContext => ({
   company: null,
@@ -25,22 +25,22 @@ describe("company-style presets", () => {
     expect(getPreset("nope")).toBeNull();
   });
 
-  it("Amazon-style behavioral asks from the LP bank and tags the LPs on the scorecard", () => {
-    const s = newSession("behavioral", ctx("amazon"), { id: "a", now: 0, seed: 1 });
-    expect(s.pending).toBe(LP_PROMPTS[1].prompt);
-    expect(lpTags([s.pending!, "Something else"])).toEqual(["Dive Deep"]);
-    const answered = answerPending(s, "I pulled the logs and found 30% of errors came from one form.", 1);
-    const done = { ...answered, status: "done" as const };
+  it("Amazon-style behavioral draws from the LP bank and tags the LPs on the scorecard", () => {
+    const pool = textPool("behavioral", { values: [], preset: "amazon" }).shuffled.map((o) => o.text);
+    for (const p of LP_PROMPTS) expect(pool).toContain(p.prompt);
+    expect(lpTags([LP_PROMPTS[1].prompt, "Something else"])).toEqual(["Dive Deep"]);
+    const done: InterviewSession = {
+      id: "a", round: "behavioral", context: ctx("amazon"), turns: [{ question: LP_PROMPTS[1].prompt, answer: "I pulled the logs and found 30% of errors came from one form." }],
+      pending: null, used: 1, seed: 1, problemId: null, code: null, hints: [], feedback: null, status: "done", createdAt: 0, updatedAt: 1,
+    };
     const card = buildScorecard(done)!;
     expect(card.axes.find((a) => a.id === "complete")!.evidence).toContain("Leadership Principles: Dive Deep");
     expect(card.axes.find((a) => a.id === "ownership")!.evidence[0]).toMatch(/“I\/my” 1 time/);
-    expect(buildRequest(s, "question").context.preset).toBe("amazon");
   });
 
-  it("without a preset, behavioral is unchanged and no LP line appears", () => {
-    const s = newSession("behavioral", ctx(), { id: "b", now: 0, seed: 1 });
-    expect(LP_PROMPTS.some((p) => p.prompt === s.pending)).toBe(false);
-    expect("preset" in buildRequest(s, "question").context).toBe(false);
+  it("without a preset, behavioral has no LP prompts", () => {
+    const pool = textPool("behavioral", { values: [] }).shuffled.map((o) => o.text);
+    expect(LP_PROMPTS.some((p) => pool.includes(p.prompt))).toBe(false);
   });
 
   it("the route accepts known presets and rejects others", () => {

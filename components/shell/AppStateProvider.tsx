@@ -22,8 +22,8 @@ import type { Profile, ResumeData } from "@/lib/types";
 import type { PostingContext } from "@/lib/tiers/types";
 import type { CheckSubmit } from "../CheckForm";
 
-export type LastCheck = { outcome: PipelineOutcome; input: PipelineInput; submit: CheckSubmit | null };
-export type Targets = { tailor: PostingContext | null; practice: PostingContext | null };
+type LastCheck = { outcome: PipelineOutcome; input: PipelineInput; submit: CheckSubmit | null };
+type Targets = { tailor: PostingContext | null; practice: PostingContext | null };
 
 type State = {
   /** False until browser storage has been read (SSR and first paint have none). */
@@ -110,10 +110,6 @@ export function useAppState(): State {
   return s;
 }
 
-export const useResume = () => {
-  const { ready, resume, setResume } = useAppState();
-  return { ready, resume, setResume };
-};
 export const useTargets = () => {
   const { ready, targets, setTarget } = useAppState();
   return { ready, targets, setTarget };

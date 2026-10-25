@@ -8,7 +8,7 @@ export interface Mark {
   flagId: string;
 }
 
-export interface Segment {
+interface Segment {
   text: string;
   start: number; // index in the original text
   marks: Mark[]; // quotes covering this segment (more than one when quotes overlap)

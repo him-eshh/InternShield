@@ -63,10 +63,10 @@ const IRREGULAR_PAST = new Set(
   "built led ran wrote made drove taught sold brought kept held won grew cut set put got took gave saw met found began chose spoke".split(" "),
 );
 
-export type Tense = "past" | "gerund" | "base" | "third";
+type Tense = "past" | "gerund" | "base" | "third";
 
 /** Tense of the opening verb, null when the line does not open with one we can tell. */
-export function openingTense(line: string): Tense | null {
+function openingTense(line: string): Tense | null {
   const w = (line.trim().match(/^[A-Za-z]+/)?.[0] ?? "").toLowerCase();
   if (w.length < 3) return null;
   if (IRREGULAR_PAST.has(w) || /(?:ed)$/.test(w)) return "past";
@@ -77,7 +77,7 @@ export function openingTense(line: string): Tense | null {
 
 const FIRST_PERSON = /\b(?:i|my|me|we|our|us)\b/i;
 
-export interface StyleIssue {
+interface StyleIssue {
   kind: "tense" | "person" | "punctuation" | "case";
 }
 

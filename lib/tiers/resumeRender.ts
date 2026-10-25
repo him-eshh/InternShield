@@ -53,7 +53,7 @@ export function fitInBoxes(line: ResumeLine, text: string, measure: Measure): Fi
   return null;
 }
 
-export interface EditText {
+interface EditText {
   lineId: string;
   text: string;
 }
@@ -147,7 +147,7 @@ export async function renderEdited(doc: ResumeDoc, original: Uint8Array | null, 
   return { bytes, mime: "text/plain;charset=utf-8", ext: "txt", pageCount: doc.pageCount, rejected: [] };
 }
 
-export interface LengthCheck {
+interface LengthCheck {
   ok: boolean;
   pagesBefore: number;
   pagesAfter: number;

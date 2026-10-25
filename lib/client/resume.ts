@@ -1,10 +1,11 @@
 // Resume Reader (spec.md > Resume Reader). Runs entirely in the browser: the file is never uploaded.
 import type { ResumeData } from "../types";
 import { htmlToLines, normalizeLines, pdfItemsToLines } from "../tiers/resumeLines";
+import { loadMammoth, loadPdfjs } from "./docLibs";
 
-export const RESUME_MAX_CHARS = 20000;
+const RESUME_MAX_CHARS = 20000;
 
-export type ResumeResult = { ok: true; data: ResumeData } | { ok: false; message: string };
+type ResumeResult = { ok: true; data: ResumeData } | { ok: false; message: string };
 
 const UNSUPPORTED = "We can read PDF and Word (.docx) files. You can also skip this step.";
 const EMPTY = "We couldn't find any readable text in that file. You can try another one or skip this step.";
@@ -29,8 +30,7 @@ export function spottedSkills(text: string, candidates: string[]): string[] {
 }
 
 async function readPdf(buf: ArrayBuffer): Promise<string[]> {
-  const pdfjs = await import("pdfjs-dist");
-  pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs"; // copied into public/
+  const pdfjs = await loadPdfjs();
   const doc = await pdfjs.getDocument({ data: new Uint8Array(buf) }).promise;
   const lines: string[] = [];
   let size = 0;
@@ -46,7 +46,7 @@ async function readPdf(buf: ArrayBuffer): Promise<string[]> {
 }
 
 async function readDocx(buf: ArrayBuffer): Promise<string[]> {
-  const mammoth = await import("mammoth");
+  const mammoth = await loadMammoth();
   const out = await mammoth.convertToHtml({ arrayBuffer: buf });
   return htmlToLines(out.value);
 }

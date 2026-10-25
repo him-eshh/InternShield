@@ -1,7 +1,8 @@
-// v3 continuous practice session engine (brief I4/I5). Pure: every function returns a new state; the input is never changed.
+// Continuous practice session engine (brief I4/I5). Pure: every function returns a new state; the input is never changed.
 // A session is a list of slots (one per question). Each slot becomes a PlanItem when it comes up, so "Mixed" difficulty can adapt.
 // Flow per question: answer -> review (feedback + optional follow-up) -> follow-up answers -> Continue.
-import { readKey, writeKey } from "../client/storage";
+import { KEYS, readKey, writeKey } from "../client/storage";
+import { isRec } from "../types";
 import type { BankFilter, BankRole } from "./bank";
 import { pickFromBank } from "./bankPool";
 import { DEBUG_PROBLEMS } from "./debugging";
@@ -12,11 +13,11 @@ import { textPool } from "./sessionPools";
 import { fitFollowUp, localReview, questionType } from "./sessionFeedback";
 import {
   CODE_ROUNDS,
-  INTERVIEW_ROUNDS,
   MAX_ANSWER_CHARS,
   MAX_CODE_CHARS,
   MAX_FOLLOWUPS,
   MAX_PRACTICE_CALLS,
+  roundLabel,
   type AnswerFeedback,
   type AnswerLevel,
   type BankQuestion,
@@ -25,6 +26,7 @@ import {
   type InterviewReply,
   type InterviewRequest,
   type InterviewSession,
+  type NewCard,
   type RoundKind,
   type ScoreBand,
   type SessionConfig,
@@ -32,14 +34,14 @@ import {
   type SessionTurn,
 } from "./types";
 // ---------- Shapes ----------
-/** Rounds the setup screen offers (finance and the board challenge stay in the old single-round flow). */
+/** Rounds the setup screen offers. */
 export const SETUP_ROUNDS: RoundKind[] = ["coding", "sql", "debugging", "design", "behavioral", "screen", "case", "portfolio"];
 /** Questions in one "round" when the session is counted in rounds. */
-export const ROUND_LEN: Partial<Record<RoundKind, number>> = { screen: 2, behavioral: 3, coding: 1, sql: 2, debugging: 1, design: 1, case: 1, portfolio: 2 };
+const ROUND_LEN: Partial<Record<RoundKind, number>> = { screen: 2, behavioral: 3, coding: 1, sql: 2, debugging: 1, design: 1, case: 1, portfolio: 2 };
 /** Languages whose code runs in the browser; the rest are discussed only. */
-export const RUNNABLE_LANGS = ["python", "typescript"] as const;
-export const MIN_COUNT = 1;
-export const MAX_COUNT = 15;
+const RUNNABLE_LANGS = ["python", "typescript"] as const;
+const MIN_COUNT = 1;
+const MAX_COUNT = 15;
 const LEVELS = ["easy", "medium", "hard"] as const;
 export interface Slot {
   round: RoundKind;
@@ -65,7 +67,7 @@ export interface PlanItem {
   problemId?: string;
   note?: string;
 }
-export interface FollowUp {
+interface FollowUp {
   question: string;
   answer: string | null;
   note?: string;
@@ -106,8 +108,7 @@ export interface PracticeState {
   endedEarly: boolean;
   endedAt: number | null;
 }
-export type Awaiting = "question" | "answer" | "review" | "followup" | "next" | "done";
-export const roundLabel = (r: RoundKind): string => INTERVIEW_ROUNDS.find((x) => x.id === r)?.label ?? r;
+type Awaiting = "question" | "answer" | "review" | "followup" | "next" | "done";
 export function defaultConfig(over: Partial<SessionConfig> = {}): SessionConfig {
   return { rounds: ["coding", "behavioral", "sql"], topics: [], customQuestions: [], difficulty: "mixed", language: "python", limit: { kind: "questions", count: 5 }, ...over };
 }
@@ -158,14 +159,14 @@ const usedKeys = (s: PracticeState): Set<string> => {
   return used;
 };
 const usedIds = (s: PracticeState): Set<string> => new Set([...s.turns.flatMap((t) => [t.source, t.problemId ?? "", t.code?.problemId ?? ""]), ...(s.activeQuestion ? [s.activeQuestion.item.source, s.activeQuestion.item.problemId ?? ""] : [])]);
-function levelFor(s: PracticeState): "easy" | "medium" | "hard" {
+function difficultyFor(s: PracticeState): "easy" | "medium" | "hard" {
   return s.config.difficulty === "mixed" ? LEVELS[Math.min(2, Math.max(0, s.level))] : s.config.difficulty;
 }
 /** Bank selection keeps the user's filters while they match; otherwise it falls back to the closest pool and says so in `note`. */
 function pickBank(s: PracticeState, bank: BankQuestion[], rand: () => number): { q: BankQuestion; note?: string } | null {
   const roleText = (s.config.role ?? s.context.role ?? "").toLowerCase();
   const role: BankRole | null = /front.?end/.test(roleText) ? "frontend" : /back.?end/.test(roleText) ? "backend" : /machine|\bml\b/.test(roleText) ? "ml" : /data|analyst/.test(roleText) ? "data" : null;
-  const filter: BankFilter = { role, company: s.config.company ?? s.context.company, topics: s.config.topics, difficulty: levelFor(s) };
+  const filter: BankFilter = { role, company: s.config.company ?? s.context.company, topics: s.config.topics, difficulty: difficultyFor(s) };
   return pickFromBank(bank, filter, usedIds(s), rand, !!s.config.mostAsked);
 }
 const bankItem = (slot: number, q: BankQuestion, note?: string): PlanItem => ({
@@ -182,7 +183,7 @@ const bankItem = (slot: number, q: BankQuestion, note?: string): PlanItem => ({
   ...(note ? { note } : {}),
 });
 /** Builds the item for slot `i`. Never repeats a question already asked in this session. */
-export function makeItem(s: PracticeState, i: number, bank: BankQuestion[]): PlanItem {
+function makeItem(s: PracticeState, i: number, bank: BankQuestion[]): PlanItem {
   const slot = s.slots[i];
   const rand = rng(s.seed + i * 7919);
   const ids = usedIds(s);
@@ -241,7 +242,6 @@ function startCurrent(s: PracticeState, i: number, bank: BankQuestion[], now: nu
           seed: s.seed,
           problemId: item.problemId ?? null,
           code: null,
-          board: null,
           hints: [],
           feedback: null,
           status: "active",
@@ -331,7 +331,6 @@ export function buildReviewRequest(s: PracticeState, ask: "review" | "hint"): In
     turns: ask === "hint" ? [] : turns.map((t) => ({ question: t.question.slice(0, 400), answer: t.answer.slice(0, MAX_ANSWER_CHARS) })),
     used: s.calls,
     code: CODE_ROUNDS.includes(round) && c.code ? { ...c.code, code: c.code.code.slice(0, MAX_CODE_CHARS) } : null,
-    board: null,
     problem: CODE_ROUNDS.includes(round) ? problem : null,
     practice: true,
     ...(ask === "review" ? { followUpsLeft: followUpsLeft(c) } : {}),
@@ -443,7 +442,7 @@ export function endEarly(s: PracticeState, now: number): PracticeState {
   return { ...s, turns: t ? [...s.turns, t] : s.turns, activeQuestion: null, status: "done", endedEarly: true, endedAt: now, updatedAt: now };
 }
 // ---------- Progress ----------
-export interface Progress {
+interface Progress {
   /** 1-based question number being worked on (or the total when done). */
   question: number;
   questions: number;
@@ -487,7 +486,6 @@ function innerFor(round: RoundKind, turns: SessionTurn[]): InterviewSession {
     seed: 0,
     problemId: last?.code?.problemId ?? null,
     code: last?.code ? { ...last.code, passed: turns.reduce((n, t) => n + (t.code?.passed ?? 0), 0), total: turns.reduce((n, t) => n + (t.code?.total ?? 0), 0) } : null,
-    board: null,
     stats: { runsBeforeSubmit: turns.reduce((n, t) => n + (t.stats?.runsBeforeSubmit ?? 0), 0), submits: turns.reduce((n, t) => n + (t.stats?.submits ?? 0), 0), firstSubmitAt: turns.find((t) => t.stats?.firstSubmitAt)?.stats?.firstSubmitAt ?? null },
     hints: turns.flatMap((t) => Array.from({ length: t.hintsUsed }, () => "hint")),
     feedback: { summary: "", items: turns.flatMap((t, i) => (t.feedback ? [{ ...t.feedback, index: i }] : [])) },
@@ -562,40 +560,55 @@ export function practiceAgain(summary: SessionSummary): SessionConfig {
   return { ...summary.config, rounds: rounds.length ? rounds : summary.config.rounds, topics: weakTopics, customQuestions: [], limit: { kind: "questions", count: 5 } };
 }
 // ---------- Storage (this browser only) ----------
-export const ACTIVE_KEY = "is:practice-active";
-export const HISTORY_KEY = "is:practice-history";
-export const MAX_HISTORY = 20;
+const MAX_HISTORY = 20;
 export interface HistoryEntry {
   id: string;
   finishedAt: number;
   company: string | null;
+  role?: string | null;
   summary: SessionSummary;
 }
-const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 /** A saved active session, or null when missing, finished or damaged. */
 export function loadActive(): PracticeState | null {
-  const v = readKey<unknown>(ACTIVE_KEY);
-  if (!isObj(v) || v.v !== 1 || v.status !== "active" || !Array.isArray(v.slots) || !Array.isArray(v.turns) || !isObj(v.config) || !isObj(v.context)) return null;
+  const v = readKey<unknown>(KEYS.practiceActive);
+  if (!isRec(v) || v.v !== 1 || v.status !== "active" || !Array.isArray(v.slots) || !Array.isArray(v.turns) || !isRec(v.config) || !isRec(v.context)) return null;
   const finite = (n: unknown) => typeof n === "number" && Number.isFinite(n);
   const strings = (xs: unknown) => Array.isArray(xs) && xs.every((x) => typeof x === "string");
   if (typeof v.id !== "string" || !finite(v.calls) || !finite(v.seed) || !finite(v.createdAt) || !finite(v.updatedAt) || !finite(v.level)) return null;
-  if (!strings(v.values) || !strings(v.config.rounds) || !strings(v.config.topics) || !strings(v.config.customQuestions) || !isObj(v.config.limit) || !finite(v.config.limit.count)) return null;
-  if (!v.slots.length || v.turns.length >= v.slots.length || !v.slots.every((x) => isObj(x) && SETUP_ROUNDS.includes(x.round as RoundKind) && finite(x.block))) return null;
-  if (!v.turns.every((t) => isObj(t) && typeof t.question === "string" && typeof t.answer === "string" && finite(t.hintsUsed))) return null;
+  if (!strings(v.values) || !strings(v.config.rounds) || !strings(v.config.topics) || !strings(v.config.customQuestions) || !isRec(v.config.limit) || !finite(v.config.limit.count)) return null;
+  if (!v.slots.length || v.turns.length >= v.slots.length || !v.slots.every((x) => isRec(x) && SETUP_ROUNDS.includes(x.round as RoundKind) && finite(x.block))) return null;
+  if (!v.turns.every((t) => isRec(t) && typeof t.question === "string" && typeof t.answer === "string" && finite(t.hintsUsed))) return null;
   const c = v.activeQuestion;
-  if (!isObj(c) || !isObj(c.item) || typeof c.item.question !== "string" || !SETUP_ROUNDS.includes(c.item.round as RoundKind) || !["text", "code", "sql", "debug"].includes(c.item.kind as string)) return null;
-  if (!Array.isArray(c.followUps) || c.followUps.length > MAX_FOLLOWUPS || !c.followUps.every((f) => isObj(f) && typeof f.question === "string" && (f.answer === null || typeof f.answer === "string"))) return null;
-  if (!strings(c.hints) || !finite(c.reviewed) || (c.answer !== null && typeof c.answer !== "string") || (c.inner !== null && (!isObj(c.inner) || !Array.isArray(c.inner.turns) || !strings(c.inner.hints)))) return null;
+  if (!isRec(c) || !isRec(c.item) || typeof c.item.question !== "string" || !SETUP_ROUNDS.includes(c.item.round as RoundKind) || !["text", "code", "sql", "debug"].includes(c.item.kind as string)) return null;
+  if (!Array.isArray(c.followUps) || c.followUps.length > MAX_FOLLOWUPS || !c.followUps.every((f) => isRec(f) && typeof f.question === "string" && (f.answer === null || typeof f.answer === "string"))) return null;
+  if (!strings(c.hints) || !finite(c.reviewed) || (c.answer !== null && typeof c.answer !== "string") || (c.inner !== null && (!isRec(c.inner) || !Array.isArray(c.inner.turns) || !strings(c.inner.hints)))) return null;
   return v as unknown as PracticeState;
 }
-export const saveActive = (s: PracticeState): void => writeKey(ACTIVE_KEY, s);
-export const clearActive = (): void => writeKey(ACTIVE_KEY, null);
+export const saveActive = (s: PracticeState): void => writeKey(KEYS.practiceActive, s);
+export const clearActive = (): void => writeKey(KEYS.practiceActive, null);
 export function loadHistory(): HistoryEntry[] {
-  const v = readKey<unknown>(HISTORY_KEY);
-  return Array.isArray(v) ? (v.filter((e) => isObj(e) && typeof e.id === "string" && isObj(e.summary) && Array.isArray(e.summary.turns) && Array.isArray(e.summary.rounds) && Array.isArray(e.summary.next) && typeof e.finishedAt === "number") as unknown as HistoryEntry[]).slice(0, MAX_HISTORY) : [];
+  const v = readKey<unknown>(KEYS.practiceHistory);
+  return Array.isArray(v) ? (v.filter((e) => isRec(e) && typeof e.id === "string" && isRec(e.summary) && Array.isArray(e.summary.turns) && Array.isArray(e.summary.rounds) && Array.isArray(e.summary.next) && typeof e.finishedAt === "number") as unknown as HistoryEntry[]).slice(0, MAX_HISTORY) : [];
 }
 export function saveToHistory(s: PracticeState): HistoryEntry {
-  const entry: HistoryEntry = { id: s.id, finishedAt: s.endedAt ?? s.updatedAt, company: s.context.company, summary: buildSummary(s) };
-  writeKey(HISTORY_KEY, [entry, ...loadHistory().filter((e) => e.id !== s.id)].slice(0, MAX_HISTORY));
+  const entry: HistoryEntry = { id: s.id, finishedAt: s.endedAt ?? s.updatedAt, company: s.context.company, role: s.context.role, summary: buildSummary(s) };
+  writeKey(KEYS.practiceHistory, [entry, ...loadHistory().filter((e) => e.id !== s.id)].slice(0, MAX_HISTORY));
   return entry;
+}
+// ---------- Hand-offs to the other tools ----------
+/** One band for the whole session: the mean of its round bands ("Not yet" when nothing was practiced). */
+export function overallBand(summary: SessionSummary): ScoreBand {
+  const r = summary.rounds;
+  return r.length ? BAND_ORDER[Math.min(3, Math.round(r.reduce((n, x) => n + BAND_ORDER.indexOf(x.band), 0) / r.length))] : "Not yet";
+}
+/** What "Add to tracker" saves from a finished session: company, role and how it went (as the card's note). */
+export function trackerCardFor(summary: SessionSummary, company: string | null | undefined, role: string | null | undefined): NewCard & { notes: string } {
+  const asked = summary.answered + summary.skipped;
+  return { company: company?.trim() ?? "", role: role?.trim() ?? "", link: null, risk: null, notes: `Practice: ${overallBand(summary)}, ${summary.answered} of ${asked} answered.` };
+}
+/** The Home "Continue" row for Practice: an unfinished session first (it resumes), else the newest finished one. Null = nothing to show. */
+export function practiceContinue(active: PracticeState | null, history: HistoryEntry[]): { title: string; detail: string; resume: boolean } | null {
+  if (active) return { title: active.context.company ? `Practice for ${active.context.company}` : "Practice in progress", detail: `${active.turns.length} of ${active.slots.length} questions done. Resume`, resume: true };
+  const last = history[0];
+  return last ? { title: last.company ? `Last practice: ${last.company}` : "Last practice", detail: `${overallBand(last.summary)}, finished`, resume: false } : null;
 }

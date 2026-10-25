@@ -105,7 +105,7 @@ const APP_NAMES:[RegExp, string][] = [
 /** Insert user/AI text into copy only if it can't smuggle in a banned word. */
 const named = (s: string | null | undefined, fallback: string) => (s && !BANNED_WORDS.test(s) ? s : fallback);
 
-export function levelFor(score: number): RiskLevel {
+function levelFor(score: number): RiskLevel {
   return score >= W.highFrom ? "high" : score >= W.mediumFrom ? "medium" : "low";
 }
 

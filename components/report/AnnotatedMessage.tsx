@@ -8,7 +8,7 @@ type Annotated = ReturnType<typeof annotate>;
 const SHOW_EVENT = "internshield:show-mark";
 const COLLAPSE_OVER = 700; // characters; about 12 lines on a phone
 
-export const markDomId = (flagId: string) => `mk-${flagId}`;
+const markDomId = (flagId: string) => `mk-${flagId}`;
 
 const smooth = () => (window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth");
 
@@ -18,7 +18,7 @@ function flash(el: HTMLElement) {
 }
 
 /** Mark to card: opens a collapsed "Good signs" group if needed, scrolls, focuses and briefly highlights the card. */
-export function showCard(flagId: string) {
+function showCard(flagId: string) {
   const el = document.getElementById(`flag-${flagId}`);
   if (!el) return;
   const group = el.closest("details");

@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 import ts from "typescript";
-import { DEBUG_PROBLEMS, pickDebugProblem } from "@/lib/tiers/debugging";
+import { DEBUG_PROBLEMS } from "@/lib/tiers/debugging";
 import { getProblem, gradeOutputs, PROBLEMS } from "@/lib/tiers/problems";
-import { buildRequest, canCall, newSession } from "@/lib/tiers/interview";
 import type { CaseOutput, CodeTest } from "@/lib/tiers/types";
 
 // Reference fixes live here, not in the app, so the user never gets them.
@@ -58,18 +57,5 @@ describe("DEBUG_PROBLEMS", () => {
     expect(gradeOutputs(cases, run(tsJs, p.functionName, cases))).toEqual(gradeOutputs(cases, run(js, p.functionName, cases)));
     expect(gradeOutputs(cases, run(FIX[p.functionName], p.functionName, cases)).passed).toBe(cases.length);
     expect(getProblem(p.id)).toBe(p);
-  });
-
-  it("picks by seed and wires a debugging session like coding", () => {
-    expect(pickDebugProblem(7)).toBe(DEBUG_PROBLEMS[2]);
-    expect(pickDebugProblem(NaN)).toBe(DEBUG_PROBLEMS[0]);
-    const s = newSession("debugging", { company: "", role: "", description: "", resume: "", field: "tech" }, { id: "t", seed: 1, now: 0 });
-    expect(s.problemId).toBe(DEBUG_PROBLEMS[1].id);
-    expect(canCall(s, "hint")).toBe(true);
-    expect(canCall(s, "question")).toBe(false);
-    const code = { problemId: s.problemId!, language: "python" as const, code: "x", passed: 1, total: 6 };
-    const req = buildRequest({ ...s, code }, "feedback");
-    expect(req.code).toEqual(code);
-    expect(req.problem).toBe(DEBUG_PROBLEMS[1].prompt);
   });
 });

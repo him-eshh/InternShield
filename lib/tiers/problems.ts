@@ -117,11 +117,6 @@ export function getProblem(id: string | null | undefined): CodingProblem | null 
   return PROBLEMS.find((p) => p.id === id) ?? DEBUG_PROBLEMS.find((p) => p.id === id) ?? null;
 }
 
-export function pickProblem(seed: number): CodingProblem {
-  const n = Number.isFinite(seed) ? Math.abs(Math.floor(seed)) : 0;
-  return PROBLEMS[n % PROBLEMS.length];
-}
-
 const FAIL = Symbol("unencodable");
 
 /** JSON round trip (undefined/NaN become null or vanish, like the runners' JSON output). */

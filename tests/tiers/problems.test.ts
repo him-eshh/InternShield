@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getProblem, gradeOutputs, pickProblem, PROBLEMS, sameValue } from "@/lib/tiers/problems";
+import { getProblem, gradeOutputs, PROBLEMS, sameValue } from "@/lib/tiers/problems";
 import type { CaseOutput, CodeTest } from "@/lib/tiers/types";
 
 // Reference solutions live here, not in the app, so the user never gets them.
@@ -103,21 +103,11 @@ describe("PROBLEMS", () => {
   });
 });
 
-describe("getProblem / pickProblem", () => {
+describe("getProblem", () => {
   it("finds by id, null otherwise", () => {
     expect(getProblem(PROBLEMS[2].id)).toBe(PROBLEMS[2]);
     expect(getProblem("nope")).toBeNull();
     expect(getProblem(null as unknown as string)).toBeNull();
-  });
-
-  it("picks deterministically for any seed", () => {
-    expect(pickProblem(0)).toBe(PROBLEMS[0]);
-    expect(pickProblem(7)).toBe(PROBLEMS[2]);
-    expect(pickProblem(7)).toBe(pickProblem(7));
-    expect(PROBLEMS).toContain(pickProblem(-3));
-    expect(PROBLEMS).toContain(pickProblem(2.7));
-    expect(pickProblem(NaN)).toBe(PROBLEMS[0]);
-    expect(pickProblem(Infinity)).toBe(PROBLEMS[0]);
   });
 });
 

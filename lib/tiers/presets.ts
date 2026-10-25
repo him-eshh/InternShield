@@ -1,11 +1,11 @@
-// Company-style practice presets (v2, findings 04 sections 1a, 5, (c) #5-#6). Pure.
+// Company-style practice presets (findings 04 sections 1a, 5, (c) #5-#6). Pure.
 // Labels always say "-style": practice modeled on each company's own public prep page, never affiliated.
 // Sources are only the official pages Research verified in 04 section 1a.
 import type { InterviewRound } from "./types";
 
 export type PresetId = "google" | "meta" | "amazon" | "mckinsey" | "goldman";
 
-export interface InterviewPreset {
+interface InterviewPreset {
   id: PresetId;
   label: string;
   rounds: InterviewRound[];
@@ -47,7 +47,7 @@ export const PRESETS: InterviewPreset[] = [
   {
     id: "goldman",
     label: "Goldman-style finance",
-    rounds: ["finance", "behavioral"],
+    rounds: ["screen", "behavioral"],
     style: "Goldman-style: short, direct questions like a first-round video interview.",
     source: { label: "Goldman Sachs: Prepare", url: "https://www.goldmansachs.com/careers/students/prepare" },
   },

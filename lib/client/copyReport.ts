@@ -4,7 +4,7 @@ import { LEVEL_LABELS, type Report } from "../types";
 export const FTC_URL = "https://reportfraud.ftc.gov";
 export const IC3_URL = "https://www.ic3.gov";
 
-export function buildReportText(report: Report, careersUrl?: string | null): string {
+function buildReportText(report: Report, careersUrl?: string | null): string {
   const lines: string[] = [
     "InternShield report",
     `${LEVEL_LABELS[report.level]} (risk ${report.score} out of 100)`,

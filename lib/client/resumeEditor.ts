@@ -1,3 +1,4 @@
+import { loadPdfjs } from "./docLibs";
 import { parseDocx } from "@/lib/tiers/resumeDocx";
 import { parsePdf } from "@/lib/tiers/resumePdf";
 import { docText, docLines } from "@/lib/tiers/resumeModel";
@@ -7,7 +8,7 @@ import type { ResumeDoc, ResumeEdit } from "@/lib/tiers/resumeTypes";
 import type { ResumePlan } from "@/lib/tiers/resumePlan";
 
 export interface PdfPreviewPage { dataUrl: string; width: number; height: number }
-export interface PreparedPreview { output: Rendered; pages: PdfPreviewPage[] }
+interface PreparedPreview { output: Rendered; pages: PdfPreviewPage[] }
 export interface ResumeFile { doc: ResumeDoc; bytes: Uint8Array | null; name: string; previews?: Map<string, PreparedPreview> }
 export const previewKey = (edits: ResumeEdit[]) => JSON.stringify(edits.map((e) => [e.lineId, e.proposed]));
 
@@ -17,8 +18,7 @@ export const previewKey = (edits: ResumeEdit[]) => JSON.stringify(edits.map((e) 
 export async function prepareResumePreviews(file: ResumeFile, edits: ResumeEdit[], signal: AbortSignal): Promise<void> {
   if (file.doc.source !== "pdf" || !file.bytes) return;
   if (edits.length > 6) throw new Error("Review up to six edits at a time.");
-  const pdfjs = await import("pdfjs-dist");
-  pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+  const pdfjs = await loadPdfjs();
   const worker = new pdfjs.PDFWorker();
   const previews = new Map<string, PreparedPreview>();
   try {
@@ -61,9 +61,7 @@ export async function openResumeFile(file: File): Promise<ResumeFile> {
   const bytes = new Uint8Array(await file.arrayBuffer());
   if (/\.docx$/i.test(file.name)) return { doc: await parseDocx(bytes), bytes, name: file.name };
   if (/\.pdf$/i.test(file.name)) {
-    const pdfjs = await import("pdfjs-dist");
-    pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
-    return { doc: await parsePdf(bytes, pdfjs), bytes, name: file.name };
+    return { doc: await parsePdf(bytes, await loadPdfjs()), bytes, name: file.name };
   }
   throw new Error("Choose a PDF or Word (.docx) file.");
 }

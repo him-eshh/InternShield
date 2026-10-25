@@ -3,8 +3,8 @@
 import { ArrowRight, CircleAlert, FileCheck2, MessagesSquare, ShieldCheck, TriangleAlert, UserRound, type LucideIcon } from "lucide-react";
 import { m } from "motion/react";
 import Link from "next/link";
-import { KEYS, readKey } from "@/lib/client/storage";
 import { EXAMPLES } from "@/lib/examples";
+import { loadActive, loadHistory, practiceContinue } from "@/lib/tiers/session";
 import { coverageTicks, topReasons } from "@/lib/reportView";
 import { score } from "@/lib/scoring/score";
 import { LEVEL_LABELS } from "@/lib/types";
@@ -46,18 +46,6 @@ const STEPS = [
   ["Act on it", "Tailor the resume, practice the questions, track the application."],
 ] as const;
 
-const ROUND_NAMES: Record<string, string> = { screen: "Screen", behavioral: "Behavioral", coding: "Coding", design: "Design", case: "Case", finance: "Finance", portfolio: "Portfolio", challenge: "Challenge", debugging: "Debugging", sql: "SQL" };
-
-/** Reads the newest practice session defensively: the interview stream owns its shape. */
-function lastPractice(): string | null {
-  const list = readKey<unknown>(KEYS.interviews);
-  const s = Array.isArray(list) ? (list[0] as { round?: unknown; status?: unknown; config?: { rounds?: unknown } } | undefined) : undefined;
-  if (!s) return null;
-  const round = typeof s.round === "string" ? ROUND_NAMES[s.round] : undefined;
-  const done = s.status === "done";
-  return `${round ? `${round} practice` : "Practice session"}${done ? ", finished" : ", in progress"}`;
-}
-
 type Row = { href: string; tool: "check" | "tailor" | "practice" | "neutral"; Icon: LucideIcon; title: string; detail: string; risk?: "low" | "medium" | "high" };
 
 export default function Home() {
@@ -72,9 +60,8 @@ export default function Home() {
       const company = lastCheck?.input.form.company?.trim();
       rows.push({ href: "/check", tool: "check", Icon: ShieldCheck, title: company ? `Last check: ${company}` : "Your last check", detail: LEVEL_LABELS[rep.level], risk: rep.level });
     }
-    if (readKey(KEYS.tailored)) rows.push({ href: "/tailor", tool: "tailor", Icon: FileCheck2, title: "Resume edits saved", detail: "Pick up where you left off" });
-    const p = lastPractice();
-    if (p) rows.push({ href: "/practice", tool: "practice", Icon: MessagesSquare, title: "Last practice", detail: p });
+    const p = practiceContinue(loadActive(), loadHistory());
+    if (p) rows.push({ href: p.resume ? "/practice?resume=1" : "/practice", tool: "practice", Icon: MessagesSquare, title: p.title, detail: p.detail });
     if (prog.count < prog.total) rows.push({ href: "/profile", tool: "neutral", Icon: UserRound, title: "Finish your profile", detail: `${prog.count} of ${prog.total} done` });
   }
   const hasState = rows.length > 0 && (rows.length > 1 || rows[0].href !== "/profile" || prog.count > 0);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildScorecard, findQuote } from "@/lib/tiers/scorecard";
+import { buildScorecard } from "@/lib/tiers/scorecard";
 import type { InterviewSession } from "@/lib/tiers/types";
 
 const base: InterviewSession = {
@@ -12,7 +12,6 @@ const base: InterviewSession = {
   seed: 1,
   problemId: "two-sum",
   code: null,
-  board: null,
   hints: [],
   feedback: null,
   status: "done",
@@ -78,30 +77,11 @@ describe("buildScorecard: other rounds", () => {
     expect(band(s, "star").band).toBe("Not yet"); // no feedback STAR, no quotes
     expect(band(s, "complete").evidence[0]).toBe("2 of 4 questions answered");
   });
-  it("design: board size and links", () => {
-    const s: InterviewSession = {
-      ...base,
-      round: "design",
-      turns: [{ question: "q", answer: "a" }],
-      board: { n: [["n1", "client", "App", 0, 0], ["n2", "api", "API", 0, 0], ["n3", "db", "DB", 0, 0]], e: [["n1", "n2", ""]] },
-    } as InterviewSession;
-    expect(band(s, "components").band).toBe("Developing");
-    expect(band(s, "connections").band).toBe("Solid");
+  it("design: graded on depth and completeness (no board)", () => {
+    const s: InterviewSession = { ...base, round: "design", turns: [{ question: "q", answer: "a" }] };
+    expect(buildScorecard(s)!.axes.map((a) => a.id)).toEqual(["numbers", "depth", "complete"]);
   });
   it("returns null with nothing to grade", () => {
     expect(buildScorecard({ ...base, round: "screen" })).toBeNull();
-  });
-});
-
-describe("findQuote", () => {
-  it("finds a quote across spacing, case and curly quotes", () => {
-    const a = "I said  “Let's ship it”\nand we did.";
-    const at = findQuote(a, 'i said "let’s ship it" and');
-    expect(at).not.toBeNull();
-    expect(a.slice(...at!)).toBe("I said  “Let's ship it”\nand");
-  });
-  it("returns null when absent or too short", () => {
-    expect(findQuote("hello world", "goodbye")).toBeNull();
-    expect(findQuote("hello", "he")).toBeNull();
   });
 });

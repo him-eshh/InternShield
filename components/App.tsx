@@ -12,8 +12,8 @@ import {
   type StepKey,
 } from "@/lib/client/pipeline";
 import type { RiskLevel, StepResult, StepResults } from "@/lib/types";
-import { TIER_FLAGS } from "@/lib/tiers/flags";
-import type { NewCard, PostingContext } from "@/lib/tiers/types";
+import { reportTarget, toPostingContext } from "@/lib/client/reportTarget";
+import type { PostingContext } from "@/lib/tiers/types";
 import SaveToTracker from "./tiers/SaveToTracker";
 import CheckForm, { type CheckSubmit } from "./CheckForm";
 import Checklist, { initialLines, type LineInfo } from "./Checklist";
@@ -25,17 +25,6 @@ const nextStep =
   "inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-full border border-tool bg-tool-tint px-5 py-3 text-[16px] font-semibold text-tool-strong transition-[background-color,transform] duration-200 ease-out hover:bg-surface active:scale-[0.98] sm:max-w-[300px]";
 
 type Screen = "loading" | "check" | "checking" | "report" | "notjob";
-
-/** Company/role/link the last report found: feeds "Save to tracker" and resume tailoring. Empty string = not known (Save asks). */
-function reportTarget(outcome: PipelineOutcome, input: PipelineInput): NewCard {
-  const posting = outcome.steps.posting.status === "done" ? outcome.steps.posting.data : null;
-  return {
-    company: outcome.facts?.company?.value?.trim() || input.form.company?.trim() || "",
-    role: outcome.facts?.role?.value?.trim() || posting?.title?.trim() || "",
-    link: posting?.found && posting.onOfficialDomain ? posting.url : null,
-    risk: outcome.report?.level ?? null,
-  };
-}
 
 function NotJob({ onBack }: { onBack: () => void }) {
   return (
@@ -172,28 +161,24 @@ export default function App() {
   const currentCheck = lastCheck ?? (outcome && runInput ? { outcome, input: runInput } : null);
   const target = currentCheck?.outcome.report ? reportTarget(currentCheck.outcome, currentCheck.input) : null;
   // Gated on the live level: a quick answer that raises the report to high hides Tailor/Practice.
-  const liveTarget = target && { company: target.company, role: target.role, description: null };
+  const liveTarget = target && toPostingContext(target);
   const reportExtras = (level: RiskLevel) =>
-    target && TIER_FLAGS.tracker ? <SaveToTracker key={reportKey} card={{ ...target, risk: level }} onOpen={() => router.push("/tracker")} /> : null;
+    target ? <SaveToTracker key={reportKey} card={{ ...target, risk: level }} onOpen={() => router.push("/tracker")} /> : null;
   // Next steps wear their own tool colors (data-tool on the button), never the Check coral or a risk color.
   const nextSteps = (level: RiskLevel) =>
-    target && level !== "high" && (TIER_FLAGS.resume || TIER_FLAGS.interview) ? (
+    target && level !== "high" ? (
       <>
-        {TIER_FLAGS.resume && (
-          <button type="button" data-tool="tailor" className={nextStep} onClick={() => openTool("tailor", liveTarget)}>
-            <FilePen size={18} aria-hidden="true" />
-            Tailor my resume for this
-            <ArrowRight size={16} aria-hidden="true" />
-          </button>
-        )}
+        <button type="button" data-tool="tailor" className={nextStep} onClick={() => openTool("tailor", liveTarget)}>
+          <FilePen size={18} aria-hidden="true" />
+          Tailor my resume for this
+          <ArrowRight size={16} aria-hidden="true" />
+        </button>
         {/* No interview coaching on high-risk reports: we don't prep people for a likely scam. */}
-        {TIER_FLAGS.interview && (
-          <button type="button" data-tool="practice" className={nextStep} onClick={() => openTool("practice", liveTarget)}>
-            <MessagesSquare size={18} aria-hidden="true" />
-            Practice an interview for this
-            <ArrowRight size={16} aria-hidden="true" />
-          </button>
-        )}
+        <button type="button" data-tool="practice" className={nextStep} onClick={() => openTool("practice", liveTarget)}>
+          <MessagesSquare size={18} aria-hidden="true" />
+          Practice an interview for this
+          <ArrowRight size={16} aria-hidden="true" />
+        </button>
       </>
     ) : null;
 

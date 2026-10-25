@@ -2,7 +2,7 @@ import { Fragment } from "react";
 import { explanationSections } from "@/lib/explainFallback";
 
 /** Split `text` into plain and highlighted parts, marking any span that matches a flag quote. */
-export function highlightParts(text: string, quotes: string[]): { text: string; hit: boolean }[] {
+function highlightParts(text: string, quotes: string[]): { text: string; hit: boolean }[] {
   const lower = text.toLowerCase();
   const ranges: [number, number][] = [];
   for (const q of quotes) {
@@ -35,7 +35,7 @@ export function highlightParts(text: string, quotes: string[]): { text: string; 
 }
 
 /** At most two paragraphs (split on blank lines). */
-export function explanationParagraphs(text: string): string[] {
+function explanationParagraphs(text: string): string[] {
   const parts = text.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
   return (parts.length ? parts : [text.trim()]).slice(0, 2);
 }

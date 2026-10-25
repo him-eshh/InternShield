@@ -1,6 +1,6 @@
 // Bug D: company vs department (findings 05 Bug D, 02 §3.8). All messages are made up.
 import { describe, expect, it } from "vitest";
-import { autofill, isDepartment, stripDepartment } from "@/lib/autofill";
+import { autofill, stripDepartment } from "@/lib/autofill";
 
 const CASES: [string, string, string | null][] = [
   ["department-only team, free mail", "Hi! I'm Jordan from the University Recruiting team. Can we chat?\njordan.r@gmail.com", null],
@@ -36,8 +36,5 @@ describe("company vs department", () => {
     expect(stripDepartment("the Talent Acquisition group")).toBe("");
     expect(stripDepartment("Stanford University")).toBe("Stanford University");
     expect(stripDepartment("Goldman Group")).toBe("Goldman Group");
-    expect(isDepartment("Campus Recruiting")).toBe(true);
-    expect(isDepartment("HR")).toBe(true);
-    expect(isDepartment("Acme")).toBe(false);
   });
 });

@@ -1,10 +1,11 @@
 // Bug C ("$1.2 million" to a percent question showed "1,200,000%") and standing issue #2 (which number is the answer).
 import { describe, expect, it } from "vitest";
 import { checkUnit, extractCandidates, formatInUnit, pickFinal, type NumUnit } from "@/lib/tiers/numbers";
-import { FINANCE_BANK, checkAnswer, describeCheck, extractNumber } from "@/lib/tiers/scripted";
+import { checkAnswer, describeCheck, extractNumber } from "@/lib/tiers/scripted";
+import type { AnswerCheck } from "@/lib/tiers/types";
 
 const first = (s: string) => extractCandidates(s)[0];
-const wacc = FINANCE_BANK.find((q) => q.id === "fin-wacc-math")!.check!; // expected 7.5, "%", tolerance 0.05
+const wacc: AnswerCheck = { kind: "number", expected: 7.5, tolerance: 0.05, unit: "%" };
 
 describe("extractCandidates: the 19-case table from devpost/research/findings/05-assets/test.mjs", () => {
   // [input, value, unit]. "7-8%" is a range; its value is the midpoint 7.5 (the sketch kept the low end, 7).

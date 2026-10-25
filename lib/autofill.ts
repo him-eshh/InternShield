@@ -1,7 +1,7 @@
 // Auto-fill guesses from a pasted message (spec.md > Check Form and Auto-fill). Pure pattern matching.
 import type { Source, Stage } from "./types";
 
-export interface AutofillGuess {
+interface AutofillGuess {
   sender: string | null; // email, else phone
   company: string | null;
   source: Source | null;
@@ -61,11 +61,6 @@ export function stripDepartment(name: string): string {
   }
   while (words.length && /^(?:the|our|your)$/i.test(words[0])) words.shift();
   return words.join(" ").replace(/['’]s$/i, "");
-}
-
-/** True when the whole name is a team/office ("Talent Acquisition", "the People Team"), never a company. */
-export function isDepartment(name: string): boolean {
-  return name.trim() !== "" && stripDepartment(name) === "";
 }
 
 function domainLabel(sender: string | null): string | null {

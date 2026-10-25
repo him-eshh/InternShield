@@ -6,7 +6,6 @@ import EvidenceCard from "@/components/report/EvidenceCard";
 import EvidenceList from "@/components/report/EvidenceList";
 import Report from "@/components/report/Report";
 import ReportFooter from "@/components/report/ReportFooter";
-import TopReasons from "@/components/report/TopReasons";
 import { fixtureOutcome } from "@/fixtures/outcome";
 import { mediumReport, realReport, scamReport } from "@/fixtures/reports";
 import { actionLine, sortFlags, topReasons } from "@/lib/reportView";
@@ -85,15 +84,6 @@ describe("EvidenceCard", () => {
     const html = renderToStaticMarkup(<ul><EvidenceCard flag={flag("c")} /></ul>);
     expect(html).not.toContain("opacity-0");
     expect(html).not.toContain("whileInView");
-  });
-});
-
-describe("TopReasons", () => {
-  it("lists at most three with severity text, and nothing when there are no red flags", () => {
-    const html = renderToStaticMarkup(<TopReasons flags={[...MIXED, flag("x", { severity: "high" })]} />);
-    expect(html.match(/<li /g)).toHaveLength(3);
-    expect(html).toContain(">Critical<");
-    expect(renderToStaticMarkup(<TopReasons flags={[MIXED[0]]} />)).toBe("");
   });
 });
 

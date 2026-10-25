@@ -4,7 +4,7 @@ import { stripDepartment } from "@/lib/autofill";
 import { EXAMPLES } from "@/lib/examples";
 import { MAX_QUOTE_CHARS, quoteIsReal } from "@/lib/quotes";
 import { cleanText } from "@/lib/scoring/unicode";
-import { type AskKind, type Facts, type InterviewStatus, MAX_MESSAGE_CHARS, type Quoted } from "@/lib/types";
+import { type AskKind, type Facts, type InterviewStatus, isRec, MAX_MESSAGE_CHARS, type Quoted } from "@/lib/types";
 import { ASK_KINDS, INTERVIEW_STATUSES } from "./extractSchema";
 
 export const EXTRACT_SYSTEM =
@@ -68,8 +68,6 @@ export function emptyFacts(isJobMessage: boolean): Facts {
   };
 }
 
-type Rec = Record<string, unknown>;
-const isRec = (v: unknown): v is Rec => !!v && typeof v === "object" && !Array.isArray(v);
 const strOrNull = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
 const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
 

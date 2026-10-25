@@ -11,7 +11,7 @@ let pyWorker: Worker | null = null;
 let pyReady = false;
 let cancelCurrent: (() => void) | null = null;
 
-export interface RunOptions {
+interface RunOptions {
   /** Called with true while Pyodide is still loading, false once it is ready. */
   onLoading?: (loading: boolean) => void;
 }
@@ -51,7 +51,7 @@ export function runCode(
   return runJs(code, functionName, cases, language === "typescript", options);
 }
 
-export type SqlRunResult = { ok: true; want: ResultSet; got: ResultSet } | { ok: false; reason: "timeout" | "load" | "error"; message: string };
+type SqlRunResult = { ok: true; want: ResultSet; got: ResultSet } | { ok: false; reason: "timeout" | "load" | "error"; message: string };
 
 /** Runs the user's query and the reference on one fresh DB seeded with `schema`. */
 export function runSql(schema: string, reference: string, query: string, options: RunOptions = {}): Promise<SqlRunResult> {

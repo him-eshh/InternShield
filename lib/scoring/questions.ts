@@ -4,7 +4,7 @@ import { LEVEL_LABELS, type Answers, type Question, type QuestionId, type RiskLe
 
 const NOT_SURE = { value: "unknown", label: "Not sure" };
 
-export const QUESTIONS: Record<QuestionId, Question> = {
+const QUESTIONS: Record<QuestionId, Question> = {
   asked_to_do: {
     id: "asked_to_do",
     text: "Have they asked you to do any of these?",
@@ -49,11 +49,11 @@ export const QUESTIONS: Record<QuestionId, Question> = {
 };
 
 /** Tie-break order (findings 02 > 4.1). */
-export const QUESTION_ORDER: QuestionId[] = ["asked_to_do", "who_first", "channel", "talked_live", "signed_offer"];
+const QUESTION_ORDER: QuestionId[] = ["asked_to_do", "who_first", "channel", "talked_live", "signed_offer"];
 const MAX_QUESTIONS = 3;
 
 /** Couldn't-check line for a relevant question that has no answer (or "Not sure"). */
-export const QUESTION_GAPS: Record<QuestionId, { check: string; reason: string }> = {
+const QUESTION_GAPS: Record<QuestionId, { check: string; reason: string }> = {
   asked_to_do: { check: "What they've asked you to do", reason: "We don't know yet if they've asked you to pay, deposit, install, or share anything." },
   who_first: { check: "Who reached out first", reason: "We don't know if you applied first or they found you." },
   channel: { check: "Where the message came from", reason: "We don't know where this message reached you." },

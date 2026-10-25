@@ -1,5 +1,6 @@
 // Typed localStorage helpers (spec.md > Browser Storage). Values are JSON-encoded.
 // Every call is wrapped so a blocked/full/unavailable store never throws into the UI.
+import type { PostingContext } from "../tiers/types";
 import type { Profile, ResumeData, Theme } from "../types";
 
 export const KEYS = {
@@ -7,11 +8,11 @@ export const KEYS = {
   resume: "is:resume",
   theme: "is:theme",
   tracker: "is:tracker", // Tier 2: TrackerCard[]
-  tailored: "is:tailored", // Tier 2: TailoredResume (accepted rewrites)
-  interviews: "is:interviews", // Tier 3: InterviewSession[] (newest first)
-  lastCheck: "is:lastCheck", // v3: last finished check { outcome, input, submit } so /check survives refresh
-  prefs: "is:prefs", // v3: ProfilePrefs (target roles/companies, location, grad date) from the guided profile
-  targets: "is:targets", // v3: { tailor, practice } PostingContext handed from the report/tracker to a tool
+  lastCheck: "is:lastCheck", // last finished check { outcome, input, submit } so /check survives refresh
+  prefs: "is:prefs", // ProfilePrefs (target roles/companies, location, grad date) from the guided profile
+  practiceActive: "is:practice-active", // the Practice session in progress (PracticeState) so a refresh can resume it
+  practiceHistory: "is:practice-history", // finished Practice sessions, newest first (max 20)
+  targets: "is:targets", // { tailor, practice } PostingContext handed from the report/tracker to a tool
 } as const;
 
 function read<T>(key: string): T | null {
@@ -78,6 +79,17 @@ export function loadPrefs(): ProfilePrefs {
 }
 export const savePrefs = (p: ProfilePrefs) => write(KEYS.prefs, p);
 
+/**
+ * What Tailor and Practice start from. A target handed over by a report or the tracker always wins; the profile's first
+ * company/role only fills in when there is no target at all, so it never overrides what the user already has or typed.
+ */
+export function prefillTarget(target: PostingContext | null, prefs: ProfilePrefs): PostingContext | null {
+  if (target) return target;
+  const company = prefs.companies[0]?.trim() || null;
+  const role = prefs.roles[0]?.trim() || null;
+  return company || role ? { company, role, description: null } : null;
+}
+
 export function loadTheme(): Theme {
   const t = read<Theme>(KEYS.theme);
   return t === "light" || t === "dark" ? t : "system";
@@ -88,14 +100,18 @@ export const saveTheme = (t: Theme) => write(KEYS.theme, t);
 export const readKey = <T>(key: string): T | null => read<T>(key);
 export const writeKey = (key: string, value: unknown): void => write(key, value);
 
-/** Removes profile, resume, the last check and every tier store (not theme). The caller returns home. */
+/** Stores earlier versions wrote and nothing reads now; "Clear my data" still removes them from browsers that kept them. */
+const LEGACY_KEYS = ["is:tailored", "is:interviews"];
+
+/** Removes profile, resume, the last check and every tool store (not theme). The caller returns home. */
 export function clearMyData(): void {
   remove(KEYS.profile);
   remove(KEYS.resume);
   remove(KEYS.tracker);
-  remove(KEYS.tailored);
-  remove(KEYS.interviews);
   remove(KEYS.lastCheck);
   remove(KEYS.targets);
   remove(KEYS.prefs);
+  remove(KEYS.practiceActive);
+  remove(KEYS.practiceHistory);
+  LEGACY_KEYS.forEach(remove);
 }

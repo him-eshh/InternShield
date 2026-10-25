@@ -4,7 +4,7 @@ import { cacheGet, cacheSet } from "./cache";
 import { classify, OUTSIDE_TIMEOUT_MS } from "./http";
 
 /** "interview" = questions and hints; "interviewFeedback" = the graded feedback JSON. */
-export type GroqTask = "extract" | "explain" | "rewrite" | "transcribe" | "interview" | "interviewFeedback" | "intel";
+type GroqTask = "extract" | "explain" | "rewrite" | "transcribe" | "interview" | "interviewFeedback" | "intel";
 
 export const MODEL_20B = "openai/gpt-oss-20b";
 export const MODEL_120B = "openai/gpt-oss-120b";
@@ -35,7 +35,7 @@ const isQwen = (model: string) => model.startsWith("qwen/");
 /** One in-place wait on a 429 when Groq asks for at most this long. */
 const MAX_RETRY_WAIT_S = 5;
 
-export interface GroqRequest {
+interface GroqRequest {
   system: string;
   user: string;
   /** Strict JSON schema; omit for plain text. */
@@ -48,12 +48,12 @@ export interface GroqRequest {
 }
 
 /** Outcome<string> plus what transcribe needs: partial output and the upstream HTTP status of a failure. */
-export type GroqOutcome =
+type GroqOutcome =
   | { ok: true; data: string; partial?: boolean }
   | { ok: false; reason: "timeout" | "limit" | "error"; retryAfter?: number; status?: number; modelMissing?: boolean };
 
 /** Qwen 3 may still emit a <think> block in content; drop it. */
-export function stripThinking(s: string): string {
+function stripThinking(s: string): string {
   return s.replace(/<think>[\s\S]*?(<\/think>|$)/gi, "").trim();
 }
 

@@ -1,6 +1,10 @@
 // Shared contracts. Owned by the orchestrator: workers read, never edit.
 // Spec ref: spec.md > Data Model.
 
+/** A plain JSON object (not null, not an array). The one shared guard for untrusted input. */
+export type Rec = Record<string, unknown>;
+export const isRec = (v: unknown): v is Rec => typeof v === "object" && v !== null && !Array.isArray(v);
+
 // ---------- Profile (localStorage, values JSON-encoded) ----------
 // Keys: "is:profile" -> Profile, "is:resume" -> ResumeData, "is:theme" -> Theme
 
@@ -189,7 +193,7 @@ export interface Report {
 // ---------- API request/response shapes ----------
 // Every route returns a StepResult-shaped body (never "skipped"):
 //   200 { status: "done", data }  |  4xx/5xx { status: "failed", reason, retryAfter?, message?, code? }
-/** Machine-readable failure cause; the UI picks its copy from this (routes adopt it in v2). */
+/** Machine-readable failure cause; the UI picks its copy from this (routes adopt it). */
 export type ApiErrorCode =
   | "RATE_LIMITED"
   | "DAILY_CAP"

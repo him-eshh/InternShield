@@ -1,9 +1,9 @@
-// Local, made-up question pools for the v3 practice session (text rounds). No AI needed to start a session.
+// Local, made-up question pools for the practice session (text rounds). No AI needed to start a session.
 import { BEHAVIORAL_PROMPTS, DESIGN_PROMPTS, PORTFOLIO_FIRST } from "./interview";
 import { LP_PROMPTS } from "./presets";
 import { CASES } from "./scripted";
 
-export const SCREEN_PROMPTS: string[] = [
+const SCREEN_PROMPTS: string[] = [
   "Tell me a little about yourself and what you are looking for in your next role.",
   "Why are you interested in this role, and why now?",
   "What is a project you are proud of, in two or three sentences?",
@@ -12,7 +12,7 @@ export const SCREEN_PROMPTS: string[] = [
   "What other roles or companies are you talking to, and how do you decide between offers?",
 ];
 
-export const PORTFOLIO_PROMPTS: string[] = [
+const PORTFOLIO_PROMPTS: string[] = [
   PORTFOLIO_FIRST,
   "Walk me through a time your design changed after feedback. What did you change, and what did it improve?",
   "Pick one decision in a project where you chose between two options. How did you decide?",
@@ -21,16 +21,16 @@ export const PORTFOLIO_PROMPTS: string[] = [
 ];
 
 /** Opening question of each made-up case (the stem and the first thing to answer). */
-export const CASE_PROMPTS: string[] = CASES.map((c) => c.questions[0].prompt);
+const CASE_PROMPTS: string[] = CASES.map((c) => c.questions[0].prompt);
 
 /** A STAR prompt tied to one company value (from cited official pages), phrased without claiming affiliation. */
-export function valuePrompt(value: string, company?: string | null): string {
+function valuePrompt(value: string, company?: string | null): string {
   const v = value.replace(/[.\s]+$/, "").slice(0, 100);
   const who = company ? ` (a value ${company} lists publicly)` : "";
   return `Tell me about a time you showed "${v}"${who}. What was the situation, what did you do yourself, and what was the result?`;
 }
 
-export interface TextOption {
+interface TextOption {
   text: string;
   /** Short origin label for the recap. */
   source: string;

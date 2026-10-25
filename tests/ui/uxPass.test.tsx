@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import Explanation from "@/components/report/Explanation";
 import Report from "@/components/report/Report";
 import { fixtureOutcome } from "@/fixtures/outcome";
-import { explanationPlain, explanationSections, fallbackExplanation, FALLBACK_TITLES, hasBannedWord } from "@/lib/explainFallback";
+import { explanationSections, fallbackExplanation, FALLBACK_TITLES, hasBannedWord } from "@/lib/explainFallback";
 
 async function renderReport(name: "real" | "scam" | "medium") {
   const fx = (await fixtureOutcome(name))!;
@@ -58,9 +58,5 @@ describe("sectioned fallback explanation", () => {
   it("leaves AI text as paragraphs, even if it happens to contain ##", () => {
     const html = renderToStaticMarkup(<Explanation text={"## Not a title\n\nSecond."} source="ai" quotes={[]} />);
     expect(html).not.toContain("<h3");
-  });
-
-  it("plain text keeps titles and bullets readable", () => {
-    expect(explanationPlain(fallbackExplanation({ level: "high", flags: FLAGS }))).toMatch(/^Our take:\nThis message[\s\S]*What stood out:\n- /);
   });
 });

@@ -52,7 +52,7 @@ export default function CodeEditor({ value, language, onChange, label }: Props) 
       langComp.current = comp;
       const labelC = new Compartment();
       labelComp.current = labelC;
-      // Replaces CodeMirror's default (purple) highlight; colors are CSS vars in app/v2-tools.css, light and dark.
+      // Replaces CodeMirror's default (purple) highlight; colors are the --code-* tokens in app/theme.css, light and dark.
       const highlight = HighlightStyle.define([
         { tag: [t.keyword, t.controlKeyword, t.moduleKeyword, t.operatorKeyword, t.definitionKeyword, t.modifier], color: "var(--code-keyword)" },
         { tag: [t.string, t.special(t.string), t.regexp], color: "var(--code-string)" },

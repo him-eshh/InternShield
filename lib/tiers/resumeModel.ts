@@ -19,7 +19,7 @@ const MARKER = /^([•●▪◦‣·–\-*])\s+/;
 const MARKER_ONLY = /^[•●▪◦‣·]$/;
 
 /** Splits "• Built X" into the glyph and the words. A lone "-" or "*" needs a space after it. */
-export function splitMarker(text: string): { marker?: string; body: string } {
+function splitMarker(text: string): { marker?: string; body: string } {
   const m = text.match(/^([•●▪◦‣·])\s*/) ?? text.match(MARKER);
   if (!m) return { body: text };
   return { marker: m[1], body: text.slice(m[0].length) };

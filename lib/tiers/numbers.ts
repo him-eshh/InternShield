@@ -3,7 +3,7 @@
 
 export type NumUnit = "$" | "%" | "bps" | "x" | "";
 
-export interface Candidate {
+interface Candidate {
   /** The matched text, trimmed. */
   text: string;
   /** Signed, scale applied ("$1.2 million" -> 1200000, "(1.2)" -> -1.2). A range holds its midpoint. */
@@ -246,9 +246,9 @@ const plain = (n: number) => String(round6(n));
 const NAME: Record<NumUnit, string> = { $: "a dollar amount", "%": "a percent", bps: "a basis-point figure", x: "a multiple", "": "a plain number" };
 
 /** The name of a unit for messages: "a percent", "a dollar amount". */
-export const unitName = (u: NumUnit) => NAME[u];
+const unitName = (u: NumUnit) => NAME[u];
 
-export interface UnitCheck {
+interface UnitCheck {
   ok: boolean;
   /** The number to grade, in `unit` (bps -> percent and 0.075 -> 7.5% already applied). Null when there is no candidate. */
   value: number | null;

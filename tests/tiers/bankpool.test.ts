@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { filterBank, loadBank } from "@/lib/tiers/bank";
-import { askedScore, companyFamily, companyScope, groupTopics, pickFromBank, rankMostAsked, selectPool } from "@/lib/tiers/bankPool";
+import { askedScore, companyFamily, companyScope, groupTopics, pickFromBank, selectPool } from "@/lib/tiers/bankPool";
 import { bankTopics } from "@/lib/tiers/bank";
 
 const none = new Set<string>();
 const rand = () => 0;
+
+// The questions of one company, most asked first (what pickFromBank draws its top from).
+const rankMostAsked = (bank: Awaited<ReturnType<typeof loadBank>>, company: string) =>
+  [...filterBank(bank, { company })].sort((x, y) => askedScore(y, [company.toLowerCase()]) - askedScore(x, [company.toLowerCase()]) || x.id.localeCompare(y.id, "en", { numeric: true }));
 
 describe("company scope and similar-question fallback", () => {
   it("keeps an exact match exact, with no substitution message", async () => {

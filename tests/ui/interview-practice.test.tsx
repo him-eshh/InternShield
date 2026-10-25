@@ -14,7 +14,7 @@ vi.mock("@/lib/tiers/runner", () => ({ runCode: vi.fn(), runSql: vi.fn(), stopRu
 const context: InterviewContext = { company: null, role: null, description: null, resume: null, field: "tech" };
 const noop = () => {};
 const sessionFor = (round: "coding" | "sql", problemId: string, code: CodeAttempt | null): InterviewSession => ({
-  id: "s", round, context, turns: [], pending: "q", used: 0, seed: 1, problemId, code, board: null, hints: [], feedback: null, status: "active", createdAt: 0, updatedAt: 0,
+  id: "s", round, context, turns: [], pending: "q", used: 0, seed: 1, problemId, code, hints: [], feedback: null, status: "active", createdAt: 0, updatedAt: 0,
 });
 const html = (n: React.ReactElement) => renderToStaticMarkup(n);
 beforeEach(() => {
@@ -137,7 +137,7 @@ describe("Summary", () => {
     let s = answeredState("coding", { problemId: "count-vowels", language: "python", code: "x", passed: 5, total: 6 }, "Loop.");
     s = advance(s, [], 100_000);
     s = endEarly(s, 14 * 60_000 + 1);
-    const out = html(<Summary state={s} onAgain={noop} onHome={noop} />);
+    const out = html(<Summary state={s} onAgain={noop} onHome={noop} onOpenTracker={noop} />);
     expect(out).toContain("Session numbers");
     expect(out).toContain("1 of 1");
     expect(out).toContain("5 of 6");

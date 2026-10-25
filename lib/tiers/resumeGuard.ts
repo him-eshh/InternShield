@@ -7,7 +7,7 @@ import {
   type GuardIssue,
   type GuardIssueKind,
   type GuardResult,
-  type GuardV2,
+  type GuardReport,
   type GuardWarning,
   type TargetLevel,
 } from "./types";
@@ -276,7 +276,7 @@ export function checkRewrite(resumeText: string, original: string, rewrite: stri
   return issues.length ? { ok: false, issues } : { ok: true };
 }
 
-// ---------- guard v2 (findings 03 section 4): Block / Check / OK ----------
+// ---------- guard tiers (findings 03 section 4): Block / Check / OK ----------
 
 /** Same skill, different words. Both sides are normalized through this before diffing. */
 export const ALIASES: string[][] = [
@@ -332,7 +332,7 @@ export const BUZZWORDS = [
   "spearheaded", "leveraged", "synergy", "results driven", "passionate", "dynamic", "go getter", "team player", "hardworking",
 ];
 
-export interface GuardInput {
+interface GuardInput {
   resume: string;
   original: string;
   rewrite: string;
@@ -345,7 +345,7 @@ export interface GuardInput {
 }
 
 /** Block = invented facts (never shown); Check = shown with warnings; OK = clean. */
-export function guardRewrite(g: GuardInput): GuardV2 {
+export function guardRewrite(g: GuardInput): GuardReport {
   const known = withAliases([g.resume ?? "", ...(g.facts ?? [])].join("\n"));
   const base = checkRewrite(known, g.original, g.rewrite);
   const issues = base.ok ? [] : base.issues;

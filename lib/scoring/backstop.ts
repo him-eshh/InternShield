@@ -19,14 +19,14 @@ export type BackstopId =
   | "no_interview"
   | "pressure";
 
-export interface BackstopHit {
+interface BackstopHit {
   id: BackstopId;
   match: string; // the matched words
   snippet: string; // the sentence around the match, <= 200 chars, real text from the message
 }
 
 /** A pattern, optionally with words that must also appear in the same sentence. */
-export type Pattern = RegExp | { re: RegExp; needs: RegExp };
+type Pattern = RegExp | { re: RegExp; needs: RegExp };
 
 const MONEY_WORDS = /\$|\b(?:check|cheque|funds|money|balance|dollars|payment|zelle|venmo|cash ?app|wire|paypal)\b/i;
 const CRYPTO = String.raw`(?:usdt|tether|bitcoin|btc|ethereum|eth|crypto(?:currency)?|trc-?20|erc-?20)`;

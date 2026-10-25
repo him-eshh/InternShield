@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { CASES, FINANCE_BANK, checkAnswer, checkTurn, describeCheck, extractNumber, findQuestion, scriptFor } from "@/lib/tiers/scripted";
-import { MAX_QUESTION_CHARS, QUESTIONS_PER_ROUND, type AnswerCheck, type ScriptedQuestion } from "@/lib/tiers/types";
+import { CASES, checkAnswer, checkTurn, describeCheck, extractNumber, findQuestion } from "@/lib/tiers/scripted";
+import { MAX_QUESTION_CHARS, type AnswerCheck, type ScriptedQuestion } from "@/lib/tiers/types";
 
-const ALL: ScriptedQuestion[] = [...CASES.flatMap((c) => c.questions), ...FINANCE_BANK];
+const ALL: ScriptedQuestion[] = CASES.flatMap((c) => c.questions);
 const byId = (id: string) => ALL.find((q) => q.id === id)!;
 const expected = (id: string) => {
   const c = byId(id).check;
@@ -20,19 +20,6 @@ describe("content", () => {
     }
   });
 
-  it("has >= 12 finance questions, >= 5 numeric, rubrics with 3-4 points", () => {
-    expect(FINANCE_BANK.length).toBeGreaterThanOrEqual(12);
-    expect(FINANCE_BANK.filter((q) => q.check?.kind === "number").length).toBeGreaterThanOrEqual(5);
-    for (const q of FINANCE_BANK) {
-      if (q.check?.kind === "rubric") {
-        expect(q.check.points.length).toBeGreaterThanOrEqual(3);
-        expect(q.check.points.length).toBeLessThanOrEqual(4);
-      } else {
-        expect(q.prompt.endsWith("End with your final number.")).toBe(true);
-      }
-    }
-  });
-
   it("ids and prompts are unique, checked, and fit the route's question cap", () => {
     expect(new Set(ALL.map((q) => q.id)).size).toBe(ALL.length);
     expect(new Set(ALL.map((q) => q.prompt)).size).toBe(ALL.length);
@@ -40,13 +27,6 @@ describe("content", () => {
       expect(q.check).not.toBeNull();
       expect(q.prompt.length).toBeLessThanOrEqual(MAX_QUESTION_CHARS);
       if (q.check?.kind === "rubric") for (const p of q.check.points) expect(p.any.length).toBeGreaterThan(0);
-    }
-  });
-
-  it("script lengths match QUESTIONS_PER_ROUND", () => {
-    for (let seed = 0; seed < 30; seed++) {
-      expect(scriptFor("case", seed)).toHaveLength(QUESTIONS_PER_ROUND.case);
-      expect(scriptFor("finance", seed)).toHaveLength(QUESTIONS_PER_ROUND.finance);
     }
   });
 });
@@ -59,12 +39,6 @@ describe("answer keys equal the arithmetic in their prompts", () => {
     { id: "bike-share-2", shown: ["$2 a ride", "9,000", "$3 a ride", "7,000", "$0.50"], value: 7000 * (3 - 0.5) - 9000 * (2 - 0.5) },
     { id: "bookstore-2", shown: ["$60,000", "$15,000", "60%", "$4,000"], value: 60000 / (15000 * (1 - 0.6) - 4000) },
     { id: "food-truck-2", shown: ["40 orders", "$10", "3 hours", "50 orders", "$9"], value: 50 * 9 * 3 - 40 * 10 * 3 },
-    { id: "fin-ev-math", shown: ["$800,000", "$300,000", "$100,000"], value: 800000 + 300000 - 100000 },
-    { id: "fin-wacc-math", shown: ["60%", "40%", "10%", "5%", "25%"], value: 0.6 * 10 + 0.4 * 5 * (1 - 0.25) },
-    { id: "fin-growth-math", shown: ["$200,000", "10%", "2 years"], value: 200000 * 1.1 ** 2 },
-    { id: "fin-margin-math", shown: ["$400,000", "$240,000", "$60,000"], value: ((400000 - 240000 - 60000) / 400000) * 100 },
-    { id: "fin-multiple-math", shown: ["8 times", "$250,000", "$500,000", "$100,000"], value: 8 * 250000 - 500000 + 100000 },
-    { id: "fin-receivables-math", shown: ["$30,000"], value: 30000 },
   ];
 
   it.each(keys)("$id", ({ id, shown, value }) => {
@@ -82,10 +56,6 @@ describe("answer keys equal the arithmetic in their prompts", () => {
     expect(3600 * (3 - 1) - 6000).toBe(1200);
   });
 
-  it("percent keys use the percent value and unit %", () => {
-    expect(expected("fin-wacc-math")).toMatchObject({ expected: 7.5, unit: "%" });
-    expect(expected("fin-margin-math")).toMatchObject({ expected: 25, unit: "%" });
-  });
 });
 
 describe("extractNumber", () => {
@@ -172,42 +142,6 @@ describe("checkTurn / findQuestion", () => {
     const q = byId("food-truck-2");
     expect(checkTurn({ question: q.prompt, answer: "50 x 9 x 3 = 1350, minus 1200 = 150" })).toMatchObject({ found: 150, correct: true });
     expect(checkTurn({ question: "Why this role?", answer: "150" })).toBeNull();
-  });
-});
-
-describe("scriptFor", () => {
-  it("is deterministic and null for other rounds", () => {
-    expect(scriptFor("case", 5)).toEqual(scriptFor("case", 5));
-    expect(scriptFor("finance", 17)).toEqual(scriptFor("finance", 17));
-    expect(scriptFor("screen", 1)).toBeNull();
-    expect(scriptFor("portfolio", 1)).toBeNull();
-  });
-
-  it("case picks one case by seed with the same seed rule as pick", () => {
-    expect(scriptFor("case", 0)).toEqual(CASES[0].questions);
-    expect(scriptFor("case", CASES.length + 1)).toEqual(CASES[1].questions);
-    expect(scriptFor("case", -1)).toEqual(CASES[1].questions);
-    expect(scriptFor("case", Number.NaN)).toEqual(CASES[0].questions);
-    expect(scriptFor("case", 2.9)).toEqual(CASES[2].questions);
-  });
-
-  it("finance always gives 4 distinct bank questions, and seeds vary the set", () => {
-    const sets = new Set<string>();
-    for (let seed = 0; seed < 200; seed++) {
-      const s = scriptFor("finance", seed)!;
-      expect(s).toHaveLength(4);
-      expect(new Set(s.map((q) => q.id)).size).toBe(4);
-      for (const q of s) expect(FINANCE_BANK).toContain(q);
-      sets.add(s.map((q) => q.id).join(","));
-    }
-    expect(sets.size).toBeGreaterThan(20);
-    expect(scriptFor("finance", Number.POSITIVE_INFINITY)).toEqual(scriptFor("finance", 0));
-  });
-
-  it("returns a copy the caller can't use to change the bank", () => {
-    const s = scriptFor("case", 0)!;
-    s.pop();
-    expect(CASES[0].questions).toHaveLength(3);
   });
 });
 

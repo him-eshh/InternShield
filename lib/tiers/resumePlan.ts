@@ -8,7 +8,7 @@ export interface ResumePlan extends TailorPlan {
   company: string;
   role: string;
 }
-export interface PlanInput {
+interface PlanInput {
   posting: string;
   resume: string;
   company?: string;

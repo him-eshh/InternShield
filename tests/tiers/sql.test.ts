@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import initSqlJs, { type Database } from "sql.js";
-import { compareResults, getSqlProblem, pickSqlProblem, SQL_PROBLEMS, SQL_SCHEMA, type ResultSet } from "@/lib/tiers/sql";
+import { compareResults, getSqlProblem, SQL_PROBLEMS, SQL_SCHEMA, type ResultSet } from "@/lib/tiers/sql";
 
 let db: Database;
 beforeAll(async () => {
@@ -41,10 +41,7 @@ describe("SQL problems", () => {
     });
   }
 
-  it("picks by seed and looks up by id", () => {
-    expect(pickSqlProblem(0).id).toBe(SQL_PROBLEMS[0].id);
-    expect(pickSqlProblem(-7).id).toBe(SQL_PROBLEMS[1].id);
-    expect(pickSqlProblem(NaN).id).toBe(SQL_PROBLEMS[0].id);
+  it("looks up by id", () => {
     expect(getSqlProblem("sql-rank")?.title).toBe("Rank within a course");
     expect(getSqlProblem("nope")).toBeNull();
   });

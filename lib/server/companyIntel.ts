@@ -1,4 +1,4 @@
-// Company intel for resume tailoring and interview practice (v3 contract, shared; nobody edits after setup).
+// Company intel for resume tailoring and interview practice.
 // Order: cache -> Wikidata (official site) -> Tavily on the official domain -> general Tavily search.
 // Claims come from Groq reading the search snippets; any claim without a valid source is dropped.
 // Never throws: capped, unconfigured or failed lookups return `limited: true` with whatever is known.
@@ -9,8 +9,8 @@ import { takeIntel } from "./guard";
 import { search, type Hit } from "./tavily";
 import { wikidataCompany } from "./wikidata";
 
-export type IntelKind = "interview" | "resume";
-export interface IntelRequest {
+type IntelKind = "interview" | "resume";
+interface IntelRequest {
   company: string;
   role?: string | null;
   kind: IntelKind;
@@ -30,7 +30,7 @@ const TTL = 7 * DAY;
 const MAX_HITS = 8;
 const SNIPPET_CHARS = 600;
 /** People-profile and contact-scraper sites: never searched, never cited. */
-export const EXCLUDED_DOMAINS = [
+const EXCLUDED_DOMAINS = [
   "linkedin.com",
   "rocketreach.co",
   "zoominfo.com",

@@ -78,7 +78,7 @@ export function nameSimilarity(company: string, domain: string): number {
 
 const CAREERS_RE = /career|jobs|join|work-with-us|hiring|opportunit/i;
 
-export function pickOfficial(company: string, hits: Hit[]): CompanyData | null {
+function pickOfficial(company: string, hits: Hit[]): CompanyData | null {
   let best: { domain: string; score: number } | null = null;
   for (const h of hits) {
     const domain = registrable(h.url);
@@ -118,7 +118,7 @@ const LOCATION_LABEL_RE = /\blocations?\s*[:\-]\s*([^\n.|]{2,60})/i;
 const CITY_RE = /\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)*,\s?[A-Z]{2})\b/;
 const REMOTE_RE = /\b(remote|hybrid|on-?site)\b/i;
 
-export function readDetails(title: string, content: string): { location: string | null; pay: string | null } {
+function readDetails(title: string, content: string): { location: string | null; pay: string | null } {
   const text = `${title}\n${content}`;
   const pay = PAY_RE.exec(text)?.[0].trim() ?? null;
   const location =
@@ -140,7 +140,7 @@ function words(s: string): string[] {
 }
 
 /** "Stripe Careers | Software Intern" / "Software Intern | Stripe" -> "Software Intern". */
-export function cleanTitle(title: string | undefined, company: string): string | null {
+function cleanTitle(title: string | undefined, company: string): string | null {
   const t = title?.trim();
   if (!t) return null;
   const tokens = nameTokens(company);

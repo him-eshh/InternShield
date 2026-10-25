@@ -59,11 +59,9 @@ for (const v of variants) {
     await page.reload(); await ready(page);
     check(await page.getByText("4 of 4 done", { exact: true }).isVisible(), "profile reload persists");
     await page.evaluate(() => {
-      localStorage.setItem("is:tailored", JSON.stringify({ saved: true }));
-      localStorage.setItem("is:interviews", JSON.stringify([{ round: "coding", status: "done" }]));
+      localStorage.setItem("is:practice-history", JSON.stringify([{ id: "qa", finishedAt: Date.now(), company: null, summary: { turns: [], rounds: [{ round: "coding", band: "Solid", note: "" }], next: [], answered: 1, skipped: 0 } }]));
     });
     await page.goto(BASE); await ready(page);
-    check(await page.getByRole("link", { name: /Resume edits saved/ }).isVisible(), "returning resume continuation");
     check(await page.getByRole("link", { name: /Last practice/ }).isVisible(), "returning practice continuation");
     await shot(page, "shell-home-returning-390-light");
   } finally { await browser.close(); }

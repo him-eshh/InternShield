@@ -2,20 +2,20 @@
 import { buildDoc, type RawRow } from "./resumeModel";
 import type { LineBox, PdfFamily, ResumeDoc } from "./resumeTypes";
 
-export interface PdfTextItem {
+interface PdfTextItem {
   str: string;
   /** [a, b, c, d, x, y] in PDF points. */
   transform: number[];
   width?: number;
   fontName?: string;
 }
-export interface PdfPageItems {
+interface PdfPageItems {
   items: PdfTextItem[];
   /** Real font name for a pdf.js font id, when the loader could look it up. */
   fontNameOf?: (id: string) => string | undefined;
 }
 
-export function fontFromName(name: string | undefined): { family: PdfFamily; bold: boolean; italic: boolean } {
+function fontFromName(name: string | undefined): { family: PdfFamily; bold: boolean; italic: boolean } {
   const n = (name ?? "").toLowerCase();
   const family: PdfFamily = /courier|mono|consolas|typewriter/.test(n)
     ? "Courier"
@@ -35,7 +35,7 @@ interface Row {
 }
 
 /** Group one page's items into visual rows, top to bottom, left to right. */
-export function pageRows(page: PdfPageItems, pageIndex: number): RawRow[] {
+function pageRows(page: PdfPageItems, pageIndex: number): RawRow[] {
   const rows: Row[] = [];
   for (const it of page.items) {
     if (!it || typeof it.str !== "string" || it.str === "" || !Array.isArray(it.transform) || it.transform.length < 6) continue;
@@ -88,7 +88,7 @@ export function pageRows(page: PdfPageItems, pageIndex: number): RawRow[] {
   return out;
 }
 
-export function parsePdfPages(pages: PdfPageItems[]): ResumeDoc {
+function parsePdfPages(pages: PdfPageItems[]): ResumeDoc {
   const rows = pages.flatMap((p, i) => pageRows(p, i));
   return buildDoc(rows, pages.length, "pdf");
 }

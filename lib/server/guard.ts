@@ -3,7 +3,7 @@ import { MAX_MESSAGE_CHARS } from "@/lib/types";
 import { MINUTE, takeCount } from "./cache";
 import { failed, MESSAGES } from "./http";
 
-export type RouteName = "extract" | "company" | "sender" | "posting" | "explain" | "rewrite" | "transcribe" | "interview" | "wikidata" | "intel";
+type RouteName = "extract" | "company" | "sender" | "posting" | "explain" | "rewrite" | "transcribe" | "interview" | "wikidata" | "intel";
 
 export type GuardResult =
   | { ok: true; body: Record<string, unknown>; ip: string }
@@ -11,7 +11,7 @@ export type GuardResult =
 
 const MAX_BODY_BYTES = 16 * 1024;
 /** Transcribe carries one browser-compressed screenshot as a data URL (Vercel's body limit is 4.5 MB). */
-export const MAX_IMAGE_BODY_BYTES = 3.6 * 1024 * 1024; // two-strip tall screenshots, base64 (findings A2)
+const MAX_IMAGE_BODY_BYTES = 3.6 * 1024 * 1024; // two-strip tall screenshots, base64 (findings A2)
 
 // Per-visitor limits for the tier AI routes: [per minute, per day].
 const VISITOR_LIMITS: Partial<Record<RouteName, [number, number]>> = {
@@ -31,7 +31,7 @@ function allowedOrigins(): string[] {
   return (raw ? raw.split(",") : ["http://localhost:3000"]).map((s) => s.trim().replace(/\/$/, "")).filter(Boolean);
 }
 
-export function clientIp(req: Request): string {
+function clientIp(req: Request): string {
   const first = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
   return first || "local";
 }

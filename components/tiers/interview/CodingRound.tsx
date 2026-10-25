@@ -11,7 +11,6 @@ import {
 } from "@/lib/tiers/types";
 import { getProblem, gradeOutputs } from "@/lib/tiers/problems";
 import { preloadPython, runCode, stopRunners } from "@/lib/tiers/runner";
-import { TIER_FLAGS } from "@/lib/tiers/flags";
 import { card as cardCls, pillOff, pillOn } from "../../ui";
 import { ActionBar, FinishStep, HintList, StatusLine } from "./RoundActions";
 
@@ -23,7 +22,7 @@ const CodeEditor = dynamic(() => import("./CodeEditor"), {
 const LANGS: { id: CodeLanguage; label: string }[] = [
   { id: "python", label: "Python" },
   { id: "javascript", label: "JavaScript" },
-  ...(TIER_FLAGS.tsRunner ? [{ id: "typescript" as const, label: "TypeScript" }] : []),
+  { id: "typescript", label: "TypeScript" },
 ];
 const langLabel = (l: CodeLanguage) => LANGS.find((x) => x.id === l)?.label ?? l;
 

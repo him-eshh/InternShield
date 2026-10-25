@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { loadMammoth, loadPdfjs } from "@/lib/client/docLibs";
 import type { PdfPreviewPage } from "@/lib/client/resumeEditor";
 import type { PDFWorker } from "pdfjs-dist";
 import { LoaderCircle, ZoomIn, ZoomOut } from "lucide-react";
@@ -42,8 +43,7 @@ export function DocumentPreview({ output, version, onReady, highlights, prepared
           fragment.appendChild(wrapper);
         }
       } else if (output.ext === "pdf") {
-        const pdfjs = await import("pdfjs-dist");
-        pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+        const pdfjs = await loadPdfjs();
         if (cancelled) return;
         worker.current ??= new pdfjs.PDFWorker();
         const task = pdfjs.getDocument({ data: output.bytes.slice(), worker: worker.current });
@@ -82,7 +82,7 @@ export function DocumentPreview({ output, version, onReady, highlights, prepared
           fragment.appendChild(wrapper);
         }
       } else if (output.ext === "docx") {
-        const mammoth = await import("mammoth");
+        const mammoth = await loadMammoth();
         const result = await mammoth.convertToHtml({ arrayBuffer: output.bytes.slice().buffer as ArrayBuffer });
         if (cancelled) return;
         // Keep basic Word content; strip links, attributes and active HTML from untrusted documents.

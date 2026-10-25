@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { gapCount, keywordGap } from "@/lib/tiers/keywordGap";
+import { keywordGap } from "@/lib/tiers/keywordGap";
 
 // Made-up posting and resume.
 const POSTING = `Data Analyst Intern, Northwind Analytics
@@ -32,10 +32,6 @@ describe("keywordGap", () => {
     expect(find("Machine learning")).toMatchObject({ bucket: "alias", alias: "ML" });
     expect(find("SQL")?.bucket).toBe("missing");
     expect(find("Tableau")?.bucket).toBe("missing");
-  });
-
-  it("counts an alias as in the resume", () => {
-    expect(gapCount(gap.required)).toEqual({ have: 3, total: 4 });
   });
 
   it("a confirmed fact moves a term to found", () => {

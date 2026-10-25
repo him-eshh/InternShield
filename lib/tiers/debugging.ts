@@ -1,5 +1,5 @@
-// Debugging round (v2, findings 04 section 4): short made-up programs with planted bugs, graded by the same hidden tests
-// as live coding. Reference fixes live in tests/tiers/v2-debugging.test.ts, so the user never gets them.
+// Debugging round (findings 04 section 4): short made-up programs with planted bugs, graded by the same hidden tests
+// as live coding. Reference fixes live in tests/tiers/debugging.test.ts, so the user never gets them.
 import type { CodingProblem } from "./types";
 
 /** TS starter = the JS program with a typed signature (TS is transpiled only, so the body stays valid). */
@@ -207,9 +207,3 @@ def is_palindrome(s):
     ],
   },
 ];
-
-/** Same seed rule as pickProblem. */
-export function pickDebugProblem(seed: number): CodingProblem {
-  const n = Number.isFinite(seed) ? Math.abs(Math.floor(seed)) : 0;
-  return DEBUG_PROBLEMS[n % DEBUG_PROBLEMS.length];
-}

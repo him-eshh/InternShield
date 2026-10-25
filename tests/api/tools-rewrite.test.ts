@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { resetServerState } from "@/lib/server/cache";
 import { parseMulti, styleLines } from "@/lib/server/rewrite";
-import { DEFAULT_TAILOR_V2 } from "@/lib/tiers/types";
+import { DEFAULT_TAILOR, type TailorOptions } from "@/lib/tiers/types";
+
+// Every optional style choice on: the posting's own words, no buzzwords, internship level, US spelling.
+const FULL_TAILOR: TailorOptions = { ...DEFAULT_TAILOR, level: "internship", region: "us", postingWords: true, noBuzzwords: true };
 import { groqOk, req } from "./helpers";
 
 const h = vi.hoisted(() => ({ create: vi.fn() }));
@@ -42,7 +45,7 @@ describe("rewrite v2: three options", () => {
         }),
       ),
     );
-    const json = await (await call({ ...body, count: 3, facts: ["HTML"], options: DEFAULT_TAILOR_V2 })).json();
+    const json = await (await call({ ...body, count: 3, facts: ["HTML"], options: FULL_TAILOR })).json();
     expect(json.status).toBe("done");
     expect(json.data.options).toEqual(["Built a club website", "Built a web page for a student club"]);
     expect(json.data.text).toBe("Built a club website");
@@ -68,9 +71,9 @@ describe("rewrite v2: three options", () => {
     ["facts not array", { facts: "React" }],
     ["too many facts", { facts: Array.from({ length: 13 }, (_, i) => `t${i}`) }],
     ["long fact", { facts: ["x".repeat(61)] }],
-    ["bad level", { options: { ...DEFAULT_TAILOR_V2, level: "ceo" } }],
-    ["bad region", { options: { ...DEFAULT_TAILOR_V2, region: "mars" } }],
-    ["postingWords not bool", { options: { ...DEFAULT_TAILOR_V2, postingWords: "yes" } }],
+    ["bad level", { options: { ...FULL_TAILOR, level: "ceo" } }],
+    ["bad region", { options: { ...FULL_TAILOR, region: "mars" } }],
+    ["postingWords not bool", { options: { ...FULL_TAILOR, postingWords: "yes" } }],
   ])("rejects %s (400)", async (_n, extra) => {
     expect((await call({ ...body, ...extra })).status).toBe(400);
     expect(h.create).not.toHaveBeenCalled();
@@ -91,6 +94,6 @@ describe("rewrite v2 helpers", () => {
   it("v1 options add no v2 style lines", () => {
     const v1 = styleLines({ emphasis: [], tone: "confident", strength: "light", keepLength: true });
     expect(v1.join(" ")).not.toMatch(/buzzword|posting's word/i);
-    expect(styleLines(DEFAULT_TAILOR_V2).length).toBeGreaterThan(v1.length);
+    expect(styleLines(FULL_TAILOR).length).toBeGreaterThan(v1.length);
   });
 });

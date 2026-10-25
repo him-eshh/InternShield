@@ -1,4 +1,4 @@
-/* v2 check stream: report styles that Tailwind classes can't express. Imported by components/report/Report.tsx. */
+/* Report styles that Tailwind classes can't express. Imported by components/report/Report.tsx. */
 
 /* Quoted text from the message. Tint plus underline plus the quotation marks: never color alone. */
 .quote-mark {

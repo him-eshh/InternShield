@@ -1,8 +1,8 @@
-// Answer impact (v3 report stream): what one answer, added detail or edited
+// Answer impact : what one answer, added detail or edited
 // message changed in the report, so the UI never shows a dead-end "no score impacted".
 import { LEVEL_LABELS, type Report, type RiskLevel } from "./types";
 
-export type ImpactSign = { id: string; title: string; kind: "red" | "good" };
+type ImpactSign = { id: string; title: string; kind: "red" | "good" };
 
 export type AnswerImpact = {
   kind: "question" | "detail" | "message";
@@ -44,7 +44,7 @@ const familyOf = (id: string) => FAMILY[id] ?? id;
 const titleKey = (title: string) =>
   title.toLowerCase().replace(/\baddress\b/g, "account").replace(/\b(high|easy)\b/g, "easy").replace(/[^a-z0-9 ]+/g, "").replace(/\s+/g, " ").trim();
 
-export function canonicalTitle(id: string, title: string): string {
+function canonicalTitle(id: string, title: string): string {
   return CANON_TITLE[familyOf(id)] ?? title;
 }
 

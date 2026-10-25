@@ -1,4 +1,4 @@
-// v3 resume tailoring contracts (resume stream owns). The tool edits the user's own file in place:
+// Resume tailoring contracts (resume stream owns). The tool edits the user's own file in place:
 // small, targeted line edits, never a regenerated resume.
 
 export type ResumeSource = "pdf" | "docx" | "text";

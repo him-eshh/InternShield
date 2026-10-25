@@ -3,10 +3,10 @@
 import type { BankQuestion } from "./types";
 
 export type BankRole = "swe" | "frontend" | "backend" | "data" | "ml";
-export type BankDifficulty = "easy" | "medium" | "hard" | "mixed";
+type BankDifficulty = "easy" | "medium" | "hard" | "mixed";
 
 /** A role keeps a question when it carries at least one of these tags. SWE keeps everything. */
-export const ROLE_TAGS: Record<BankRole, string[] | null> = {
+const ROLE_TAGS: Record<BankRole, string[] | null> = {
   swe: null,
   frontend: ["string", "array", "hash table", "stack", "queue", "tree", "binary tree", "recursion", "two pointers", "sliding window", "design"],
   backend: ["hash table", "heap (priority queue)", "graph", "trie", "union find", "topological sort", "shortest path", "binary search", "sorting", "design", "queue"],
