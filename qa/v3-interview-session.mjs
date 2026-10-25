@@ -3,8 +3,12 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 assert.match(process.env.QA_BASE ?? "", /^http:\/\/(localhost|127\.0\.0\.1):32\d\d$/);
 assert.ok(process.env.QA_SHOTS, "Set the interview QA_SHOTS directory");
-const { open, mockApi, shot, overflowX, BASE, done, variants, tag } = await import("./lib.mjs");
+const { open, mockApi, shot: capture, overflowX, BASE, done, variants, tag } = await import("./lib.mjs");
 const all = process.argv.includes("--matrix");
+async function shot(page, name) {
+  await page.addStyleTag({ content: "nextjs-portal { display:none !important }" });
+  await capture(page, name);
+}
 const sqlSource = readFileSync("lib/tiers/sql.ts", "utf8");
 const sql = Object.fromEntries([...sqlSource.matchAll(/id: "([^"]+)"[\s\S]*?reference:\s*"([^"]+)"/g)].map((m) => [m[1], m[2]]));
 const py = {
@@ -43,7 +47,11 @@ for (const v of all ? variants : [variants[0]]) {
     for (let i = 1; i <= 5; i++) {
       await page.getByRole("heading", { name: `Question ${i} of 5`, exact: true }).waitFor();
       const s = await getState(page); const item = s.activeQuestion.item;
-      if (i === 1) await shot(page, `v3-interview-coding-${t}`);
+      if (i === 1) {
+        await page.locator(".cm-content").first().waitFor();
+        await page.locator('textarea[aria-label*="code editor"]').waitFor({ state: "hidden" });
+        await shot(page, `v3-interview-coding-${t}`);
+      }
       if (item.kind === "code" || item.kind === "sql") {
         await edit(page, item.kind === "sql" ? sql[item.problemId] : py[item.problemId]);
         await page.locator(item.kind === "sql" ? "#sql-approach" : "#coding-approach").fill("Use one pass where possible, verify empty inputs and explain time and space complexity.");
@@ -85,6 +93,8 @@ for (const v of all ? variants : [variants[0]]) {
     await page.getByRole("heading", { name: "Past sessions" }).scrollIntoViewIfNeeded();
     await shot(page, `v3-interview-history-${t}`);
     await page.getByRole("button", { name: "Start session", exact: true }).click();
+    await page.locator(".cm-content").first().waitFor();
+    await page.locator('textarea[aria-label*="code editor"]').waitFor({ state: "hidden" });
     await page.getByRole("button", { name: "End session", exact: true }).click();
     await page.getByRole("alertdialog").waitFor(); await shot(page, `v3-interview-end-confirm-${t}`);
     await page.getByRole("button", { name: "End and view summary" }).click();
