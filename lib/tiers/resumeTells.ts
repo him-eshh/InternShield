@@ -25,9 +25,17 @@ const BANNED: [RegExp, string][] = [
 const EM_DASH = /[—―]/g;
 export const emDashCount = (s: string) => (s.match(EM_DASH) ?? []).length;
 
+// Match typographic spellings and invisible separators without changing the user's displayed text.
+const tellText = (text: string) => text.normalize("NFKC")
+  .replace(/[\u2010-\u2015\u2212]/g, "-")
+  .replace(/[\u2018\u2019]/g, "'")
+  .replace(/[\u200B-\u200D\u2060\uFEFF]/g, "")
+  .replace(/\s+/g, " ");
+
 /** Banned words found in the text, by their listed name. */
 export function bannedIn(text: string): string[] {
-  return BANNED.filter(([re]) => re.test(text)).map(([, name]) => name);
+  const normalized = tellText(text);
+  return BANNED.filter(([re]) => re.test(normalized)).map(([, name]) => name);
 }
 
 /** Adjectives that pile up in machine-written bullets. Three in a row is a stack. */
@@ -42,7 +50,7 @@ const ADJECTIVES = new Set(
 
 /** True when three or more stacked adjectives appear in a row (commas and "and" between them allowed). */
 export function adjectiveStack(text: string): boolean {
-  const words = text.toLowerCase().replace(/[^a-z\s,-]/g, " ").split(/[\s,]+/).filter((w) => w && w !== "and");
+  const words = tellText(text).toLowerCase().replace(/[^a-z\s,-]/g, " ").split(/[\s,]+/).filter((w) => w && w !== "and");
   let run = 0;
   for (const w of words) {
     run = ADJECTIVES.has(w) ? run + 1 : 0;

@@ -56,6 +56,13 @@ describe("shared resume edit guard", () => {
     expect(out.length).toBeLessThan(6);
     expect(out.reduce((n, e) => n + e.proposed.length - e.original.length, 0)).toBeLessThanOrEqual(source.length * 6 * 0.03);
   });
+  it.each([
+    "cutting\u2011edge", "results\u2013driven", "in today\u2019s fast\u2011paced",
+    "proven\u00a0track\u00a0record", "lever\u200baged", "proven\ttrack\nrecord",
+  ])("catches typographic AI-tell variants: %s", (text) => {
+    expect(bannedIn(text).length).toBeGreaterThan(0);
+  });
+
   it("recognizes every required banned phrase, adjective stacks, em dashes and voice changes", () => {
     for (const word of ["spearheaded", "leveraged", "utilized", "passionate", "synergy", "cutting-edge", "dynamic", "results-driven", "orchestrated", "seamlessly", "robust", "innovative", "proven track record", "in today's fast-paced", "drove impact", "drive impact", "showcasing", "demonstrating"]) expect(bannedIn(word).length).toBeGreaterThan(0);
     expect(adjectiveStack("modern, scalable and reliable dashboard")).toBe(true);
