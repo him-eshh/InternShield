@@ -5,6 +5,10 @@
 /* Dark mode is class-based: the no-flash script in layout.tsx sets .dark on <html>. */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Height of the mobile bottom tab bar (components/shell/Nav.tsx): sticky/fixed bottom UI sits above it. */
+:root { --nav-bottom: calc(56px + env(safe-area-inset-bottom)); }
+@media (width >= 48rem) { :root { --nav-bottom: 0px; } }
+
 @theme inline {
   /* colors (new names) */
   --color-bg: var(--bg);

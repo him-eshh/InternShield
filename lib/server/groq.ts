@@ -4,7 +4,7 @@ import { cacheGet, cacheSet } from "./cache";
 import { classify, OUTSIDE_TIMEOUT_MS } from "./http";
 
 /** "interview" = questions and hints; "interviewFeedback" = the graded feedback JSON. */
-export type GroqTask = "extract" | "explain" | "rewrite" | "transcribe" | "interview" | "interviewFeedback";
+export type GroqTask = "extract" | "explain" | "rewrite" | "transcribe" | "interview" | "interviewFeedback" | "intel";
 
 export const MODEL_20B = "openai/gpt-oss-20b";
 export const MODEL_120B = "openai/gpt-oss-120b";
@@ -26,6 +26,7 @@ export function modelOrder(task: GroqTask): string[] {
     transcribe: [vision], // the only vision model; no fallback model
     interview: [MODEL_20B, interview], // short questions: cheap gpt-oss-20b first
     interviewFeedback: [interview, MODEL_120B, MODEL_20B],
+    intel: [MODEL_20B, MODEL_120B], // company intel from search snippets (lib/server/companyIntel.ts)
   };
   return [...new Set(order[task])];
 }

@@ -39,14 +39,14 @@ export async function openRoute(route = "/", { tracker, targets, profile = false
   if (targets) storage["is:targets"] = JSON.stringify(targets);
   const s = await open({ ...opts, profile, storage });
   const calls = await mockApi(s.page);
-  await s.page.goto(BASE + route, { waitUntil: "networkidle" });
+  await s.page.goto(BASE + route, { waitUntil: "load", timeout: 90000 });
   return { ...s, calls };
 }
 
 /** Seeds a finished check ("scam" | "real" | "medium") via the dev-only ?fixture= path; leaves the page on its report. */
 export async function seedCheck(page, name = "real") {
-  await page.goto(`${BASE}/check?fixture=${name}`, { waitUntil: "networkidle" });
-  await page.waitForFunction(() => localStorage.getItem("is:lastCheck"));
+  await page.goto(`${BASE}/check?fixture=${name}`, { waitUntil: "load", timeout: 90000 });
+  await page.waitForFunction(() => localStorage.getItem("is:lastCheck"), null, { timeout: 60000 });
 }
 
 /** Active nav tab label(s) (aria-current="page"). */

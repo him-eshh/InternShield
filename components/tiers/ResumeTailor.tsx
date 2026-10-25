@@ -520,7 +520,7 @@ function Editor({ resume, target, onBack }: { resume: ResumeData; target: Postin
         {status}
       </p>
 
-      <div className="sticky bottom-0 -mx-6 mt-8 flex flex-col gap-3 border-t border-border bg-bg/95 px-6 py-3 backdrop-blur sm:flex-row sm:items-center">
+      <div className="sticky bottom-[var(--nav-bottom)] -mx-6 mt-8 flex flex-col gap-3 border-t border-border bg-bg/95 px-6 py-3 backdrop-blur sm:flex-row sm:items-center">
         <p className="text-[15px] font-medium sm:mr-auto">
           {changes === 0 ? "No changes yet" : `${changes} ${changes === 1 ? "change" : "changes"}`}
         </p>

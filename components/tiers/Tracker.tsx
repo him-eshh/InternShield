@@ -293,7 +293,7 @@ export default function Tracker({
       </div>
 
       {undo && (
-        <div role="status" className="animate-enter fixed bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3 rounded-full border border-border bg-card px-5 py-2 shadow-lg">
+        <div role="status" className="animate-enter fixed bottom-[calc(var(--nav-bottom)+1rem)] left-1/2 z-20 flex -translate-x-1/2 items-center gap-3 rounded-full border border-border bg-card px-5 py-2 shadow-lg">
           <span className="text-[15px]">Deleted {nameOf(undo.card)}</span>
           <button type="button" onClick={undoDelete} className={`${linkClass} min-h-10 text-[15px] font-semibold`}>
             Undo

@@ -8,7 +8,7 @@ import { takeTavily } from "./guard";
 import { classify, type Outcome, withTimeout } from "./http";
 import { wikidataCompany } from "./wikidata";
 
-interface Hit {
+export interface Hit {
   title: string;
   url: string;
   content: string;
@@ -16,9 +16,9 @@ interface Hit {
 }
 
 /** One basic search. Counts against TAVILY_DAILY_CAP. Never raw content. */
-async function search(
+export async function search(
   query: string,
-  extra: { includeDomains?: string[]; includeDomainsMode?: "prefer" | "restrict" } = {},
+  extra: { includeDomains?: string[]; includeDomainsMode?: "prefer" | "restrict"; excludeDomains?: string[] } = {},
 ): Promise<Outcome<Hit[]>> {
   const apiKey = process.env.TAVILY_API_KEY;
   if (!apiKey) return { ok: false, reason: "error" };

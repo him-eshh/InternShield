@@ -481,3 +481,64 @@ export interface RoundPanelProps {
   /** True while a call is in flight. */
   busy: boolean;
 }
+
+// ---------- v3: continuous practice sessions + question bank (interview stream owns after setup) ----------
+export type RoundKind = InterviewRound;
+export type SessionLanguage = "python" | "typescript" | "sql" | "java" | "cpp" | "go" | "javascript";
+
+/** What the user picked before starting: one session runs several rounds back to back until `limit` is hit. */
+export interface SessionConfig {
+  rounds: RoundKind[];
+  /** Topic tags (e.g. "arrays", "leadership"); empty = any. */
+  topics: string[];
+  /** Questions the user typed in; asked before generated ones. */
+  customQuestions: string[];
+  difficulty: "easy" | "medium" | "hard" | "mixed";
+  /** CompanyPreset id (lib/tiers/presets.ts). */
+  companyPreset?: string;
+  company?: string;
+  role?: string;
+  language: SessionLanguage;
+  limit: { kind: "questions" | "rounds"; count: number };
+}
+
+/** One asked question and what happened to it. */
+export interface SessionTurn {
+  round: RoundKind;
+  question: string;
+  /** Where the question came from: a bank id, "custom", or "ai". */
+  source: string;
+  answer: string;
+  /** Code rounds: local grading result. */
+  code?: CodeAttempt;
+  hintsUsed: number;
+  skipped: boolean;
+  feedback?: AnswerFeedback;
+  startedAt: number;
+  endedAt: number | null;
+}
+
+/** End-of-session summary (the celebration screen). */
+export interface SessionSummary {
+  config: SessionConfig;
+  turns: SessionTurn[];
+  answered: number;
+  skipped: number;
+  /** Per-round band, rules-graded where possible. */
+  rounds: { round: RoundKind; band: ScoreBand; note: string }[];
+  /** 2-3 concrete things to practice next. */
+  next: string[];
+  durationMs: number;
+}
+
+/** A question-bank entry (data/question-bank/**). Links only to public problem pages; never scraped text. */
+export interface BankQuestion {
+  id: string;
+  title: string;
+  difficulty: "Easy" | "Medium" | "Hard";
+  url: string;
+  tags: string[];
+  companies: string[];
+  /** Dataset/list it came from (name + license), for attribution. */
+  source: string;
+}

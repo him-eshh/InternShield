@@ -3,7 +3,7 @@ import { MAX_MESSAGE_CHARS } from "@/lib/types";
 import { MINUTE, takeCount } from "./cache";
 import { failed, MESSAGES } from "./http";
 
-export type RouteName = "extract" | "company" | "sender" | "posting" | "explain" | "rewrite" | "transcribe" | "interview" | "wikidata";
+export type RouteName = "extract" | "company" | "sender" | "posting" | "explain" | "rewrite" | "transcribe" | "interview" | "wikidata" | "intel";
 
 export type GuardResult =
   | { ok: true; body: Record<string, unknown>; ip: string }
@@ -18,6 +18,7 @@ const VISITOR_LIMITS: Partial<Record<RouteName, [number, number]>> = {
   rewrite: [4, 15],
   transcribe: [2, 6],
   interview: [6, 30],
+  intel: [4, 20],
 };
 
 function envInt(name: string, fallback: number): number {
@@ -138,6 +139,12 @@ export function takeInterview(): { ok: true } | { ok: false; retryAfter: number 
 /** Counts one Tavily call against TAVILY_DAILY_CAP (free plan: 1,000 credits/month). */
 export function takeTavily(): { ok: true } | { ok: false; retryAfter: number } {
   const r = takeCount("global:tavily", envInt("TAVILY_DAILY_CAP", 30), "day");
+  return r.ok ? { ok: true } : { ok: false, retryAfter: r.retryAfter };
+}
+
+/** Counts one uncached company-intel lookup against INTEL_DAILY_CAP (site-wide), so intel can't eat the check flow's Tavily budget. */
+export function takeIntel(): { ok: true } | { ok: false; retryAfter: number } {
+  const r = takeCount("global:intel", envInt("INTEL_DAILY_CAP", 15), "day");
   return r.ok ? { ok: true } : { ok: false, retryAfter: r.retryAfter };
 }
 
