@@ -294,6 +294,7 @@ export interface InterviewSession {
   hints: string[];
   /** Coding/debugging rounds (v2): counted by the app, feeds the scorecard. Absent on older sessions. */
   stats?: CodeStats;
+  editorDraft?: { language: CodeLanguage; code: string; approach: string };
   plannedQuestions?: number;
   feedback: InterviewFeedback | null;
   status: "active" | "done";

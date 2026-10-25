@@ -29,3 +29,6 @@
 - React event timestamps use module-level clock wrapper (same as SqlRound).
 - Runnable language prop keeps old panel defaults intact; v3 offers Python/TypeScript execution and JS discussion only.
 - Needs integration: shell supplies Practice illustration and cross-tool clear-data/continue links (shared files out of scope).
+- Final QA round starting: hidden launcher 40256, port 3200; run edge checks before matrix, then stop verified own next process.
+- Edge QA and all four matrix variants passed. Own port-3200 next tree stopped. About to inspect all 36 matrix shots, then full gates.
+- Inspection refinement: removed duplicate runnable prompt, added per-round labels + overall summary, persisted unfinished text/code/SQL drafts. Recheck draft refresh in edge + matrix scripts before closing gates.

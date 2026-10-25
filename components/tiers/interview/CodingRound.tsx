@@ -47,11 +47,11 @@ const showOut = (o: CaseOutput) => (o.ok ? show(o.value) : `Error: ${o.error}`);
 export default function CodingRound({ session, onUpdate, ask, busy, initialLanguage, runnableLanguages }: RoundPanelProps) {
   const problem = getProblem(session.problemId ?? "");
   const debug = session.round === "debugging";
-  const [language, setLanguage] = useState<CodeLanguage>(session.code?.language ?? initialLanguage ?? "python");
+  const [language, setLanguage] = useState<CodeLanguage>(session.editorDraft?.language ?? session.code?.language ?? initialLanguage ?? "python");
   const [codes, setCodes] = useState<Partial<Record<CodeLanguage, string>>>(() =>
-    session.code ? { [session.code.language]: session.code.code } : {},
+    session.editorDraft ? { [session.editorDraft.language]: session.editorDraft.code } : session.code ? { [session.code.language]: session.code.code } : {},
   );
-  const [approach, setApproach] = useState("");
+  const [approach, setApproach] = useState(session.editorDraft?.approach ?? "");
   const [running, setRunning] = useState<"examples" | "submit" | null>(null);
   const [loadingPy, setLoadingPy] = useState(false);
   const [rows, setRows] = useState<ExampleRow[] | null>(null);
@@ -90,6 +90,13 @@ export default function CodingRound({ session, onUpdate, ask, busy, initialLangu
 
   function setCode(v: string) {
     setCodes((c) => ({ ...c, [language]: v }));
+    persistDraft(language, v, approach);
+  }
+
+  function persistDraft(lang: CodeLanguage, text: string, plan: string) {
+    const next = { ...latest.current, editorDraft: { language: lang, code: text.slice(0, MAX_CODE_CHARS), approach: plan.slice(0, MAX_ANSWER_CHARS) } };
+    latest.current = next;
+    onUpdate(next);
   }
 
   async function runExamples() {
@@ -211,7 +218,7 @@ export default function CodingRound({ session, onUpdate, ask, busy, initialLangu
           id="coding-approach"
           value={approach}
           maxLength={MAX_ANSWER_CHARS}
-          onChange={(e) => setApproach(e.target.value)}
+          onChange={(e) => { setApproach(e.target.value); persistDraft(language, code, e.target.value); }}
           rows={4}
           className="mt-1.5 w-full rounded-[14px] border border-border bg-card p-4 text-[17px]"
         />
@@ -247,6 +254,7 @@ export default function CodingRound({ session, onUpdate, ask, busy, initialLangu
             disabled={running !== null}
             onClick={() => {
               setLanguage(l.id);
+              persistDraft(l.id, codes[l.id] ?? problem.starter[l.id] ?? problem.starter.javascript ?? "", approach);
               setRows(null);
               setRunError(null);
             }}

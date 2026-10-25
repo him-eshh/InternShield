@@ -69,6 +69,7 @@ export interface FollowUp {
   note?: string;
 }
 export interface Current {
+  draft?: string;
   item: PlanItem;
   startedAt: number;
   answer: string | null;
@@ -296,7 +297,7 @@ export function submitAnswer(s: PracticeState, answer: string, now: number, code
   const c = s.activeQuestion;
   const text = answer.trim().slice(0, MAX_ANSWER_CHARS + MAX_CODE_CHARS);
   if (!c || !text || c.answer !== null) return s;
-  return { ...s, updatedAt: now, activeQuestion: { ...c, answer: text, code: code ?? c.code } };
+  return { ...s, updatedAt: now, activeQuestion: { ...c, draft: "", answer: text, code: code ?? c.code } };
 }
 /** Runnable panels edit `inner`; keep our copy of its code and hints in step. */
 export function syncInner(s: PracticeState, inner: InterviewSession, now: number): PracticeState {
@@ -318,7 +319,7 @@ export function answerFollowUp(s: PracticeState, answer: string, now: number): P
   const i = c.followUps.findIndex((f) => f.answer === null);
   if (i < 0) return s;
   const followUps = c.followUps.map((f, k) => (k === i ? { ...f, answer: text } : f));
-  return { ...s, updatedAt: now, activeQuestion: { ...c, followUps } };
+  return { ...s, updatedAt: now, activeQuestion: { ...c, draft: "", followUps } };
 }
 /** The /api/interview body for the review (or hint) of the current question. Null when there is nothing to review. */
 export function buildReviewRequest(s: PracticeState, ask: "review" | "hint"): InterviewRequest | null {
@@ -482,14 +483,14 @@ function innerFor(round: RoundKind, turns: SessionTurn[]): InterviewSession {
     used: 0,
     seed: 0,
     problemId: last?.code?.problemId ?? null,
-    code: last?.code ?? null,
+    code: last?.code ? { ...last.code, passed: turns.reduce((n, t) => n + (t.code?.passed ?? 0), 0), total: turns.reduce((n, t) => n + (t.code?.total ?? 0), 0) } : null,
     board: null,
     stats: { runsBeforeSubmit: turns.reduce((n, t) => n + (t.stats?.runsBeforeSubmit ?? 0), 0), submits: turns.reduce((n, t) => n + (t.stats?.submits ?? 0), 0), firstSubmitAt: turns.find((t) => t.stats?.firstSubmitAt)?.stats?.firstSubmitAt ?? null },
     hints: turns.flatMap((t) => Array.from({ length: t.hintsUsed }, () => "hint")),
     feedback: { summary: "", items: turns.flatMap((t, i) => (t.feedback ? [{ ...t.feedback, index: i }] : [])) },
     status: "done",
-    createdAt: 0,
-    updatedAt: 0,
+    createdAt: turns[0]?.startedAt ?? 0,
+    updatedAt: turns[turns.length - 1]?.endedAt ?? 0,
   };
 }
 function sessionCard(round: RoundKind, turns: SessionTurn[]) {
@@ -506,7 +507,7 @@ function roundBand(round: RoundKind, turns: SessionTurn[]): { band: ScoreBand; n
   const answered = turns.filter((t) => !t.skipped);
   if (!answered.length) return { band: "Not yet", note: "Every question was skipped." };
   const graded = answered.some((t) => t.code) || round !== "coding";
-  const card = graded ? sessionCard(round, answered) : null;
+  const card = graded ? sessionCard(round, turns) : null;
   let band: ScoreBand;
   if (card && card.axes.length) {
     const mean = card.axes.reduce((a, x) => a + BAND_ORDER.indexOf(x.band), 0) / card.axes.length;
@@ -520,7 +521,7 @@ function roundBand(round: RoundKind, turns: SessionTurn[]): { band: ScoreBand; n
 }
 export function buildSummary(s: PracticeState): SessionSummary {
   const rounds = [...new Set(s.turns.map((t) => t.round))];
-  const per = rounds.map((round) => { const turns = s.turns.filter((t) => t.round === round); return { round, ...roundBand(round, turns), axes: sessionCard(round, turns.filter((t) => !t.skipped))?.axes ?? [] }; });
+  const per = rounds.map((round) => { const turns = s.turns.filter((t) => t.round === round); return { round, ...roundBand(round, turns), axes: sessionCard(round, turns)?.axes ?? [] }; });
   const weakTags = new Map<string, number>();
   s.turns.filter((t) => t.level === "weak").forEach((t) => (t.tags ?? []).forEach((g) => weakTags.set(g, (weakTags.get(g) ?? 0) + 1)));
   const next: string[] = [];

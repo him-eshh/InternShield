@@ -60,9 +60,11 @@ for (const v of all ? variants : [variants[0]]) {
       await page.getByRole("heading", { name: "Your feedback" }).waitFor();
       if (i === 1) { await shot(page, `v3-interview-feedback-${t}`); await shot(page, `v3-interview-followup-${t}`); }
       if (i === 2) {
+        await page.getByLabel("Your follow-up answer").fill("My in-progress follow-up draft");
         const before = await getState(page);
         await page.reload(); await page.getByRole("button", { name: "Resume session" }).click();
         assert.deepEqual((await getState(page)).activeQuestion.followUps, before.activeQuestion.followUps);
+        assert.equal(await page.getByLabel("Your follow-up answer").inputValue(), "My in-progress follow-up draft");
       }
       await page.getByLabel("Your follow-up answer").fill("I would profile the bottleneck, test with ten times the data, and compare latency before scaling capacity.");
       await page.getByRole("button", { name: "Answer follow-up", exact: true }).click();
