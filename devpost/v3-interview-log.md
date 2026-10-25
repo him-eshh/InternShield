@@ -41,3 +41,7 @@ Complete. Eight round cards, topic chips, verbatim custom questions, all difficu
 ### I4: continuous session engine
 
 Complete. No repeated main questions or runnable IDs; exact question/round limits; adaptive Mixed level; maximum two follow-ups; skip/hints; native end confirmation. Active session and unfinished text/code/SQL drafts survive refresh. Real Python/SQL/TypeScript execution and recovery pass.
+
+### I5: progress scorecards and history
+
+Complete. Segmented progress with round counts; overall and per-round evidence-based scorecards, including SQL query correctness and discussion rubrics. Distinct next drills, strengths, expandable recaps/links, weak-topic retry setup and 20-entry local history. Celebration completes within 1.2 seconds and skips reduced motion.
