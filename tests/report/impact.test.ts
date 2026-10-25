@@ -22,7 +22,7 @@ describe("report additions", () => {
     });
   }
   it("reports changed weights even when the capped score stays unchanged", () => {
-    const after = { ...scamReport, flags: scamReport.flags.map((f, i) => i \u2192 f : { ...f, points: f.points + 5 }) };
+    const after = { ...scamReport, flags: scamReport.flags.map((f, i) => i ? f : { ...f, points: f.points + 5 }) };
     const impact = diffReports(scamReport, after, "detail", "More evidence");
     expect(impact.changed).toHaveLength(1);
     expect(impactCopy(impact)).toContain("points");

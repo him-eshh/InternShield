@@ -13,6 +13,7 @@ interface Props {
   change: string | null;
   /** The question answered most recently; the confirmation shows under it. */
   lastId?: QuestionId | null;
+  disabled?: boolean;
   confirmations?: Partial<Record<QuestionId, string>>;
   onAnswer: (id: QuestionId, value: AnswerValue) => void;
 }
@@ -57,7 +58,7 @@ function MultiQuestion({ q, value, onAnswer }: { q: Question; value: Answers[Que
         })}
       </div>
       {picked.length > 0 && (
-        <button type="button" className={`${btnSecondary} mt-3 !min-h-10 !px-5 !py-2 !text-[15px]`} onClick={() => onAnswer(q.id, picked)}>
+        <button type="button" className={`${btnSecondary} mt-3 !min-h-11 !px-5 !py-2 !text-[15px]`} onClick={() => onAnswer(q.id, picked)}>
           Update the check
         </button>
       )}
@@ -65,7 +66,7 @@ function MultiQuestion({ q, value, onAnswer }: { q: Question; value: Answers[Que
   );
 }
 
-export default function QuickQuestions({ questions, answers, change, lastId = null, onAnswer, confirmations = {} }: Props) {
+export default function QuickQuestions({ questions, answers, change, lastId = null, onAnswer, confirmations = {}, disabled = false }: Props) {
   const [showAll, setShowAll] = useState(false);
   const [editing, setEditing] = useState<QuestionId | null>(null);
   if (questions.length === 0) return null;
@@ -87,7 +88,7 @@ export default function QuickQuestions({ questions, answers, change, lastId = nu
       <p className="mt-1 text-[15px] text-muted">Make this check more accurate · Optional</p>
       <div className="mt-5 space-y-6">
         {shown.map((q) => (
-          <fieldset key={q.id}>
+          <fieldset key={q.id} disabled={disabled}>
             <legend className="text-[17px]">{q.text}</legend>
             {answers[q.id] !== undefined && editing !== q.id ? (
               <button type="button" className={`${btnSecondary} mt-2 min-h-11 text-left`} onClick={() => setEditing(q.id)}>

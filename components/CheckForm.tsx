@@ -243,7 +243,7 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
                     key={s.value}
                     type="button"
                     aria-pressed={source === s.value}
-                    className={source === s.value ? pillOn : pillOff}
+                    className={`${source === s.value ? pillOn : pillOff} !min-h-11`}
                     onClick={() => {
                       setSource(source === s.value ? null : s.value);
                       setTouched((t) => ({ ...t, source: true }));
@@ -262,7 +262,7 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
                     key={s.value}
                     type="button"
                     aria-pressed={stage === s.value}
-                    className={stage === s.value ? pillOn : pillOff}
+                    className={`${stage === s.value ? pillOn : pillOff} !min-h-11`}
                     onClick={() => {
                       setStage(stage === s.value ? null : s.value);
                       setTouched((t) => ({ ...t, stage: true }));
@@ -282,11 +282,11 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
           </button>
           <p className="text-[15px] text-muted">
             Try an example:{" "}
-            <button type="button" className={linkClass} onClick={() => tryExample("scam")}>
+            <button type="button" className={`${linkClass} inline-flex min-h-11 items-center`} onClick={() => tryExample("scam")}>
               a scam
             </button>
             {" · "}
-            <button type="button" className={linkClass} onClick={() => tryExample("real")}>
+            <button type="button" className={`${linkClass} inline-flex min-h-11 items-center`} onClick={() => tryExample("real")}>
               a real one
             </button>
           </p>

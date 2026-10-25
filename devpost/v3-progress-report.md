@@ -3,7 +3,8 @@ Done
 - Preserved incoming approved briefs: ebcb4c0.
 - P1 form/checklist sub-item: 6e1b559 (WIP; gates pending).
 Current
-- P2 hero surface and ring polish; P3 impact and in-place additions implemented, validating.
+- P2/P3 implementation: bee484b (WIP). Mocked flow passed all assertions.
+- Finishing persistence, real step outcomes, mobile targets; then full gates.
 - Files: components/CheckForm.tsx, Checklist.tsx, report/**, lib/impact.ts.
 Next
 - Commit P1 sub-item, implement P3 and regression tests.

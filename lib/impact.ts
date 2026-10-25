@@ -1,4 +1,4 @@
-// Answer impact (v3 contract; shell stream owns after setup): what one answer, added detail or edited
+// Answer impact (v3 report stream): what one answer, added detail or edited
 // message changed in the report, so the UI never shows a dead-end "no score impacted".
 import { LEVEL_LABELS, type Report, type RiskLevel } from "./types";
 
@@ -19,8 +19,7 @@ export type AnswerImpact = {
 };
 
 /**
- * Before/after diff of two reports. Basic version; TODO(shell): `confirmed` copy for answers that move nothing,
- * and flags whose points changed without appearing or going away.
+ * Compare evidence by stable signal ID, including changed weights and unchanged-score confirmation.
  */
 export function diffReports(before: Report, after: Report, kind: AnswerImpact["kind"], label: string): AnswerImpact {
   const ids = (r: Report) => new Set(r.flags.map((f) => f.id));

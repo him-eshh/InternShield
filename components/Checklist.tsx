@@ -8,6 +8,7 @@ import { subhead } from "./ui";
 
 export interface LineInfo {
   state: LineState;
+  outcome?: string;
   reason?: string; // "timeout" | "limit" | "error" | skip reason
   code?: ApiErrorCode; // set once App passes it through (Needs integration)
 }
@@ -28,7 +29,7 @@ export function initialLines(): Record<StepKey, LineInfo> {
 export function lineNote(info: LineInfo): string | null {
   if (info.state === "failed") return stepNote(info.code, info.reason);
   if (info.state === "skipped") return "skipped";
-  return null;
+  return info.state === "done" ? info.outcome ?? null : null;
 }
 
 const STATE_WORD: Record<LineState, string> = { pending: "", running: ", in progress", done: ", done", failed: ", failed", skipped: ", skipped" };

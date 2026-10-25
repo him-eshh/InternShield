@@ -249,7 +249,7 @@ export async function runPipeline(
 
   // Steps 2 and 3, at the same time
   const companyName = facts?.company?.value?.trim() || input.form.company?.trim() || null;
-  const senderEmail = looksLikeEmail(facts?.sender.email) ? facts!.sender.email : looksLikeEmail(input.form.sender) ? input.form.sender : null;
+  const senderEmail = looksLikeEmail(input.form.sender) ? input.form.sender : looksLikeEmail(facts?.sender.email) ? facts!.sender.email : null;
   const missing = (): StepResult<never> =>
     extract.status === "done" ? { status: "skipped", reason: "missing input" } : { status: "skipped", reason: "needs step 1" };
 

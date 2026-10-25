@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { postTranscribe } from "@/lib/tiers/client";
 import { prepareStrips } from "@/lib/tiers/image";
 import type { ApiErrorCode } from "@/lib/types";
-import { UploadIcon } from "../icons";
+import { Upload } from "lucide-react";
 
 interface Props {
   onText: (text: string) => void;
@@ -80,9 +80,9 @@ export default function ScreenshotUpload({ onText, disabled }: Props) {
         type="button"
         disabled={disabled || busy}
         onClick={() => input.current?.click()}
-        className="inline-flex min-h-10 items-center gap-1.5 text-[15px] font-medium text-accent underline-offset-4 hover:underline disabled:cursor-not-allowed disabled:opacity-40"
+        className="inline-flex min-h-11 items-center gap-1.5 text-[15px] font-medium text-accent underline-offset-4 hover:underline disabled:cursor-not-allowed disabled:opacity-40"
       >
-        <UploadIcon size={16} />
+        <Upload size={16} />
         Upload a screenshot
       </button>
       <span role="status" aria-live="polite" className={busy || error ? "mt-1 text-[14px] text-muted" : "sr-only"}>
