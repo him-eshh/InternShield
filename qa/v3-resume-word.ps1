@@ -10,10 +10,10 @@ try {
   $resumeWord.Visible = $false
   $resumeWord.DisplayAlerts = 0
   $resumeWord.AutomationSecurity = 3
-  $resumeBeforePath = Join-Path $Shots 'word-before.docx'
-  $resumeAfterPath = Join-Path $Shots 'word-after.docx'
-  $resumeBeforePdf = Join-Path $Shots 'word-before.pdf'
-  $resumeAfterPdf = Join-Path $Shots 'word-after.pdf'
+  $resumeBeforePath = [System.IO.Path]::Combine($Shots, 'word-before.docx')
+  $resumeAfterPath = [System.IO.Path]::Combine($Shots, 'word-after.docx')
+  $resumeBeforePdf = [System.IO.Path]::Combine($Shots, 'word-before.pdf')
+  $resumeAfterPdf = [System.IO.Path]::Combine($Shots, 'word-after.pdf')
   $resumeDocument = $resumeWord.Documents.Open([ref]$resumeBeforePath, [ref]$resumeNo, [ref]$resumeReadOnly, [ref]$resumeNo)
   $resumeDocument.Repaginate()
   $resumeBeforePages = $resumeDocument.ComputeStatistics(2)
