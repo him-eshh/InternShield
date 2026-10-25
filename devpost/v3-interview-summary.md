@@ -1,5 +1,7 @@
 # V3 interview summary
 
+> This is a stream handoff snapshot, not final integrated status. The Practice clear-data, Home Continue, report/profile prefill, illustration, and summary-to-Tracker seams listed under “Needs integration” were subsequently merged. The finance round, design challenge, whiteboard, and single-round flow were retired. See `prd.md`, `spec.md`, and `checklist.md` for the current product and verification state.
+
 Interview stream complete on `v3-interview`. Application source: `c710ba0`. All seven items and all Quality bar checks are complete; evidence is in [v3-interview-qa.md](v3-interview-qa.md).
 
 ## Shipped
@@ -39,7 +41,7 @@ Company tags reflect historical May 2022 lists. Current company research uses th
 
 All **36** final captures personally inspected, including phone and desktop in both themes. Root:
 
-`C:\my_projects\projects\InternShield\.git\internshield-relay\v3-shots\interview`
+`[project root]\.git\internshield-relay\v3-shots\interview`
 
 Names: `v3-interview-<state>-<variant>.png`.
 

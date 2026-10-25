@@ -62,4 +62,4 @@ Branch `v2-tools` from `v2-base` 36ad123. Brief: `devpost/v2-brief-tools.md`. Pr
 - `.env.example`: add optional `VISION_MODEL=qwen/qwen3.8-27b`, `INTERVIEW_MODEL=qwen/qwen3.8-27b`, `REWRITE_MODEL=qwen/qwen3.8-27b` (lib/server/groq.ts reads them; defaults shown).
 - `lib/server/guard.ts`: optionally raise MAX_IMAGE_BODY_BYTES to 3.6 MB (findings A2 allow 3.5 MB of strips) and lower TRANSCRIBE_DAILY_CAP default 20 -> 12 (findings A2: 2-strip calls share qwen TPD). Not required for correctness.
 
-## Pending Himesh
+## Pending owner review

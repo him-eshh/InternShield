@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { loadTheme, saveTheme } from "@/lib/client/storage";
 import type { Theme } from "@/lib/types";
 import { MonitorIcon, MoonIcon, SunIcon } from "./icons";
@@ -17,6 +18,7 @@ function apply(theme: Theme) {
 
 export default function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>("system");
+  const menu = useRef<HTMLDetailsElement>(null);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- read the saved choice after mount (SSR has no storage)
@@ -36,28 +38,18 @@ export default function ThemeToggle() {
     setTheme(t);
     saveTheme(t);
     apply(t);
+    if (menu.current) menu.current.open = false;
   }
 
+  const active = OPTIONS.find((option) => option.value === theme) ?? OPTIONS[0];
+  const ActiveIcon = active.Icon;
+
   return (
-    <div role="group" aria-label="Theme" className="inline-flex rounded-full border border-border bg-card p-0.5">
-      {OPTIONS.map(({ value, label, Icon }) => {
-        const on = theme === value;
-        return (
-          <button
-            key={value}
-            type="button"
-            aria-pressed={on}
-            aria-label={label}
-            title={label}
-            onClick={() => choose(value)}
-            className={`inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors duration-200 ${
-              on ? "bg-accent text-accent-contrast" : "text-muted hover:text-text"
-            }`}
-          >
-            <Icon size={16} />
-          </button>
-        );
-      })}
-    </div>
+    <details ref={menu} className="group relative inline-block">
+      <summary aria-label={`Theme: ${active.label}. Choose appearance`} className="inline-flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-full border border-border-strong bg-paper-2 px-3 text-fg [&::-webkit-details-marker]:hidden"><ActiveIcon size={17} /><span className="text-sm">{active.label}</span><ChevronDown size={15} aria-hidden="true" className="transition-transform group-open:rotate-180" /></summary>
+      <div role="group" aria-label="Theme" className="absolute right-0 z-50 mt-2 min-w-40 rounded-[6px] border border-rule bg-paper-2 p-2 shadow-[var(--shadow-2)]">
+        {OPTIONS.map(({ value, label, Icon }) => <button key={value} type="button" aria-pressed={theme === value} onClick={() => choose(value)} className={`flex min-h-11 w-full items-center gap-2 rounded-[4px] px-3 text-left text-sm hover:bg-bg-subtle ${theme === value ? "bg-ink-tint font-semibold text-ink-strong" : "text-fg"}`}><Icon size={17} />{label}</button>)}
+      </div>
+    </details>
   );
 }

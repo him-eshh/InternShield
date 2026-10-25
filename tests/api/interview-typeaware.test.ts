@@ -63,4 +63,20 @@ describe("question-type-aware review prompt (no live model: Groq is mocked)", ()
     expect(typeGuide({ round: "debugging", code: null }).judge).toMatch(/coding question/);
     expect(typeGuide({ round: "design", code: null }).judge).toBe("");
   });
+
+  it.each([
+    ["coding", { problemId: "count-vowels", language: "python", code: "def f(s): return 0", passed: 1, total: 6 }, "1 of 6 hidden tests passed.", "weak"],
+    ["sql", { problemId: "sql-top-courses", language: "sql", code: "SELECT 1", passed: 0, total: 1 }, "The query result did not match the expected rows.", "weak"],
+  ])("replaces model praise when %s executable results fail", async (round, code, summary, level) => {
+    h.create.mockReturnValue(groqOk(JSON.stringify({
+      summary: "Perfect solution.", level: "strong", followUp: "", items: [{
+        index: 0, strength: "Everything is correct.", improve: "No changes needed.", quote: "", star: { situation: true, task: true, action: true, result: true },
+      }],
+    })));
+    const json = await (await review(round, { code })).json();
+    expect(json.data.feedback.summary).toBe(summary);
+    expect(json.data.feedback.items[0].strength).not.toMatch(/Everything is correct/);
+    expect(json.data.feedback.items[0].improve).not.toMatch(/No changes needed/);
+    expect(json.data.level).toBe(level);
+  });
 });

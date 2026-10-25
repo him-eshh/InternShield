@@ -1,6 +1,6 @@
 # InternShield tiers build: orchestrator brief (one session per tier)
 
-Himesh approved this on Oct 21, 2026 ~2:20 AM ET and is asleep. Run it end to end without asking questions. Where a skill says to pause for the learner, record the item as "pending Himesh (morning)" and continue. FAST MODE, as in the core build. Treat this brief as his approval of the tier checklist slices you write (status stays `approved`).
+The owner approved this overnight tier plan on Oct 21, 2026. The historical workflow recorded learner checkpoints as pending owner review and continued in fast mode. The tier checklist slices were approved under that plan.
 
 **Each tier runs in its own fresh Claude Code session.** Your launch prompt names your tier: `TIER=2`, `TIER=3` or `TIER=4`. Do ONLY your tier, then stop. The launcher (`.git/internshield-relay/run-tiers.ps1`, you never edit it) starts the next tier's session after you exit. It decides "merged" by looking for a merge commit on `main` whose subject starts with `Tier N:`.
 
@@ -15,7 +15,7 @@ The finished core is tagged `core-v1` (6067a1d, pushed). It works: 175 tests, ev
 - Usage limits are waited out automatically (CLAUDE_CODE_RETRY_WATCHDOG=1). Don't stop because of them.
 
 ## Phase 0 (you, solo, every tier)
-1. `git status`. Untracked `.agents/`, `agent/`, `.claude/skills/`, `skills-lock.json` are Himesh's skill files: never touch, stage or delete them. If there are other uncommitted changes left by a crashed earlier session, commit them on that tier's branch as `WIP (unmerged): ...` (never discard work, never `reset --hard`/`clean`).
+1. `git status`. Untracked `.agents/`, `agent/`, `.claude/skills/`, `skills-lock.json` are the owner's skill files: never touch, stage or delete them. If there are other uncommitted changes left by a crashed earlier session, commit them on that tier's branch as `WIP (unmerged): ...` (never discard work, never `reset --hard`/`clean`).
 2. `git switch main`. Run the gates (below). If main is red, fix main first (a `git revert -m 1 <tier merge>` is allowed if a tier merge broke it) and log it.
 3. If branch `tier<TIER>` already exists (a resumed session), switch to it and continue from `devpost/checklist.md` and `devpost/build-log.md`; otherwise `git switch -c tier<TIER>` from main.
 4. Append `- <time ET> Tier <TIER> session started` under the `## Tiers` heading of `devpost/build-log.md` (create the heading once).
@@ -47,7 +47,7 @@ Launch workers in the background together, each with a precise task, the exact f
 3. Live API budget for the WHOLE tiers build is ~10 real calls: Tier 2 <= 4, Tier 3 <= 4, Tier 4 <= 2. Mocks everywhere else. Log every live call in build-log.md. Never read, print or log `.env.local`; the app reads it.
 4. If green: `git switch main` -> `git merge --no-ff tier<TIER> -m "Tier <TIER>: <short what>"` -> re-run lint/tsc/vitest/build/eval on main -> if anything is red on main, `git revert -m 1 HEAD` immediately and record why. Main must always pass gates and keep both example flows working.
 5. If the tier can't be made green: leave it unmerged on `tier<TIER>`, commit its state there, note why in the summary. You may merge a green subset (e.g. two of three features) only if the unfinished one stays fully hidden and the subset passes every gate; the merge subject still starts `Tier <TIER>:` and the summary says what's left out.
-6. Write `devpost/tier<TIER>-summary.md` (what's built, what's merged, test results, live calls used, what needs Himesh's hands-on check, known issues). Then rewrite `devpost/tiers-summary.md` combining every `tier*-summary.md` that exists so far (one section per tier, plus "not run yet" for later tiers). Commit both on main (`Tier <TIER> summary`). Append the end line to build-log.md. Exit.
+6. Write `devpost/tier<TIER>-summary.md` (what's built, what's merged, test results, live calls used, what needs the owner's hands-on check, known issues). Then rewrite `devpost/tiers-summary.md` combining every `tier*-summary.md` that exists so far (one section per tier, plus "not run yet" for later tiers). Commit both on main (`Tier <TIER> summary`). Append the end line to build-log.md. Exit.
 
 ## Hard rules
 - Never `git push`, never touch remotes, never deploy (no vercel, no gh). Local commits only. Stage only intended files; read every staged diff for secrets (gsk_, tvly-, sk-, ghp_, AKIA). Never commit `.env.local` or `devpost/learner-profile.md`.
@@ -60,7 +60,7 @@ Launch workers in the background together, each with a precise task, the exact f
 ## Tier 2 (slices 7-10)
 **First, before anything else (chore):** `npm ci` fails on Linux because `package-lock.json` is out of sync with `package.json` (missing `@emnapi/runtime@1.11.3` and `@emnapi/core@1.11.3`, Windows-generated optional deps). Fix the lockfile so `npm ci` works cross-platform (needed for the Vercel deploy): e.g. `npm install --package-lock-only` (or delete and regenerate only the lockfile with `npm install`) so the lockfile lists those packages; verify with `npm ci` (then confirm `node -e` that `package-lock.json` contains `node_modules/@emnapi/runtime` and `node_modules/@emnapi/core` entries at 1.11.3, or the versions npm resolves) and the gates. Give it to the Haiku `chores` worker if it can run commands; otherwise do it yourself. Commit on main directly, before branching: `Fix lockfile for cross-platform npm ci`. Then branch `tier2`.
 (If `package-lock.json` is uncommitted when you start, that is a half-done regeneration from an earlier session that hit the usage limit; a backup of it is at `.git/internshield-relay/package-lock.partial.json`. HEAD's lockfile was restored, so just redo the fix on main.)
-- **7 Core polish (do this first, Sonnet `ui-builder`, reviewed and gated like everything else; both examples and eval 26/26 must stay intact).** Fixes from Himesh's side of browser QA of the core:
+- **7 Core polish (do this first, Sonnet `ui-builder`, reviewed and gated like everything else; both examples and eval 26/26 must stay intact).** Fixes from the owner's side of browser QA of the core:
   1. After a resume upload, show a short confirmation of what was read (e.g. detected skills and/or level), not just the file name.
   2. The Check button is disabled until a "Where are you with them?" source is picked, with no hint. Either show a one-line hint of what's needed, or make the source optional (it's then asked via quick questions). Pick one, note why in tier2-spec.md.
   3. The scam explanation is long and repeats the same quote twice: dedupe quotes (same quote shown at most once) and keep the explanation shorter (cap paragraphs/length), in the explain route/fallback/Explanation component, not the scoring.

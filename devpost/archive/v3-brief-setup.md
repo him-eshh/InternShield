@@ -1,6 +1,6 @@
 # InternShield v3, session 1 of 5: SETUP (solo, Opus, worktree `InternShield-v3`, branch `v3-base`)
 
-Deadline: Devpost submission Mon Oct 26, 5 PM ET. Target: the whole v3 build done with quality-reviewed screenshots by Sun Oct 25 evening. This session is short (target 60-100 min) and does everything three parallel streams would otherwise fight over: dependencies, the theme file, the app shell skeleton (routes, nav, shared state), and the contracts. Do not build the features themselves. Run end to end without asking; anything needing Himesh goes in `devpost/v3-setup-log.md` as "Pending Himesh".
+Deadline: Devpost submission Mon Oct 26, 5 PM ET. Target: the whole v3 build done with quality-reviewed screenshots by Sun Oct 25 evening. This session is short (target 60-100 min) and does everything three parallel streams would otherwise fight over: dependencies, the theme file, the app shell skeleton (routes, nav, shared state), and the contracts. Do not build the features themselves. Run end to end without asking; anything needing the project owner goes in `devpost/v3-setup-log.md` as "Pending owner review".
 
 Next, three Sonnet streams run in parallel worktrees: **resume** (tailoring rework), **interview** (continuous sessions + question bank), **shell** (home, nav polish, profile, check/report restyle, answer impact, visual redesign). Then an Opus integration session. Skim `devpost/v3-brief-resume.md`, `v3-brief-interview.md`, `v3-brief-shell.md` before starting so your contracts fit all three.
 
@@ -12,21 +12,21 @@ Next, three Sonnet streams run in parallel worktrees: **resume** (tailoring rewo
 - Save usage: short tool output. `npx vitest run --reporter=dot` (rerun only failing files), pipe long output through `tail -n 40`, read files with offset/limit, look at screenshots selectively but DO look at them (quality is the point of v3).
 - Subagents run on Sonnet (forced). Give each a precise, self-contained task with exact files and acceptance checks; ask for a report of 10 lines or fewer.
 
-## Why v3 exists (Himesh's verdict on v2, Oct 25, 2026)
+## Why v3 exists (the owner's verdict on v2, Oct 25, 2026)
 He tested v2 by hand. The scoring logic works. Everything else fell short: the tailored resume was too long, lost the original format and read as AI-written ("it will get rejected"); no loading state, no preview before download, no way to adjust and see changes. No nav bar, no home screen, no profile screen, no icons; very hard to navigate; unclear how to build the profile; flows dropped him back into the questions. Answers/details he added showed no visible effect ("no score impacted" is a dead end). The UI looked basic and AI-generated, only black and blue, unresponsive, no motion. The interview showed only one question. v2's checks only proved things rendered; **v3 is judged on whether it is actually good to use.** Every brief has a Quality bar: treat each line as a test you must pass and prove with a screenshot or an automated check.
 
 ## Hard rules (all sessions)
-- Work only in your own worktree. Never cd into, edit, build in, or switch branches in the main tree `C:\my_projects\projects\InternShield` (it stays on `v2` and serves Himesh's manual test on port 3000). Never use or stop anything on port 3000. Your dev/test servers use only your port range, started hidden (the launcher prompt gives the exact command), and stopped after each screenshot round.
+- Work only in your own worktree. Never cd into, edit, build in, or switch branches in the main tree `[project root]` (it stays on `v2` and serves the owner's manual test on port 3000). Never use or stop anything on port 3000. Your dev/test servers use only your port range, started hidden (the launcher prompt gives the exact command), and stopped after each screenshot round.
 - Never read or print `.env.local` (or any key). Keys are server-side only. No live API calls except where your brief allows them (default: none; use mocks and fixtures).
 - No push, no merge into `main`, no deploy, no cloud agents. Free APIs/data only, no card.
 - Never touch, stage or delete `.agents/`, `agent/`, `.claude/skills/`, `skills-lock.json`, `.codex/`. Never stage `devpost/learner-profile.md` or any `.env*` except `.env.example`.
 - No LinkedIn or people-profile scraping. No scraping LeetCode (or any site) behind a login or against its terms. Tavily stays within `TAVILY_DAILY_CAP` (30/day) and is always cached; Wikidata/company pages first.
-- Himesh's standing UI preferences: concise UI text; no "Copy report" on low-risk reports; confirmations go below the chosen answer; the quick-questions title stays "A few quick questions"; tailoring never invents facts.
+- the owner's standing UI preferences: concise UI text; no "Copy report" on low-risk reports; confirmations go below the chosen answer; the quick-questions title stays "A few quick questions"; tailoring never invents facts.
 - Original eval cases (`eval/messages`, `eval/heldout`) are never edited; the main eval must stay 88/88 (0 false positives on low) and held-out >= 24/27. Scoring logic is out of scope unless a brief says otherwise.
 - Gates for every item-closing commit: `npm run lint`, `npx tsc --noEmit`, `npx vitest run`, `npm run build`, `npm run eval`.
 
-## Design system (approved by Himesh on Oct 25, final; tokens live in ONE swappable theme file, `app/theme.css`)
-Himesh rejected v2's "Calm Instrument" one-blue look (findings 06 §2 Direction A and its "no gradients / one accent" rules are REPLACED by this section; 06 §4 motion specs, §9 craft checklist, §10 accessibility and §15 pitfalls other than the color rules still apply).
+## Design system (approved by the project owner on Oct 25, final; tokens live in ONE swappable theme file, `app/theme.css`)
+The project owner rejected v2's "Calm Instrument" one-blue look (findings 06 §2 Direction A and its "no gradients / one accent" rules are REPLACED by this section; 06 §4 motion specs, §9 craft checklist, §10 accessibility and §15 pitfalls other than the color rules still apply).
 - **References:** Linear (polish, motion, dark elevation from one hue), Raycast (vivid per-command color, crisp icons), Duolingo (session flow, progress bars, end-of-session moment), Notion (home and onboarding clarity). Name these in code comments of `app/theme.css`, not in the UI.
 - **Tool color identities**, carried through each tool's icon, nav tab (active state), primary buttons, focus/highlights and illustration: **Check = warm coral**, **Tailor = green** (lean emerald/teal so it never reads as the risk "low" green), **Practice = violet**. Tracker and Profile use the ink/neutral brand color. Each accent has light + dark values, a soft tint (backgrounds) and an on-accent text color, all WCAG AA (text >= 4.5:1, UI marks >= 3:1).
 - **Risk colors are reserved:** red (high), amber (medium), green (low) appear only on risk results (ring, level icon, tags, marks), always with an icon + words, never color alone. Coral must be visibly distinct from risk red (more orange/pink, lighter); if a report screen shows both, the report's chrome uses neutral, not coral.
@@ -39,7 +39,7 @@ Himesh rejected v2's "Calm Instrument" one-blue look (findings 06 §2 Direction 
 - **Copy:** short, second person, specific, verb first. No filler ("Unlock", "Supercharge", "Seamless"), no fake stats.
 
 ## Starting point
-- Worktree `C:\my_projects\projects\InternShield-v3`, branch `v3-base` created from `v2` (f790485: finished v2 build, gates green, 1191 tests, eval 88/88, held-out 24/27). `node_modules` installed by the launcher. The briefs were copied in untracked under `devpost/`. The research is already tracked in `devpost/research/findings/` (03 resume, 04 interview, 06 design).
+- Worktree `[project root]-v3`, branch `v3-base` created from `v2` (f790485: finished v2 build, gates green, 1191 tests, eval 88/88, held-out 24/27). `node_modules` installed by the launcher. The briefs were copied in untracked under `devpost/`. The research is already tracked in `devpost/research/findings/` (03 resume, 04 interview, 06 design).
 - Read: `CLAUDE.md`, `devpost/v2-summary.md`, `components/App.tsx` (the current single-screen state machine: `Screen = "loading" | "intro" | "profile" | "check" | ...`), `lib/client/storage.ts`, `lib/tiers/flags.ts`, `lib/server/guard.ts`, `lib/server/tavily.ts`, `lib/server/wikidata.ts`, `lib/server/cache.ts`.
 
 ## Steps (commit each on `v3-base`)

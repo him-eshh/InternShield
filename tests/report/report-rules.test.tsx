@@ -16,7 +16,7 @@ describe("v3 report rules", () => {
       const actions = html.match(/<(?:button|a) [^>]*class="[^"]*bg-accent text-accent-contrast[^"]*"/g) ?? [];
       expect(actions).toHaveLength(1);
       expect(html.includes("Copy report")).toBe(name !== "real");
-      expect(html).toContain('data-tool="neutral"');
+      expect(html).toContain('data-tool="check"');
     });
   }
   it("places the full impact directly below its collapsed answer", () => {

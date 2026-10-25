@@ -1,5 +1,7 @@
 # InternShield v3 report summary
 
+> This is a stream handoff snapshot. Current Check behavior, scoring, and final verification are in `prd.md`, `spec.md`, and `checklist.md`; the integration tasks and screenshots below describe the state at the time of this stream.
+
 Branch: `v3-report`. Item-closing commit: `d57555b`.
 
 ## Shipped against the brief
@@ -42,7 +44,7 @@ Branch: `v3-report`. Item-closing commit: `d57555b`.
 
 All **56 final screenshots were opened and visually reviewed**, including the four corrected checking captures. Full manifest and variant results: `devpost/v3-report-qa.json`.
 
-Artifact directory: `C:/my_projects/projects/InternShield/.git/internshield-relay/v3-shots/report/`.
+Artifact directory: `.git/internshield-relay/v3-shots/report/` (local, untracked QA output).
 Component crops hide only the sticky shell during capture to prevent it covering the component; full-page captures include the shell.
 
 ### 1440-light

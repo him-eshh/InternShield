@@ -28,5 +28,5 @@
 ## Step 5
 - CLAUDE.md v3 section: worktrees/ports, ownership, theme rule, intel, quality bar.
 
-## Pending Himesh
+## Pending owner review
 - (none yet)

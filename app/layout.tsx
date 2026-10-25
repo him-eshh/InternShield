@@ -10,7 +10,7 @@ import "./shell.css";
 import "./resume.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"], axes: ["opsz"] });
-const bricolage = Bricolage_Grotesque({ variable: "--font-bricolage", subsets: ["latin"] });
+const bricolage = Bricolage_Grotesque({ variable: "--font-bricolage", subsets: ["latin"], axes: ["opsz", "wdth"] });
 
 export const metadata: Metadata = {
   // Vercel sets VERCEL_PROJECT_PRODUCTION_URL; locally the share image resolves against localhost.
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fbf8f3" }, // = --bg in app/theme.css
+    { media: "(prefers-color-scheme: light)", color: "#f7f2e8" }, // = --bg in app/theme.css
     { media: "(prefers-color-scheme: dark)", color: "#0d1220" },
   ],
 };
@@ -35,7 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="min-h-dvh bg-bg text-text">
+      <body className="min-h-dvh bg-bg text-text" suppressHydrationWarning>
         <MotionProvider>
           <AppStateProvider>
             <Nav />

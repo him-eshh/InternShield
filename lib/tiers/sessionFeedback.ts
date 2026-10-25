@@ -88,8 +88,8 @@ function codingChecks(c: Current): Check[] {
     const f = code.detail?.failed;
     out.push({ id: "tests", ok, text: ok ? `All ${code.total} hidden tests passed.` : `${code.passed} of ${code.total} hidden tests passed.${f ? ` First failure: input ${compact(f.input)}, expected ${compact(f.expected)}, got ${compact(f.got)}.` : ""}`, ...(ok ? {} : { fix: f ? `Fix the first failing case: input ${compact(f.input)}, expected ${compact(f.expected)}, got ${compact(f.got)}.` : "Get the failing hidden tests passing before you polish." }) });
   }
-  out.push(EDGE.test(text) ? { id: "edge", ok: true, text: "You named an edge case." } : { id: "edge", ok: false, text: "Name one edge case (empty input, one element, duplicates) and say what your code returns for it." });
-  out.push(COMPLEXITY.test(text) ? { id: "complexity", ok: true, text: "You stated the complexity." } : { id: "complexity", ok: false, text: "State the time and space complexity, like O(n), and where the cost comes from." });
+  out.push(EDGE.test(text) ? { id: "edge", ok: true, text: "You mentioned a possible edge case; check what your code returns for it." } : { id: "edge", ok: false, text: "Name one edge case (empty input, one element, duplicates) and say what your code returns for it." });
+  out.push(COMPLEXITY.test(text) ? { id: "complexity", ok: true, text: "You mentioned complexity; verify the time and space costs against your code." } : { id: "complexity", ok: false, text: "State the time and space complexity, like O(n), and where the cost comes from." });
   if (code) {
     const runs = c.inner?.stats?.runsBeforeSubmit ?? 0;
     out.push(runs > 0 ? { id: "verify", ok: true, text: "You ran the examples before submitting." } : { id: "verify", ok: false, text: "Run the examples (and one case of your own) before you submit." });
@@ -110,18 +110,22 @@ function sqlChecks(c: Current): Check[] {
   }
   const wantsNull = /\bNULL\b/i.test(problem?.prompt ?? "") || /IS\s+(?:NOT\s+)?NULL|COALESCE/i.test(ref);
   const nullSafe = /IS\s+(?:NOT\s+)?NULL|COALESCE|IFNULL|COUNT\s*\(\s*(?!\*)[\w.]+\s*\)/i.test(query);
-  if (code && wantsNull) out.push(nullSafe ? { id: "null", ok: true, text: "You handled NULL values on purpose." } : { id: "null", ok: false, text: "This question has NULLs. Use IS NULL / IS NOT NULL or COUNT(column) so they are counted, or left out, deliberately." });
+  if (code && wantsNull) out.push(nullSafe && code.passed === code.total
+    ? { id: "null", ok: true, text: "Your result matches the expected rows and your query includes NULL handling." }
+    : { id: "null", ok: false, text: nullSafe ? "Your query mentions NULL handling, but the result differs. Compare the rows with NULLs." : "This question has NULLs. Use IS NULL / IS NOT NULL or COUNT(column) so they are counted, or left out, deliberately." });
   else if (!code) out.push({ id: "null", ok: false, text: "Say how your query treats NULL values." });
   const needsJoin = /\bJOIN\b/i.test(ref);
   const hasJoin = /\bJOIN\b/i.test(query);
   if (code && needsJoin) {
-    if (hasJoin && code.passed === code.total) out.push({ id: "join", ok: true, text: "You joined the tables correctly." });
-    else if (!hasJoin) out.push({ id: "join", ok: false, text: "This needs more than one table. Add a JOIN on the matching ids." });
+    if (code.passed === code.total) out.push({ id: "join", ok: true, text: "Your result matches the expected rows across the needed tables." });
+    else if (!hasJoin) out.push({ id: "join", ok: false, text: "This question uses more than one table. Compare the matching ids; a JOIN or subquery may help." });
     else out.push({ id: "join", ok: false, text: "Check the join type: INNER drops rows with no match, LEFT JOIN keeps them. Also look for duplicated rows." });
   }
   if (code && /\bGROUP BY\b/i.test(ref)) {
     const grouped = /\bGROUP BY\b/i.test(query);
-    out.push(grouped ? { id: "group", ok: true, text: /\bHAVING\b/i.test(ref) && !/\bHAVING\b/i.test(query) ? "You grouped the rows. Filter groups with HAVING, not WHERE." : "You grouped the rows." } : { id: "group", ok: false, text: "This question groups rows: add GROUP BY and, to filter groups, HAVING." });
+    out.push(grouped && code.passed === code.total
+      ? { id: "group", ok: true, text: "Your result matches the expected rows and your query groups them." }
+      : { id: "group", ok: false, text: grouped ? "GROUP BY is present, but the result differs. Check grouping and any HAVING condition." : "This question groups rows: add GROUP BY and, to filter groups, HAVING." });
   }
   if (!code) out.push({ id: "join", ok: false, text: "Name the join type you would use and why." });
   return out;
@@ -137,8 +141,8 @@ function behavioralChecks(c: Current): Check[] {
   }
   const i = (text.match(/\bI\b|\b[Mm]y\b/g) ?? []).length;
   const we = (text.match(/\b(?:we|our|us)\b/gi) ?? []).length;
-  out.push(i >= we && i > 0 ? { id: "own", ok: true, text: "You said what you did yourself." } : { id: "own", ok: false, text: "Say what you did yourself: use “I” for your own actions, “we” only for the team." });
-  out.push(HAS_NUMBER.test(text) ? { id: "result", ok: true, text: "Your story ended with a number or concrete result." } : { id: "result", ok: false, text: "End with a result you can count: time saved, users, percent." });
+  out.push(i >= we && i > 0 ? { id: "own", ok: true, text: "You used first-person wording; make your own actions clear." } : { id: "own", ok: false, text: "Say what you did yourself: use “I” for your own actions, “we” only for the team." });
+  out.push(HAS_NUMBER.test(text) ? { id: "result", ok: true, text: "You mentioned a number; check that it describes the outcome." } : { id: "result", ok: false, text: "End with a result you can count: time saved, users, percent." });
   return out;
 }
 
@@ -164,7 +168,9 @@ export function localReview(c: Current): { feedback: AnswerFeedback; level: Answ
   const bad = checks.filter((k) => !k.ok);
   const lead = checks.find((k) => k.id === "tests");
   const rest = bad.filter((k) => k.id !== "tests");
-  const strength = lead?.ok ? lead.text : good[0]?.text ?? (lead && c.code ? (type === "sql" ? "Your query ran and returned rows to compare." : `Your code ran and passed ${c.code.passed} of ${c.code.total} hidden tests.`) : "You gave an answer to work from.");
+  const strength = lead?.ok ? lead.text : lead && c.code
+    ? (type === "sql" ? "Your query was checked against the expected result." : `Your code ran and passed ${c.code.passed} of ${c.code.total} hidden tests.`)
+    : good[0]?.text ?? "You gave an answer to work from.";
   const improve = (lead && !lead.ok ? lead.fix : null) ?? rest[0]?.text ?? (type === "sql" ? "Try the next one without a hint." : "Try a harder question next.");
   const ratio = c.code && c.code.total > 0 ? c.code.passed / c.code.total : null;
   const level: AnswerLevel = ratio !== null ? (ratio >= 1 ? "strong" : ratio < 0.5 ? "weak" : "ok") : bad.length === 0 ? "strong" : bad.length >= 2 ? "weak" : "ok";

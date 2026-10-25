@@ -38,6 +38,10 @@ describe("shared resume edit guard", () => {
     expect(checkEdit({ resume, original, proposed, posting: "React required" }).ok).toBe(false);
     expect(checkEdit({ resume, original, proposed, facts: ["React"] }).ok).toBe(true);
   });
+  it("rejects an edit that reassigns existing metrics to different work", () => {
+    const source = "Built 2 apps and taught 100 students.";
+    expect(checkEdit({ resume: source, original: source, proposed: "Built 100 apps and taught 2 students." }).ok).toBe(false);
+  });
   it("rejects headings, fabricated ids, duplicate edits and malformed objects", () => {
     const heading = docLines(doc).find((l) => l.kind === "heading")!;
     expect(checkedEdits(doc, [null, {}, { ...candidate, lineId: heading.id }, { ...candidate, lineId: "missing" }, candidate, candidate], [])).toHaveLength(1);

@@ -38,7 +38,7 @@ const CRITICAL_COPY: Record<CriticalAsk, { title: string; why: string; sourceUrl
     sourceUrl: FTC_FAKE_CHECKS,
   },
   gift_cards: {
-    title: "They bring up gift cards",
+    title: "They ask you to buy or send gift cards",
     why: "No real employer pays you, or asks you to pay, with gift cards.",
     sourceUrl: FTC_JOB_SCAMS,
   },
@@ -64,6 +64,9 @@ const CRITICAL_COPY: Record<CriticalAsk, { title: string; why: string; sourceUrl
 };
 // run_code_or_install and money_wrong_way have their own rules below.
 const CRITICAL_ASKS = (Object.keys(CRITICAL_COPY) as CriticalAsk[]).filter((k) => k !== "run_code_or_install" && k !== "money_wrong_way");
+// AI labels are untrusted. A real quote alone does not prove the quoted words
+// describe this action; the raw-text detector must independently find it.
+const ACTION_BACKSTOP_REQUIRED = new Set<CriticalAsk>(["pay_fee", "buy_equipment", "deposit_check", "gift_cards", "crypto_or_task_deposit", "reship_or_forward"]);
 const TOLD_ASKS: [AskedTo, CriticalAsk][] = [
   ["pay", "pay_fee"],
   ["deposit_check", "deposit_check"],
@@ -228,11 +231,12 @@ function evaluate(input: ScoreInput): Evaluated {
 
   // ----- Offer: critical asks (facts ∪ backstop) -----
   for (const kind of CRITICAL_ASKS) {
-    const fact = ask(kind);
     const h = hit(kind);
+    const fact = ACTION_BACKSTOP_REQUIRED.has(kind) && !h ? null : ask(kind);
     if (!fact && !h) continue;
     const c = CRITICAL_COPY[kind];
-    red(kind, "offer", W.critical, c.title, c.why, fact?.quote ?? h!.snippet, { critical: true, sourceUrl: c.sourceUrl });
+    const quote = ACTION_BACKSTOP_REQUIRED.has(kind) ? h!.snippet : fact?.quote ?? h!.snippet;
+    red(kind, "offer", W.critical, c.title, c.why, quote, { critical: true, sourceUrl: c.sourceUrl });
   }
   // What the user told us they were asked to do. Same criticals, no quote. (Sensitive data is below: it's stage-aware.)
   for (const [tick, kind] of TOLD_ASKS) {
@@ -242,21 +246,19 @@ function evaluate(input: ScoreInput): Evaluated {
   }
 
   // Money flowing the wrong way. One critical in the money family is enough; no double count.
-  const wayFact = ask("money_wrong_way");
   const wayHit = hit("money_wrong_way");
-  if ((wayFact || wayHit) && !flags.some((f) => MONEY_FAMILY.includes(f.id))) {
+  if (wayHit && !flags.some((f) => MONEY_FAMILY.includes(f.id))) {
     const c = CRITICAL_COPY.money_wrong_way;
-    red("money_wrong_way", "offer", W.critical, c.title, c.why, wayFact?.quote ?? wayHit!.snippet, { critical: true, sourceUrl: c.sourceUrl });
+    red("money_wrong_way", "offer", W.critical, c.title, c.why, wayHit.snippet, { critical: true, sourceUrl: c.sourceUrl });
   }
 
   // Run their code: critical for remote-access tools, terminal pastes, switching off protection, and installers,
   // or when the ask comes with something else suspicious. A plain take-home from a company you applied to is +15.
-  const codeFact = ask("run_code_or_install");
   const codeHit = hit("run_code_or_install");
   const riskyRun = hit("risky_run");
-  if ((codeFact || codeHit || riskyRun) && !flags.some((f) => f.id === "run_code_or_install")) {
+  if ((codeHit || riskyRun) && !flags.some((f) => f.id === "run_code_or_install")) {
     const suspicious = chatChannel || free || CRYPTO_THEME.test(text) || (!appliedFirst && UNSOLICITED.test(text));
-    const quote = codeFact?.quote ?? riskyRun?.snippet ?? codeHit?.snippet ?? null;
+    const quote = riskyRun?.snippet ?? codeHit?.snippet ?? null;
     if (riskyRun || suspicious) {
       const c = CRITICAL_COPY.run_code_or_install;
       red("run_code_or_install", "offer", W.critical, c.title, c.why, quote, { critical: true });
@@ -284,11 +286,10 @@ function evaluate(input: ScoreInput): Evaluated {
     );
   }
 
-  const sensFact = ask("sensitive_data");
   const sensHit = hit("sensitive_data");
-  const sensitiveAsked = Boolean(sensFact || sensHit || ticked.includes("share_data"));
+  const sensitiveAsked = Boolean(sensHit || ticked.includes("share_data"));
   if (sensitiveAsked) {
-    const quote = sensFact?.quote ?? sensHit?.snippet ?? null;
+    const quote = sensHit?.snippet ?? null;
     // After a signed offer it's only a caution when they point you to an official portal,
     // not when they want it by reply, email, chat, or text.
     const viaPortal = HR_PORTAL.test(text);

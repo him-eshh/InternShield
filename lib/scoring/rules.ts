@@ -1,6 +1,6 @@
 // Every weight the engine uses, in one place (prd.md > Risk Scoring). Tune here only.
-// Read points as log-odds with 10 points = about twice as likely in scams as in real messages
-// (research 01 > 3.1): 25 is about 5.7x, 60 about 64x. Cutoffs stay 25 / 60; a critical flag floors at 85.
+// Points and cutoffs are policy heuristics, not measured odds or a probability of fraud.
+// A verified critical request floors the rule score at 85; bands begin at 25 and 60.
 
 export const WEIGHTS = {
   // Critical flags: any one sets the floor. Their points also count toward the sum.

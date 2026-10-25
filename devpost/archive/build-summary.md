@@ -32,7 +32,7 @@ npm run eval:live -- --limit 3   # real Groq extraction, uses quota
   - The explanation filter threw away nearly every AI paragraph over the word "legitimate".
 - **Review:** every slice and a final full pass were reviewed, and all blockers and should-fixes were fixed. Details are in `devpost/checklist.md > Revisions`.
 
-## Pending Himesh (morning)
+## Pending owner review (morning)
 
 1. **Hands-on check:** run `npm run dev`, click "Try an example: a scam" and then "a real one". Do you believe each report, and what would you change? (These are the planned checkpoints; boxes in `checklist.md` are still unchecked.)
 2. **Browser-only checks** (I couldn't open a browser on localhost):

@@ -1,4 +1,4 @@
-﻿# v3 interview QA evidence
+# v3 interview QA evidence
 
 ## Gates
 
@@ -33,7 +33,7 @@ Use the user's hidden launcher on port 3200; never use port 3000. Set:
 
 ```powershell
 $env:QA_BASE='http://localhost:3200'
-$env:QA_SHOTS='C:\my_projects\projects\InternShield\.git\internshield-relay\v3-shots\interview'
+$env:QA_SHOTS='[project root]\.git\internshield-relay\v3-shots\interview'
 $env:QA_OUT='qa/v3-interview-edge-out.txt'
 node qa/v3-interview-edge.mjs --loud
 $env:QA_OUT='qa/v3-interview-matrix-out.txt'
@@ -45,7 +45,7 @@ All `/api/interview` and `/api/intel` calls are mocked. Browser runtime assets u
 ## Screenshot index
 
 36 captures, nine states at `1440-light`, `1440-dark`, `390-light`, `390-dark`.
-Root: `C:\my_projects\projects\InternShield\.git\internshield-relay\v3-shots\interview`.
+Root: `[project root]\.git\internshield-relay\v3-shots\interview`.
 
 Filename format: `v3-interview-<state>-<variant>.png`.
 

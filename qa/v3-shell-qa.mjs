@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { BASE, openRoute, overflowX, RESUME, ROUTES, shot, variants, tag } from "./v3-lib.mjs";
 assert.ok(/^http:\/\/(localhost|127\.0\.0\.1):33\d\d$/.test(BASE), "Set QA_BASE to a shell port (3300-3399)");
-const labels = { "/": "Home", "/check": "Check", "/tailor": "Tailor", "/practice": "Practice", "/tracker": "Tracker", "/profile": "Profile" };
+const labels = { "/": "Home", "/check": "Check", "/tailor": "Tailor", "/practice": "Practice", "/tracker": "Tracker" };
 let checks = 0;
 function check(value, message) { assert.ok(value, message); checks++; console.log(`ok ${message}`); }
 async function ready(page) { await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" }); await page.getByRole("heading", { level: 1 }).first().waitFor(); await page.waitForTimeout(600); }
@@ -10,21 +10,19 @@ for (const v of variants) {
   const { browser, page, log } = await openRoute("/", v);
   try {
     await ready(page);
-    check(await page.getByRole("link", { name: /Check.*Start/ }).count() === 1, `${tag(v)} Check card`);
-    check(await page.getByRole("link", { name: /Tailor.*Start/ }).count() === 1, `${tag(v)} Tailor card`);
-    check(await page.getByRole("link", { name: /Practice.*Start/ }).count() === 1, `${tag(v)} Practice card`);
-    check(await page.locator("#how-h + ol > li > span").first().evaluate(el => {
-      const marker = document.createElement("span"); marker.style.color = "var(--on-ink)"; el.append(marker);
-      const expected = getComputedStyle(marker).color; marker.remove();
-      return getComputedStyle(el).color === expected;
-    }), `${tag(v)} step number foreground`);
+    const toolRows = page.locator('section[aria-labelledby="tools-h"] > ol > li');
+    check(await toolRows.count() === 3, `${tag(v)} three tool rows`);
+    for (const [index, href] of ["/check", "/tailor", "/practice"].entries()) {
+      check(await toolRows.nth(index).getByRole("link").getAttribute("href") === href, `${tag(v)} ${href} tool link`);
+    }
     await shot(page, `shell-home-new-${tag(v)}`);
     for (const route of ROUTES) {
       await page.goto(BASE + route, { waitUntil: "load" });
       await ready(page);
       const nav = page.getByRole("navigation", { name: v.width >= 1024 ? "Main" : "Tools", exact: true });
       check(await nav.isVisible(), `${tag(v)} ${route} nav visible`);
-      if (route !== "/" || v.width >= 1024) check(await nav.locator('[aria-current="page"]').innerText() === labels[route], `${tag(v)} ${route} active`);
+      if (route === "/profile") check(await page.getByRole("link", { name: /Profile, .* steps done/ }).isVisible(), `${tag(v)} profile avatar reachable`);
+      else check(await nav.locator('[aria-current="page"]').innerText() === labels[route], `${tag(v)} ${route} active`);
       check((await overflowX(page)) <= 0, `${tag(v)} ${route} overflow`);
       const home = page.getByRole("link", { name: "InternShield home", exact: true });
       check(await home.isVisible(), `${tag(v)} ${route} home reachable`);
@@ -75,7 +73,7 @@ for (const v of variants) {
     await page.getByLabel("Role (optional)", { exact: true }).fill("Engineering intern");
     await page.getByRole("button", { name: "Add application", exact: true }).click();
     await page.getByRole("button", { name: "Move to Applied" }).click();
-    check(await page.locator('[id^="card-"]').getByText("Applied", { exact: true }).isVisible(), "tracker moved");
+    check(await page.locator('[id^="card-"] p').filter({ hasText: /^Applied$/ }).isVisible(), "tracker moved");
     await page.getByLabel("More actions for Example Labs").click();
     await page.getByRole("button", { name: "Delete", exact: true }).click();
     await page.getByRole("button", { name: "Undo", exact: true }).click();

@@ -6,8 +6,8 @@ import { ChevronDown as ChevronIcon, ExternalLink as ExternalIcon } from "lucide
 export default function RecoveryCard({ level }: { level: RiskLevel }) {
   if (!showRecovery(level)) return null;
   return (
-    <details id="recovery" className="group rounded-[18px] border border-border bg-bg-soft">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-[18px] px-5 py-4 text-[17px] font-medium text-text [&::-webkit-details-marker]:hidden">
+    <details id="recovery" className="group mt-3 border border-rule bg-paper-2">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-3 text-[16px] font-medium text-fg [&::-webkit-details-marker]:hidden">
         <span>Already sent money or shared info?</span>
         <span className="text-muted transition-transform duration-200 group-open:rotate-180">
           <ChevronIcon size={18} />

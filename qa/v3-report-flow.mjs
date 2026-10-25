@@ -2,12 +2,17 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { openRoute, shot, overflowX } from "./v3-lib.mjs";
 const EX = JSON.parse(readFileSync("qa/examples.json", "utf8"));
+async function expandedImpactText(section) {
+  const detail = section.locator("[data-impact] details");
+  if (!(await detail.evaluate((node) => node.open))) await detail.locator("summary").click();
+  return section.locator("[data-impact]").innerText();
+}
 const { browser, page, log } = await openRoute("/check", { width: 390 });
 try {
-  await page.getByRole("button", { name: "Check it", exact: true }).click();
+  assert.equal(await page.getByRole("button", { name: "Check this message", exact: true }).isDisabled(), true);
   await page.getByText("Paste a message to check.", { exact: true }).waitFor();
   await page.locator("#message").fill(EX.real.text);
-  await page.getByRole("button", { name: "Check it", exact: true }).click();
+  await page.getByRole("button", { name: "Check this message", exact: true }).click();
   await page.locator("article").waitFor();
   await page.getByRole("heading", { name: "No red flags found", exact: true }).waitFor();
   assert.equal(await page.getByRole("button", { name: "Copy report", exact: true }).count(), 0);
@@ -15,7 +20,7 @@ try {
   await qq.getByRole("button", { name: "Deposit a check", exact: true }).click();
   await qq.getByRole("button", { name: "Update the check", exact: true }).click();
   await qq.locator("[data-impact]").waitFor();
-  assert.match(await qq.locator("[data-impact]").innerText(), /What you added[\s\S]*What changed[\s\S]*Score \d+ → \d+, (still|now) /);
+  assert.match(await expandedImpactText(qq), /What you added[\s\S]*What changed[\s\S]*Score \d+ → \d+, (still|now) /i);
   assert.match(await qq.innerText(), /Change/);
   await page.getByRole("heading", { name: "Strong signs of a scam", exact: true }).waitFor();
   assert.equal(await page.getByRole("button", { name: /Tailor my resume|Practice an interview/ }).count(), 0);
@@ -25,12 +30,12 @@ try {
   await qq.locator("[data-impact]").filter({ hasText: "None yet" }).waitFor();
   await qq.getByRole("button", { name: /None yet.*Change/ }).click();
   await qq.getByRole("button", { name: "None yet", exact: true }).click();
-  assert.match(await qq.locator("[data-impact]").innerText(), /None yet[\s\S]*Score (\d+) → \1, still /);
+  assert.match(await expandedImpactText(qq), /None yet[\s\S]*Score (\d+) → \1, still /);
   await page.getByRole("button", { name: /Edit company name/ }).click();
   assert.equal(await page.locator('article :is(button,a)[class*="bg-accent text-accent-contrast"]').count(), 1);
   await page.getByLabel("Company", { exact: true }).fill("Northbeam Analytics");
   await page.getByRole("button", { name: "Recheck", exact: true }).click();
-  await page.locator("header [role=status]").filter({ hasText: /You added: .*Company/ }).waitFor();
+  await page.locator("[data-impact]").filter({ hasText: "Company: Northbeam Analytics" }).waitFor();
   assert.match(await qq.innerText(), /None yet.*Change/);
   await page.getByText("Add to this check", { exact: true }).click();
   await page.getByLabel("Another message", { exact: true }).fill(EX.scam.text);

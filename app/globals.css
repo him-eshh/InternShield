@@ -12,6 +12,9 @@
 @theme inline {
   /* colors (new names) */
   --color-bg: var(--bg);
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-rule: var(--rule);
   --color-bg-subtle: var(--bg-subtle);
   --color-surface-2: var(--surface-2);
   --color-surface-3: var(--surface-3);
@@ -20,6 +23,8 @@
   --color-tool-tint: var(--tool-tint);
   --color-tool-strong: var(--tool-strong);
   --color-on-tool: var(--on-tool);
+  --color-tool-deep: var(--tool-deep);
+  --color-on-deep: var(--on-deep);
   --color-coral: var(--coral); --color-coral-strong: var(--coral-strong); --color-coral-tint: var(--coral-tint);
   --color-teal: var(--teal); --color-teal-strong: var(--teal-strong); --color-teal-tint: var(--teal-tint);
   --color-violet: var(--violet); --color-violet-strong: var(--violet-strong); --color-violet-tint: var(--violet-tint);
@@ -56,8 +61,12 @@
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   /* type scale (weights: 400 body, 600 headline, 680-700 display) */
-  --text-display: clamp(2.5rem, 5.5vw + 0.5rem, 4.5rem); --text-display--line-height: 1.04; --text-display--letter-spacing: -0.032em;
+  --text-display: clamp(2.75rem, 7vw, 5.25rem); --text-display--line-height: 0.98; --text-display--letter-spacing: -0.035em;
   --text-title: clamp(1.75rem, 2.5vw + 0.75rem, 2.5rem); --text-title--line-height: 1.12; --text-title--letter-spacing: -0.024em;
+  --text-section: 1.375rem; --text-section--line-height: 1.2; --text-section--letter-spacing: -0.015em;
+  --text-numeral: clamp(4.5rem, 8vw, 6rem); --text-numeral--line-height: 0.9; --text-numeral--letter-spacing: -0.04em;
+  --text-label: 0.8125rem; --text-label--line-height: 1.3; --text-label--letter-spacing: 0.08em;
+  --text-evidence: 0.9375rem; --text-evidence--line-height: 1.55;
   --text-level: clamp(1.875rem, 3vw + 0.75rem, 2.75rem); --text-level--line-height: 1.1; --text-level--letter-spacing: -0.022em;
   --text-score: 3.5rem; --text-score--line-height: 1; --text-score--letter-spacing: -0.03em;
   --text-headline: 1.0625rem; --text-headline--line-height: 1.4;
@@ -88,6 +97,7 @@ html {
   background: var(--bg);
   color: var(--fg);
   font-optical-sizing: auto;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -95,7 +105,49 @@ body {
   font-size: 17px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  position: relative;
 }
+
+/* A very quiet paper grain keeps large open areas from reading as flat template panels. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+}
+.dark body::before { opacity: 0.06; }
+
+::selection { background: var(--highlight-swash); color: var(--fg); }
+
+.swash { background: linear-gradient(transparent 57%, var(--highlight-swash) 57%, var(--highlight-swash) 93%, transparent 93%); }
+.ruled { background-image: repeating-linear-gradient(to bottom, transparent 0 27px, var(--rule) 28px); }
+.text-display { font-variation-settings: "wdth" 88, "opsz" 96; }
+.text-numeral { font-variation-settings: "wdth" 80, "opsz" 96; font-variant-numeric: tabular-nums; }
+.text-evidence { font-family: var(--font-mono); }
+
+.progress-track { height: 12px; overflow: hidden; border-radius: 999px; background: var(--sunken); }
+.progress-fill { height: 100%; border-radius: inherit; background: var(--tool); position: relative; transition: width 320ms var(--ease-out); }
+.progress-fill::before { content: ""; position: absolute; inset: 0 0 50%; background: color-mix(in oklab, var(--tool) 70%, white); opacity: .45; }
+
+@keyframes skeleton-sweep { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+.skeleton-paper { position: relative; overflow: hidden; background: var(--sunken); }
+.skeleton-paper::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, var(--paper-2), transparent); opacity: .4; animation: skeleton-sweep 1.5s linear infinite; }
+
+.pressable {
+  --press-edge: var(--accent-edge);
+  box-shadow: 0 var(--edge-depth) 0 var(--press-edge);
+  transition: transform var(--dur-hover) var(--ease-standard), box-shadow var(--dur-hover) var(--ease-standard), background-color var(--dur-hover) var(--ease-standard);
+}
+.pressable-secondary { --press-edge: var(--border-strong); }
+.pressable-pill { --press-edge: var(--border-strong); box-shadow: 0 2px 0 var(--press-edge); }
+.pressable:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 calc(var(--edge-depth) + 1px) 0 var(--press-edge); }
+.pressable-pill:hover:not(:disabled) { box-shadow: 0 3px 0 var(--press-edge); }
+.pressable:active:not(:disabled) { transform: translateY(var(--edge-depth)); box-shadow: none; }
+.pressable-pill:active:not(:disabled) { transform: translateY(2px); box-shadow: none; }
+.pressable:disabled { box-shadow: none; }
 
 h1, h2, h3 { text-wrap: balance; font-family: var(--font-display); }
 p { text-wrap: pretty; }
@@ -110,7 +162,7 @@ p { text-wrap: pretty; }
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--accent-fg);
   outline-offset: 2px;
 }
 

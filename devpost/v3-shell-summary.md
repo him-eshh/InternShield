@@ -1,5 +1,7 @@
 # V3 shell summary
 
+> This is a stream handoff snapshot. Current routes, navigation, and final verification are in `prd.md`, `spec.md`, and `checklist.md`; the integration tasks below describe the state at the time of this stream.
+
 Shell items closed in `38f9768`, after all five gates passed. Codex continued the paused Claude shell stream; inherited work was preserved before edits.
 
 ## Shipped

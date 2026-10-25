@@ -20,8 +20,9 @@ export default function EvidenceCard({ flag, n }: { flag: Flag; n?: number }) {
   const red = flag.kind === "red";
   const sev = severityOf(flag);
   const Icon = red ? (sev === "critical" || sev === "high" ? AlertIcon : WarningIcon) : CheckCircleIcon;
+  const weight = Math.min(100, Math.abs(flag.points) * 2.5);
   return (
-    <li id={flagDomId(flag)} tabIndex={-1} className={`ev-card scroll-mt-6 rounded-[18px] border border-border border-l-[5px] bg-card p-5 ${red ? BAR[sev] : "border-l-good"}`}>
+    <li id={flagDomId(flag)} tabIndex={-1} className={`ev-card scroll-mt-6 border-t border-rule border-l-4 bg-paper-2 p-5 ${red ? BAR[sev] : "border-l-good"}`}>
       <div className="flex items-start gap-3">
         <span className={`mt-0.5 shrink-0 ${red ? (sev === "medium" ? "text-warn" : sev === "low" ? "text-fg-2" : "text-bad") : "text-good"}`}>
           <Icon size={22} />
@@ -41,7 +42,7 @@ export default function EvidenceCard({ flag, n }: { flag: Flag; n?: number }) {
             {flag.title}
           </h4>
           {flag.quote && (
-            <blockquote className="mt-2 text-[15px] leading-relaxed [overflow-wrap:anywhere]">
+            <blockquote className="mt-3 border-l-2 border-dashed border-tool pl-3 font-mono text-[15px] leading-relaxed [overflow-wrap:anywhere]">
               <mark className="quote-mark">&ldquo;{flag.quote}&rdquo;</mark>
               {n !== undefined && (
                 <button type="button" onClick={() => showInMessage(flag.id)} className="ml-2 rounded-full px-2 py-0.5 text-[14px] text-accent-fg hover:underline">
@@ -52,6 +53,14 @@ export default function EvidenceCard({ flag, n }: { flag: Flag; n?: number }) {
             </blockquote>
           )}
           <p className="mt-2 text-[15px] leading-relaxed [overflow-wrap:anywhere]">{flag.why}</p>
+          {flag.points !== 0 && (
+            <div className="mt-3 flex items-center gap-3 text-sm text-fg-2">
+              <span className="whitespace-nowrap">Rule weight {flag.points > 0 ? "+" : ""}{flag.points}</span>
+              <span className="h-2 min-w-12 flex-1 rounded-full bg-sunken" aria-hidden="true">
+                <span className={`block h-full rounded-full ${red ? "bg-bad" : "bg-good"}`} style={{ width: `${weight}%` }} />
+              </span>
+            </div>
+          )}
           {flag.action && (
             <p className="mt-3 rounded-[10px] bg-bg-subtle px-3 py-2 text-[15px] leading-relaxed [overflow-wrap:anywhere]">
               <span className="font-semibold">Check: </span>

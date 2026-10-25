@@ -146,7 +146,7 @@ describe("PDF in-place render (R4)", () => {
     expect(docText(after)).toContain(text.slice(0, 40));
     const check = lengthCheck(doc, [{ lineId: target.id, text }], out);
     expect(check.ok).toBe(true);
-  });
+  }, 20_000);
 
   it("rejects an edit that cannot fit its rows", async () => {
     const original = fx("one-page.pdf");

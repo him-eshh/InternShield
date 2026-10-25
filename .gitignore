@@ -27,3 +27,8 @@ npm-debug.log*
 # local review aids / agent state
 .codex/
 /images/
+
+# Private research notes for this local submission pass; may contain machine paths.
+/research_notes/
+/reports/
+/HANDOFF.md

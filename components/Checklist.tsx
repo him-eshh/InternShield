@@ -68,12 +68,13 @@ function Marker({ state }: { state: LineState }) {
 }
 
 export default function Checklist({ lines, example, slowAfterMs = SLOW_AFTER_MS }: { lines: Record<StepKey, LineInfo>; example?: boolean; slowAfterMs?: number }) {
+  const active = KEYS_IN_ORDER.find((key) => lines[key].state === "running") ?? [...KEYS_IN_ORDER].reverse().find((key) => lines[key].state !== "pending");
+  const current = active ? `${STEP_LABELS[active]}${STATE_WORD[lines[active].state]}` : "Preparing checks";
   return (
-    <section data-tool="check" className="mx-auto max-w-[640px] px-6 py-16 sm:py-24">
-      <h2 className={subhead}>Checking the message</h2>
-      {example && <p className="mt-2 text-[15px] text-muted">Example</p>}
-      <p className="mt-3 text-[17px] leading-relaxed text-muted">Following the evidence, one check at a time.</p>
-      <ol aria-live="polite" aria-label="Checks in progress" className="mt-10 space-y-3">
+    <section data-tool="check" className="mx-auto max-w-[760px] px-4 py-10 sm:px-6 sm:py-16">
+      <header className="rounded-tr-[28px] bg-tool-deep px-5 py-6 text-on-deep"><p className="text-sm opacity-85">{example ? "Example / " : ""}Checking the message</p><h2 className={`${subhead} mt-2`}>Following the evidence</h2><p className="mt-2 opacity-90">Each finished check makes the report more useful. Missing checks will be shown plainly.</p></header>
+      <p role="status" aria-live="polite" className="sr-only">{current}</p>
+      <ol aria-label="Checks in progress" className="mt-8 border-t border-rule">
         {KEYS_IN_ORDER.map((k) => {
           const info = lines[k];
           const n = lineNote(info);
@@ -81,7 +82,7 @@ export default function Checklist({ lines, example, slowAfterMs = SLOW_AFTER_MS 
             <li
               key={k}
               data-state={info.state}
-              className={`flex min-h-14 items-start gap-4 transition-opacity duration-300 ease-out ${info.state === "pending" ? "text-muted" : ""}`}
+              className={`flex min-h-16 items-start gap-4 border-b border-rule py-4 transition-opacity duration-150 ease-out ${info.state === "pending" ? "text-fg-3" : ""}`}
             >
               <Marker key={info.state} state={info.state} />
               <span className="block pt-0.5">

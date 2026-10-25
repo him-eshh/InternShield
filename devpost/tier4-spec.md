@@ -1,9 +1,11 @@
 ---
 doc: tier4-spec
-status: approved (tiers-orchestration.md, Himesh, Oct 21 2026)
+status: historical-approved-plan
 ---
 
 # Tier 4 spec: interview rounds for other fields
+
+> Historical plan. This is the approved 2026-10-21 Tier 4 build plan, retained for historical decisions. Current v3 Practice keeps relevant case/portfolio-style discussion but retired the finance round and design challenge; the old hidden flags and `components/App.tsx` entry points below no longer exist. The continuous session and current round choices are described in `prd.md` and `spec.md`.
 
 Grounded in `prd.md > Deferred From the POC`, `scope.md > Later`, `spec.md > Look and Feel / Components / Usage Guard / Token Budget / Browser Storage / Stack`, and the Tier 3 interview shell (`tier3-spec.md`). Same look: Apple-like, system font, one soft-blue accent, green/amber/red only for results, light/dark, CSS motion only, inline SVG icons, keyboard and screen-reader accessible, self-explanatory. No accounts, no server storage, no scraping, no "safe" verdict. Every case, question, prompt and answer key is made up.
 

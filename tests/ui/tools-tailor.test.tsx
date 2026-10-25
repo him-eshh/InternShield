@@ -10,6 +10,9 @@ describe("Tailor v3 inputs", () => {
     expect(html).toContain("Choose PDF or Word");
     expect(html).toContain("Tailor my resume");
     expect(html).toContain("Your resume");
+    expect(html).toContain("Your resume text and posting are sent to AI");
+    expect(html).toContain("review every line against your experience");
+    expect(html).not.toContain("Edited in your browser.");
     expect(html).not.toContain("How to tailor");
   });
   it("prefills profile text and report target and explains original-file formatting", () => {

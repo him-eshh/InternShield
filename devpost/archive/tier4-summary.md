@@ -29,7 +29,7 @@ The merge-gate review also found no blockers. Its 2 should-fixes and the nits ar
 ## Live calls
 0 of 2. Mocked route tests cover the prompts, checks and link handling.
 
-## Pending Himesh (morning), hands-on
+## Pending owner review (morning), hands-on
 - Business profile: run a case and answer the calculation in words, e.g. "so about 4,000 cups".
 - Finance profile: answer a numeric question as "$1.2 million" and check it's read right.
 - Design profile: add two made-up portfolio links and answer a follow-up. Draw a 3-screen flow in the challenge and watch the timer.

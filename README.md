@@ -1,13 +1,17 @@
 # InternShield
 
-Paste a job or recruiter message and get an evidence-based scam-risk report.
+Check a job or recruiter message, tailor a resume for the role, and practice an interview in one browser-based workspace.
 
 ## How it works
 
+- **Check:** paste a message or upload a screenshot, review the rule-based risk report, answer quick questions, and add information to see what changed. Company, posting, and sender checks show unavailable results explicitly.
+- **Tailor:** upload an original PDF or DOCX and review a small set of suggested line edits against the job posting. Accept, reject, preview, and download the edited document.
+- **Practice:** choose rounds and question count, then work through interview questions with coding, SQL, behavioral, and discussion feedback. Runnable questions execute in browser workers; test results lead the review.
+- **Tracker and profile:** save application steps and optional preferences locally. A Check report or Practice summary can hand a role and company to the next tool.
 - AI extracts facts from the message, each with an exact quote.
 - Fixed rules score those facts. The AI never decides the score.
 - AI explains the result only after the score is set.
-- The real posting is cross-checked against the company's official listing. It never says a message is safe. If nothing is flagged, it says "No red flags found" and links the official careers page.
+- A posting is cross-checked against official company information when available. It never says a message is safe. If nothing is flagged, it says "No red flags found" and offers an official careers link when one was found.
 
 ## Run it locally
 
@@ -18,7 +22,7 @@ Requires Node 20+.
 3. `npm run dev`
 4. Open http://localhost:3000
 
-Try "Try an example: a scam" and "a real one" on the check screen. If a live step fails or the free quota is used up, examples fall back to saved results and say so.
+The Check screen includes two made-up examples. If a live step fails or the free quota is used up, examples fall back to saved results and say so.
 
 ## Deploy (optional)
 
@@ -28,7 +32,9 @@ Try "Try an example: a scam" and "a real one" on the check screen. If a live ste
 
 ## Limits
 
-Every outside service is on a free plan with no card. Per visitor: 3 checks a minute, 20 a day. Site-wide: 120 checks and 80 searches a day by default. Counters live in server memory, so they're best-effort per server instance.
+The app is configured for free-tier services. Per visitor, Check allows 3 extractions a minute and 20 a day; Tailor allows 4 rewrites a minute and 15 a day; Practice allows 6 interview calls a minute and 30 a day; screenshot transcription allows 2 a minute and 6 a day. Default instance-wide daily caps are 120 live checks, 30 Tavily searches, 300 Wikidata lookups, 15 company-intel lookups, 30 rewrites, 12 transcriptions, and 50 interview calls. These counters and caches live in server memory, so limits are best effort per instance. External providers have separate quotas.
+
+`ALLOWED_ORIGINS` must contain each deployed origin. Requests from other origins are rejected. All API requests are bounded; regular JSON bodies are capped at 16 KB and screenshot bodies at 3.6 MB.
 
 ## Tests
 
@@ -76,7 +82,7 @@ Held-out set (27 cases written without seeing the rules, not gating): 24/27; fal
 | c7-low-offer-letter-esign | low | low | 0 | - |
 | c7-low-online-assessment-portal | low | low | 0 | - |
 | c7-low-rejection-polite | low | low | 0 | - |
-| c7-low-signed-offer-i9 | low | low | 0 | sensitive_data |
+| c7-low-signed-offer-i9 | low | low | 0 | - |
 | c7-low-staffing-agency-outreach | low | low | 0 | unsolicited |
 | c7-low-takehome-git-clone | low | low | 0 | untrusted_code |
 | c7-low-university-info-session | low | low | 0 | - |
@@ -90,7 +96,7 @@ Held-out set (27 cases written without seeing the rules, not gating): 24/27; fal
 | c7-mid-telegram-interview-corporate | medium | medium | 25 | off_platform |
 | c7-mid-unpaid-trial-project | low | low | 7 | unsolicited, other_concern_1 |
 | c7-paperwork-ssn-bank-first | high | high | 85 | sensitive_data*, no_interview, new_domain |
-| c7-punycode-careers-link | high | high | 100 | sensitive_data*, lookalike_domain, link_punycode |
+| c7-punycode-careers-link | high | high | 65 | lookalike_domain, link_punycode, new_domain |
 | c7-reimburse-laptop-own-card | high | high | 85 | buy_equipment*, lookalike_domain, new_domain |
 | c7-remote-access-teamviewer | high | high | 100 | run_code_or_install*, sensitive_data*, surprise_text |
 | c7-secrecy-dont-tell | high | high | 85 | sensitive_data*, secrecy, new_domain |
@@ -149,7 +155,9 @@ Held-out set (27 cases written without seeing the rules, not gating): 24/27; fal
 
 ## Privacy
 
-Your message is sent to an AI (Groq) and a search service (Tavily) to run the check. Nothing is stored on a server. Your profile and resume text stay in your browser.
+Your profile, extracted resume text, last report, tracker, and practice history are saved in this browser's local storage. Check sends message content to Groq for extraction and explanation; company and posting lookups use Tavily and may use Wikidata, RDAP, and public DNS. Sender checks may send an email address to Hunter if its optional key is configured. Screenshot transcription sends a browser-compressed image to Groq; Tailor sends extracted resume text and the posting to Groq for suggestions; Practice may send answers and a short resume excerpt to Groq for feedback. The app has no account or persistent application database, but server instances temporarily cache some lookup and extraction results. “Clear my data” removes the app's saved local data except the theme choice. Use made-up information for demos.
+
+PDF editing covers old text and redraws new text; the original text can remain extractable underneath. **An edited PDF is not a redacted document.** DOCX edits are limited by existing word layout. Review every suggested line, generated preview, and download before using it. Practice's “Most asked at” ranking is a proxy from historical public question lists, not employer question counts; model feedback can fall back to local checks when unavailable.
 
 ## Built with
 

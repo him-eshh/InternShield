@@ -28,12 +28,10 @@ interface BackstopHit {
 /** A pattern, optionally with words that must also appear in the same sentence. */
 type Pattern = RegExp | { re: RegExp; needs: RegExp };
 
-const MONEY_WORDS = /\$|\b(?:check|cheque|funds|money|balance|dollars|payment|zelle|venmo|cash ?app|wire|paypal)\b/i;
 const CRYPTO = String.raw`(?:usdt|tether|bitcoin|btc|ethereum|eth|crypto(?:currency)?|trc-?20|erc-?20)`;
-const CRYPTO_UNIT = String.raw`(?:usdt|tether|bitcoin|btc|ethereum|eth)`;
 const YOU_PAY = String.raw`(?:you(?:['’]ll| will)?\s+(?:need to\s+|have to\s+|must\s+)?|must\s+|required to\s+|need to\s+|please\s+)`;
 const SENSITIVE_THING = String.raw`(?:ssn|social security(?: number)?|bank account(?: number| details| info(?:rmation)?)?|routing number|online banking|bank login|banking (?:login|credentials|details)|debit card(?: number)?|credit card(?: number)?|driver['’]?s licen[cs]e|passport(?: number| copy| photo)?|(?:photo|government[- ]issued|state) id|password|login credentials)`;
-const ASK_VERB = String.raw`(?:send|sending|share|provide|reply|respond|email (?:us|me|it|them)|text (?:us|me|it|them)|submit|upload|give (?:us|me)|forward|enter|verify|ask for your|request your|require your)`;
+const ASK_VERB = String.raw`(?:send|sending|share|provide|reply|respond|email (?:us|me|it|them)|text (?:us|me|it|them)|submit|upload|give (?:us|me)|forward|enter|verify|asks? for your|asking for your|request your|require your)`;
 const YOU_BUY = String.raw`(?:you(?:['’]ll| will)?\s+(?:need to\s+|have to\s+|must\s+)?|must\s+|required to\s+|need to\s+|please\s+|to\s+)`;
 
 // Money flowing the wrong way (research 01 > rule 2).
@@ -47,26 +45,25 @@ const RMM = String.raw`(?:any\s?desk|team\s?viewer|screen\s?connect|connectwise|
 const OFFICIAL_MEETING_HOST = String.raw`(?:[\w-]+\.)?(?:zoom\.us|zoom\.com|microsoft\.com|office\.com|webex\.com|meet\.google\.com|google\.com)`;
 
 const PATTERNS: Record<BackstopId, Pattern[]> = {
-  deposit_check: [
-    /\b(?:mail|send|sending|mailing|issue|issuing|courier|ship|overnight)\s+(?:you\s+)?(?:a|the|an)\s+(?:cashier['’]?s\s+|certified\s+|company\s+|business\s+)?(?:check|cheque)\b/gi,
-    /\b(?:deposit|cash|mobile[- ]deposit)\s+(?:the|this|a|your|that)\s+(?:\w+\s+)?(?:check|cheque)\b/gi,
-    /\b(?:check|cheque)\s+(?:for|of|worth|in the amount of)\s+\$?\d/gi,
-    /\bcashier['’]?s\s+(?:check|cheque)\b/gi,
-    { re: /\bsend\s+(?:back\s+)?(?:the\s+)?(?:remaining|rest|balance|difference|excess|leftover)\b/gi, needs: MONEY_WORDS },
-  ],
+  // A check is only critical when the applicant is told to deposit it and spend or send money onward.
+  deposit_check: [],
   gift_cards: [
-    /\b(?:gift\s*cards?|e-?gift\s*cards?|itunes\s+cards?|google\s+play\s+cards?|steam\s+cards?|apple\s+cards?)\b/gi,
+    /\b(?:buy|purchase|send|provide|pay|obtain|pick up)\b[^.!?\n]{0,90}\b(?:gift\s*cards?|e-?gift\s*cards?|itunes\s+cards?|google\s+play\s+cards?|steam\s+cards?|apple\s+cards?)\b/gi,
+    /\b(?:gift\s*cards?|e-?gift\s*cards?)\b[^.!?\n]{0,70}\b(?:send|share|email|text)\b[^.!?\n]{0,40}\b(?:codes?|pins?|photos?)\b/gi,
   ],
   crypto_or_task_deposit: [
     // You pay in: "you need to top up your account with 50 USDT", "Deposit $100 in bitcoin to start".
     new RegExp(String.raw`(?:(?<=(?:^|[.!?\n:])\s{0,3})|\b${YOU_PAY})(?:deposit|send|transfer|top[- ]?up|recharge|fund|buy|purchase)\w*\s+(?:[\w'’]+\s+){0,5}?(?:\$?\d[\d,.]*\s*)?(?:in\s+|of\s+|worth of\s+)?${CRYPTO}\b`, "gi"),
-    // An amount: "50 USDT", "$200 in bitcoin".
-    new RegExp(String.raw`(?:\$\d[\d,.]*\s+(?:in|of|worth of)\s+${CRYPTO}|\b\d[\d,.]*\s*${CRYPTO_UNIT})\b`, "gi"),
-    new RegExp(String.raw`\b${CRYPTO}\s+deposits?\b`, "gi"),
-    /\bunlock\w*\b[^.!?\n]{0,60}\b(?:earnings|commissions?|withdraw\w*|salary|payouts?|wages)\b/gi,
-    /\b(?:recharge|top[- ]?up)\b[^.!?\n]{0,40}\b(?:account|balance|tasks?)\b/gi,
+    // A crypto amount alone can be legitimate pay; the applicant must be asked to put money in.
+    new RegExp(String.raw`\b(?:you(?:\s+(?:must|need to|have to|will))?|please|required to)\b[^.!?\n]{0,70}\b(?:deposit|send|transfer|top[- ]?up|recharge|fund|buy|purchase)\b[^.!?\n]{0,70}\b${CRYPTO}\b`, "gi"),
+    new RegExp(String.raw`\b(?:and|then|please|you(?:\s+(?:must|need to|have to|will))?)\s+(?:deposit|top[- ]?up|recharge|fund|send)\b[^.!?\n]{0,55}\b${CRYPTO}\b[^.!?\n]{0,70}\b(?:unlock|start|begin|withdraw|tasks?|earnings|commissions?)\b`, "gi"),
+    /\b(?:you(?:\s+(?:must|need to|have to))?|please|if your balance[^.!?\n]{0,35})\b[^.!?\n]{0,70}\b(?:recharge|top[- ]?up)\b[^.!?\n]{0,40}\b(?:your\s+)?(?:account|balance|tasks?)\b/gi,
   ],
   pay_fee: [
+    // A directed payment with letter-spaced scam vocabulary, not a bare mention of a fee.
+    /\b(?:you\s+(?:need|have)\s+to\s+|please\s+|must\s+)p\s+a\s+y\b[^.!?\n]{0,55}\br\s+e\s+g\s+i\s+s\s+t\s+r\s+a\s+t\s+i\s+o\s+n\s+f\s+e\s+e\b/gi,
+    // cleanText can join the article and adjacent word in a spaced phrase.
+    /\b(?:you\s+(?:need|have)\s+to\s+|please\s+|must\s+)paya?\b[^.!?\n]{0,55}\bregistrationfee\b/gi,
     /\b(?:registration|application|training|onboarding|processing|certification|background[- ]check|enrollment|enrolment|placement|activation|membership|administrative|admin|refundable|equipment)\s+(?:fee|fees|charge)\b/gi,
     new RegExp(String.raw`\b${YOU_BUY}pay\b[^.!?\n]{0,40}\bfees?\b`, "gi"),
     /\b(?:one[- ]time|small|refundable|upfront|up-front)\s+(?:fee|deposit)\b/gi,
@@ -75,13 +72,12 @@ const PATTERNS: Record<BackstopId, Pattern[]> = {
   ],
   buy_equipment: [
     new RegExp(String.raw`(?:(?<=(?:^|[.!?\n:])\s{0,3})|\b${YOU_BUY})(?:buy|purchase|order|pay for)\b[^.!?\n]{0,50}\b(?:equipment|laptop|computer|software|supplies|devices?|macbook|ipad|iphone|printer|starter kit|training (?:materials|kit|course))\b`, "gi"),
-    /\b(?:approved|designated|preferred|certified)\s+vendor\b/gi,
   ],
   reship_or_forward: [
-    /\bre-?ship(?:ping|ped|per|pers|ment)?\b/gi,
+    /\b(?:you(?:\s+(?:will|must|need to|have to))?|your\s+(?:job|role|task|duties)|please|we\s+(?:need|want|ask)\s+you\s+to)\b[^.!?\n]{0,90}\bre-?ship(?:ping|ped|per|pers|ment)?\b/gi,
     /\b(?:receive|accept|collect)\w*\b[^.!?\n]{0,50}\b(?:packages?|parcels?|shipments?)\b[^.!?\n]{0,60}\b(?:forward|re-?label|repackag|ship (?:them|it)|send (?:them|it))\w*/gi,
     /\bforward(?:ing|ed)?\s+(?:the\s+|these\s+|those\s+|any\s+|all\s+)?(?:packages?|parcels?|shipments?|items|funds|money|payments?\s+to)\b/gi,
-    /\b(?:package|parcel)\s+(?:inspectors?|forwarders?|processing (?:agents?|assistants?))\b/gi,
+    /\b(?:package|parcel)\s+(?:inspectors?|forwarders?|processing (?:agents?|assistants?))\b[^.!?\n]{0,90}\b(?:receive|forward|ship|repackag|re-?label)\w*\b/gi,
     /\b(?:receive|process|accept)\w*\b[^.!?\n]{0,30}\b(?:payments?|funds|transfers?|money)\b[^.!?\n]{0,50}\b(?:on (?:our|the company['’]?s) behalf|forward (?:it|them|the funds)|transfer (?:it|them)|send (?:it|them))\b/gi,
   ],
   run_code_or_install: [
@@ -120,8 +116,6 @@ const PATTERNS: Record<BackstopId, Pattern[]> = {
     new RegExp(String.raw`\b(?:zelle|venmo|cash\s?app|cashapp|wire)\s+(?:us\s+|them\s+|the\s+)?${REST}\b`, "gi"),
     // Mobile deposits and e-checks, only with money going back out (a bare "mobile deposit" is normal banking).
     new RegExp(String.raw`\b(?:mobile[- ](?:check[- ])?deposit|e-?checks?)\b[^.!?\n]{0,100}\b(?:send|buy|purchase|transfer|wire|forward|${P2P}|vendor|supplier|${REST})\b`, "gi"),
-    // ... or paying for equipment/supplies that way (the fake-check equipment setup).
-    /\b(?:equipment|supplies|office setup)\b[^.!?\n]{0,80}\b(?:mobile[- ](?:check[- ])?deposit|e-?checks?)\b/gi,
     // Money mule setups
     /\buse\s+your\s+(?:own\s+|personal\s+)?(?:bank|checking|savings)\s+account\b(?![^.!?\n]{0,60}\b(?:direct deposit|payroll|paycheck|portal|workday|set up)\b)/gi,
     /\buse\s+your\s+(?:own\s+|personal\s+)account\b[^.!?\n]{0,60}\b(?:receive|transfer|forward|send|move|payments?|funds|money)\b/gi,
@@ -172,6 +166,8 @@ const DIRECT_NEGATION =
 /** A fraud-warning lead earlier in the same sentence: "we will never ask you to buy gift cards, deposit a check, or ...". */
 const WARNING_LEAD =
   /\b(?:never|not|don['’]?t|do not|won['’]?t|will not|doesn['’]?t|does not)\s+(?:\w+\s+){0,2}(?:ask|request|require|charge|expect|tell)\w*\b/i;
+/** Describing a known scam is not asking the applicant to do it. */
+const SCAM_DESCRIPTION = /\b(?:scammers?|fraudsters?|a scam|fraud warning)\b[^.!?\n]{0,90}\b(?:may|might|often|typically|could|ask|tell)\b/i;
 /** The employer pays: "we'll pay for your laptop", "we reimburse certification fees". Fees and equipment only. */
 const EMPLOYER_PAYS =
   /\b(?:we|the company|our company|the employer)(?:['’](?:ll|d|re))?\s+(?:\w+\s+){0,3}?(?:pay|cover|reimburse|provide|waive|order|buy|purchase|supply)\w*\b|\b(?:reimburs\w*|waived?|free of charge|at no cost|company[- ](?:paid|provided))\b/i;
@@ -212,10 +208,36 @@ export function snippetAround(text: string, start: number, end: number): string 
 function negated(text: string, index: number, end: number, employerPays: boolean, strict: boolean): boolean {
   const [s, e] = sentenceBounds(text, index, end);
   const before = text.slice(s, index);
-  if (DIRECT_NEGATION.test(before) || WARNING_LEAD.test(before)) return true;
+  if (DIRECT_NEGATION.test(before) || WARNING_LEAD.test(before) || SCAM_DESCRIPTION.test(before)) return true;
   if (!employerPays) return false;
   if (strict) return EQUIPMENT_PROVIDED.test(before) || /\b(?:waived?|covered by us|at no cost|free of charge)\b/i.test(text.slice(index, e));
   return EMPLOYER_PAYS.test(before) || /\b(?:reimburs\w*|waived?|covered by us)\b/i.test(text.slice(index, e));
+}
+
+/** A fake-check flow needs all three steps, not a check amount or deposit mentioned on its own. */
+function checkFlow(text: string): { index: number; match: string } | null {
+  const checks = /\b(?:check|cheque)\b/gi;
+  let check: RegExpExecArray | null;
+  while ((check = checks.exec(text)) !== null) {
+    const windowStart = Math.max(0, check.index - 80);
+    const window = text.slice(windowStart, Math.min(text.length, check.index + 320));
+    const deposit = /\b(?:deposit|cash)\s+(?:(?:the|this|a|your|that|an)\s+)?(?:(?:cashier['’]?s|certified|company|business)\s+)?(?:check|cheque|it)\b/i.exec(window);
+    if (!deposit) continue;
+    const depositAt = windowStart + deposit.index;
+    const depositEnd = depositAt + deposit[0].length;
+    if (negated(text, depositAt, depositEnd, false, false)) continue;
+    const [sentenceStart] = sentenceBounds(text, depositAt, depositEnd);
+    if (/\b(?:we|the company|payroll)\s+(?:will\s+)?$/.test(text.slice(sentenceStart, depositAt).toLowerCase())) continue;
+
+    const onward = /\b(?:send|transfer|wire|forward|buy|purchase|pay)\b[^.!?\n]{0,90}\b(?:remaining|rest|balance|difference|money|funds|vendor|supplier|equipment|laptop|computer|supplies|gift\s*cards?|\$\s?\d)\b/i.exec(window.slice(deposit.index + deposit[0].length));
+    if (!onward) continue;
+    const onwardAt = depositEnd + onward.index;
+    if (negated(text, onwardAt, onwardAt + onward[0].length, false, false)) continue;
+    const [onwardSentence] = sentenceBounds(text, onwardAt, onwardAt + onward[0].length);
+    if (/\b(?:we|the company|payroll)\s+(?:will\s+)?$/.test(text.slice(onwardSentence, onwardAt).toLowerCase())) continue;
+    return { index: depositAt, match: text.slice(depositAt, onwardAt + onward[0].length) };
+  }
+  return null;
 }
 
 /** First match of any pattern that isn't negated and meets its same-sentence needs, or null. */
@@ -251,7 +273,9 @@ export function firstMatch(
 export function backstop(text: string): BackstopHit[] {
   const hits: BackstopHit[] = [];
   for (const id of Object.keys(PATTERNS) as BackstopId[]) {
-    const m = firstMatch(text, PATTERNS[id], true, PROVIDER_IDS.has(id), STRICT_PROVIDER_IDS.has(id));
+    const m = id === "deposit_check"
+      ? checkFlow(text)
+      : firstMatch(text, PATTERNS[id], true, PROVIDER_IDS.has(id), STRICT_PROVIDER_IDS.has(id));
     if (m) hits.push({ id, match: m.match, snippet: snippetAround(text, m.index, m.index + m.match.length) });
   }
   return hits;

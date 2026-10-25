@@ -50,8 +50,11 @@ const state = (page) => page.evaluate(() => JSON.parse(localStorage.getItem("is:
   const summary=await page.evaluate(()=>JSON.parse(localStorage.getItem("is:practice-history"))[0].summary);
   assert.equal(summary.turns[0].hintsUsed,1); assert.equal(summary.turns[0].code.language,"typescript");
   await page.waitForTimeout(1200);
-  const celebration = await page.locator("main header svg").first().evaluate((svg) => getComputedStyle(svg.parentElement).transform);
-  assert.ok(celebration === "none" || celebration === "matrix(1, 0, 0, 1, 0, 0)", "celebration reaches its final state within 1.2 seconds");
+  const stamp = await page.locator("main header svg").first().evaluate((svg) => {
+   const matrix = new DOMMatrixReadOnly(getComputedStyle(svg.parentElement).transform);
+   return { scale: Math.hypot(matrix.a, matrix.b), angle: Math.atan2(matrix.b, matrix.a) * 180 / Math.PI };
+  });
+  assert.ok(Math.abs(stamp.scale - 1) < 0.02 && Math.abs(stamp.angle + 2) < 0.5, "celebration reaches its final stamp within 1.2 seconds");
   console.log("PASS real TypeScript, chosen language, draft refresh, hint note/call count, single-question end and normal-motion celebration");
  } finally { await browser.close(); }
 }
@@ -89,7 +92,7 @@ const state = (page) => page.evaluate(() => JSON.parse(localStorage.getItem("is:
   await page.reload(); await page.getByRole("button",{name:"Resume session"}).click();
   await page.getByLabel("Your answer",{exact:true}).fill("I chose a simpler design to ship a working version first.");
   await page.getByRole("button",{name:"Get feedback",exact:true}).click();
-  await page.getByText(/30 AI calls/).waitFor(); await page.getByRole("button",{name:"View summary",exact:true}).click();
+  await page.getByText(/0 of 30 AI checks left/).waitFor(); await page.getByRole("button",{name:"View summary",exact:true}).click();
   await page.getByRole("heading",{name:"Keep the momentum."}).waitFor();
   console.log("PASS limited intel/preset fallback, custom wording, hint note, capped offline completion");
  } finally {await browser.close();}

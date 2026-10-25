@@ -1,9 +1,11 @@
 ---
 doc: tier3-spec
-status: approved (tiers-orchestration.md, Himesh, Oct 21 2026)
+status: historical-approved-plan
 ---
 
 # Tier 3 spec: mock interview
+
+> Historical plan. This is the approved 2026-10-21 Tier 3 build plan, retained for historical decisions. The current v3 Practice route uses a continuous multi-question session, local browser workers for runnable questions, type-specific feedback, and a metadata-only historical question bank. The old `components/App.tsx` screen, `is:interviews` active store, hidden flags, single-round flow, and system-design whiteboard described below are retired. Current behavior and limits are in `prd.md` and `spec.md`.
 
 Grounded in `prd.md > Deferred From the POC`, `scope.md > Later`, `spec.md > Look and Feel / Components / Usage Guard / Token Budget / Browser Storage / Stack`. Same look as the core and Tier 2: Apple-like, system font, one soft-blue accent, green/amber/red only for results, light/dark, CSS motion only, inline SVG icons, keyboard and screen-reader accessible, self-explanatory. No accounts, no server storage, no scraping, no "safe" verdict. All questions, problems and design prompts are made up.
 

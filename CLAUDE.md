@@ -1,35 +1,33 @@
 # InternShield
 
-Paste a recruiter message, get an evidence-based scam-risk report. AI extracts facts and explains; fixed rules in `lib/scoring` decide the score. Plans: `devpost/scope.md`, `prd.md`, `spec.md` (source of truth), `api-facts.md`, `scam-detection-research.md`. Progress: `devpost/checklist.md`.
+InternShield has three primary tools: Check (rule-based message risk report), Tailor (guarded original-document resume edits), and Practice (multi-question interview sessions). Tracker and optional Profile connect the tools. The current product contract is in `devpost/scope.md`, `devpost/prd.md`, and `devpost/spec.md`; final verification is tracked in `devpost/checklist.md`. Historical stream plans and logs are in `devpost/archive/`. The old single-screen Intro, hidden Tier 2 flags, finance round, design challenge, whiteboard, and single-round interview flow are retired.
 
-Next.js 16 App Router + TypeScript + Tailwind v4 (CSS-first config in `app/globals.css`, no tailwind.config). See `AGENTS.md`: read `node_modules/next/dist/docs/` before using unfamiliar Next APIs.
+Next.js 16 App Router + TypeScript + Tailwind v4 (CSS-first tokens in `app/theme.css`, no tailwind.config). Read the installed guide in `node_modules/next/dist/docs/` before using unfamiliar Next APIs.
 
-## Status
-
-v2/v3 streams are merged on branch `v3`. Single working copy at `InternShield` (no worktrees); the old per-stream ownership tables are retired. `lib/types.ts` contracts change deliberately, not casually. No new dependencies unless asked. Historical stream logs and briefs: `devpost/archive/`, `qa/archive/`.
-
-## Gates (all must pass before any merge)
+## Gates
 
 ```
 npm run lint
 npx tsc --noEmit
 npx vitest run
 npm run build
-npm run eval    # 88/88, held-out >= 24/27
+npm run eval    # labeled 88/88; report held-out separately (last documented 24/27)
 ```
+
+Run gates against the final integrated tree. Browser QA and a bounded live smoke with fabricated inputs are separate checks. Do not infer final submission, demo, or deployment status from a stream summary.
 
 ## Rules
 
 - Keys only via `process.env` inside `lib/server/**`; never `NEXT_PUBLIC_`, never logged, never sent to the client. Never read or print `.env.local`.
 - Never commit `.env.local` or `devpost/learner-profile.md`. Never push, deploy, or touch remotes.
-- Example messages are made up. Never put Himesh's real recruiter or scam messages in the repo.
-- Never say "safe" as a verdict. Nothing from `scope.md > Explicitly Cut`; Tier 2 stays hidden.
-- Motion (`motion/react`) is the only animation library; icons stay inline SVG.
+- All example messages and test resumes are made up. Keep personal recruiter/scam messages out of tracked files and demos.
+- AI extracts facts and explains; deterministic `lib/scoring` rules set risk. Never use “safe” as a verdict.
+- Risk red/amber/green are reserved for risk results, always with icon and words. Tool colors: Check coral, Tailor teal, Practice violet.
+- Every UI color comes from `app/theme.css`; no hex literals in `components/**`. Use `motion/react` for JS motion and `lucide-react` for icons, plus existing inline SVG illustrations. Respect reduced motion.
+- No new dependencies without asking. Treat `lib/types.ts` contracts deliberately. Current routes and guards are documented in `devpost/spec.md`.
+- Resume PDFs are cover-and-redraw documents: covered original text may remain extractable. They are not redactions. Practice's company question ranking is a historical-list proxy.
+- Keep names, absolute workstation paths, personal messages, and private context out of tracked docs. The vault may be unavailable; say so rather than claiming to have read it.
 
-## v3 conventions
+## QA
 
-- **Theme rule:** every color comes from a token in `app/theme.css`; never a hex literal in `components/**` (`tests/shared/v3-theme.test.ts` enforces it, plus contrast). Inside a tool, use `--tool`, `--tool-tint`, `--tool-strong`, `--on-tool` (set by `data-tool`). Risk red/amber/green only on risk results, always with an icon + words.
-- **Icons:** `lucide-react` only. **Motion:** `motion/react`, reduced-motion aware.
-- **Company intel:** `POST /api/intel { company, role, kind }` -> `CompanyIntel` (`lib/server/companyIntel.ts`); cached 7 days, capped by `INTEL_DAILY_CAP`, `limited: true` when capped/unconfigured. Tests mock it; no live calls.
-- **Quality bar:** v3 is judged on whether it is good to use, not whether it renders. Each brief's Quality bar line is a test: prove it with a screenshot you actually looked at, or an automated check.
-- QA scripts live in `qa/` (`v3-*.mjs`, shared `lib.mjs`, `ports.mjs`, `serve.mjs`, `make-shots.mjs`); `node qa/serve.mjs start|stop <port>` runs a dev server.
+`qa/v3-*.mjs` contains current browser scripts; `qa/archive/` contains old flows. `tests/shared/v3-theme.test.ts` enforces theme constraints and contrast checks. Use fabricated fixtures, inspect screenshots, and report what was and was not run.

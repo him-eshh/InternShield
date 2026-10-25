@@ -1,12 +1,14 @@
 "use client";
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
+import * as m from "motion/react-m";
 import { addCard, loadCards, moveCard, removeCard, saveCards, updateNotes } from "@/lib/tiers/tracker";
-import { TRACKER_COLUMNS, type TrackerCard } from "@/lib/tiers/types";
+import { TRACKER_COLUMNS, type TrackerCard, type TrackerColumn } from "@/lib/tiers/types";
 import { LEVEL_LABELS, type RiskLevel } from "@/lib/types";
 import { CircleAlert, CircleCheck, TriangleAlert, SquareKanban } from "lucide-react";
 import { EmptyIllustration } from "../illustrations";
 import { ArrowLeftIcon, ExternalIcon } from "../icons";
 import { btnPrimary, card as cardCls, chip, fieldInput, linkClass } from "../ui";
+import { useMotion } from "../motion/useMotion";
 
 // Same wording as the report, so a card never contradicts it.
 const RISK: Record<RiskLevel, { label: string; cls: string }> = {
@@ -48,6 +50,7 @@ export default function Tracker({
   /** Seed cards (used by render tests); the saved cards replace them after mount. */
   initialCards?: TrackerCard[];
 }) {
+  const motion = useMotion();
   const [cards, setCards] = useState<TrackerCard[]>(initialCards ?? []);
   const [ready, setReady] = useState(false);
   const [announce, setAnnounceRaw] = useState("");
@@ -60,6 +63,7 @@ export default function Tracker({
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [undo, setUndo] = useState<{ card: TrackerCard; index: number } | null>(null);
+  const [holdUndo, setHoldUndo] = useState(false);
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
   const [link, setLink] = useState("");
@@ -78,6 +82,12 @@ export default function Tracker({
   useEffect(() => {
     if (editing) notesRef.current?.focus();
   }, [editing]);
+
+  useEffect(() => {
+    if (!undo || holdUndo) return;
+    const timer = window.setTimeout(() => setUndo(null), 6000);
+    return () => window.clearTimeout(timer);
+  }, [undo, holdUndo]);
 
   // After a move the card re-mounts in another column; put focus back on it.
   useEffect(() => {
@@ -98,6 +108,13 @@ export default function Tracker({
     refocus.current = c.id;
     commit(moveCard(cards, c.id, dir));
     setAnnounce(`Moved ${nameOf(c)} to ${target.label}`);
+  }
+
+  function setStatus(c: TrackerCard, column: TrackerColumn) {
+    if (c.column === column) return;
+    refocus.current = c.id;
+    commit(cards.map((item) => item.id === c.id ? { ...item, column } : item));
+    setAnnounce(`Moved ${nameOf(c)} to ${TRACKER_COLUMNS.find((item) => item.id === column)?.label ?? column}`);
   }
 
   function remove(c: TrackerCard) {
@@ -149,8 +166,8 @@ export default function Tracker({
       <button type="button" onClick={onBack} className={`${linkClass} inline-flex min-h-11 items-center gap-1.5 text-[15px]`}>
         <ArrowLeftIcon size={16} /> Back
       </button>
-      <h1 className="mt-4 font-display text-[clamp(30px,5vw,48px)] font-bold leading-[1.1] tracking-[-0.025em]">My applications</h1>
-      <p className="mt-2 max-w-[560px] text-[17px] text-fg-2">Keep your next move in view. Saved on this device.</p>
+      <h1 className="mt-4 font-display text-[clamp(30px,5vw,48px)] font-bold leading-[1.1] tracking-[-0.025em]">Your application notebook</h1>
+      <p className="mt-2 max-w-[560px] text-[17px] text-fg-2">Keep each next step in view. Saved on this device.</p>
 
       <p role="status" aria-live="polite" className="sr-only">
         {announce}
@@ -160,11 +177,12 @@ export default function Tracker({
       </p>
 
       {ready && cards.length === 0 && (
-        <div className={`${cardCls} mt-8 flex flex-col items-center gap-4 p-6 text-center sm:flex-row sm:text-left`}>
+        <div className="mt-8 flex flex-col items-center gap-4 border-l-4 border-ink bg-paper-2 p-6 text-center sm:flex-row sm:text-left">
           <EmptyIllustration size={144} />
           <div>
             <h2 className="font-display text-[24px] font-bold">Your next move starts here</h2>
-            <p className="mt-1 max-w-[42ch] text-[16px] text-fg-2">Nothing here yet. Add a job below or save one from a report.</p>
+            <p className="mt-1 max-w-[42ch] text-[16px] text-fg-2">Nothing tracked yet. Save a job from Check or add one to remember your next move.</p>
+            <a href="#add-application" className={`${linkClass} mt-2 inline-flex min-h-11 items-center font-semibold`}>Add an application</a>
           </div>
         </div>
       )}
@@ -173,7 +191,7 @@ export default function Tracker({
         {TRACKER_COLUMNS.map((col, ci) => {
           const items = cards.filter((c) => c.column === col.id);
           return (
-            <section key={col.id} aria-labelledby={`col-${col.id}`} className="min-w-0">
+            <section key={col.id} aria-labelledby={`col-${col.id}`} className="min-w-0 border-l border-rule bg-paper-2/30 px-3 pb-3">
               <h2 id={`col-${col.id}`} className="flex items-center gap-2 font-display text-[18px] font-bold">
                 <SquareKanban size={18} strokeWidth={1.75} aria-hidden="true" className="text-ink-strong" />
                 {col.label}
@@ -189,17 +207,22 @@ export default function Tracker({
                   const next = TRACKER_COLUMNS[ci + 1];
                   const risk = c.risk ? RISK[c.risk] : null;
                   return (
-                    <li
+                    <m.li
                       key={c.id}
+                      layout
+                      layoutId={`tracker-${c.id}`}
+                      transition={motion.spring.layout}
                       id={`card-${c.id}`}
                       tabIndex={0}
                       onKeyDown={(e) => onKey(e, c)}
                       aria-describedby="card-hint"
-                      className={`${cardCls} animate-enter p-4 outline-offset-2 transition-[border-color,box-shadow] hover:border-border-strong hover:shadow-[var(--shadow-2)]`}
+                      className={`${cardCls} animate-enter border-l-2 border-l-ink p-4 outline-offset-2 transition-[border-color,box-shadow] hover:border-border-strong hover:shadow-[var(--shadow-2)]`}
                     >
                       <p className="break-words text-[17px] font-semibold leading-snug">{nameOf(c)}</p>
                       {c.role.trim() && <p className="break-words text-[15px] text-muted">{c.role}</p>}
                       <p className={`${chip} mt-2 bg-ink-tint text-ink-strong`}>{col.label}</p>
+                      <label className="mt-3 block text-[13px] font-medium text-fg-2" htmlFor={`status-${c.id}`}>Application status</label>
+                      <select id={`status-${c.id}`} aria-label={`Status for ${nameOf(c)}`} value={c.column} onChange={(e) => setStatus(c, e.target.value as TrackerColumn)} className="mt-1 min-h-11 w-full rounded-[6px] border border-border-strong bg-paper-2 px-3 text-[15px]">{TRACKER_COLUMNS.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}</select>
                       {risk && (
                         <p className={`mt-2 inline-flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[13px] font-medium ${risk.cls}`}>
                           {c.risk === "high" ? <CircleAlert size={14} strokeWidth={1.75} aria-hidden="true" /> : c.risk === "medium" ? <TriangleAlert size={14} strokeWidth={1.75} aria-hidden="true" /> : <CircleCheck size={14} strokeWidth={1.75} aria-hidden="true" />}
@@ -291,12 +314,12 @@ export default function Tracker({
                           </div>
                         </details>
                       </div>
-                    </li>
+                    </m.li>
                   );
                 })}
               </ul>
               {items.length === 0 && (
-                <p className="mt-3 rounded-[14px] border border-dashed border-border p-4 text-[15px] text-muted">{EMPTY[col.id]}</p>
+                <div className="mt-3 min-h-28 border border-dashed border-rule p-4 text-[15px] text-fg-2"><p>{EMPTY[col.id]}</p><p className="mt-2 font-mono text-xs">A clear space for the next step.</p></div>
               )}
             </section>
           );
@@ -304,7 +327,7 @@ export default function Tracker({
       </div>
 
       {undo && (
-        <div role="status" className="shell-tracker-toast animate-enter fixed bottom-[calc(var(--nav-bottom)+1rem)] left-1/2 z-20 flex w-max -translate-x-1/2 flex-wrap items-center justify-center gap-3 rounded-[18px] border border-border bg-card px-5 py-2 shadow-lg">
+        <div role="status" onMouseEnter={() => setHoldUndo(true)} onMouseLeave={() => setHoldUndo(false)} onFocusCapture={() => setHoldUndo(true)} onBlurCapture={() => setHoldUndo(false)} className="shell-tracker-toast animate-enter fixed bottom-[calc(var(--nav-bottom)+1rem)] left-1/2 z-20 flex w-max -translate-x-1/2 flex-wrap items-center justify-center gap-3 rounded-[6px] border border-rule bg-paper-2 px-5 py-2 shadow-lg">
           <span className="min-w-0 break-words text-[15px]">Deleted {nameOf(undo.card)}</span>
           <button type="button" onClick={undoDelete} className={`${linkClass} min-h-11 text-[15px] font-semibold`}>
             Undo
@@ -315,7 +338,7 @@ export default function Tracker({
         </div>
       )}
 
-      <form onSubmit={submit} className={`${cardCls} mt-10 max-w-[640px] p-5 sm:p-6`} noValidate>
+      <form id="add-application" onSubmit={submit} className="mt-10 max-w-[640px] border-t-2 border-ink bg-paper-2 p-5 sm:p-6" noValidate>
         <h2 className="text-[20px] font-semibold">Add an application</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div>

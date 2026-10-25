@@ -16,11 +16,12 @@ export default function EvidenceList({ flags, level, numbers = {} }: { flags: Fl
       </div>
       {red.length > 0 && (
         <ul className="mt-4 space-y-3">
-          {red.map((f) => (
+          {red.slice(0, 3).map((f) => (
             <EvidenceCard key={f.id} flag={f} n={numbers[f.id]} />
           ))}
         </ul>
       )}
+      {red.length > 3 && <details className="group mt-3 border-t border-rule"><summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 py-3 text-sm font-medium text-tool-strong [&::-webkit-details-marker]:hidden">Show {red.length - 3} more warning signs<ChevronIcon size={18} className="transition-transform group-open:rotate-180" /></summary><ul className="space-y-3">{red.slice(3).map((f) => <EvidenceCard key={f.id} flag={f} n={numbers[f.id]} />)}</ul></details>}
       {good.length > 0 &&
         (level === "high" ? (
           <details className="group mt-4 rounded-[18px] border border-border bg-bg-soft">

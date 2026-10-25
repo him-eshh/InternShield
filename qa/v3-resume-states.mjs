@@ -47,7 +47,7 @@ try {
   const cards = page.getByRole("article", { name: /Suggested edit/ });
   await cards.first().waitFor({ timeout: 60000 });
   await page.getByText("Using the job post only", { exact: true }).waitFor();
-  await page.getByText("Word edits shorten your wording while keeping the remaining words in order. Use a PDF for broader rewrites.", { exact: true }).waitFor();
+  await page.getByText("Word edits shorten wording while keeping the remaining words in order. Check the downloaded file in Word before sending it.", { exact: true }).waitFor();
   await cards.first().getByRole("button", { name: "Accept", exact: true }).click();
   await cards.first().getByRole("button", { name: "Edit", exact: true }).click();
   const validWord = cards.first().getByRole("textbox", { name: "Your wording" });

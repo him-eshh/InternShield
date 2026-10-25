@@ -77,6 +77,7 @@ describe("interview route", () => {
     ["bad language", { ...body, code: { problemId: "p", language: "ruby", code: "x", passed: 1, total: 2 } }],
     ["code over 4000", { ...body, code: { problemId: "p", language: "python", code: "a".repeat(4001), passed: 1, total: 2 } }],
     ["passed over 100", { ...body, code: { problemId: "p", language: "python", code: "x", passed: 101, total: 2 } }],
+    ["passed over total", { ...body, code: { problemId: "p", language: "python", code: "x", passed: 3, total: 2 } }],
     ["problem over 2000", { ...body, problem: "a".repeat(2001) }],
     ["hint outside coding", { ...body, ask: "hint" }],
     ["question in coding", { ...body, round: "coding" }],

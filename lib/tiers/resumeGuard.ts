@@ -1,6 +1,6 @@
 // Rewrite guard and word diff for the tailored resume (devpost/tier2-spec.md > Slice 8).
-// Pure: a suggested rewrite may reword, never add facts. Anything that looks like a number,
-// a name, or a tool must already be somewhere in the user's resume text.
+// Pure: a suggested rewrite may reword, never add facts. A fact added to a bullet
+// must belong to that bullet, not merely appear somewhere else in the resume.
 import {
   MAX_REWRITE_CHARS,
   type DiffPart,
@@ -120,6 +120,22 @@ function numberKey(raw: string): string {
 }
 const numberKeys = (s: string) => new Set([...s.normalize("NFKC").matchAll(NUMBER_RE)].map((m) => numberKey(m[0])));
 
+// A metric is a claim about the nearby work, not just a number that occurs
+// somewhere in the bullet. Stop at the next number so two achievements cannot
+// lend each other their nouns ("2 apps / 100 students" -> "100 apps / 2 students").
+const METRIC_FILLERS = new Set("a an the and or of for to in on with by from per about around approximately nearly over under more than at least up down".split(" "));
+function metricMentions(s: string): { key: string; token: string; context: string[] }[] {
+  const text = dropCompounds(s).normalize("NFKC");
+  const matches = [...text.matchAll(NUMBER_RE)];
+  const words = (piece: string) => canon(piece).trim().split(" ").filter((w) => w && !METRIC_FILLERS.has(w) && !/^\d/.test(w));
+  return matches.map((m, i) => {
+    const next = matches[i + 1]?.index ?? text.length;
+    const after = words(text.slice(m.index! + m[0].length, next).split(/[.!?;\n]/)[0]).slice(0, 3);
+    const before = words(text.slice(matches[i - 1] ? matches[i - 1].index! + matches[i - 1][0].length : 0, m.index).split(/[.!?;\n]/).at(-1) ?? "").slice(-3);
+    return { key: numberKey(m[0]), token: m[0].trim(), context: after.length ? after : before };
+  });
+}
+
 /** Cardinals and multipliers spelled out. A word with a digit value also passes if that digit is in the resume. */
 const NUMBER_WORDS: Record<string, string | null> = {
   one: "1", two: "2", three: "3", four: "4", five: "5", six: "6", seven: "7", eight: "8", nine: "9", ten: "10",
@@ -232,8 +248,13 @@ export function checkRewrite(resumeText: string, original: string, rewrite: stri
     issues.push({ kind, token });
   };
 
-  for (const m of dropCompounds(text).normalize("NFKC").matchAll(NUMBER_RE)) {
-    if (!knownNumbers.has(numberKey(m[0]))) flag("number", m[0].trim());
+  const originalMetrics = metricMentions(original);
+  for (const m of metricMentions(text)) {
+    if (!knownNumbers.has(m.key)) { flag("number", m.token); continue; }
+    const backed = originalMetrics.some((source) => source.key === m.key && (
+      !source.context.length || !m.context.length || source.context.some((word) => m.context.includes(word))
+    ));
+    if (!backed) flag("number", m.token);
   }
 
   const has = (w: string) => knownCanon.includes(` ${w} `);
@@ -344,9 +365,13 @@ interface GuardInput {
   noBuzzwords?: boolean;
 }
 
-/** Block = invented facts (never shown); Check = shown with warnings; OK = clean. */
+/** Block = invented or moved facts (never shown); Check = shown with warnings; OK = clean. */
 export function guardRewrite(g: GuardInput): GuardReport {
-  const known = withAliases([g.resume ?? "", ...(g.facts ?? [])].join("\n"));
+  // A whole-resume match can move another job's metrics, employer or tools into this
+  // bullet. Only the source bullet and terms the user explicitly confirmed may
+  // support a newly added claim. The whole resume remains useful for context in
+  // the model prompt, but is not proof that this experience used that fact.
+  const known = withAliases([g.original ?? "", ...(g.facts ?? [])].join("\n"));
   const base = checkRewrite(known, g.original, g.rewrite);
   const issues = base.ok ? [] : base.issues;
   const postingCanon = canon(g.posting ?? "");

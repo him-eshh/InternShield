@@ -1,5 +1,7 @@
 # InternShield v3 resume summary
 
+> This is a stream handoff snapshot, not final integrated status. The shared header, illustration, and cross-tool seams below were addressed or superseded after this report; current Tailor behavior is in `prd.md` and `spec.md`. The PDF extraction and DOCX layout limits remain relevant. Screenshot paths below record local QA artifacts from that stream, not portable submission evidence.
+
 Status: resume stream complete and ready for integration. All final gates are green. Conservative choices and shared integration tasks are listed below.
 
 ## Shipped against the brief
@@ -32,7 +34,7 @@ QA scripts: `qa/v3-resume-flow.mjs`, `qa/v3-resume-states.mjs`, `qa/v3-resume-re
 ## Screenshot index
 
 All paths below are relative to:
-`C:\my_projects\projects\InternShield\.git\internshield-relay\v3-shots\resume`
+`[project root]\.git\internshield-relay\v3-shots\resume`
 
 | State | Paths | What it proves |
 |---|---|---|

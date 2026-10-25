@@ -16,7 +16,7 @@ lint ✓ · tsc ✓ · vitest **290/290** (was 175) · build ✓ · eval **26/26
 1. `/api/transcribe` on the app's own share image: qwen read it, 836 + 23 tokens.
 2. `/api/rewrite` with a made-up bullet and posting: honest rewording that didn't pull in the posting's tools, 155 + 15 tokens.
 
-## Needs Himesh's hands-on check (morning)
+## Needs the owner's hands-on check (morning)
 - The UI hasn't been looked at in a browser this session. Please check:
   - the resume confirmation line;
   - the posting match at 320px;

@@ -15,6 +15,7 @@ import {
   SCRIPTED_ROUNDS,
   CODE_ROUNDS,
   type CodeAttempt,
+  type InterviewFeedback,
   type InterviewAsk,
   type InterviewContext,
   type InterviewRequest,
@@ -90,7 +91,7 @@ function parseCode(v: unknown): CodeAttempt | null | undefined {
   if (typeof v.problemId !== "string" || v.problemId.length === 0 || v.problemId.length > 60) return undefined;
   if (v.language !== "python" && v.language !== "javascript" && v.language !== "typescript" && v.language !== "sql") return undefined;
   if (typeof v.code !== "string" || v.code.length > MAX_CODE_CHARS) return undefined;
-  if (!isInt(v.passed, 0, 100) || !isInt(v.total, 0, 100)) return undefined;
+  if (!isInt(v.passed, 0, 100) || !isInt(v.total, 0, 100) || v.passed > v.total) return undefined;
   return { problemId: v.problemId, language: v.language, code: v.code, passed: v.passed, total: v.total };
 }
 
@@ -262,6 +263,23 @@ const REVIEW_SCHEMA = {
   properties: { ...(FEEDBACK_SCHEMA.properties as object), level: { type: "string", enum: ["strong", "ok", "weak"] }, followUp: str },
 };
 
+/** The local runner's result outranks model prose. A failed submission receives only
+ * test-grounded feedback; model praise and levels can otherwise contradict it. */
+function groundFailedCodeFeedback(fb: InterviewFeedback, code: CodeAttempt | null, lastIndex: number): InterviewFeedback {
+  if (!code || code.total === 0 || code.passed >= code.total) return fb;
+  const sql = code.language === "sql";
+  const strength = sql
+    ? "Your query was checked against the expected result."
+    : `Your code passed ${code.passed} of ${code.total} hidden tests.`;
+  const improve = sql
+    ? "The result differs from the expected rows. Compare the rows, joins, grouping and NULL handling."
+    : "Some hidden tests failed. Use the first failing case to revise and rerun your code.";
+  return {
+    summary: sql ? "The query result did not match the expected rows." : `${code.passed} of ${code.total} hidden tests passed.`,
+    items: fb.items.map((item) => item.index === lastIndex ? { ...item, strength, improve, star: null } : item),
+  };
+}
+
 /** Plain, one-paragraph text: no fences, bullets, emphasis, headings or wrapping quotes. */
 export function cleanQuestion(raw: string, max = MAX_QUESTION_CHARS): string {
   let s = raw
@@ -325,12 +343,15 @@ export async function handleInterview(body: Record<string, unknown>): Promise<Re
     } catch {
       return failed("error", { message: FEEDBACK_FAILED });
     }
-    const fb = validateFeedback(raw, input.turns, input.round);
+    const checked = validateFeedback(raw, input.turns, input.round);
+    const fb = checked && groundFailedCodeFeedback(checked, input.code, input.turns.length - 1);
     if (!fb || (review && (fb.items.length !== 1 || fb.items[0].index !== input.turns.length - 1))) return failed("error", { message: FEEDBACK_FAILED });
     if (!review) return done({ text: null, feedback: fb });
     const rec = raw as Rec;
     const followUp = (input.followUpsLeft ?? 0) > 0 && typeof rec.followUp === "string" ? cleanQuestion(rec.followUp) : "";
-    const level = rec.level === "strong" || rec.level === "ok" || rec.level === "weak" ? rec.level : undefined;
+    const modelLevel = rec.level === "strong" || rec.level === "ok" || rec.level === "weak" ? rec.level : undefined;
+    const codeRatio = input.code && input.code.total > 0 ? input.code.passed / input.code.total : null;
+    const level = codeRatio !== null && codeRatio < 1 ? (codeRatio < 0.5 ? "weak" : "ok") : modelLevel;
     return done({ text: null, feedback: fb, followUp: followUp || null, ...(level ? { level } : {}) });
   }
 

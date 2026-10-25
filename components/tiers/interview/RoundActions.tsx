@@ -38,7 +38,7 @@ interface ActionBarProps {
 /** Run and Submit on the left, Hint and Skip grouped on the right. A 2 by 2 grid at phone width. */
 export function ActionBar({ runLabel, running, disabled, busy, passed, onRun, onSubmit, onStop, onHint, onSkip, runKey }: ActionBarProps) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-center" role="group" aria-label="Actions">
+    <div className="sticky bottom-[var(--nav-bottom)] z-20 grid grid-cols-2 gap-3 border-t border-rule bg-paper-2/95 p-3 backdrop-blur-sm sm:static sm:flex sm:flex-wrap sm:items-center sm:bg-transparent sm:p-0 sm:backdrop-blur-none" role="group" aria-label="Actions">
       <button type="button" className={btnSecondary} disabled={disabled} onClick={onRun}>
         {running === runKey && <Spinner size={16} />} {runLabel}
       </button>

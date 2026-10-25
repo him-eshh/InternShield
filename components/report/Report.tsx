@@ -2,11 +2,11 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { fetchExplanation, rerunWithCompany, runPipeline, type Explanation as ExplanationData, type PipelineInput, type PipelineOutcome, type StepKey } from "@/lib/client/pipeline";
 import { annotate } from "@/lib/client/annotate";
-import { actionLine, goods, reds } from "@/lib/reportView";
+import { actionLine, coverageTicks, goods, reds } from "@/lib/reportView";
 import { diffReports, impactCopy, type AnswerImpact } from "@/lib/impact";
 import { score } from "@/lib/scoring/score";
 import { MAX_MESSAGE_CHARS, LEVEL_LABELS, type Answers, type QuestionId, type Report as ReportData, type RiskLevel } from "@/lib/types";
-import { Info as InfoIcon } from "lucide-react";
+import { CircleAlert, CircleCheck, Info as InfoIcon, TriangleAlert } from "lucide-react";
 import { btnSecondary } from "../ui";
 import AnnotatedMessage from "./AnnotatedMessage";
 import CompanyChip from "./CompanyChip";
@@ -250,37 +250,38 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, nextS
   const annotated = annotate(input.text, ordered);
   const numbers = Object.fromEntries(annotated.marks.map((m) => [m.flagId, m.n]));
   const channel = answers.channel && answers.channel !== "other" ? answers.channel : null;
+  const RiskIcon = report.level === "high" ? CircleAlert : report.level === "medium" ? TriangleAlert : CircleCheck;
+  const actionTone = report.level === "high" ? "border-bad bg-bad-tint" : report.level === "medium" ? "border-warn bg-warn-tint" : "border-good bg-good-tint";
+  const riskTone = report.level === "high" ? "text-bad" : report.level === "medium" ? "text-warn" : "text-good";
 
   return (
-    <article data-tool="neutral" className="[&_button]:!min-h-11 [&_summary]:!min-h-11 mx-auto max-w-[960px] px-4 sm:px-6 py-10 sm:py-16">
+    <article data-tool="check" className="[&_button]:!min-h-11 [&_summary]:!min-h-11 mx-auto max-w-[1200px] px-4 py-8 sm:px-6 sm:py-12">
       <p role="status" aria-live="polite" className="sr-only">{announce}</p>
+      <div className="grid items-start gap-x-10 gap-y-7 lg:grid-cols-[minmax(0,2fr)_minmax(250px,1fr)]">
+        <header className="min-w-0 border-t-4 border-tool pt-5 lg:col-start-1">
+          <div className="flex flex-wrap items-center gap-3 text-sm text-fg-2"><span>Message risk report</span>{(input.exampleId || outcome.usedSaved) && <span className="rounded-full bg-tool-tint px-3 py-1 font-medium text-tool-strong">{outcome.usedSaved ? "Example (saved)" : "Example"}</span>}</div>
+          <h1 className="mt-4 flex items-start gap-3 font-display text-[clamp(2rem,3.6vw,3rem)] font-bold leading-tight"><RiskIcon size={32} aria-hidden="true" className={`mt-1 shrink-0 ${riskTone}`} />{LEVEL_LABELS[report.level]}</h1>
+          <div className={`mt-6 border-l-4 p-5 ${actionTone}`}>
+            <p className="text-sm font-semibold">What to do now</p>
+            <p className="mt-1 max-w-[58ch] text-lg font-medium leading-snug">{actionLine(report.level)}</p>
+          </div>
+          {recovery ?? <RecoveryCard level={report.level} />}
+          {report.questionHint && shownQuestions.some((q) => answers[q.id] === undefined) && <p className="mt-4 text-sm text-fg-2">{report.questionHint}</p>}
+        </header>
 
-      <header className="flex flex-col items-center rounded-[28px] border border-border bg-card px-4 py-8 text-center shadow-[var(--shadow-2)] sm:px-10 sm:py-10">
-        <p className="mb-5 text-[12px] font-semibold uppercase tracking-[0.16em] text-muted">Message risk report</p>
-        {(input.exampleId || outcome.usedSaved) && (
-          <span className="mb-6 rounded-full bg-accent/10 px-3 py-1 text-[13px] font-medium text-accent-fg">
-            {outcome.usedSaved ? "Example (saved)" : "Example"}
-          </span>
-        )}
-        <RiskRing score={report.score} level={report.level} coverage={report.coverage} />
-        <p className="mt-3 max-w-[46ch] text-[17px] leading-snug text-fg-2">{actionLine(report.level)}</p>
-        {report.questionHint && shownQuestions.some((q) => answers[q.id] === undefined) && (
-          <p className="mt-2 text-[14px] text-muted">{report.questionHint}</p>
-        )}
-        {company && !incomplete && <CompanyChip name={companyName} busy={company.busy} note={company.note} onSave={company.onSave} />}
-        <button
-          type="button"
-          onClick={jumpToCouldntCheck}
-          disabled={report.couldntCheck.length === 0}
-          className="mt-3 min-h-11 rounded-full px-3 py-1 text-[14px] text-muted underline-offset-4 enabled:hover:text-text enabled:hover:underline"
-        >
-          {coverage.ran} of {coverage.total} checks ran{missing}
-        </button>
-      </header>
+        <aside className="min-w-0 border border-rule bg-paper-2 px-4 py-5 lg:sticky lg:top-6 lg:col-start-2 lg:row-span-2" aria-label="Risk score and checks">
+          <RiskRing score={report.score} level={report.level} coverage={report.coverage} showLabel={false} />
+          <p className="mt-2 text-center text-sm text-fg-2">Rule-based risk score, not a probability.</p>
+          <div className="mx-auto mt-5 max-w-52 border-t border-rule pt-4"><p className="text-center text-sm font-medium">Checks completed</p><div role="img" aria-label={`${coverage.ran} of ${coverage.total} checks ran`} className="mt-3 grid grid-cols-7 justify-center gap-1.5">{coverageTicks(coverage).map((ran, i) => <span key={i} data-coverage-block={ran ? "ran" : "skipped"} aria-hidden="true" className={`aspect-square min-w-0 rounded-[2px] ${ran ? "bg-tool-deep" : "border border-border-strong bg-paper"} ${i % 3 === 1 ? "translate-y-[2px]" : ""}`} />)}</div></div>
+          <div className="mt-5 border-t border-rule pt-4 text-center">
+            {company && !incomplete && <CompanyChip name={companyName} busy={company.busy} note={company.note} onSave={company.onSave} />}
+            <button type="button" onClick={jumpToCouldntCheck} disabled={report.couldntCheck.length === 0} className="mt-2 min-h-11 rounded-full px-3 py-1 text-sm text-fg-2 underline-offset-4 enabled:hover:text-fg enabled:hover:underline">{coverage.ran} of {coverage.total} checks ran{missing}</button>
+          </div>
+        </aside>
 
-      <div className="mx-auto mt-12 max-w-[720px] space-y-10">
+        <div className="min-w-0 space-y-8 lg:col-start-1">
         {(canRetry || resting || outcome.limited || incomplete) && (
-          <div role="status" className="flex flex-col items-start gap-4 rounded-[18px] border border-border bg-bg-soft p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div role="status" className="flex flex-col items-start gap-4 border-l-4 border-warn bg-warn-tint p-5 sm:flex-row sm:items-center sm:justify-between">
             <p className="flex items-start gap-3 text-[15px]">
               <span className="mt-0.5 text-muted"><InfoIcon size={18} /></span>
               {resting
@@ -308,23 +309,15 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, nextS
           </p>
         )}
 
-        {explanation ? (
-          <Explanation text={explanation.text} source={explanation.source} quotes={quotes} loading={explaining} />
-        ) : (
-          pending && <p className="text-[17px] text-muted" aria-busy="true">Writing the explanation...</p>
-        )}
-
         <AnnotatedMessage text={input.text} flags={ordered} annotated={annotated} />
-
         <EvidenceList flags={report.flags} level={report.level} numbers={numbers} />
-
         <CouldntCheck items={report.couldntCheck} />
+
+        {explanation ? <Explanation text={explanation.text} source={explanation.source} quotes={quotes} loading={explaining} /> : pending && <p className="text-[17px] text-fg-2" aria-busy="true">Writing the explanation...</p>}
 
         <QuickQuestions questions={shownQuestions} answers={answers} change={change} lastId={lastId} onAnswer={onAnswer} disabled={company?.busy} confirmations={confirmations} />
 
         {additions}
-
-        {recovery ?? <RecoveryCard level={report.level} />}
 
         {report.level !== "high" && (
           <PostingSection checked={steps.posting.status === "done"} posting={postingData} match={report.postingMatch} company={companyName} careersUrl={careersUrl} />
@@ -339,6 +332,7 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, nextS
           extras={extras}
           nextSteps={nextSteps}
         />
+        </div>
       </div>
     </article>
   );

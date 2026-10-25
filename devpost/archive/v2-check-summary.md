@@ -30,7 +30,7 @@ See "Assertions changed" in `devpost/v2-check-log.md` (relay-from-.edu, pipeline
 lint 0 errors (2 pre-existing warnings), tsc clean, build OK, eval 88/88, vitest 965/966: `tests/tiers/pdf.test.ts` fails only under full-suite load (known flake, not ours; passes alone 5/5).
 
 ## Screenshots
-`C:\my_projects\projects\InternShield\.git\internshield-relay\v2-shots\check\` (1440/390, light/dark): 01 tracker form, 10 form empty, 11 report scam/real, 20 chip/recovery/annotated, 30-33 quick questions + reduced motion, 40-42 form/checking/error, 50 intro, 51 OG/apple/icon, 60 levels (low, medium, link-scam, score-0). Scripts `qa/v2-check-*.mjs`. Overflow 0 everywhere; only console error is the mocked explain 503. Note: in 60-* shots the mocked posting lookup returns stripe.com for every company, so posting-mismatch rows there are a mock artefact.
+`[project root]\.git\internshield-relay\v2-shots\check\` (1440/390, light/dark): 01 tracker form, 10 form empty, 11 report scam/real, 20 chip/recovery/annotated, 30-33 quick questions + reduced motion, 40-42 form/checking/error, 50 intro, 51 OG/apple/icon, 60 levels (low, medium, link-scam, score-0). Scripts `qa/v2-check-*.mjs`. Overflow 0 everywhere; only console error is the mocked explain 503. Note: in 60-* shots the mocked posting lookup returns stripe.com for every company, so posting-mismatch rows there are a mock artefact.
 
 ## Reviewer (read-only, final pass)
 No blockers. Should-fix items, status:
@@ -46,7 +46,7 @@ No blockers. Should-fix items, status:
 - `App.tsx`: Intro "Get started" should go straight to Check; checking state inside the report layout.
 - Bug B: `contents` wrapper in SaveToTracker can go if tracker state is lifted.
 
-## Pending Himesh
+## Pending owner review
 - C7 relabels: `c7-mid-high-pay-no-experience` medium->high; `c7-mid-new-domain-interview`, `c7-mid-pressure-two-hours`, `c7-mid-unpaid-trial-project` medium->low. Confirm or ask for weight retuning.
 - Held-out misses above: decide whether to tune.
 

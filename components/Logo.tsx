@@ -16,7 +16,7 @@ export default function Logo() {
   return (
     <span className="inline-flex items-center gap-2 font-display text-[19px] font-bold tracking-[-0.02em]">
       <RingMark size={26} />
-      <span className="max-sm:sr-only">InternShield</span>
+      <span>InternShield</span>
     </span>
   );
 }

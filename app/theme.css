@@ -7,9 +7,13 @@
 
 :root {
   /* Canvas: warm off-white page, white cards, warm grey borders. */
-  --bg: #fbf8f3;
+  /* Field-notebook paper: quoted evidence and ruled surfaces carry the identity. */
+  --bg: #f7f2e8;
+  --paper: #f7f2e8;
+  --paper-2: #fffdf8;
+  --rule: #d9d0c0;
   --bg-subtle: #f5f1ea;
-  --surface: #ffffff;
+  --surface: #fffdf8;
   --surface-2: #fdfbf8;
   --surface-3: #f8f4ee;
   --sunken: #f1ece4;
@@ -30,14 +34,21 @@
   --coral-strong: #b0401c;
   --coral-tint: #ffefe8;
   --on-coral: #3a1306;
+  --coral-deep: #8a3115;
   --teal: #0d7d74; /* Tailor: teal-leaning so it never reads as risk green */
   --teal-strong: #0a6760;
   --teal-tint: #e2f4f1;
   --on-teal: #ffffff;
+  --teal-deep: #064e48;
   --violet: #6b4eff; /* Practice */
   --violet-strong: #5838e0;
   --violet-tint: #efebff;
   --on-violet: #ffffff;
+  --violet-deep: #3b2594;
+  --ink-deep: #1e2a47;
+  --on-deep: #fffdf8;
+  --highlight-swash: color-mix(in oklab, var(--tool) 28%, transparent);
+  --edge-depth: 4px;
 
   /* Risk: reserved for risk results only, always with an icon + words. */
   --good: #1d7a4c;
@@ -74,6 +85,7 @@
   /* Type */
   --font-display: var(--font-bricolage), var(--font-inter), system-ui, sans-serif;
   --font-body: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   /* Radii: child <= parent. */
   --radius-xs: 6px;
@@ -84,6 +96,13 @@
 
   /* Motion (findings 06 §4): page transitions <= 250ms, celebration <= 1.2s. */
   --dur-press: 90ms;
+  --dur-hover: 140ms;
+  --dur-enter: 220ms;
+  --dur-exit: 140ms;
+  --dur-route: 240ms;
+  --dur-stagger: 45ms;
+  --dur-count: 900ms;
+  --dur-ring: 1100ms;
   --dur-micro: 150ms;
   --dur-base: 220ms;
   --dur-page: 220ms;
@@ -102,6 +121,9 @@
 /* Dark: deep ink-navy, never black; elevation = surface steps from one hue (no shadows). */
 .dark {
   --bg: #0d1220;
+  --paper: #0d1220;
+  --paper-2: #151c2e;
+  --rule: #283149;
   --bg-subtle: #111728;
   --surface: #151c2e;
   --surface-2: #1b2338;
@@ -122,14 +144,20 @@
   --coral-strong: #ffbb98;
   --coral-tint: #2e1d1c;
   --on-coral: #2a0c04;
+  --coral-deep: #ffbb98;
   --teal: #2cc9b5;
   --teal-strong: #5fdccb;
   --teal-tint: #0f2a2c;
   --on-teal: #03231f;
+  --teal-deep: #5fdccb;
   --violet: #a48bff;
   --violet-strong: #bca9ff;
   --violet-tint: #221c45;
   --on-violet: #170b3b;
+  --violet-deep: #bca9ff;
+  --ink-deep: #d5def0;
+  --on-deep: #0d1220;
+  --highlight-swash: color-mix(in oklab, var(--tool) 35%, transparent);
 
   --good: #5bbf8a;
   --good-tint: #12271c;
@@ -165,24 +193,28 @@
   --tool-tint: var(--ink-tint);
   --tool-strong: var(--ink-strong);
   --on-tool: var(--on-ink);
+  --tool-deep: var(--ink-deep);
 }
 [data-tool="check"] {
   --tool: var(--coral);
   --tool-tint: var(--coral-tint);
   --tool-strong: var(--coral-strong);
   --on-tool: var(--on-coral);
+  --tool-deep: var(--coral-deep);
 }
 [data-tool="tailor"] {
   --tool: var(--teal);
   --tool-tint: var(--teal-tint);
   --tool-strong: var(--teal-strong);
   --on-tool: var(--on-teal);
+  --tool-deep: var(--teal-deep);
 }
 [data-tool="practice"] {
   --tool: var(--violet);
   --tool-tint: var(--violet-tint);
   --tool-strong: var(--violet-strong);
   --on-tool: var(--on-violet);
+  --tool-deep: var(--violet-deep);
 }
 :root,
 [data-tool] {
@@ -191,6 +223,11 @@
   --accent-fg: var(--tool-strong);
   --accent-tint: var(--tool-tint);
   --accent-contrast: var(--on-tool);
+  --accent-edge: var(--tool-deep);
+}
+
+@media (width < 40rem) {
+  :root { --edge-depth: 3px; }
 }
 
 /* Old raw names some components read with var() (they were never defined originally). */

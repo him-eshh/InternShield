@@ -28,7 +28,7 @@
 - Gates: node qa/v3-gates.mjs -> qa/gates-out.txt. Inspect all exits; runner itself can exit 0 on red gates.
 - Browser QA: qa/v3-resume-flow.mjs, states.mjs, responsive.mjs, budget.mjs. All APIs mocked.
 - Actual Word QA: npx tsx qa/v3-resume-word.ts (optional Windows/existing Word); COM needs [ref] arguments and .NET string paths. Cold startup can be slow.
-- QA_BASE=http://localhost:3100; QA_SHOTS=C:\my_projects\projects\InternShield\.git\internshield-relay\v3-shots\resume; QA_OUT=qa/v3-resume-*-out.txt.
+- QA_BASE=http://localhost:3100; QA_SHOTS=[project root]\.git\internshield-relay\v3-shots\resume; QA_OUT=qa/v3-resume-*-out.txt.
 - Prepared PDF previews cache valid <=64 subset PNGs paired with exact output bytes during layout checking; toggles stay local. Cancellation/invalidation are tested.
 - Default filesystem read-only; authorized writes/tests/commits used escalated exec. rg absent; use Select-String/Get-ChildItem. Python IO needs UTF-8; use escapes for Unicode in piped scripts.
 - No personal vault or .env.local read, no secrets printed, no forbidden paths or learner profile changed. Original eval cases unchanged.

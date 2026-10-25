@@ -13,7 +13,7 @@ import { btnPrimary, btnSecondary } from "../ui";
 
 const ICONS = { coding: Code2, sql: Database, debugging: Bug, design: Network, behavioral: MessagesSquare, screen: Phone, case: ChartNoAxesCombined, portfolio: PanelsTopLeft };
 const field = "min-h-12 w-full rounded-xl border border-border-strong bg-card px-3 py-2 text-text focus-visible:outline-2 focus-visible:outline-tool";
-const panel = "space-y-5 rounded-2xl border border-border bg-card p-5 sm:p-6";
+const panel = "space-y-5 border-t border-rule py-6";
 const LANG_LABEL: Record<SessionLanguage, string> = { python: "Python", typescript: "TypeScript", sql: "SQL", java: "Java", cpp: "C++", go: "Go", javascript: "JavaScript" };
 
 /** A select with its own chevron, so it reads as a control and not as a bare browser dropdown. */
@@ -127,6 +127,11 @@ export default function Setup({ bank, initial, autoResearch = true, onStart }: {
       <div className="flex flex-wrap items-end gap-3"><label className="space-y-2"><span className="block font-medium">Session length</span><input aria-label="Session length" className={field + " !w-24"} type="number" min={1} max={15} value={config.limit.count} onChange={(e) => change({ limit: { ...config.limit, count: Number(e.target.value) } })} /></label><SelectField label="Count by" className="w-40" value={config.limit.kind} onChange={(v) => change({ limit: { ...config.limit, kind: v as "questions" | "rounds" } })}><option value="questions">questions</option><option value="rounds">rounds</option></SelectField></div>
       <p className="text-sm text-muted">Each round has 1–3 questions. Follow-ups stay within the same question.</p>
     </section>
+    <aside className="border-l-4 border-tool bg-tool-tint px-5 py-4" aria-live="polite">
+      <p className="font-display text-xl">Your session at a glance</p>
+      <p className="mt-1 text-sm text-fg-2">{config.limit.count} {config.limit.kind} · {config.rounds.length ? config.rounds.map(roundLabel).join(", ") : "Choose at least one round"}</p>
+      <p className="mt-1 text-sm text-fg-2">About {Math.max(1, config.limit.kind === "questions" ? config.limit.count : config.limit.count * 2) * 4} minutes. Your progress is saved on this device.</p>
+    </aside>
     <button className={btnPrimary} disabled={!config.rounds.length || loading || !bank.length}>Start session<ArrowRight size={18} /></button>
   </form>;
 }

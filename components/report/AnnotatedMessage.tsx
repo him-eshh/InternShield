@@ -70,9 +70,9 @@ export default function AnnotatedMessage({ text, flags, annotated }: { text: str
 
   return (
     <section aria-labelledby="annotated-title">
-      <h3 id="annotated-title" className="text-[24px] font-semibold tracking-[-0.02em]">Your message</h3>
+      <h3 id="annotated-title" className="flex items-center gap-3 text-[24px] font-semibold tracking-[-0.02em]">Your message <svg aria-hidden="true" viewBox="0 0 64 12" className="h-3 w-16 text-tool-strong"><path d="M2 8 Q18 1 32 7 T62 5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg></h3>
       <p className="mt-1 text-[14px] text-muted">Numbered passages match the evidence below.</p>
-      <div id={bodyId} className="am-body mt-4 rounded-[18px] border border-border bg-bg-soft p-5 text-[15px] leading-[1.7]" data-collapsed={long && !expanded} onFocus={() => setExpanded(true)}>
+      <div id={bodyId} className="am-body ruled mt-4 border-l-4 border-tool bg-paper-2 p-5 font-mono text-[15px] leading-[28px]" data-collapsed={long && !expanded} onFocus={() => setExpanded(true)}>
         {segments.map((s) =>
           s.marks.length === 0 ? (
             <span key={s.start}>{s.text}</span>

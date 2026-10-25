@@ -1,9 +1,11 @@
 ---
 doc: tier2-spec
-status: approved (tiers-orchestration.md, Himesh, Oct 21 2026)
+status: historical-approved-plan
 ---
 
 # Tier 2 spec: core polish, tailored resume, tracker, screenshot upload
+
+> Historical plan. This is the approved 2026-10-21 Tier 2 build plan, retained for historical decisions. The current v3 product exposes Tailor and Tracker directly; hidden tier flags were removed. Tailor now edits the original PDF/DOCX with guarded line changes and preview. PDF cover-and-redraw leaves underlying text extractable, so it is not redaction. Current behavior and limits are in `prd.md` and `spec.md`.
 
 Grounded in `prd.md > Deferred From the POC`, `scope.md > Later`, `spec.md > Look and Feel / Components / Usage Guard / Token Budget / Browser Storage / Stack`. Same look: Apple-like, system font, one soft-blue accent, green/amber/red only for results, light/dark, CSS motion only, inline SVG icons, keyboard and screen-reader accessible. Nothing here adds accounts, server storage, scraping, or a "safe" verdict.
 
@@ -11,7 +13,7 @@ Grounded in `prd.md > Deferred From the POC`, `scope.md > Later`, `spec.md > Loo
 
 ## Slice 7: core polish
 1. **Resume confirmation.** After a resume is read in the profile step, show one line under the file name: "Read 1,240 words. Skills we spotted: Python, SQL, React" (skills = profile skill suggestions + chosen skills found in the text, case-insensitive, max 6; "No skills from your list spotted" otherwise). Pure helper `spottedSkills(text, candidates)` in `lib/client/resume.ts`, tested.
-2. **Check button.** In code the button is only disabled until there is message text; both pill groups were already optional. Himesh read the disabled button as "pick a source first". **Decision: keep both optional** (the engine already asks "Where did this message come from?" as a quick question when it matters) and make it obvious: legends say "(optional)", and while the box is empty a one-line hint under the button says "Paste a message to check it." (`aria-describedby` on the button).
+2. **Check button.** In code the button is only disabled until there is message text; both pill groups were already optional. the project owner read the disabled button as "pick a source first". **Decision: keep both optional** (the engine already asks "Where did this message come from?" as a quick question when it matters) and make it obvious: legends say "(optional)", and while the box is empty a one-line hint under the button says "Paste a message to check it." (`aria-describedby` on the button).
 3. **Shorter explanation, no repeated quotes.** Explain route: prompt asks for at most 2 short paragraphs / ~80 words and each quote at most once; server post-processing (`lib/explainFallback.ts > tidyExplanation`) removes a quoted string that already appeared earlier, caps at 2 paragraphs and ~700 characters (cut at a sentence end). Fallback text dedupes quotes the same way. The Explanation component renders at most 2 paragraphs. Scoring untouched.
 4. **320px match table.** Posting match table reflows: at narrow widths each row stacks (label, message value, posting value, tick) so nothing clips or scrolls sideways; long URLs/values `break-words`.
 5. **Clear my data confirm.** The chip menu item swaps into an inline confirm inside the menu: "Clear your profile, resume and saved items?" with **Clear** (focused first) and **Cancel**; Escape cancels. No `window.confirm()`.
@@ -56,7 +58,7 @@ Tier 2's AI routes run on **qwen/qwen3.8-27b**, a separate per-model budget, so 
 | qwen total | Tier 2 | ~116K | **58% (42% left)** |
 
 Requests/day stay far under 1,000 per model (≤ 360 on the busiest). Per-minute: one screenshot ≈ 2.8K of qwen's 8K TPM; the 2/min per-visitor cap keeps one visitor under it.
-**Known issue (pending Himesh):** the core's own explain cap (2× checks) lets the gpt-oss pair reach ~360K (90%) in the worst case; setting `DAILY_CHECK_CAP=100` for the demo restores 25%+. Tier 2 doesn't change core caps and never calls the gpt-oss models (rewrite has no fallback, per merge review).
+**Known issue (pending owner review):** the core's own explain cap (2× checks) lets the gpt-oss pair reach ~360K (90%) in the worst case; setting `DAILY_CHECK_CAP=100` for the demo restores 25%+. Tier 2 doesn't change core caps and never calls the gpt-oss models (rewrite has no fallback, per merge review).
 
 ## Dependencies
 | Package | Version | License | Why |

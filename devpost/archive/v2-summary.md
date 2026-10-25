@@ -56,7 +56,7 @@ Index: `.git/internshield-relay/v2-shots/integration/INDEX.md` (outside git). To
 - Confirm the C7 relabels (`c7-mid-high-pay-no-experience` medium->high; `c7-mid-new-domain-interview`, `c7-mid-pressure-two-hours`, `c7-mid-unpaid-trial-project` medium->low) and whether to tune for the 3 held-out misses.
 - Medium label is now "Some warning signs" (prd.md says the longer form).
 
-## 6. Pending Himesh
+## 6. Pending owner review
 - Merge `v2` into `main` with `--no-ff` (needs your OK).
 - Push: Coder handles it after a secret scan.
 - Deploy (needs your OK): set `DAILY_CHECK_CAP=100`, confirm `TAVILY_DAILY_CAP=30` in Vercel, and check that the Stripe posting in the real example is still live.

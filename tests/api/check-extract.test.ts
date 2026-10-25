@@ -22,4 +22,14 @@ describe("extract department vs company", () => {
     expect(f.company?.value).toBe("Initech");
     expect(f.department).toBe("University Recruiting");
   });
+
+  it("drops a company name that its real quote does not say", () => {
+    const f = quoteCheck({ ...base, company: { value: "MegaBank", quote: "Let's talk" } }, MSG)!;
+    expect(f.company).toBeNull();
+  });
+
+  it("drops a critical label when the quoted words do not describe that action", () => {
+    const f = quoteCheck({ ...base, asks: [{ kind: "pay_fee", quote: "Let's talk" }] }, MSG)!;
+    expect(f.asks).toEqual([]);
+  });
 });

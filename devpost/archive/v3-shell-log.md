@@ -11,7 +11,7 @@
 - Use shell illustrations in tool empty states when merging other streams.
 - Report stream owns any remaining profile loops in components/App.tsx.
 
-## Pending Himesh
+## Pending owner review
 - None.
 
 ## Validation (Oct 25, Codex continuation)

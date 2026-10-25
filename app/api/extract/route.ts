@@ -1,5 +1,5 @@
 import { cacheGet, cacheSet, DAY } from "@/lib/server/cache";
-import { EXTRACT_SYSTEM, fingerprint, formLine, isExampleText, prepareMessage, quoteCheck } from "@/lib/server/extract";
+import { EXTRACT_SYSTEM, fingerprint, formLine, prepareMessage, quoteCheck } from "@/lib/server/extract";
 import { EXTRACT_SCHEMA } from "@/lib/server/extractSchema";
 import { callGroq } from "@/lib/server/groq";
 import { guard, takeCheck } from "@/lib/server/guard";
@@ -21,10 +21,10 @@ export async function POST(req: Request) {
     const cached = cacheGet<Facts>(key);
     if (cached) return done(cached);
 
-    if (!isExampleText(text)) {
-      const cap = takeCheck();
-      if (!cap.ok) return failed("limit", { status: 429, retryAfter: cap.retryAfter, message: MESSAGES.daily });
-    }
+    // Every uncached model call costs a slot, including a made-up example with
+    // edited sender/company fields. Cached repeats are still free.
+    const cap = takeCheck();
+    if (!cap.ok) return failed("limit", { status: 429, retryAfter: cap.retryAfter, message: MESSAGES.daily });
 
     const r = await callGroq("extract", {
       system: EXTRACT_SYSTEM,

@@ -4,7 +4,7 @@ import { Check, CheckCircle2, CircleAlert, Minus } from "lucide-react";
 import type { Current } from "@/lib/tiers/session";
 import { questionType, reviewChecks, TYPE_LABEL } from "@/lib/tiers/sessionFeedback";
 
-const box = "rounded-2xl border border-border bg-card p-5";
+const box = "border-l-4 border-tool bg-paper-2 p-5";
 const compact = (v: string, max = 160) => (v.length > max ? `${v.slice(0, max - 1)}…` : v);
 
 /** Hidden-test (or query) result, the first failing case, and the submitted code. Shown before any approach feedback. */
@@ -62,7 +62,7 @@ export function FeedbackCard({ c }: { c: Current }) {
   const checks = reviewChecks(c).filter((k) => !(k.id === "tests" && c.code));
   const star = type === "behavioral" ? fb?.star : null;
   return (
-    <section className={box} aria-live="polite">
+    <section className="border-l-2 border-dashed border-tool bg-tool-tint/50 p-5" aria-live="polite">
       <h2 className="flex items-center gap-2 font-display text-xl"><CheckCircle2 size={20} aria-hidden="true" className="text-tool-strong" />{TYPE_LABEL[type]}</h2>
       {fb && (
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -75,7 +75,7 @@ export function FeedbackCard({ c }: { c: Current }) {
           {STAR_LABELS.map(([k, label]) => <li key={k} className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm ${star[k] ? "border-tool bg-tool-tint text-tool-strong" : "border-border text-muted"}`}>{star[k] ? <Check size={14} aria-hidden="true" /> : <Minus size={14} aria-hidden="true" />}{label}<span className="sr-only">{star[k] ? " covered" : " missing"}</span></li>)}
         </ul>
       )}
-      {fb?.quote && <blockquote className="mt-4 border-l-2 border-tool pl-4 text-sm text-muted">“{fb.quote}”</blockquote>}
+      {fb?.quote && <blockquote className="mt-4 border-l-2 border-tool pl-4 font-mono text-sm text-fg-2">“{fb.quote}”</blockquote>}
       {!!checks.length && (
         <div className="mt-4 border-t border-border pt-4">
           <h3 className="text-sm font-semibold">{type === "coding" ? "Code checks" : type === "sql" ? "SQL checks" : type === "behavioral" ? "Story checks" : "Answer checks"}</h3>

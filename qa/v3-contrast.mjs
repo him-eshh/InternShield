@@ -27,7 +27,7 @@ export function contrast(a, b) {
 const light = block(":root");
 export const themes = { light, dark: { ...light, ...block(".dark") } };
 
-const canvases = ["bg", "bg-subtle", "surface", "surface-2", "surface-3"];
+const canvases = ["bg", "paper", "paper-2", "bg-subtle", "surface", "surface-2", "surface-3"];
 const tools = ["ink", "coral", "teal", "violet"];
 const risks = ["good", "warn", "bad"];
 
@@ -41,6 +41,8 @@ export function pairs() {
     for (const r of risks) p.push([r, bg, 4.5]);
   }
   for (const t of tools) p.push([`on-${t}`, t, 4.5], [`${t}-strong`, `${t}-tint`, 4.5], ["fg", `${t}-tint`, 4.5], ["fg-2", `${t}-tint`, 4.5]);
+  for (const t of tools) p.push(["on-deep", `${t}-deep`, 4.5], [`${t}-deep`, "paper", 3], [`${t}-deep`, "paper-2", 3]);
+  p.push(["fg", "paper", 4.5], ["fg", "paper-2", 4.5]);
   for (const r of risks) p.push([r, `${r}-tint`, 4.5], ["fg", `${r}-tint`, 4.5]);
   return p;
 }

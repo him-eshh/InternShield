@@ -1,6 +1,6 @@
 # InternShield v2, session 1 of 4: SETUP (solo, short, everything shared)
 
-Himesh approved the v2 plan on Oct 22, 2026 (~1:40 AM ET) and wants it finished by **Fri Oct 23 night**. Final deadline is Mon Oct 26, 5 PM ET. Run end to end without asking questions; anything that needs his decision goes into `devpost/v2-setup-log.md` as "pending Himesh".
+The project owner approved the v2 plan on Oct 22, 2026 (~1:40 AM ET) and wants it finished by **Fri Oct 23 night**. Final deadline is Mon Oct 26, 5 PM ET. Run end to end without asking questions; anything that needs his decision goes into `devpost/v2-setup-log.md` as "pending owner review".
 
 **Why this session exists:** next, two sessions build in parallel in separate git worktrees: `check` (the scam check and report) and `tools` (resume tailoring, interview, screenshots, tracker). Everything that both of them would otherwise touch is done here, once, so they never conflict. Keep it tight: target 45-75 minutes. Do not build features here.
 
@@ -16,13 +16,13 @@ Read first: `CLAUDE.md`, `devpost/tiers-orchestration.md` (Lessons + Hard rules 
 - Subagents run on Sonnet (the launcher forces it). Give each a precise, self-contained task with exact files and acceptance checks, and ask for a report of 10 lines or fewer. Do the review of risky logic yourself if a Sonnet reviewer seems unsure.
 
 ## Starting point
-- Main tree `C:\my_projects\projects\InternShield`, `main` = a1a6b71, green (641 tests, eval 26/26).
+- Main tree `[project root]`, `main` = a1a6b71, green (641 tests, eval 26/26).
 - The research and briefs were copied in untracked: `devpost/research/**`, `devpost/v2-brief-*.md`.
-- Untracked `.agents/`, `agent/`, `.claude/skills/`, `skills-lock.json`, `.codex/` are Himesh's: never touch, stage or delete. Never stage `devpost/learner-profile.md` or `.env.local`.
+- Untracked `.agents/`, `agent/`, `.claude/skills/`, `skills-lock.json`, `.codex/` are the owner's: never touch, stage or delete. Never stage `devpost/learner-profile.md` or `.env.local`.
 
 ## Steps (commit each, all on `v2-base`)
 0. `git status`; `git switch -c v2-base` from main (if it exists, switch to it and continue from `devpost/v2-setup-log.md`). The research includes reference `.mjs` sketches (`devpost/research/findings/05-assets/`) that ESLint would lint: first add `"devpost/**"` to `globalIgnores` in `eslint.config.mjs` (vitest only includes `tests/**`, so it's unaffected). Run all gates once, record the baseline in `devpost/v2-setup-log.md`. Commit the research + briefs: `git add eslint.config.mjs devpost/research devpost/v2-brief-*.md devpost/v2-setup-log.md` -> `V2 setup 0: research findings and briefs`.
-1. **Bug F (line endings).** Add `.gitattributes` exactly as in findings 05 Bug F (`* text=auto eol=lf`, `tests/fixtures/** text eol=lf`, `*.png -text`, `*.pdf -text`, `*.docx -text`, also `*.wasm -text`, `*.woff2 -text`). `git add --renormalize .` (stage only what that touches, check `git status` for anything of Himesh's and unstage it), add a `readFixture()` helper in tests that normalizes `\r\n?` -> `\n`, use it where fixtures are read, add one deliberate CRLF test. Add `.editorconfig` (`end_of_line = lf`). Gates. Commit `V2 setup 1: .gitattributes and LF fixtures`. After committing, `git checkout -- tests/fixtures` only (never a repo-wide checkout/reset).
+1. **Bug F (line endings).** Add `.gitattributes` exactly as in findings 05 Bug F (`* text=auto eol=lf`, `tests/fixtures/** text eol=lf`, `*.png -text`, `*.pdf -text`, `*.docx -text`, also `*.wasm -text`, `*.woff2 -text`). `git add --renormalize .` (stage only what that touches, check `git status` for anything of the owner's and unstage it), add a `readFixture()` helper in tests that normalizes `\r\n?` -> `\n`, use it where fixtures are read, add one deliberate CRLF test. Add `.editorconfig` (`end_of_line = lf`). Gates. Commit `V2 setup 1: .gitattributes and LF fixtures`. After committing, `git checkout -- tests/fixtures` only (never a repo-wide checkout/reset).
 2. **Dependencies, once, for both streams** (nobody else touches `package.json`/lockfile). Check each with `npm view <pkg> license` and record it in the log:
    - `motion` (MIT) for `motion/react`.
    - `sql.js` (MIT) + `@types/sql.js`; `@codemirror/lang-sql` (MIT).
@@ -49,7 +49,7 @@ Read first: `CLAUDE.md`, `devpost/tiers-orchestration.md` (Lessons + Hard rules 
    - `qa/ports.mjs`: honor `QA_PORT_RANGE` (e.g. `3100-3199`), default 3000-3999.
    - A tiny `qa/serve.mjs` helper or documented command to start `next dev -p $QA_PORT` and stop it by PID.
    Commit `V2 setup 6: QA harness env for worktrees`.
-7. **CLAUDE.md**: replace "No animation or icon libraries" with "Motion (`motion/react`) is the only animation library; icons stay inline SVG". Add a `## v2 ownership (parallel worktrees)` section copied from the ownership tables in both stream briefs, and the v2 gate list. Update `devpost/v2-setup-log.md` with: baseline, each step, decisions (TS loading, sql.js wasm, caps), licenses, anything pending Himesh.
+7. **CLAUDE.md**: replace "No animation or icon libraries" with "Motion (`motion/react`) is the only animation library; icons stay inline SVG". Add a `## v2 ownership (parallel worktrees)` section copied from the ownership tables in both stream briefs, and the v2 gate list. Update `devpost/v2-setup-log.md` with: baseline, each step, decisions (TS loading, sql.js wasm, caps), licenses, anything pending owner review.
 8. **Worktrees have no `.env.local`.** Confirm nothing reads env at import time in a way that breaks `npm run build`, `npx vitest run` or `next dev` without it (grep `lib/server/**`, `app/**` for module-level `process.env` throws); if anything does, make it lazy (read at request time) so the streams' gates and mocked QA work without keys. Note it in the log.
 9. Final gates on `v2-base`, all green: `npm run lint`, `npx tsc --noEmit`, `npx vitest run`, `npm run build`, `npm run eval` (26/26). Stop every server you started; check `node qa/ports.mjs` shows nothing in your range. Commit `V2 setup: base ready for check + tools streams` (this exact subject prefix `V2 setup:` tells the launcher you are done). Exit. Do NOT create worktrees (the launcher does that) and do NOT merge anything.
 
@@ -60,5 +60,5 @@ Read first: `CLAUDE.md`, `devpost/tiers-orchestration.md` (Lessons + Hard rules 
 - Stage only intended files; read every staged diff for secrets (gsk_, tvly-, sk-, ghp_, github_pat_, AKIA) before each commit.
 - Never touch `.agents/`, `agent/`, `.claude/skills/`, `skills-lock.json`, `.codex/`; never edit `.claude/settings.json`; in `.git/internshield-relay/` write only inside `$QA_SHOTS`.
 - No real recruiter or scam messages; all test content made up. No LinkedIn or people-search scraping.
-- Every server you start you stop; never kill processes you didn't start (Himesh's Codex, Tabbit and Claude desktop apps). Your ports: 3000-3099.
+- Every server you start you stop; never kill processes you didn't start (the owner's Codex, Tabbit and Claude desktop apps). Your ports: 3000-3099.
 - Never `reset --hard`, `clean`, or a repo-wide `checkout .`.

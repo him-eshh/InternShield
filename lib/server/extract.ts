@@ -1,8 +1,8 @@
 // Extract pipeline pieces: prompt, message prep, Quote Check (spec.md > Extract Route, Quote Check).
 import { createHash } from "node:crypto";
 import { stripDepartment } from "@/lib/autofill";
-import { EXAMPLES } from "@/lib/examples";
 import { MAX_QUOTE_CHARS, quoteIsReal } from "@/lib/quotes";
+import { backstop } from "@/lib/scoring/backstop";
 import { cleanText } from "@/lib/scoring/unicode";
 import { type AskKind, type Facts, type InterviewStatus, isRec, MAX_MESSAGE_CHARS, type Quoted } from "@/lib/types";
 import { ASK_KINDS, INTERVIEW_STATUSES } from "./extractSchema";
@@ -42,12 +42,6 @@ export function formLine(sender: unknown, company: unknown): string {
 
 export function fingerprint(...parts: (string | null | undefined)[]): string {
   return createHash("sha256").update(parts.map((p) => p ?? "").join("\u0000")).digest("hex");
-}
-
-const collapse = (s: string) => s.replace(/\s+/g, " ").trim();
-const EXAMPLE_TEXTS = new Set(Object.values(EXAMPLES).map((e) => collapse(e.text)));
-export function isExampleText(message: string): boolean {
-  return EXAMPLE_TEXTS.has(collapse(message));
 }
 
 export function emptyFacts(isJobMessage: boolean): Facts {
@@ -110,7 +104,13 @@ export function quoteCheck(raw: unknown, message: string): Facts | null {
     if (!name) {
       department ??= company.value;
       company = null;
-    } else if (name !== company.value) company = { ...company, value: name };
+    } else {
+      // An unrelated but real quote cannot support a model-invented employer.
+      const words = (s: string) => s.normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+      const said = words(company.quote);
+      const claimed = words(name);
+      company = claimed && ` ${said} `.includes(` ${claimed} `) ? { ...company, value: name } : null;
+    }
   }
 
   return {
@@ -124,14 +124,14 @@ export function quoteCheck(raw: unknown, message: string): Facts | null {
       email: inMessage(strOrNull(sender.email)),
       phone: phoneInMessage(strOrNull(sender.phone)),
     },
-    asks: arr(raw.asks).flatMap((a) =>
-      isRec(a) && real(a.quote)
-        ? [{
-            kind: ((ASK_KINDS as readonly string[]).includes(a.kind as string) ? a.kind : "other") as AskKind,
-            quote: a.quote as string,
-          }]
-        : [],
-    ),
+    asks: arr(raw.asks).flatMap((a) => {
+      if (!isRec(a) || !real(a.quote)) return [];
+      const kind = ((ASK_KINDS as readonly string[]).includes(a.kind as string) ? a.kind : "other") as AskKind;
+      const supported = kind === "other" || backstop(cleanText(a.quote as string).text).some((hit) =>
+        hit.id === kind || (kind === "run_code_or_install" && hit.id === "risky_run"),
+      );
+      return supported ? [{ kind, quote: a.quote as string }] : [];
+    }),
     offPlatform,
     pressure: arr(raw.pressure).flatMap((p) => {
       const q = quoteObj(p);

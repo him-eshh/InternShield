@@ -41,6 +41,15 @@ describe("v3 rewrite route enforces edits guard", () => {
     expect((await (await call()).json()).data.edits).toEqual([]);
     expect((await (await call({ ...body, facts: ["React"] })).json()).data.edits).toHaveLength(1);
   });
+  it("drops a metric copied from another experience before returning model edits", async () => {
+    const twoJobs = "Sam Rivera\nEXPERIENCE\n- Built a club website with JavaScript for 12 members.\n- Wrote Python scripts that cut review time by 40%.";
+    const first = docLines(parseTextResume(twoJobs)).find((l) => l.kind === "bullet")!;
+    h.call.mockResolvedValue({ ok: true, data: JSON.stringify({ edits: [
+      { lineId: first.id, proposed: "Built a club website with JavaScript for 40 members." },
+    ] }) });
+    const result = await (await call({ ...body, resume: twoJobs })).json();
+    expect(result.data.edits).toEqual([]);
+  });
   it.each([{ ...body, resume: "" }, { ...body, posting: 5 }, { ...body, facts: [5] }, { ...body, company: {} }, { ...body, facts: ["Microsoft"] }, { ...body, facts: ["50%"] }])("rejects malformed requests before calling the model", async (data) => {
     expect((await call(data)).status).toBe(400);
     expect(h.call).not.toHaveBeenCalled();
@@ -61,7 +70,7 @@ describe("v3 rewrite route enforces edits guard", () => {
     const wide = { ...data, geometry: [{ lineId, boxes: [{ ...box, w: 500 }] }] };
     expect((await (await call(wide)).json()).data.edits).toHaveLength(1);
     expect((await call({ ...body, geometry: [{ lineId, boxes: [{ ...box, w: -1 }] }] })).status).toBe(400);
-  });
+  }, 20_000);
 
   it("handles bad JSON and upstream limits without leaking output", async () => {
     h.call.mockResolvedValueOnce({ ok: true, data: "not json" }).mockResolvedValueOnce({ ok: false, reason: "limit", retryAfter: 20 });

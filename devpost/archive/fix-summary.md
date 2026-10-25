@@ -62,6 +62,6 @@ All transcribe calls on made-up screenshots (2 to reproduce, 4 to verify; 2 of t
 - **Known limits kept on purpose:** the transcript cleanup keeps short repeated lines (under 40 chars) and sender headers, because dropping them could hide evidence; a model that repeats a short line will show it twice. Number reading follows a fixed cue order, so odd phrasings can still pick the wrong number; rubric synonyms are a small hand list.
 - Evidence cards still animate in on scroll (only print was fixed).
 
-## Pending Himesh
+## Pending owner review
 - Merge `fix` into `ux`/`main` and deploy (not done: the brief says leave it on `fix`). Run the secret scan before pushing.
 - Whether `qa/` (Playwright harness, committed; `playwright` is a devDependency) should stay in the repo or move out before submission.

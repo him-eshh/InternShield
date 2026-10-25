@@ -360,7 +360,7 @@ Split the result into **Block** (red, can't accept), **Check** (amber, can accep
 | 3 | **3 options per request** via strict JSON, plus a `held_back` "Not added" list | 0.5 day | High, and costs no extra budget | Free |
 | 4 | **Guard v2**: job-description-leak label, inflation ladder, scope and seniority words, qualifier drop, alias map, hyphen whitelist, quote-verified `supports`, Block/Check/OK tiers, and a 40-pair fictional guard eval | 1 day | High for trust, and backed by the 2026 papers | Free |
 | 5 | **Ask-for-the-number slots** plus user-confirmed facts, with export blocked while slots are empty | 0.5 day | High. It's a distinctive feature: "we won't guess". | Free |
-| 6 | **New options**: Target level, Region, Use the posting's words, Avoid buzzwords, and saved presets | 0.5 day | Medium-high, and directly answers Himesh's ask | Free |
+| 6 | **New options**: Target level, Region, Use the posting's words, Avoid buzzwords, and saved presets | 0.5 day | Medium-high, and directly answers the owner's ask | Free |
 | 7 | **Deterministic reordering**: skills first, bullets ranked within each role, "Top 3 for this job" | 0.5 day | Medium-high, with 0 tokens | Free |
 | 8 | **PDF v2**: name header, bold titles, embedded Unicode font, proper file name, plus **Copy as plain text** | 0.5 day | Medium (Design is the tie-breaker criterion) | Free |
 | 9 | Raise the rewrite cap to about 60–100/day after checking the org Limits page, plus a localStorage cache of identical requests | 1–2 h | Medium for the demo | Free |

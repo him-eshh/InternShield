@@ -28,12 +28,16 @@ describe("checkRewrite: honest rewordings pass", () => {
     expect(checkRewrite(RESUME, LINE, rewrite)).toEqual({ ok: true });
   });
 
-  it("allows numbers and names from elsewhere in the resume", () => {
-    expect(checkRewrite(RESUME, LINE, "Used SQL and Git across 3 projects in Austin in 2025.")).toEqual({ ok: true });
+  it("does not move numbers from another experience into this bullet", () => {
+    expect(tokens(checkRewrite(RESUME, LINE, "Used SQL and Git across 3 projects in Austin in 2025."))).toEqual(expect.arrayContaining(["number:3", "number:2025"]));
   });
 });
 
 describe("checkRewrite: invented facts fail", () => {
+  it("does not swap two existing metrics between achievements", () => {
+    const line = "Built 2 apps and taught 100 students.";
+    expect(tokens(checkRewrite(line, line, "Built 100 apps and taught 2 students."))).toEqual(expect.arrayContaining(["number:100", "number:2"]));
+  });
   it("invented employer", () => {
     expect(tokens(checkRewrite(RESUME, LINE, "Built a dashboard for Northwind Capital in React and Python."))).toContain(
       "proper_noun:northwind capital",

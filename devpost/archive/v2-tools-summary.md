@@ -24,7 +24,7 @@ Reviewer (read-only, Opus) pass on the full diff: no blockers; findings below.
 `tsRunner`, `sqlRound`, `debugRound`, `presets`, `scorecard`, `keywordGap`, `rewriteOptions` all true.
 
 ## Screenshots
-`C:\my_projects\projects\InternShield\.git\internshield-relay\v2-shots\tools\` (not in repo). Index by prefix:
+`[project root]\.git\internshield-relay\v2-shots\tools\` (not in repo). Index by prefix:
 01 resume PDF/DOCX preview, 02 screenshot error codes, 03 finance feedback ("$1.2 million"), 04 screenshot short/tall/paragraphs/too-long, 05 coding, 06 scorecard, 07 TS run + timeout, 08 SQL, 09 setup cards + Amazon-style, 10 debugging, 11 tailor (gap, options, three, accepted, blocked), 12 tracker (empty, filled, menu, undo), 13 recruiter / behavioral / design board / case / portfolio / timed challenge first screens.
 All at 1440 + 390, light + dark; reduced-motion shots for 03, 06 and 13. Overflow 0 everywhere checked. Scripts: `qa/v2-tools-t*.mjs`.
 Not re-shot at T9: interview rounds beyond their first screen for screen/behavioral/case/portfolio/challenge (answer and feedback states use the shared scorecard shots 03 and 06).
@@ -35,7 +35,7 @@ Not re-shot at T9: interview rounds beyond their first screen for screen/behavio
 - `components/App.tsx`: `sql` and `debugging` rounds are gated by `v2RoundOn()` and rendered inside `Interview.tsx`; optionally move them into App's maps.
 - `next.config.ts` already carries the worker CSP header; verify its value allows the sql.js wasm and the Pyodide/TypeScript CDN loads.
 
-## Pending Himesh
+## Pending owner review
 - Review the screenshots above (design board canvas is intentionally dark in both themes; check you like it in light).
 - Decide on the optional items left out: ask-for-the-number slots, Accept morph animation, A3 line protocol.
 - Live Groq checks (no `.env.local` in this worktree, every API call was mocked): tall screenshot tiling, interview fallback and 429 retry.

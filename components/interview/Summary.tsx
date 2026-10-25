@@ -1,16 +1,27 @@
 "use client";
+import { useEffect, useState } from "react";
 import * as m from "motion/react-m";
-import { useReducedMotion } from "motion/react";
 import { ArrowRight, Trophy, ExternalLink, History as HistoryIcon } from "lucide-react";
 import { buildSummary, overallBand, practiceAgain, trackerCardFor, type HistoryEntry, type PracticeState } from "@/lib/tiers/session";
 import { roundLabel, type SessionConfig, type SessionSummary } from "@/lib/tiers/types";
 import { formatDuration, summaryNumbers } from "@/lib/tiers/sessionFeedback";
 import SaveToTracker from "../tiers/SaveToTracker";
 import { btnPrimary, btnSecondary } from "../ui";
+import { useMotion } from "../motion/useMotion";
 
-export function Summary({ state, summary: saved, company, role, onAgain, onHome, onOpenTracker }: { state?: PracticeState; summary?: SessionSummary; company?: string | null; role?: string | null; onAgain: (c: SessionConfig) => void; onHome: () => void; onOpenTracker: () => void }) {
+export function Summary({ state, summary: saved, sessionId, company, role, onAgain, onHome, onOpenTracker }: { state?: PracticeState; summary?: SessionSummary; sessionId?: string; company?: string | null; role?: string | null; onAgain: (c: SessionConfig) => void; onHome: () => void; onOpenTracker: () => void }) {
   const summary = saved ?? buildSummary(state!);
-  const reduced = useReducedMotion();
+  const motion = useMotion();
+  const [celebrate, setCelebrate] = useState(false);
+  useEffect(() => {
+    if (summary.endedEarly || motion.reduce) return;
+    const key = `is:celebrated:${sessionId ?? state?.id ?? "recent"}`;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+    // One small finish moment per session; revisiting history is quiet.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCelebrate(true);
+  }, [motion.reduce, sessionId, state?.id, summary.endedEarly]);
   const n = summaryNumbers(summary);
   const stats: [string, string, string][] = [
     ["Answered", `${n.answered} of ${n.asked}`, n.skipped ? `${n.skipped} skipped` : "none skipped"],
@@ -18,9 +29,13 @@ export function Summary({ state, summary: saved, company, role, onAgain, onHome,
     ["Time", formatDuration(n.seconds), n.hints ? `${n.hints} ${n.hints === 1 ? "hint" : "hints"} used` : "no hints used"],
   ];
   const overall = overallBand(summary);
-  return <div className="space-y-6"><header className="py-4 text-center"><m.div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-tool-tint text-tool-strong" initial={reduced ? false : { scale: 0.8, rotate: -8 }} animate={{ scale: 1, rotate: 0 }} transition={{ duration: reduced ? 0 : 0.6 }}><Trophy size={30} /></m.div><p className="text-sm font-medium text-tool-strong">{summary.endedEarly ? "Session saved" : "Session complete"}</p><h1 className="mt-2 font-display text-4xl">Keep the momentum.</h1></header>
-    <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3" aria-label="Session numbers">{stats.map(([label, value, sub]) => <div key={label} className="rounded-2xl border border-border bg-card p-5"><dt className="text-sm text-muted">{label}</dt><dd className="mt-1 font-display text-3xl text-tool-strong">{value}</dd>{sub && <p className="mt-1 text-sm text-muted">{sub}</p>}</div>)}</dl>
-    <section className="rounded-2xl border border-tool bg-tool-tint p-5"><h2 className="text-sm font-medium">Overall practice</h2><p className="mt-1 font-display text-3xl text-tool-strong">{overall}</p><p className="mt-2 text-sm text-muted">Across your practiced rounds. Use the scorecards below to choose your next drill.</p></section>
+  return <div className="space-y-8"><header className="relative overflow-hidden rounded-tr-[28px] bg-tool-deep px-6 py-10 text-on-deep sm:px-10">
+    {celebrate && Array.from({ length: 12 }, (_, i) => <m.span key={i} aria-hidden="true" className={`pointer-events-none absolute left-1/2 top-1/2 h-2 w-2 ${i % 3 === 0 ? "bg-coral" : i % 3 === 1 ? "bg-teal" : "bg-violet"}`} initial={{ opacity: 0, scale: 0, x: 0, y: 0 }} animate={{ opacity: [0, 1, 0], scale: [0, 1, 0.7], x: (i % 6 - 2.5) * 27, y: (Math.floor(i / 6) ? 1 : -1) * (35 + (i % 3) * 14) }} transition={{ duration: motion.t.celebrate, ease: "easeOut" }} />)}
+    <m.div className="mb-4 inline-flex rotate-[-2deg] items-center gap-2 rounded-[4px] border-2 border-current px-3 py-1 font-display font-bold" initial={celebrate ? { scale: 1.2, rotate: -7 } : false} animate={{ scale: 1, rotate: -2 }} transition={motion.spring.stamp}><Trophy size={22} />{summary.endedEarly ? "Session saved" : "Session done"}</m.div>
+    <h1 className="max-w-xl font-display text-4xl sm:text-5xl">Keep the momentum.</h1><p className="mt-3 max-w-xl opacity-90">Your results are a practice snapshot. Use the specific checks below to choose what to try next.</p>
+  </header>
+    <dl className="grid grid-cols-1 gap-5 sm:grid-cols-3" aria-label="Session numbers">{stats.map(([label, value, sub]) => <div key={label} className="border-t-2 border-tool py-4"><dt className="text-sm text-fg-2">{label}</dt><dd className="mt-2 font-display text-4xl text-tool-strong">{value}</dd>{sub && <p className="mt-1 text-sm text-fg-2">{sub}</p>}</div>)}</dl>
+    <section className="border-l-4 border-tool bg-tool-tint p-5"><h2 className="text-sm font-medium">Overall practice</h2><p className="mt-1 font-display text-3xl text-tool-strong">{overall}</p><p className="mt-2 text-sm text-fg-2">Across your practiced rounds. Use the scorecards below to choose your next drill.</p></section>
     <div className="grid gap-3 sm:grid-cols-2">{summary.rounds.map((r) => <section key={r.round} className="rounded-2xl border border-border bg-card p-5"><h2 className="text-sm text-muted">{roundLabel(r.round)}</h2><p className="mt-2 font-display text-2xl text-tool-strong">{r.band}</p>{(() => { const k = n.rounds.find((x) => x.round === r.round); return k && <p className="mt-1 text-sm text-muted">{k.answered} of {k.asked} answered{k.tests ? ` · ${k.tests.passed} of ${k.tests.total} tests passed` : k.solved ? ` · ${k.solved.done} of ${k.solved.of} queries matched` : ""}</p>; })()}<p className="mt-2 text-sm">{r.note}</p><dl className="mt-4 space-y-2 border-t border-border pt-3">{r.axes?.map((a) => <div key={a.id} className="flex flex-wrap justify-between gap-2 text-sm"><dt>{a.label}</dt><dd className="font-medium">{a.band}</dd></div>)}</dl></section>)}</div>
     {!!summary.strengths?.length && <section className="rounded-2xl bg-tool-tint p-5"><h2 className="font-display text-xl">Build on these strengths</h2><ul className="mt-3 list-inside list-disc space-y-2">{summary.strengths.map((s, i) => <li key={i}>{s}</li>)}</ul></section>}
     <section className="rounded-2xl border border-border bg-card p-5"><h2 className="font-display text-xl">Practice next</h2><ol className="mt-3 list-inside list-decimal space-y-2">{summary.next.map((n, i) => <li key={i}>{n}</li>)}</ol></section>

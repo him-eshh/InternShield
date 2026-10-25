@@ -20,7 +20,7 @@ Branch `v2-base` from `main` a1a6b71. Brief: `devpost/v2-brief-setup.md`.
 - 8: env at import time: none. Every key/cap read in `lib/server/**` is inside a function (`callGroq`, Tavily `search`, `hunterEnabled`, `envInt`, `allowedOrigins`) and missing keys return a failed step, never throw. `app/layout.tsx` metadataBase falls back to localhost. So `npm run build`, `npx vitest run` (tests stub env) and mocked QA on `next dev` work in a worktree without `.env.local`; live API calls just fail softly.
 - 9: final gates on `v2-base`: lint clean, tsc clean, vitest 39 files / 645 tests, build OK, eval 26/26 (README table unchanged). All servers stopped; `node qa/ports.mjs` shows nothing on 3000-3099.
 
-## Pending Himesh
+## Pending owner review
 - None blocking. Optional: raise `REWRITE_DAILY_CAP` after checking Groq token use (left at 30).
 
 ## Decisions (for the tools stream)

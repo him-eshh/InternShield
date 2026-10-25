@@ -20,7 +20,7 @@ Custom questions occupy the first round in rounds mode. SQL runs in SQL rounds; 
 
 Runtime assets use the existing public free CDNs. Provider output was not live-tested; integration may use the four-call smoke check in the final summary. Existing held-out misses (ho-11, ho-15, ho-16) and two unrelated lint warnings are unchanged.
 
-## Pending Himesh
+## Pending owner review
 
 None for this stream. Shared integration follows its separate brief.
 

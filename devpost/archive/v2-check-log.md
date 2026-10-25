@@ -56,7 +56,7 @@ Branch `v2-check` from `v2-base` 36ad123. Brief: `devpost/v2-brief-check.md`.
 - [x] held-out set 27 cases: 24/27, FP 0/9 (misses ho-11, ho-15, ho-16; not gating)
 - [x] confusion matrix + FP rate, README
 - c7 fixture fix: `c7-unicode-cyrillic-zelle-fee` used `д` (not a visual look-alike); now е/о.
-- Labels changed after the first run (Pending Himesh): `c7-mid-high-pay-no-experience` medium->high (free email + text
+- Labels changed after the first run (Pending owner review): `c7-mid-high-pay-no-experience` medium->high (free email + text
   interview + easy pay, three FTC signs); `c7-mid-new-domain-interview`, `c7-mid-pressure-two-hours`,
   `c7-mid-unpaid-trial-project` medium->low (one weak signal each, no strong sign).
 ### C8 Check form + checking screen
@@ -92,6 +92,6 @@ Branch `v2-check` from `v2-base` 36ad123. Brief: `devpost/v2-brief-check.md`.
   Workaround in place: ReportFooter sets `data-level` (live) and `app/v2-check.css` hides the direct extra buttons on high.
 - Bug B: if `App.tsx` lifts the tracker open state into the footer later, the `contents` wrapper in SaveToTracker can go.
 
-## Pending Himesh
+## Pending owner review
 - C7 relabels (see C7 above): 4 worker-written cases changed level after the first eval run. Confirm or tell me to retune weights.
 - C8 "checking state inside the report layout": Checklist stays its own screen because App.tsx is frozen (integration).

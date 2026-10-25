@@ -1,5 +1,7 @@
 # API facts for InternShield (checked Oct 20, 2026)
 
+> Dated research snapshot, not a live account-quota guarantee. Provider models, prices, and free-tier limits may change; check the linked official provider docs and the account's limits before relying on these figures. The app's current configurable guard defaults are in `lib/server/guard.ts` and `.env.example`. Vision is used for Check screenshot transcription; it is no longer a hypothetical Tier 2 feature.
+
 Sources are official docs, fetched on Oct 20, 2026. Lines marked **UNVERIFIED** could not be confirmed from an official page.
 
 ## Plain-language summary

@@ -17,7 +17,7 @@ interface EditCheck {
 }
 
 interface CheckInput {
-  /** The whole resume as text (facts live here). */
+  /** The whole resume as context; guards source new claims from the edited bullet. */
   resume: string;
   original: string;
   proposed: string;
@@ -124,7 +124,7 @@ export function checkedEdits(doc: ResumeDoc, candidates: unknown, keywords: stri
       section: sectionOf(doc, line.id)?.heading ?? "", original: line.text,
       proposed, keywords: added, status: "pending",
       // Do not display an unchecked model-authored explanation as a factual claim.
-      reason: added.length ? `Brings forward ${added.join(", ")}.` : "Tightens the wording while keeping your facts.",
+      reason: added.length ? `Highlights ${added.join(", ")}; check that it fits this experience.` : "Tightens the wording; review it against your experience.",
     });
   }
   return out;

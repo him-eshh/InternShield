@@ -6,7 +6,7 @@
   color: inherit;
   padding: 0.05em 0.25em;
   border-radius: 3px;
-  border-bottom: 2px solid var(--warn);
+  border-bottom: 2px dashed var(--warn);
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
 }
@@ -45,7 +45,7 @@
 }
 .am-mark.am-red {
   background: var(--warn-tint);
-  border-bottom: 2px solid var(--warn);
+  border-bottom: 2px dashed var(--warn);
 }
 .am-mark.am-good {
   background: var(--good-tint);
@@ -57,7 +57,7 @@
   margin: 0 0.2em 0 0.15em;
   padding: 0 0.3em;
   border: 1.5px solid currentColor;
-  border-radius: 999px;
+  border-radius: 3px;
   font-size: 0.75rem;
   font-weight: 600;
   line-height: 1.35;

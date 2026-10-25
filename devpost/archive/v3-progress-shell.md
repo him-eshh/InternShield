@@ -19,7 +19,7 @@
 ## Gotchas
 - v3-shell only; personal vault/report-owned source untouched; no theme value changes.
 - Hidden 3300 dev server STOPPED (verified cmd PID 27860 tree); no 3300 listener.
-- QA_SHOTS=C:\my_projects\projects\InternShield\.git\internshield-relay\v3-shots\shell
+- QA_SHOTS=[project root]\.git\internshield-relay\v3-shots\shell
 - QA scripts: qa/v3-shell-qa.mjs, qa/v3-shell-accessibility.mjs (explicit QA_BASE 3300-3399 required, mocked APIs).
 - Gates: node qa/v3-gates.mjs -> qa/gates-out.txt. Initial PDF timeout passed isolated and in final full run.
 - Two pre-existing lint warnings remain in qa/v2-check-heldout-lint.mjs.

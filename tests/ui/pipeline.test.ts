@@ -93,11 +93,20 @@ describe("runPipeline", () => {
 
   it("stops on a message that is not a job message", async () => {
     const f = makeFetch({ "/api/extract": () => done({ ...scamFacts, isJobMessage: false }) });
-    const out = await runPipeline(input, { ...opts, fetch: f.fn });
+    const out = await runPipeline({ ...input, text: "Lunch is at noon tomorrow." }, { ...opts, fetch: f.fn });
     expect(out.notJob).toBe(true);
     expect(out.report).toBeNull();
     expect(f.count("/api/company")).toBe(0);
     expect(f.count("/api/explain")).toBe(0);
+  });
+
+  it("does not let a non-job model answer hide a raw payment request", async () => {
+    const text = "To start this internship, you must pay a $40 registration fee today.";
+    const f = makeFetch({ "/api/extract": () => done({ ...scamFacts, isJobMessage: false }), "/api/explain": explain });
+    const out = await runPipeline({ ...input, text }, { ...opts, fetch: f.fn });
+    expect(out.notJob).toBe(false);
+    expect(out.report?.score).toBeGreaterThanOrEqual(85);
+    expect(out.report?.flags.some((flag) => flag.id === "pay_fee")).toBe(true);
   });
 
   it("skips company/sender with 'missing input' when facts have none and the form is empty", async () => {

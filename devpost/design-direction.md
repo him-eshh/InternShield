@@ -1,5 +1,19 @@
 # InternShield design direction: "Field notebook, not SaaS template"
 
+> Design brief and decision record. The Levels/Tetris/Sketch choice immediately below governs the final visual pass. The older A-F sections contain proposed slices and critiques from before implementation; verify any “current UI” description there against the live app. Final verification belongs in `checklist.md`.
+
+## Owner update, 2026-10-25: Levels + Tetris + Sketch
+
+The owner chose a combination of the [Levels](https://github.com/bergside/awesome-design-skills/tree/main/skills/levels), [Tetris](https://github.com/bergside/awesome-design-skills/tree/main/skills/tetris), and [Sketch](https://github.com/bergside/awesome-design-skills/tree/main/skills/sketch) design skills. Their project-local copies are installed in `.agents/skills/`. This section supersedes the earlier single-metaphor restriction where it conflicts; the rest of this brief remains the starting implementation spec.
+
+- **Levels supplies the interaction hierarchy:** one clear next action per state; show what was checked, why a result changed, and the next useful step without making users decode a dashboard. Controls must have explicit focus, disabled, loading, error, and recovery states.
+- **Tetris supplies the structural motif:** small offset square modules, block-like progress and staggered evidence pieces. Use the motif where discrete facts or steps really accumulate: Home's annotated message, Check coverage, Tailor accepted edits, and Practice rounds. Do not make the scam verdict look like a game score or use blocks as decoration in every card.
+- **Sketch supplies the human annotation:** warm paper, short hand-drawn SVG strokes, dashed callouts, marker highlights, and pencil-like margin notes. Quoted message text and the user's resume remain legible, selectable text. Sketch marks never replace an icon, label, or accessible focus state.
+- **One palette still governs the app:** retain the existing Check coral, Tailor teal, Practice violet, and distinct risk red/amber/green. The reference skills' literal palettes conflict with this semantic mapping, so use their layout and interaction ideas rather than importing their hex values. Bricolage Grotesque and Inter remain the fonts; no novelty display font is added to safety-critical reading.
+- **Restraint:** the Home hero gets the most expressive block-and-sketch composition. Tool pages use smaller versions of the same grammar for progress and evidence. Motion stays short, responsive to state changes, and absent under reduced motion.
+
+Acceptance: at 390 and 1280 px in both themes, a person can identify the next action, the source of each claim, and the missing checks; no visual motif hides content, introduces horizontal overflow, or weakens contrast. The risk score remains described as rule-based, not a probability.
+
 Author: design lead. Date: 2026-10-25. Scope: visual identity, motion, interaction, a11y, and a 4-slice build plan.
 Inputs: the six reviewer screenshots in `images/`, `app/theme.css`, `app/globals.css`, `components/ui.ts`, `shell/{Nav,PageTransition,reveal}`, `report/RiskRing.tsx`, plus research (sources inline).
 Not covered by screenshots: Tailor, Tracker, Profile, Practice summary. Those critiques come from code and the shared tokens, and are marked "(inferred)". Whoever implements them should open the screen first.

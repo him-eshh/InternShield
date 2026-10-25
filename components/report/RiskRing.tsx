@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { coverageTicks, deltaAnnouncement, deltaLabel } from "@/lib/reportView";
 import { LEVEL_LABELS, type Report, type RiskLevel } from "@/lib/types";
 import { CircleAlert, TriangleAlert, CircleCheck } from "lucide-react";
+import { dur } from "../motion/tokens";
 
 const R = 86;
 const C = 2 * Math.PI * R;
@@ -33,16 +34,17 @@ interface ViewProps {
   /** Change since the previous score, or null the first time. */
   delta?: { label: string; announcement: string } | null;
   chipKey?: number;
+  showLabel?: boolean;
 }
 
 /** Pure presentation: no state, so it renders the same on the server and in tests. */
-export function RingView({ value, score, level, ticks, staggerTicks = false, delta = null, chipKey = 0 }: ViewProps) {
+export function RingView({ value, score, level, ticks, staggerTicks = false, delta = null, chipKey = 0, showLabel = true }: ViewProps) {
   const Icon = level === "high" ? CircleAlert : level === "medium" ? TriangleAlert : CircleCheck;
   const n = ticks.length;
   return (
     <div className="flex flex-col items-center text-center">
       <div className={`relative ${COLOR[level]}`}>
-        <svg width="220" height="220" viewBox="0 0 220 220" role="img" aria-label={`Risk ${score} out of 100`} className="max-w-full">
+        <svg width="168" height="168" viewBox="0 0 220 220" role="img" aria-label={`Risk ${score} out of 100`} className="max-w-full">
           {ticks.map((ran, i) => {
             const l = tickLine(i, n, ran);
             return (
@@ -77,7 +79,7 @@ export function RingView({ value, score, level, ticks, staggerTicks = false, del
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center text-text">
           <span className="text-[13px] font-medium uppercase tracking-[0.12em] text-muted">Risk</span>
-          <span data-score className="text-score font-semibold tabular-nums" aria-hidden="true">{Math.round(value)}</span>
+          <span data-score className="font-display text-[68px] font-extrabold leading-none tabular-nums" aria-hidden="true">{Math.round(value)}</span>
         </div>
       </div>
       <div className="mt-3 flex h-7 items-center">
@@ -96,15 +98,15 @@ export function RingView({ value, score, level, ticks, staggerTicks = false, del
         )}
       </div>
       <p role="status" aria-live="polite" className="sr-only">{delta?.announcement ?? ""}</p>
-      <h2 className="mt-2 flex max-w-[22ch] flex-col items-center justify-center gap-2 text-[clamp(32px,4.6vw,44px)] font-bold leading-[1.1] tracking-[-0.025em] sm:flex-row sm:gap-3">
+      {showLabel && <h2 className="mt-2 flex max-w-[22ch] flex-col items-center justify-center gap-2 text-[clamp(32px,4.6vw,44px)] font-bold leading-[1.1] tracking-[-0.025em] sm:flex-row sm:gap-3">
         {Icon && <span className={`shrink-0 ${COLOR[level]}`}><Icon size={32} /></span>}
         <span className="text-text">{LEVEL_LABELS[level]}</span>
-      </h2>
+      </h2>}
     </div>
   );
 }
 
-export default function RiskRing({ score, level, coverage }: { score: number; level: RiskLevel; coverage?: Report["coverage"] }) {
+export default function RiskRing({ score, level, coverage, showLabel = true }: { score: number; level: RiskLevel; coverage?: Report["coverage"]; showLabel?: boolean }) {
   const target = clamp(score);
   const reduce = useReducedMotion();
   const [shown, setShown] = useState(0);
@@ -122,7 +124,7 @@ export default function RiskRing({ score, level, coverage }: { score: number; le
     const first = !revealed.current;
     revealed.current = true;
     const ctl = animate(shownRef.current, target, {
-      duration: first ? 0.8 : 0.5,
+      duration: first ? dur.ring : 0.5,
       ease: EASE,
       onUpdate: (v) => {
         shownRef.current = v;
@@ -167,6 +169,7 @@ export default function RiskRing({ score, level, coverage }: { score: number; le
       staggerTicks={!reduce}
       delta={delta}
       chipKey={target}
+      showLabel={showLabel}
     />
   );
 }

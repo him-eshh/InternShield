@@ -9,7 +9,7 @@ import ReportFooter from "@/components/report/ReportFooter";
 import { fixtureOutcome } from "@/fixtures/outcome";
 import { mediumReport, realReport, scamReport } from "@/fixtures/reports";
 import { actionLine, sortFlags, topReasons } from "@/lib/reportView";
-import type { Flag } from "@/lib/types";
+import { LEVEL_LABELS, type Flag } from "@/lib/types";
 
 const flag = (id: string, over: Partial<Flag> = {}): Flag => ({
   id,
@@ -60,9 +60,12 @@ describe("good signs", () => {
     expect(html).not.toMatch(/<details[^>]*\sopen/);
     expect(html.indexOf("<details")).toBeGreaterThan(html.indexOf("Title crit1"));
   });
-  it("are plain cards on low and medium", () => {
-    expect(renderToStaticMarkup(<EvidenceList flags={MIXED} level="low" />)).not.toContain("<details");
-    expect(renderToStaticMarkup(<EvidenceList flags={MIXED} level="medium" />)).not.toContain("<details");
+  it("stay visible on low and medium while extra warning signs collapse", () => {
+    for (const level of ["low", "medium"] as const) {
+      const html = renderToStaticMarkup(<EvidenceList flags={MIXED} level={level} />);
+      expect(html).toContain("Show 1 more warning sign");
+      expect(html.indexOf("Official domain")).toBeGreaterThan(html.lastIndexOf("</details>"));
+    }
   });
 });
 
@@ -125,13 +128,15 @@ describe("footer per level", () => {
 });
 
 describe("Report order", () => {
-  it("ring, verdict, action line, evidence, quick questions, footer", async () => {
+  it("leads with verdict and action, then score, evidence, questions and footer", async () => {
     const fx = (await fixtureOutcome("medium"))!;
     const html = renderToStaticMarkup(<Report outcome={fx.outcome} input={fx.input} onRetry={() => {}} onAgain={() => {}} />);
     const order = [
-      "Risk ",
-      "<h2",
+      LEVEL_LABELS[fx.outcome.report!.level],
+      "What to do now",
       actionLine(fx.outcome.report!.level).replaceAll("'", "&#x27;"),
+      "Risk ",
+      "Your message",
       ">Evidence<",
       "A few quick questions",
       "Check another message",
@@ -150,11 +155,20 @@ describe("Report order", () => {
     expect(high).not.toContain("opacity-0");
   });
 
+  it("shows completed and skipped check blocks without treating the score as a probability", async () => {
+    const html = renderToStaticMarkup(<Report {...(await props("real"))} />);
+    expect(html).toContain("Rule-based risk score, not a probability.");
+    expect(html).toMatch(/role="img" aria-label="\d+ of \d+ checks ran"/);
+    expect(html).toContain('data-coverage-block="ran"');
+    expect(html).toContain('data-coverage-block="skipped"');
+  });
+
   it("renders extras and the recovery slot", async () => {
     const p = await props("medium");
     const html = renderToStaticMarkup(<Report {...p} extras={<span>EXTRA</span>} recovery={<section>RECOVERY</section>} />);
     expect(html).toContain("EXTRA");
-    expect(html.indexOf("RECOVERY")).toBeGreaterThan(html.indexOf("A few quick questions"));
+    expect(html.indexOf("RECOVERY")).toBeGreaterThan(html.indexOf("What to do now"));
+    expect(html.indexOf("RECOVERY")).toBeLessThan(html.indexOf(">Evidence<"));
   });
 });
 

@@ -155,14 +155,14 @@ Risk-communication guidance says to state uncertainty about the conclusion separ
 | **BBB Scam Tracker narratives** | Pattern ideas | BBB terms not reviewed **[unverified]**; paraphrase only |
 | **Reddit r/Scams** | Pattern ideas only | Real personal messages and Reddit's data terms; **don't ship** |
 | **EMSCAD / Kaggle "Real or Fake Job Posting"** (17,880 postings, about 800 fake) | Posting-mode checks and phrase mining, not recruiter messages | Kaggle lists **CC0: Public Domain** (checked via the Kaggle API, Oct 22) ([Kaggle](https://www.kaggle.com/datasets/shivamb/real-or-fake-fake-jobposting-prediction)) |
-| **Chang et al. 2024 (Virginia Tech CS)**: about 1,200 messages (530 scam, 126 adversarial, 544 non-scam), including recruitment | Closest academic match; adversarial recruitment examples | The paper is CC BY 4.0 ([arXiv 2412.00621](https://arxiv.org/html/2412.00621v1)). **Dataset availability is [unverified]**. Himesh is at VT, so emailing the authors (post-hackathon) is realistic. |
+| **Chang et al. 2024 (Virginia Tech CS)**: about 1,200 messages (530 scam, 126 adversarial, 544 non-scam), including recruitment | Closest academic match; adversarial recruitment examples | The paper is CC BY 4.0 ([arXiv 2412.00621](https://arxiv.org/html/2412.00621v1)). **Dataset availability is [unverified]**. the project owner is at VT, so emailing the authors (post-hackathon) is realistic. |
 | **Fraud-R1** (8,564 cases, 5 fraud types including fake job postings; multi-round) | Multi-turn and role-play stress tests | The GitHub repo shows **no license** (checked via the GitHub API), so treat it as not reusable without permission ([repo](https://github.com/kaustpradalab/Fraud-R1)) |
 | **SmishTank** (1,062 SMS-phishing samples) | Text-message variety | The paper is CC BY-NC-SA 4.0, but the dataset link (`smishtank.com/dataset`) **returned 404 on Oct 22** ([arXiv](https://arxiv.org/abs/2402.18430)) |
 | **Synthetic generation** | Main source for the hackathon | A documented grid: scam type (17 patterns from Q1) × channel (email, LinkedIn, Handshake, SMS, WhatsApp) × stage × field × obfuscation (none, Unicode, spacing, injection, split fee) × language (EN plus 1–2). **Hard negatives:** ATS emails, ATS SMS reminders, agency recruiters, startup Gmail, abroad-WhatsApp, real take-homes, post-offer onboarding, real equipment shipping, real background-check consent after an offer. |
 
 **Size and split (realistic by Monday):**
 - Grow from 26 to about **90–110**: roughly 45 high, 20 medium, 35 low. At least 40% of the low cases should be *hard* negatives.
-- **Holdout:** 25–30 messages written by **someone other than the rule author**. A friend works, or a separate LLM session with a frozen prompt, labeled by Himesh *before* he looks at the scores. Freeze it and never tune rules on it.
+- **Holdout:** 25–30 messages written by **someone other than the rule author**. A friend works, or a separate LLM session with a frozen prompt, labeled by the project owner *before* he looks at the scores. Freeze it and never tune rules on it.
 - Post-hackathon, aim for 300+ so per-level 95% intervals shrink. Use Wilson intervals and report them.
 
 **Metrics to report** (README plus demo):

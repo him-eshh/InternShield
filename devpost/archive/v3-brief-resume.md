@@ -1,6 +1,6 @@
 # InternShield v3, stream RESUME (Sonnet, worktree `InternShield-v3-resume`, branch `v3-resume`, ports 3100-3199)
 
-You rebuild resume tailoring so a recruiter could not tell a tool touched it. Runs in parallel with `interview`, `shell` and `report` (they don't touch your files). Run end to end without asking; decisions for Himesh go in `devpost/v3-resume-log.md` as "Pending Himesh". When done, write `devpost/v3-resume-summary.md` and commit **`V3 resume summary`** (exact subject start = done signal).
+You rebuild resume tailoring so a recruiter could not tell a tool touched it. Runs in parallel with `interview`, `shell` and `report` (they don't touch your files). Run end to end without asking; decisions for the project owner go in `devpost/v3-resume-log.md` as "Pending owner review". When done, write `devpost/v3-resume-summary.md` and commit **`V3 resume summary`** (exact subject start = done signal).
 
 ## Context rotation and usage (applies to the whole session)
 - The launcher watches your context size. At ~75% (150K tokens) it stops you right after your current tool call and starts a fresh session that resumes from your progress file. This is normal; plan for it.
@@ -10,26 +10,26 @@ You rebuild resume tailoring so a recruiter could not tell a tool touched it. Ru
 - Save usage: short tool output. `npx vitest run --reporter=dot` (rerun only failing files), pipe long output through `tail -n 40`, read files with offset/limit, look at screenshots selectively but DO look at them (quality is the point of v3).
 - Subagents run on Sonnet (forced). Give each a precise, self-contained task with exact files and acceptance checks; ask for a report of 10 lines or fewer.
 
-## Speed rules (Himesh wants v3 faster; added Oct 25, 2:30 AM ET; these override any slower habit)
+## Speed rules (the project owner wants v3 faster; added Oct 25, 2:30 AM ET; these override any slower habit)
 - While iterating run only the related tests (`npx vitest run <files> --reporter=dot`) and `npx tsc --noEmit` when types change. Full gates (lint, tsc, full vitest, build, eval; ~10 min) only at item-closing commits; if several items close close together, WIP-commit them and run the full gates once at the next closing commit. Never rerun green gates without code changes. Run gates as one background command and poll it. The final summary commit must be fully green (the launcher re-runs all gates after you exit).
 - Screenshots: at most 1-2 quick shots per item to check your work (1440 light, plus 390 when layout matters). The full matrix (1440 + 390, light + dark, plus states) is taken once, at the end of the stream, and you look at every shot then.
 - Parallelize with subagents where files don't overlap (e.g. tests + QA script + one component). Don't re-read files you already read this session.
 
-## Why v3 exists (Himesh's verdict on v2, Oct 25, 2026)
+## Why v3 exists (the owner's verdict on v2, Oct 25, 2026)
 He tested v2 by hand. The scoring logic works. Everything else fell short: the tailored resume was too long, lost the original format and read as AI-written ("it will get rejected"); no loading state, no preview before download, no way to adjust and see changes. No nav bar, no home screen, no profile screen, no icons; very hard to navigate; unclear how to build the profile; flows dropped him back into the questions. Answers/details he added showed no visible effect ("no score impacted" is a dead end). The UI looked basic and AI-generated, only black and blue, unresponsive, no motion. The interview showed only one question. v2's checks only proved things rendered; **v3 is judged on whether it is actually good to use.** Every brief has a Quality bar: treat each line as a test you must pass and prove with a screenshot or an automated check.
 
 ## Hard rules (all sessions)
-- Work only in your own worktree. Never cd into, edit, build in, or switch branches in the main tree `C:\my_projects\projects\InternShield` (it stays on `v2` and serves Himesh's manual test on port 3000). Never use or stop anything on port 3000. Your dev/test servers use only your port range, started hidden (the launcher prompt gives the exact command), and stopped after each screenshot round.
+- Work only in your own worktree. Never cd into, edit, build in, or switch branches in the main tree `[project root]` (it stays on `v2` and serves the owner's manual test on port 3000). Never use or stop anything on port 3000. Your dev/test servers use only your port range, started hidden (the launcher prompt gives the exact command), and stopped after each screenshot round.
 - Never read or print `.env.local` (or any key). Keys are server-side only. No live API calls except where your brief allows them (default: none; use mocks and fixtures).
 - No push, no merge into `main`, no deploy, no cloud agents. Free APIs/data only, no card.
 - Never touch, stage or delete `.agents/`, `agent/`, `.claude/skills/`, `skills-lock.json`, `.codex/`. Never stage `devpost/learner-profile.md` or any `.env*` except `.env.example`.
 - No LinkedIn or people-profile scraping. No scraping LeetCode (or any site) behind a login or against its terms. Tavily stays within `TAVILY_DAILY_CAP` (30/day) and is always cached; Wikidata/company pages first.
-- Himesh's standing UI preferences: concise UI text; no "Copy report" on low-risk reports; confirmations go below the chosen answer; the quick-questions title stays "A few quick questions"; tailoring never invents facts.
+- the owner's standing UI preferences: concise UI text; no "Copy report" on low-risk reports; confirmations go below the chosen answer; the quick-questions title stays "A few quick questions"; tailoring never invents facts.
 - Original eval cases (`eval/messages`, `eval/heldout`) are never edited; the main eval must stay 88/88 (0 false positives on low) and held-out >= 24/27. Scoring logic is out of scope unless a brief says otherwise.
 - Gates for every item-closing commit: `npm run lint`, `npx tsc --noEmit`, `npx vitest run`, `npm run build`, `npm run eval`.
 
-## Design system (approved by Himesh on Oct 25, final; tokens live in ONE swappable theme file, `app/theme.css`)
-Himesh rejected v2's "Calm Instrument" one-blue look (findings 06 §2 Direction A and its "no gradients / one accent" rules are REPLACED by this section; 06 §4 motion specs, §9 craft checklist, §10 accessibility and §15 pitfalls other than the color rules still apply).
+## Design system (approved by the project owner on Oct 25, final; tokens live in ONE swappable theme file, `app/theme.css`)
+The project owner rejected v2's "Calm Instrument" one-blue look (findings 06 §2 Direction A and its "no gradients / one accent" rules are REPLACED by this section; 06 §4 motion specs, §9 craft checklist, §10 accessibility and §15 pitfalls other than the color rules still apply).
 - **References:** Linear (polish, motion, dark elevation from one hue), Raycast (vivid per-command color, crisp icons), Duolingo (session flow, progress bars, end-of-session moment), Notion (home and onboarding clarity). Name these in code comments of `app/theme.css`, not in the UI.
 - **Tool color identities**, carried through each tool's icon, nav tab (active state), primary buttons, focus/highlights and illustration: **Check = warm coral**, **Tailor = green** (lean emerald/teal so it never reads as the risk "low" green), **Practice = violet**. Tracker and Profile use the ink/neutral brand color. Each accent has light + dark values, a soft tint (backgrounds) and an on-accent text color, all WCAG AA (text >= 4.5:1, UI marks >= 3:1).
 - **Risk colors are reserved:** red (high), amber (medium), green (low) appear only on risk results (ring, level icon, tags, marks), always with an icon + words, never color alone. Coral must be visibly distinct from risk red (more orange/pink, lighter); if a report screen shows both, the report's chrome uses neutral, not coral.
@@ -42,9 +42,9 @@ Himesh rejected v2's "Calm Instrument" one-blue look (findings 06 §2 Direction 
 - **Copy:** short, second person, specific, verb first. No filler ("Unlock", "Supercharge", "Seamless"), no fake stats.
 
 ## Read first
-`devpost/v3-setup-log.md`, `CLAUDE.md` (v3 section + ownership), the current `components/tiers/ResumeTailor.tsx`, `lib/tiers/{tailored,resumeGuard,resumeLines,keywordGap,pdf}.ts`, `lib/server/rewrite.ts`, `app/api/rewrite/route.ts`, `lib/server/companyIntel.ts` (built in setup), findings `03-resume-tailoring.md` §2 (ATS facts, formatting must-dos), §4 (guard), §5 (parsing), §6 (output), §7 (prompting), §8 (AI-penalty evidence). Test fixtures: create made-up resumes (one-page PDF and DOCX, a two-page PDF) under `tests/fixtures/resume/`; never use Himesh's real resume.
+`devpost/v3-setup-log.md`, `CLAUDE.md` (v3 section + ownership), the current `components/tiers/ResumeTailor.tsx`, `lib/tiers/{tailored,resumeGuard,resumeLines,keywordGap,pdf}.ts`, `lib/server/rewrite.ts`, `app/api/rewrite/route.ts`, `lib/server/companyIntel.ts` (built in setup), findings `03-resume-tailoring.md` §2 (ATS facts, formatting must-dos), §4 (guard), §5 (parsing), §6 (output), §7 (prompting), §8 (AI-penalty evidence). Test fixtures: create made-up resumes (one-page PDF and DOCX, a two-page PDF) under `tests/fixtures/resume/`; never use the owner's real resume.
 
-## What Himesh saw (v2) and what must change
+## What the project owner saw (v2) and what must change
 Output was longer than the original, re-flowed into a new layout, full of AI phrasing; no loading state, no preview, no per-change control. The fix is a different product shape: **an editor of small, targeted suggestions applied in place to the user's own file**, not a resume generator.
 
 ## Items (commit each; flip any feature flag only when it passes gates)

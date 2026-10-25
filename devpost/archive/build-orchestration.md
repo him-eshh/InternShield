@@ -1,6 +1,6 @@
 # InternShield overnight build: orchestrator brief
 
-Himesh approved this plan on Oct 21, 2026 ~1:10 AM ET and is asleep. Run it end to end without asking questions. Where a skill says to pause for the learner, record the item under Hands-on Checkpoints / Final Review as "pending Himesh (morning)" and continue. He chose FAST MODE. He approved scope, PRD and spec already; treat this brief as his approval of the checklist (set checklist status: approved after writing it).
+The owner approved this overnight plan on Oct 21, 2026. The historical workflow recorded learner checkpoints as pending owner review and continued. The owner chose fast mode and had approved the scope, PRD, and spec.
 
 You are the orchestrator (Opus). Follow .claude/skills/5-build/SKILL.md for the checklist format, verification, commits and git safety, adapted as below. Source of truth: devpost/scope.md, prd.md, spec.md, api-facts.md, scam-detection-research.md.
 
@@ -20,11 +20,11 @@ You are the orchestrator (Opus). Follow .claude/skills/5-build/SKILL.md for the 
 6. Polish only if everything above is green and time/usage remain: motion, empty/error states, a11y pass.
 
 ## Checklist slices (write them in the 5-build template format)
-1 Scaffold + contracts + stub flow showing a fixture report. 2 Scoring engine + test set. 3 Server routes (mocked) with limits/caps. 4 UI screens on fixtures. 5 Live integration of both examples. 6 Review fixes + README. Record the parallel strategy under Revisions as a deliberate deviation approved by Himesh.
+1 Scaffold + contracts + stub flow showing a fixture report. 2 Scoring engine + test set. 3 Server routes (mocked) with limits/caps. 4 UI screens on fixtures. 5 Live integration of both examples. 6 Review fixes + README. Record the parallel strategy under Revisions as a deliberate deviation approved by the project owner.
 
 ## Hard rules
 - Never git push, never deploy, never touch remotes. Local commits only. Stage only intended files; check every diff for secrets. Never commit .env.local or devpost/learner-profile.md.
-- Never put Himesh's real recruiter/scam messages anywhere.
+- Never put the owner's real recruiter/scam messages anywhere.
 - No --dangerously-skip-permissions behavior; stay within allowed tools.
 - Don't add anything from scope.md "Explicitly Cut". Tier 2 stays hidden.
 - Keep your own context small: workers report in <=10 lines; track progress in devpost/checklist.md and git, and tick boxes immediately.
@@ -32,4 +32,4 @@ You are the orchestrator (Opus). Follow .claude/skills/5-build/SKILL.md for the 
 - If you hit something you cannot safely fix, record it in devpost/build-log.md and move to the next independent task.
 - Append a short timestamped progress line to devpost/build-log.md at each phase change.
 
-When finished, write devpost/build-summary.md: what works, how to run it (npm run dev), test results, what's pending Himesh's hands-on checks, known issues.
+When finished, write devpost/build-summary.md: what works, how to run it (npm run dev), test results, what's pending the owner's hands-on checks, known issues.

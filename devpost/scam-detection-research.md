@@ -1,6 +1,6 @@
 # InternShield: Scam-Detection Design Review
 
-*Prepared Tue Oct 20, 2026, 9:30 pm ET, for Himesh and the Coder teammate. Deadline: Mon Oct 26, 5:00 pm EDT, about 5.8 days away. Every statistic below links to its source. Anything I couldn't confirm is marked **[unverified]**.*
+*Prepared Tue Oct 20, 2026, 9:30 pm ET, for the project owner and the Coder teammate. Deadline: Mon Oct 26, 5:00 pm EDT, about 5.8 days away. Every statistic below links to its source. Anything I couldn't confirm is marked **[unverified]**.*
 
 ---
 

@@ -113,7 +113,7 @@ This is a synthesis of the official facts above plus well-known guides. Where on
 
    Show these in the "Checked by code" row the app already has.
 3. **The LLM only grades what code can't**, such as quality of reasoning or clarity of trade-offs, and **must return a verbatim quote as evidence for each band** (the existing quote check). **If a quote is missing, cap that axis at "Developing" and label it "not enough evidence".** Prometheus-style analytic rubrics (a per-criterion rubric plus an optional reference answer, then a score) are the evidence-backed approach: https://arxiv.org/abs/2310.08491 . G-Eval (generated evaluation steps plus form filling): https://arxiv.org/abs/2303.16634
-4. **Calibration:** keep a tiny golden set of 2 made-up answers per round per band. Himesh labels them. Add a Vitest/eval script that checks the model's band agrees within ±1 before shipping a prompt change. This mirrors the 26-message scam eval.
+4. **Calibration:** keep a tiny golden set of 2 made-up answers per round per band. the project owner labels them. Add a Vitest/eval script that checks the model's band agrees within ±1 before shipping a prompt change. This mirrors the 26-message scam eval.
 5. **Fairness for non-native speakers (many of the users are international students):**
    - LLM essay scoring shows measurable bias against English-language learners: https://aclanthology.org/2024.bea-1.7.pdf ; https://doi.org/10.1016/j.caeai.2024.100234 ; a 2025 follow-up found GPT-4o errors rose when it inferred non-native writers: https://arxiv.org/abs/2504.21330
    - Mitigations:

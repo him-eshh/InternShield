@@ -1,5 +1,17 @@
 /* Shell stream styles (home, nav, profile, check/report). Colors via app/theme.css tokens only. */
 
+@keyframes mark-evidence { from { background-size: 0 40%; } to { background-size: 100% 40%; } }
+.hero-mark {
+  background-image: linear-gradient(var(--highlight-swash), var(--highlight-swash));
+  background-repeat: no-repeat;
+  background-position: 0 93%;
+  background-size: 100% 40%;
+  animation: mark-evidence 220ms var(--ease-out) both;
+}
+.hero-mark:nth-of-type(2) { animation-delay: 440ms; }
+.hero-mark:nth-of-type(3) { animation-delay: 580ms; }
+@media (prefers-reduced-motion: reduce) { .hero-mark { animation: none; } }
+
 /* The full desktop navigation fits at 1024px; tablets keep the bottom bar. */
 @media (min-width: 768px) and (max-width: 1023px) {
   :root { --nav-bottom: calc(56px + env(safe-area-inset-bottom)); }

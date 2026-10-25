@@ -1,11 +1,11 @@
 "use client";
-import { MessageSquareText, ChevronRight } from "lucide-react";
+import { MessageSquareText, ChevronRight, ClipboardPaste, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { autofill } from "@/lib/autofill";
 import { EXAMPLES } from "@/lib/examples";
 import { MAX_MESSAGE_CHARS, type Source, type Stage } from "@/lib/types";
 import ScreenshotUpload from "./tiers/ScreenshotUpload";
-import { btnPrimary, linkClass, pillOff, pillOn } from "./ui";
+import { btnPrimary, btnSecondary, linkClass, pillOff, pillOn } from "./ui";
 
 export interface CheckSubmit {
   text: string;
@@ -56,6 +56,7 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
   const [trimmed, setTrimmed] = useState(false);
   const [fromShot, setFromShot] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
+  const [clipboardError, setClipboardError] = useState<string | null>(null);
   // Sender/Company stay hidden until autofill finds something or the user asks.
   const [showFields, setShowFields] = useState(!!(initial?.form.sender || initial?.form.company));
   const areaRef = useRef<HTMLTextAreaElement>(null);
@@ -75,6 +76,7 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
     setText(next);
     setExample(null);
     setHint(null);
+    setClipboardError(null);
     const g = autofill(next);
     const f = { ...filled };
     if (!touched.sender) {
@@ -119,50 +121,71 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
     setFromShot(false);
     setHint(null);
     setShowFields(true);
-    onSubmit({ text: ex.text, form: { sender: ex.form.sender, company: ex.form.company }, source: ex.source, stage: ex.stage, exampleId: id });
+    areaRef.current?.focus();
+  }
+
+  function clearForm() {
+    setText(""); setSender(""); setCompany(""); setSource(null); setStage(null);
+    setExample(null); setTrimmed(false); setFromShot(false); setHint(null); setClipboardError(null);
+    setFilled({ sender: false, company: false }); setShowFields(false);
+    setTouched({ sender: false, company: false, source: false, stage: false });
+    areaRef.current?.focus();
+  }
+
+  async function pasteFromClipboard() {
+    try {
+      const copied = await navigator.clipboard.readText();
+      if (!copied.trim()) { setClipboardError("The clipboard is empty. Copy the message, then try again."); return; }
+      onTextChange(copied);
+      areaRef.current?.focus();
+    } catch {
+      setClipboardError("Clipboard access was blocked. Paste the message into the box instead.");
+    }
   }
 
   const inputCls = "mt-1.5 min-h-12 w-full rounded-[14px] border border-border bg-card px-4 text-[17px] placeholder:text-muted";
   const noSender = text.trim().length > 0 && !sender.trim();
   const contextSet = (source ? 1 : 0) + (stage ? 1 : 0);
   const describedBy = hint ? "message-hint" : trimmed ? "message-trimmed" : undefined;
+  const issue = messageIssue(text);
 
   return (
-    <section data-tool="check" className="mx-auto max-w-[640px] px-6 py-10 sm:py-16">
-      <span className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-tool-tint text-tool-strong"><MessageSquareText size={25} strokeWidth={1.75} aria-hidden="true" /></span>
-      <h1 className="text-[clamp(36px,6vw,72px)] font-bold leading-[1.05] tracking-[-0.025em]">Is this offer real?</h1>
-      <p className="mt-4 max-w-[42ch] text-[17px] leading-relaxed text-muted">Paste a recruiter message. See the warning signs, the evidence, and what to do next.</p>
+    <section data-tool="check" className="mx-auto max-w-[1100px] px-4 py-8 sm:px-6 sm:py-12">
+      <header className="rounded-tr-[28px] bg-tool-deep px-5 py-6 text-on-deep sm:px-8"><div className="flex items-start gap-4"><MessageSquareText size={30} strokeWidth={1.75} aria-hidden="true" className="mt-1 shrink-0" /><div><p className="text-sm font-medium opacity-85">Check a message</p><h1 className="mt-1 font-display text-[clamp(2rem,4vw,3rem)] font-bold leading-tight">What does this message actually say?</h1><p className="mt-2 max-w-[62ch] opacity-90">Paste the whole recruiter message. We’ll mark the evidence, what we could not verify, and what to do next.</p></div></div></header>
       <form
-        className="mt-8"
+        className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(240px,1fr)]"
         noValidate
         onSubmit={(e) => {
           e.preventDefault();
           submit();
         }}
       >
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+        <div className="min-w-0"><div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
           <label htmlFor="message" className="flex items-center text-[15px] font-medium">
             The message
             {example && <FilledTag label="Example" />}
             {fromShot && !example && <FilledTag label="from screenshot" />}
           </label>
-          <ScreenshotUpload
+          <div className="flex flex-wrap items-center gap-2"><button type="button" className={`${btnSecondary} !min-h-11 !w-auto !px-3 !py-1.5 !text-sm`} onClick={() => void pasteFromClipboard()}><ClipboardPaste size={16} aria-hidden="true" />Paste from clipboard</button><ScreenshotUpload
             onText={(t) => {
               onTextChange(t, true);
             }}
-          />
+          /></div>
         </div>
         <textarea
           id="message"
           ref={areaRef}
           value={text}
           onChange={(e) => onTextChange(e.target.value)}
+          onKeyDown={(e) => { if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); submit(); } }}
           placeholder="Paste the whole message here"
           rows={8}
           aria-invalid={hint ? true : undefined}
           aria-describedby={describedBy}
-          className="mt-1.5 w-full resize-y rounded-[18px] border border-border bg-card p-5 text-[17px] leading-relaxed placeholder:text-muted [field-sizing:content] min-h-48 max-h-[60dvh]"
+          className="ruled mt-2 min-h-56 max-h-[60dvh] w-full resize-y rounded-[6px] border border-border-strong bg-paper-2 px-5 py-[17px] font-mono text-[15px] leading-7 placeholder:text-fg-3 [field-sizing:content]"
         />
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm text-fg-2"><span>{text.length > 200 ? `${text.length.toLocaleString()} of ${MAX_MESSAGE_CHARS.toLocaleString()} characters` : "Include the sender, links, and the full request when you can."}</span>{text && <button type="button" className="inline-flex min-h-11 items-center gap-1 px-2 text-tool-strong underline-offset-4 hover:underline" onClick={clearForm}><X size={16} aria-hidden="true" />Clear</button>}</div>
+        {clipboardError && <p role="alert" className="mt-2 text-sm">{clipboardError}</p>}
         {hint && (
           <p id="message-hint" role="alert" className="mt-2 text-[14px] text-text">
             {hint}
@@ -273,21 +296,15 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
           </div>
         </details>
 
-        <div className="mt-10 flex flex-col items-center gap-4">
-          <button type="submit" className={`${btnPrimary} w-full sm:w-auto sm:min-w-56`} aria-describedby={hint ? "message-hint" : undefined}>
-            Check it
+        <div className="mt-8 flex flex-col items-start gap-4">
+          <button type="submit" className={`${btnPrimary} w-full sm:w-auto sm:min-w-56`} disabled={!!issue} aria-describedby={issue ? "submit-reason" : hint ? "message-hint" : undefined} title="Ctrl or Command + Enter">
+            Check this message
           </button>
-          <p className="text-[15px] text-muted">
-            Try an example:{" "}
-            <button type="button" className={`${linkClass} !text-tool-strong inline-flex min-h-11 items-center`} onClick={() => tryExample("scam")}>
-              a scam
-            </button>
-            {" · "}
-            <button type="button" className={`${linkClass} !text-tool-strong inline-flex min-h-11 items-center`} onClick={() => tryExample("real")}>
-              a real one
-            </button>
-          </p>
+          {issue && <p id="submit-reason" className="text-sm text-fg-2">{issue}</p>}
+          <p className="text-sm text-fg-2">Press Ctrl or Command + Enter to check.</p>
         </div>
+        </div>
+        <aside className="border-t border-rule pt-5 lg:sticky lg:top-6"><h2 className="font-display text-xl">Try a made-up example</h2><p className="mt-2 text-sm text-fg-2">The examples fill the sheet so you can see what gets checked before submitting.</p><div className="mt-4 flex flex-wrap gap-2"><button type="button" className={`${pillOff} !w-auto`} onClick={() => tryExample("scam")}>A suspicious offer</button><button type="button" className={`${pillOff} !w-auto`} onClick={() => tryExample("real")}>An ordinary update</button></div><p className="mt-7 border-l-2 border-tool pl-4 text-sm text-fg-2">Your message is sent to AI and search services for these checks. Extracted facts may be cached temporarily in server memory; your report is saved on this device.</p></aside>
       </form>
     </section>
   );

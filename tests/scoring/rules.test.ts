@@ -10,6 +10,12 @@ const criticals = (r: Report) => r.flags.filter((f) => f.critical).map((f) => f.
 const run = (text: string, source: Source | null = null) => score(input({ text, source }));
 
 describe("rule 1: reimbursement trap (equipment)", () => {
+  it("does not let an AI-only critical label turn a greeting into a high-risk verdict", () => {
+    const text = "Hello candidate. Let's talk about the role.";
+    const report = score(input({ text, facts: facts({ asks: [{ kind: "pay_fee", quote: "Hello candidate" }] }) }));
+    expect(criticals(report)).toEqual([]);
+    expect(report.level).toBe("low");
+  });
   it("'buy it, we'll reimburse you' keeps buy_equipment critical", () => {
     const r = run("Congrats on the offer. Please buy a MacBook laptop through our approved vendor and we'll reimburse the full cost with your first paycheck.");
     expect(criticals(r)).toContain("buy_equipment");
@@ -50,9 +56,10 @@ describe("rule 2: money flowing the wrong way", () => {
     expect(r.score).toBeGreaterThanOrEqual(85);
   });
 
-  it("mobile check deposit is critical", () => {
+  it("mobile deposit without an onward payment is not critical", () => {
     const r = run("We will send your equipment budget, and you can use mobile deposit to put it in your account.");
-    expect(criticals(r)).toContain("money_wrong_way");
+    expect(criticals(r)).not.toContain("money_wrong_way");
+    expect(criticals(r)).not.toContain("deposit_check");
   });
 
   it("'use your personal bank account' to receive payments is critical", () => {

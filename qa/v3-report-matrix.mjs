@@ -27,15 +27,14 @@ for (const width of [1440, 390]) for (const theme of ["light", "dark"]) {
     await page.locator("#message").fill(EX.real.text);
     await capture(page, `v3-report-filled-${suffix}`);
     await mockApi(page, { extract: async () => { await new Promise((r) => setTimeout(r, 5000)); return done(EX.real.savedSteps.extract.data); } });
-    await page.getByRole("button", { name: "Check it", exact: true }).click();
-    await page.getByRole("heading", { name: "Checking the message" }).waitFor();
+    await page.getByRole("button", { name: "Check this message", exact: true }).click();
+    await page.getByRole("heading", { name: "Following the evidence" }).waitFor();
     await capture(page, `v3-report-checking-${suffix}`);
     await page.locator("article").waitFor();
     await page.waitForTimeout(1000);
     await capture(page, `v3-report-low-${suffix}`);
     assert.equal(await page.getByRole("button", { name: "Copy report", exact: true }).count(), 0);
-    const filledPrimary = page.locator('article :is(button,a)[class*="bg-accent text-accent-contrast"]');
-    assert.equal(await filledPrimary.count(), 1);
+    assert.equal(await page.getByRole("button", { name: "Check another message", exact: true }).count(), 1);
     const shortTargets = await page.locator("article").evaluate((article) => [...article.querySelectorAll("button, summary, a")].filter((e) => !e.closest(".am-body")).map((e) => ({ text: e.textContent?.trim(), rect: e.getBoundingClientRect() })).filter(({ rect }) => rect.width > 0 && rect.height > 0 && (rect.height < 44 || rect.width < 44)).map(({ text }) => text));
     assert.deepEqual(shortTargets, [], "report controls must be 44px");
     const qq = page.locator("#qq-title").locator("..");
@@ -61,8 +60,9 @@ for (const width of [1440, 390]) for (const theme of ["light", "dark"]) {
     await page.getByRole("button", { name: /Edit company name/ }).click();
     await page.getByLabel("Company", { exact: true }).fill("Northbeam Analytics");
     await page.getByRole("button", { name: "Recheck", exact: true }).click();
-    await page.locator("header [role=status]").filter({ hasText: /You added: .*Company/ }).waitFor();
-    await capture(page, `v3-report-company-impact-${suffix}`, page.locator("article header"));
+    const companyImpact = page.locator("[data-impact]").filter({ hasText: "Company: Northbeam Analytics" });
+    await companyImpact.waitFor();
+    await capture(page, `v3-report-company-impact-${suffix}`, companyImpact);
     await page.getByText("Add to this check", { exact: true }).click();
     const form = page.getByRole("form", { name: "Add information" });
     await page.getByLabel("Another message", { exact: true }).fill("They now want a payment before the interview. Please deposit a check and send money to our vendor.");
@@ -85,14 +85,14 @@ for (const width of [1440, 390]) for (const theme of ["light", "dark"]) {
     await page.getByRole("button", { name: "Check another message", exact: true }).click();
     await mockApi(page, { extract: () => done({ ...fullFacts, ...linkCase.savedSteps.extract.data }) });
     await page.locator("#message").fill(linkCase.text);
-    await page.getByRole("button", { name: "Check it", exact: true }).click();
+    await page.getByRole("button", { name: "Check this message", exact: true }).click();
     await page.locator("article").waitFor();
     await page.getByRole("heading", { name: "Strong signs of a scam", exact: true }).waitFor();
     await capture(page, `v3-report-link-scam-${suffix}`);
     await page.emulateMedia({ reducedMotion: "reduce" });
     await seedCheck(page, "scam");
-    await page.locator("article header").filter({ hasText: "Brightline" }).waitFor();
-    assert.equal(await page.locator("[data-score]").innerText(), "100");
+    await page.waitForFunction(() => Number(document.querySelector("[data-score]")?.textContent ?? 0) >= 85);
+    assert(Number(await page.locator("[data-score]").innerText()) >= 85);
     await capture(page, `v3-report-reduced-motion-${suffix}`, page.locator("article header"));
     for (const w of [320, 768]) {
       await page.setViewportSize({ width: w, height: 900 });

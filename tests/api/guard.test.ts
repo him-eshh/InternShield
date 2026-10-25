@@ -11,7 +11,7 @@ vi.mock("groq-sdk", () => ({
 
 import { POST as explain } from "@/app/api/explain/route";
 import { POST as extract } from "@/app/api/extract/route";
-import { takeTavily, takeWikidata } from "@/lib/server/guard";
+import { guard, takeTavily, takeWikidata } from "@/lib/server/guard";
 
 function drain(take: () => { ok: boolean }): number {
   let n = 0;
@@ -67,6 +67,22 @@ describe("usage guard", () => {
     expect(res.status).toBe(413);
   });
 
+  it("stops reading an oversized streaming body without Content-Length", async () => {
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode("x".repeat(9000)));
+        controller.enqueue(new TextEncoder().encode("x".repeat(9000)));
+        controller.close();
+      },
+    });
+    const request = new Request("http://localhost:3000/api/explain", {
+      method: "POST", headers: { origin: "http://localhost:3000", "content-type": "application/json" }, body, duplex: "half",
+    } as RequestInit & { duplex: "half" });
+    const result = await guard(request, "explain");
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.response.status).toBe(413);
+  });
+
   it("rejects a message over 4000 characters (413)", async () => {
     const res = await extract(req("extract", { message: "a".repeat(4001) }));
     expect(res.status).toBe(413);
@@ -89,6 +105,15 @@ describe("usage guard", () => {
     expect(body.retryAfter).toBeGreaterThan(0);
     // A different visitor is unaffected.
     expect((await extract(req("extract", { message: MESSAGE }, { ip: "8.8.8.8" }))).status).toBe(200);
+  });
+
+  it("does not trust a caller-supplied forwarded IP outside a trusted production edge", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("VERCEL", "");
+    for (const ip of ["1.1.1.1", "2.2.2.2", "3.3.3.3"]) {
+      expect((await extract(req("extract", { message: MESSAGE }, { ip }))).status).toBe(200);
+    }
+    expect((await extract(req("extract", { message: MESSAGE }, { ip: "4.4.4.4" }))).status).toBe(429);
   });
 
   it("?fail=1 returns failed timeout (504) without calling anything", async () => {

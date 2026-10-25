@@ -2,7 +2,7 @@
 
 All 29 images personally reviewed. Screenshots remain outside the working tree.
 
-Root: `C:\my_projects\projects\InternShield\.git\internshield-relay\v3-shots\shell`
+Root: `[project root]\.git\internshield-relay\v3-shots\shell`
 
 - `shell-check-1440-dark.png`
 - `shell-check-1440-light.png`

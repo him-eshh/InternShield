@@ -150,21 +150,15 @@ describe("extract route", () => {
     expect(h.create).toHaveBeenCalledTimes(1);
   });
 
-  it("example text and cache hits do not count toward the daily cap", async () => {
+  it("caps altered examples while leaving exact cache hits free", async () => {
     vi.stubEnv("DAILY_CHECK_CAP", "1");
     h.create.mockReturnValue(groqOk(modelFacts()));
-    // Three example runs (different form values dodge the cache) use no cap.
-    for (const [i, company] of ["A", "B", "C"].entries()) {
-      const { res } = await call(EXAMPLES.scam.text, `3.3.3.${i}`, { company });
-      expect(res.status).toBe(200);
-    }
-    // First real check takes the single slot, its repeat is a cache hit.
-    expect((await call(MESSAGE, "4.4.4.4")).res.status).toBe(200);
-    expect((await call(MESSAGE, "4.4.4.5")).res.status).toBe(200);
-    // A different live check is over the cap.
-    const over = await call(`${MESSAGE} Reply soon.`, "4.4.4.6");
+    expect((await call(EXAMPLES.scam.text, "3.3.3.1", { company: "A" })).res.status).toBe(200);
+    expect((await call(EXAMPLES.scam.text, "3.3.3.2", { company: "A" })).res.status).toBe(200);
+    const over = await call(EXAMPLES.scam.text, "3.3.3.3", { company: "B" });
     expect(over.res.status).toBe(429);
     expect(over.body).toMatchObject({ status: "failed", reason: "limit" });
     expect(over.body.message).toMatch(/resting for today/);
+    expect(h.create).toHaveBeenCalledTimes(1);
   });
 });

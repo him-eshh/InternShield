@@ -78,6 +78,7 @@ describe("code-built review", () => {
     const checks = reviewChecks(s.activeQuestion!);
     expect(checks.find((k) => k.id === "edge")!.ok).toBe(true);
     expect(checks.find((k) => k.id === "complexity")!.ok).toBe(true);
+    expect(checks.find((k) => k.id === "complexity")!.text).toMatch(/verify the time and space costs/);
     expect(localReview(s.activeQuestion!).level).toBe("strong");
   });
 
@@ -97,6 +98,21 @@ describe("code-built review", () => {
     expect(good.filter((k) => k.id !== "tests").every((k) => k.ok)).toBe(true);
   });
 
+  it("does not praise SQL syntax clues when the computed result failed", () => {
+    let s = start("sql");
+    s = { ...s, activeQuestion: { ...s.activeQuestion!, item: { ...s.activeQuestion!.item, problemId: "sql-top-courses" } } };
+    s = answered(s, "I used grouping and NULL handling.", {
+      problemId: "sql-top-courses", language: "sql",
+      code: "SELECT c.title, COUNT(e.grade) FROM courses c JOIN enrollments e ON e.course_id=c.id WHERE e.grade IS NOT NULL GROUP BY c.title",
+      passed: 0, total: 1,
+    });
+    const checks = reviewChecks(s.activeQuestion!);
+    expect(checks.find((k) => k.id === "group")).toMatchObject({ ok: false });
+    expect(checks.find((k) => k.id === "null")).toMatchObject({ ok: false });
+    expect(checks.find((k) => k.id === "join")).toMatchObject({ ok: false });
+    expect(localReview(s.activeQuestion!).feedback.strength).toBe("Your query was checked against the expected result.");
+  });
+
   it("keeps STAR feedback for behavioral answers", () => {
     let s = answered(start("behavioral"), "We shipped a fix and things got better.");
     s = applyReview(s, { text: null, level: "ok", followUp: null, feedback: { summary: "", items: [{ index: 0, strength: "Clear story", improve: "Add a result", quote: "", star: { situation: true, task: true, action: true, result: false } }] } }, 6);
@@ -104,6 +120,14 @@ describe("code-built review", () => {
     expect(checks.find((k) => k.id === "star")!.text).toMatch(/Missing from your story: result/);
     expect(checks.find((k) => k.id === "own")!.ok).toBe(false);
     expect(checks.find((k) => k.id === "result")!.ok).toBe(false);
+  });
+
+  it("describes behavioral wording without inferring actions or results", () => {
+    const s = answered(start("behavioral"), "I remember room 42. The team had a meeting.");
+    const checks = reviewChecks(s.activeQuestion!);
+    expect(checks.find((k) => k.id === "own")!.text).toMatch(/first-person wording/);
+    expect(checks.find((k) => k.id === "result")!.text).toMatch(/mentioned a number; check/);
+    expect(checks.map((k) => k.text).join(" ")).not.toMatch(/concrete result|what you did yourself/);
   });
 
   it("applyLocalReview fills feedback and lets the session move on", () => {

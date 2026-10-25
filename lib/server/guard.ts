@@ -32,8 +32,35 @@ function allowedOrigins(): string[] {
 }
 
 function clientIp(req: Request): string {
-  const first = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return first || "local";
+  // Vercel overwrites this header at its edge. Outside Vercel production there
+  // is no trusted proxy contract, so use one conservative shared visitor bucket.
+  const header = process.env.VERCEL
+    ? req.headers.get("x-vercel-forwarded-for")
+    : process.env.NODE_ENV === "production" ? null : req.headers.get("x-forwarded-for");
+  const first = header?.split(",")[0]?.trim();
+  return first || "shared";
+}
+
+/** Read only up to the route cap, including when Content-Length is absent or false. */
+async function readLimitedText(req: Request, maxBytes: number): Promise<string | null> {
+  if (!req.body) return "";
+  const reader = req.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      void reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  return new TextDecoder().decode(bytes);
 }
 
 function reject(status: number, message: string): GuardResult {
@@ -72,11 +99,12 @@ export async function guard(req: Request, route: RouteName): Promise<GuardResult
 
   let text: string;
   try {
-    text = await req.text();
+    const bounded = await readLimitedText(req, maxBytes);
+    if (bounded === null) return reject(413, MESSAGES.big);
+    text = bounded;
   } catch {
     return reject(400, MESSAGES.bad);
   }
-  if (new TextEncoder().encode(text).length > maxBytes) return reject(413, MESSAGES.big);
 
   let body: unknown;
   try {

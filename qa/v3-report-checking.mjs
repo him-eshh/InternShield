@@ -8,8 +8,8 @@ for (const width of [1440, 390]) for (const theme of ["light", "dark"]) {
   try {
     await mockApi(page, { extract: async () => { await new Promise((r) => setTimeout(r, 5000)); return done(EX.real.savedSteps.extract.data); } });
     await page.locator("#message").fill(EX.real.text);
-    await page.getByRole("button", { name: "Check it", exact: true }).click();
-    await page.getByRole("heading", { name: "Checking the message", exact: true }).waitFor();
+    await page.getByRole("button", { name: "Check this message", exact: true }).click();
+    await page.getByRole("heading", { name: "Following the evidence", exact: true }).waitFor();
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
     await page.waitForTimeout(350);
     await page.screenshot({ path: `${process.env.QA_SHOTS}/v3-report-checking-${width}-${theme}.png`, fullPage: true });

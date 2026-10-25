@@ -6,7 +6,7 @@
 - Add a sender/message/screenshot from the report. Combined text is capped explicitly rather than silently dropping new evidence.
 - Explicit sender input takes priority over extraction for sender lookup; no scoring rules changed.
 - Persist updated report/input/answers and resolved explanation; never serialize the pending explanation promise.
-- Pending Himesh: none. All routine choices followed the approved brief.
+- Pending owner review: none. All routine choices followed the approved brief.
 
 ## Needs integration
 - Shell may replace the form lucide placeholder with CheckIllustration as planned.

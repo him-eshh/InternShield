@@ -71,6 +71,7 @@ describe("intel route", () => {
 
   it("falls back to a general search that excludes people sites when there is no official site", async () => {
     h.wiki.mockResolvedValue(null);
+    h.search.mockResolvedValue({ results: [{ title: "Acme resume tips", url: "https://careers.example/acme", content: "Show shipped projects in your resume." }] });
     h.create.mockReturnValue(claims([{ field: "emphasis", text: "Shipped projects", source: 1 }]));
     const res = await json({ company: "Acme", kind: "resume" });
     expect(res.data.resume).toEqual({ emphasis: ["Shipped projects"], notes: [] });
@@ -78,6 +79,28 @@ describe("intel route", () => {
     const [query, opts] = h.search.mock.calls[0];
     expect(query).toBe("Acme resume tips");
     expect(opts.excludeDomains).toContain("linkedin.com");
+  });
+
+  it("drops claims that cite a real hit but are not stated in its snippet", async () => {
+    h.create.mockReturnValue(claims([
+      { field: "round", text: "Guaranteed offer after one interview", source: 1 },
+      { field: "round", text: "Recruiter screen", source: 1 },
+      { field: "value", text: 42, source: 2 },
+    ]));
+    const res = await json({ company: "Acme", kind: "interview" });
+    expect(res.data.interview.rounds).toEqual(["Recruiter screen"]);
+    expect(res.data.values).toBeUndefined();
+    expect(res.data.sources).toEqual([{ label: "How we hire | Acme", url: "https://acme.com/careers/how-we-hire" }]);
+  });
+
+  it("does not turn a negated source phrase into a positive interview stage", async () => {
+    h.search.mockResolvedValue({ results: [{ title: "Acme hiring", url: "https://acme.com/hiring", content: "No technical interview for interns. Recruiter screen first." }] });
+    h.create.mockReturnValue(claims([
+      { field: "round", text: "Technical interview", source: 1 },
+      { field: "round", text: "Recruiter screen", source: 1 },
+    ]));
+    const res = await json({ company: "Acme", kind: "interview" });
+    expect(res.data.interview.rounds).toEqual(["Recruiter screen"]);
   });
 
   it("returns limited without calling anything when unconfigured", async () => {

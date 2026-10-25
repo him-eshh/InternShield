@@ -1,4 +1,4 @@
-import { ArrowRight, CircleMinus, CirclePlus, Equal, Scale, TextCursorInput } from "lucide-react";
+import { ArrowRight, ChevronDown, CircleMinus, CirclePlus, Equal, Scale, TextCursorInput } from "lucide-react";
 import { impactLines, scoreLine, type AnswerImpact, type ImpactLine } from "@/lib/impact";
 
 const MAX_ROWS = 4;
@@ -22,11 +22,11 @@ export default function ImpactCard({ impact }: { impact: AnswerImpact }) {
           <p className="mt-0.5 text-[16px] font-semibold leading-snug [overflow-wrap:anywhere]">{impact.label}</p>
         </div>
       </div>
-      <div className="mt-3 border-t border-tool/25 pt-3">
-        <p className="flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.12em] text-tool-strong">
+      <details className="group mt-3 border-t border-tool/25 pt-3">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-[13px] font-semibold text-tool-strong [&::-webkit-details-marker]:hidden"><span className="flex items-center gap-2">
           <ArrowRight size={14} aria-hidden="true" />
           What changed
-        </p>
+        </span><ChevronDown size={17} aria-hidden="true" className="transition-transform group-open:rotate-180" /></summary>
         <p className="mt-1 text-[16px] font-semibold leading-snug tabular-nums [overflow-wrap:anywhere]">{scoreLine(impact)}</p>
         <ul className="mt-2 space-y-2">
           {lines.map((l) => {
@@ -40,7 +40,7 @@ export default function ImpactCard({ impact }: { impact: AnswerImpact }) {
           })}
           {hidden > 0 && <li className="pl-6 text-[14px] text-fg-2">and {hidden} more, listed in the evidence below</li>}
         </ul>
-      </div>
+      </details>
     </div>
   );
 }

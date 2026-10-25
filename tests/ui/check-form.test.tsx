@@ -5,12 +5,14 @@ import CheckForm, { messageIssue, type CheckSubmit } from "@/components/CheckFor
 const noop = () => {};
 
 describe("CheckForm (C8)", () => {
-  it("keeps Check it enabled when the box is empty", () => {
+  it("explains why checking is unavailable until a message is pasted", () => {
     const html = renderToStaticMarkup(<CheckForm initial={null} onSubmit={noop} />);
     const btn = html.match(/<button type="submit"[^>]*>/)?.[0] ?? "";
     expect(btn).not.toBe("");
-    expect(btn).not.toMatch(/\sdisabled(=|\s|>)/); // the attribute, not Tailwind's disabled: variant
-    expect(html).not.toContain("Paste a message first");
+    expect(btn).toMatch(/\sdisabled(=|\s|>)/);
+    expect(html).toContain("Check this message");
+    expect(html).toContain('id="submit-reason"');
+    expect(html).toContain("Paste a message to check.");
   });
 
   it("flags empty and too-short text with an inline hint, accepts real text", () => {

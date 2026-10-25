@@ -1,6 +1,6 @@
 # InternShield v2, stream CHECK (worktree `InternShield-v2-check`, branch `v2-check`)
 
-Himesh approved the v2 plan on Oct 22, 2026 and wants it done by **Fri Oct 23 night** (deadline Mon Oct 26, 5 PM ET; the weekend is buffer). Run it end to end without asking questions. Anything needing his decision: "Pending Himesh" in your log, then continue.
+The project owner approved the v2 plan on Oct 22, 2026 and wants it done by **Fri Oct 23 night** (deadline Mon Oct 26, 5 PM ET; the weekend is buffer). Run it end to end without asking questions. Anything needing his decision: "Pending owner review" in your log, then continue.
 
 **Your area: the scam check, end to end** — scoring rules, eval set, extraction (company vs department), lookups (Wikidata before Tavily), quick questions, link checks, and every screen of the check: check form, checking state, report (ring, verdict, reasons, evidence, questions, recovery card, annotated message, footer), intro, logo. The `tools` stream builds resume tailoring, interview, screenshot upload and tracker at the same time in another worktree. Integration merges both afterwards.
 
@@ -101,7 +101,7 @@ Commit `V2 check 9: intro and ring logo`.
 - Reviewer (Opus, read-only) full pass on `git diff v2-base...v2-check` vs this brief and findings; fix blockers and should-fixes.
 - Full screenshot pass of every check screen: check form (empty, filled, error), checking, report low/medium/high (both "Try an example" choices plus a link-scam case and a score-0 case), quick questions before/after answering, recovery card open, company chip editing, annotated message (desktop + mobile), footer on each level, intro, logo/OG — 1440 + 390, light + dark, plus reduced-motion report shots.
 - Gates green; both "Try an example" flows land in their levels; stop servers; ports clear.
-- Write `devpost/v2-check-summary.md`: what's built per phase (with ✓/✗ against this brief), rule list with weights, eval results (N/N main, held-out confusion matrix, FP rate), existing assertions changed (and why), screenshots index, "Needs integration", "Pending Himesh", known issues.
+- Write `devpost/v2-check-summary.md`: what's built per phase (with ✓/✗ against this brief), rule list with weights, eval results (N/N main, held-out confusion matrix, FP rate), existing assertions changed (and why), screenshots index, "Needs integration", "Pending owner review", known issues.
 - Commit `V2 check summary` (this exact subject start tells the launcher you are done). Exit.
 
 Estimated: ~26 h of agent work; with parallel workers ~11-14 h wall.
@@ -111,7 +111,7 @@ Estimated: ~26 h of agent work; with parallel workers ~11-14 h wall.
 - The other stream is building at the same time in a sibling worktree. **Only edit files in your ownership table.** If you truly need a change in a file you don't own, don't make it: write it under "Needs integration" in your log (file, exact change, why) and work around it (wrapper, prop, local helper). The launcher logs every file you change outside your table.
 - Shared files are frozen for both streams: `package.json`, `package-lock.json`, configs (`next.config.ts`, `tsconfig.json`, `eslint.config.mjs`, `vitest.config.ts`), `.gitattributes`, `app/globals.css`, `app/layout.tsx`, `components/App.tsx`, `components/ProfileChip.tsx`, `components/MotionProvider.tsx`, `lib/constants.ts`, `lib/server/guard.ts`, `.env.example`, `CLAUDE.md`, `qa/lib.mjs`, `qa/ports.mjs`, `tests/shared/**`. Global CSS goes only in your `app/v2-<stream>.css`. New shared-looking types go in `lib/v2/<stream>-types.ts`.
 - No new dependencies (setup installed motion, sql.js, @codemirror/lang-sql and friends). If something is truly missing, log it under "Needs integration" instead.
-- Track progress in `devpost/v2-<stream>-log.md` (create it): a checklist of every phase item `[ ]`/`[x]`, each bug (id, steps, cause, fix, test, commit), decisions, "Needs integration", "Pending Himesh". Keep your own context small: rely on the log and git, not memory.
+- Track progress in `devpost/v2-<stream>-log.md` (create it): a checklist of every phase item `[ ]`/`[x]`, each bug (id, steps, cause, fix, test, commit), decisions, "Needs integration", "Pending owner review". Keep your own context small: rely on the log and git, not memory.
 - **Each phase ends with:** reviewer pass on the phase diff -> fix blockers -> all gates green -> screenshots of every changed screen -> commit `V2 <stream> N: <what>` -> tick the log. Never leave a phase half-committed; if a phase item can't be finished, hide or revert just that item and log why.
 - **Priority order is the phase order.** If you run low on usage or time, finish and commit the current phase cleanly, skip to the final phase, and list what's left.
 
@@ -125,14 +125,14 @@ npm run eval        # every labeled case lands in its level; the original 26 fil
 ```
 - `lib/scoring` and `eval/messages` were frozen since tag `core-v1`; v2 changes to scoring are now approved **for the check stream only**, but every original eval case must stay correct and every existing scoring test must keep passing; if an existing test's expectation must change because a rule was deliberately changed, change only that assertion and log it (test, old, new, why).
 
-## Screenshots (test proof, Himesh reviews them)
+## Screenshots (test proof, the project owner reviews them)
 - Use the `qa/` Playwright harness (`qa/lib.mjs`: `open`, `mockApi`, `shot`, `variants`, `overflowX`). Every `/api` call is mocked; this worktree has no `.env.local`, so live calls are impossible here by design. Add your scripts as `qa/v2-<stream>-*.mjs` only.
 - Start your own dev server on `$QA_PORT` (`npx next dev -p $QA_PORT`, record the PID), use `QA_BASE`; screenshots go to `$QA_SHOTS` (already set; never into the repo, never commit images).
 - For every changed feature: 1440 and 390 widths, light and dark (`variants`), plus one `reducedMotion: "reduce"` shot of anything animated. Name `NN-feature-state-width-theme.png`. Check each image yourself (Read it): look for invisible/blank sections, clipped text, sideways scroll (`overflowX` must be 0 at 390 and 320), unreadable dark-mode colors, purple, overlapping elements. The frontend is judged visually, not just by tests.
 - Capture console errors/warnings per screen; zero new errors.
-- Stop every server you start, then `node qa/ports.mjs` must show nothing in `$QA_PORT_RANGE`. Never kill processes you didn't start (Himesh's Codex, Tabbit and Claude desktop apps, or the other stream's servers on the other port range).
+- Stop every server you start, then `node qa/ports.mjs` must show nothing in `$QA_PORT_RANGE`. Never kill processes you didn't start (the owner's Codex, Tabbit and Claude desktop apps, or the other stream's servers on the other port range).
 
-## Himesh's product rules (apply everywhere)
+## the owner's product rules (apply everywhere)
 - UI text concise: short labels, no sentences that repeat the label or explain the obvious.
 - No "safe", "legit" or "guaranteed" verdicts. No celebratory moment on a low score.
 - Look: "Calm Instrument" (findings 06): Inter/system font, slightly blue-tinted greys, ONE blue accent, green/amber/red only for results, no purple anywhere (including code themes), no glassy glow, no emoji clutter, no stock shield icons, no shadcn defaults. Motion only via `motion/react` with the existing `MotionConfig reducedMotion="user"`; never scroll-reveal, never hide content until scrolled, no bounce on scam results, no `transition: all`.

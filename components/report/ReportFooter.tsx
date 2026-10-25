@@ -50,7 +50,7 @@ export default function ReportFooter({ report, careersUrl, officialLink, source,
       </div>
       <details className="group w-full max-w-[520px] text-left">
         <summary className="mx-auto flex min-h-11 w-fit cursor-pointer list-none items-center gap-1.5 rounded-full px-3 text-[15px] font-medium text-fg-2 hover:text-fg [&::-webkit-details-marker]:hidden">
-          {low ? "Report a message" : "Report this scam"}
+          {low ? "Report a message" : "Report a suspicious message"}
           <ChevronDown size={16} aria-hidden="true" className="transition-transform duration-200 group-open:rotate-180" />
         </summary>
         <div className="mt-2 flex flex-wrap justify-center gap-2">

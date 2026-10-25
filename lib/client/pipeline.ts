@@ -3,6 +3,8 @@
 import { EXAMPLES } from "../examples";
 import { fallbackExplanation } from "../explainFallback";
 import { score } from "../scoring/score";
+import { backstop, type BackstopId } from "../scoring/backstop";
+import { cleanText } from "../scoring/unicode";
 import type {
   ApiResponse,
   CompanyData,
@@ -41,6 +43,13 @@ const TIMEOUTS: Record<StepKey, number> = {
   posting: 10_000,
   explain: 10_000,
 };
+
+// Extraction is fallible. A model's "not a job" answer cannot hide a concrete
+// payment, forwarding, credential or remote-access request in the pasted text.
+const DECISIVE_RAW_REQUESTS = new Set<BackstopId>([
+  "pay_fee", "buy_equipment", "deposit_check", "gift_cards", "crypto_or_task_deposit",
+  "reship_or_forward", "money_wrong_way", "risky_run", "sensitive_data",
+]);
 
 export interface PipelineInput {
   text: string;
@@ -225,7 +234,8 @@ export async function runPipeline(
   }
   const facts = extract.status === "done" ? extract.data : null;
 
-  if (facts && !facts.isJobMessage) {
+  const decisiveRawRequest = backstop(cleanText(text).text).some((hit) => DECISIVE_RAW_REQUESTS.has(hit.id));
+  if (facts && !facts.isJobMessage && !decisiveRawRequest) {
     const steps: StepResults = {
       extract,
       company: { status: "skipped", reason: "needs step 1" },

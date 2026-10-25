@@ -19,7 +19,7 @@ lint clean, tsc clean, **430 tests** (32 files), build OK, **eval 26/26**, `git 
 - The previous session stopped mid-build. Its uncommitted worker output was committed as WIP (`d94837e`) and finished here.
 - There were two review passes. Pass 1 found 1 blocker: a hint saved a fake "0 of 5 passed" result. Pass 2 found no blockers. All blockers and should-fixes were fixed, plus most nits.
 
-## Needs Himesh's hands-on check
+## Needs the owner's hands-on check
 - Behavioral round for a made-up posting: give one weak and one strong STAR answer, then read the quotes.
 - Coding: solve one problem in Python (first load takes a few seconds) and one in JavaScript. Write an infinite loop and watch it get stopped.
 - Design: build client → server → database + cache using only the keyboard, export the PNG, then ask for a follow-up.

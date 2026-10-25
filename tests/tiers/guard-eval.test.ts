@@ -28,9 +28,9 @@ const CASES: Case[] = [
   [L4, "Double-checked weekly inventory counts at Maple Grocery", "ok"],
   [L5, "Built a Python script to clean survey data for the psychology lab", "ok"],
   [L5, "Wrote a Python script that cleaned the psych lab's survey data", "ok"],
-  [L5, "Built a Python script that cleaned survey data with machine learning", "ok"], // ML alias in resume
-  [L5, "Built a PostgreSQL-backed Python script that cleaned survey data", "ok"], // Postgres alias
-  [L5, "Built a Python script in Microsoft Excel workflows to clean survey data", "ok"], // Excel alias
+  [L5, "Built a Python script that cleaned survey data with machine learning", "block"], // ML elsewhere is not evidence for this project
+  [L5, "Built a PostgreSQL-backed Python script that cleaned survey data", "block"], // Postgres elsewhere is not evidence for this project
+  [L5, "Built a Python script in Microsoft Excel workflows to clean survey data", "block"], // Excel elsewhere is not evidence for this project
   [L4, "Double-checked inventory counts each week at Maple Grocery, one-on-one with new staff", "ok"],
   [L3, "Worked on a team of 4 to test a mobile app, 24/7 support rotation", "ok"],
   [L5, "Built a Python script that cleaned SQL survey data", "ok", { facts: ["SQL"] }], // confirmed fact
@@ -74,6 +74,25 @@ describe("guard v2 eval (40 made-up pairs)", () => {
 });
 
 describe("guard v2 details", () => {
+  it("blocks another bullet's employer, metric and skill from moving into this experience", () => {
+    const r = guardRewrite({
+      resume: RESUME,
+      original: L5,
+      rewrite: "Built a Python and Figma script for Maple Grocery that cleaned survey data for 40 volunteers",
+      posting: null,
+    });
+    expect(r.tier).toBe("block");
+    expect(r.issues).toEqual(expect.arrayContaining([
+      { kind: "skill", token: "Figma" },
+      { kind: "proper_noun", token: "Maple Grocery" },
+      { kind: "number", token: "40" },
+    ]));
+  });
+  it("accepts an alias backed by the same bullet and a user-confirmed posting skill", () => {
+    const original = "Built a Postgres report with Python";
+    const r = guardRewrite({ resume: RESUME, original, rewrite: "Built a PostgreSQL report with Python and SQL", facts: ["SQL"] });
+    expect(r.tier).toBe("ok");
+  });
   it("labels posting terms that aren't in the resume", () => {
     const r = guardRewrite({ resume: RESUME, original: L5, rewrite: "Built a Python and SQL script that fed Tableau", posting: POSTING });
     expect(r.fromPosting.sort()).toEqual(["SQL", "Tableau"]);

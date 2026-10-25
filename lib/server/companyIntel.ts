@@ -1,6 +1,7 @@
 // Company intel for resume tailoring and interview practice.
 // Order: cache -> Wikidata (official site) -> Tavily on the official domain -> general Tavily search.
-// Claims come from Groq reading the search snippets; any claim without a valid source is dropped.
+// Claims come from Groq reading the search snippets; a source index alone is not
+// evidence. Keep only short claims whose words appear together in that snippet.
 // Never throws: capped, unconfigured or failed lookups return `limited: true` with whatever is known.
 import { getDomain } from "tldts";
 import { cacheGet, cacheSet, DAY } from "./cache";
@@ -79,16 +80,35 @@ Skip anything not in the snippets, any person's name, and rumors. Return {"claim
 
 const clean = (s: string) => s.replace(/\s+/g, " ").trim().slice(0, 140);
 const uniq = (xs: string[]) => [...new Set(xs.filter(Boolean))].slice(0, 6);
+const phrase = (s: string) => s.normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim().replace(/\s+/g, " ");
+/** A conservative evidence check: do not present a model paraphrase as verified source text. */
+function supported(text: string, hit: Hit): boolean {
+  const claim = phrase(text);
+  if (claim.length < 4) return false;
+  for (const source of [phrase(hit.title ?? ""), phrase(hit.content ?? "")]) {
+    let at = source.indexOf(claim);
+    while (at >= 0) {
+      // "No technical interview" is not evidence for "Technical interview".
+      const prefix = source.slice(Math.max(0, at - 50), at);
+      if (!/\b(?:no|not|never|without)\b(?:\s+\w+){0,3}\s*$/.test(prefix)) return true;
+      at = source.indexOf(claim, at + claim.length);
+    }
+  }
+  return false;
+}
 
 function shape(company: string, kind: IntelKind, officialSite: string | undefined, hits: Hit[], raw: string): CompanyIntel {
   let claims: { field: Field; text: string; source: number }[] = [];
   try {
-    claims = (JSON.parse(raw) as { claims?: typeof claims }).claims ?? [];
+    const parsed = JSON.parse(raw) as { claims?: unknown };
+    claims = Array.isArray(parsed.claims) ? parsed.claims : [];
   } catch {
     claims = [];
   }
   // Drop claims without a real source; renumber the sources actually cited.
-  const kept = claims.filter((c) => FIELDS.includes(c.field) && Number.isInteger(c.source) && hits[c.source - 1] && clean(c.text ?? ""));
+  const kept = claims.filter((c) => c && typeof c === "object" && FIELDS.includes(c.field) &&
+    typeof c.text === "string" && !!clean(c.text) && Number.isInteger(c.source) &&
+    !!hits[c.source - 1] && supported(c.text, hits[c.source - 1]));
   const used = [...new Set(kept.map((c) => c.source))];
   const pick = (f: Field) => uniq(kept.filter((c) => c.field === f).map((c) => clean(c.text)));
   const out: CompanyIntel = {

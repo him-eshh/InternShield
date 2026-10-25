@@ -2,14 +2,23 @@
 // /profile: four optional steps, each saves the moment you change it. Nothing in the app sends you back here.
 import { Check, ChevronDown, FileText, Plus, Trash2, Upload, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import * as m from "motion/react-m";
 import { readResume, spottedSkills } from "@/lib/client/resume";
 import { layoutLost, lineKind } from "@/lib/tiers/resumeLines";
 import type { Field, UserLevel } from "@/lib/types";
 import { ProfileIllustration } from "../illustrations";
+import ThemeToggle from "../ThemeToggle";
+import { useMotion } from "../motion/useMotion";
 import { FIELD_LABELS, LEVEL_NAMES } from "../ProfileSteps";
 import { useAppState } from "../shell/AppStateProvider";
-import { btnPrimary, card, chip, eyebrow, fieldInput, linkClass, pillOff, pillOn } from "../ui";
+import { btnPrimary, chip, eyebrow, fieldInput, linkClass, pillOff, pillOn } from "../ui";
 import { STEPS, resumeName, useProfileProgress, type StepId } from "./progress";
+const WHY: Record<StepId, string> = {
+  resume: "Tailor can suggest edits against the experience you actually wrote.",
+  roles: "Your target roles prefill the tools, so you enter them once.",
+  companies: "A target company can prefill practice and resume suggestions.",
+  about: "Your field and level help choose relevant examples.",
+};
 // resumeName is also used by the avatar in the nav.
 
 const ROLE_IDEAS = ["Software engineering intern", "Data analyst intern", "Product intern", "Marketing intern", "Finance intern", "Design intern"];
@@ -222,6 +231,7 @@ function AboutStep({ onSaved }: { onSaved: () => void }) {
 }
 
 export default function ProfilePage() {
+  const motion = useMotion();
   const { ready, profile, resume, prefs, setPrefs, clearAll } = useAppState();
   const prog = useProfileProgress();
   const [open, setOpen] = useState<StepId | null>(null);
@@ -261,9 +271,9 @@ export default function ProfilePage() {
       <div className="flex items-center gap-5">
         <div className="hidden shrink-0 sm:block"><ProfileIllustration size={132} /></div>
         <div>
-          <p className={eyebrow}>Profile</p>
-          <h1 className="mt-1 font-display text-[clamp(30px,5vw,44px)] font-extrabold leading-[1.08] tracking-[-0.03em]">Set up once, skip the typing</h1>
-          <p className="mt-2 max-w-[52ch] text-[16px] text-fg-2">Prefills Tailor and Practice. Stays on this device; only the AI calls that need it see it.</p>
+          <p className={eyebrow}>Your profile</p>
+          <h1 className="mt-1 font-display text-[clamp(30px,5vw,44px)] font-extrabold leading-[1.08] tracking-[-0.03em]">Your starting notes</h1>
+          <p className="mt-2 max-w-[52ch] text-[16px] text-fg-2">Saved on this device. Tailor and Practice may send relevant resume text to AI for suggestions and feedback.</p>
         </div>
       </div>
 
@@ -276,18 +286,18 @@ export default function ProfilePage() {
           aria-valuemax={prog.total}
           aria-valuenow={prog.count}
           aria-valuetext={`${prog.count} of ${prog.total} done`}
-          className="h-2 flex-1 overflow-hidden rounded-full bg-sunken"
+          className="flex flex-1 gap-1"
         >
-          <div className="h-full rounded-full bg-ink transition-[width] duration-500 ease-out" style={{ width: `${(prog.count / prog.total) * 100}%` }} />
+          {STEPS.map((step) => <span key={step.id} aria-hidden="true" className={`h-3 min-w-0 flex-1 rounded-[2px] ${prog.done[step.id] ? "bg-ink" : "bg-sunken"}`} />)}
         </div>
       </div>
 
-      <ol className="mt-5 flex flex-col gap-3">
+      <ol className="mt-5 flex flex-col border-t border-rule">
         {STEPS.map((s, i) => {
           const isOpen = open === s.id;
           const done = prog.done[s.id];
           return (
-            <li key={s.id} className={`${card} overflow-hidden`}>
+            <li key={s.id} className="overflow-hidden border-b border-rule bg-paper-2/45">
               <h2>
                 <button
                   type="button"
@@ -296,7 +306,7 @@ export default function ProfilePage() {
                   onClick={() => setOpen(isOpen ? null : s.id)}
                   className="flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left sm:px-5"
                 >
-                  <span aria-hidden="true" className={`num grid size-8 shrink-0 place-items-center rounded-full text-[14px] font-semibold ${done ? "bg-ink text-[var(--on-ink)]" : "border border-border-strong text-fg-2"}`}>
+                  <span aria-hidden="true" className={`num grid size-8 shrink-0 place-items-center rounded-[4px] text-[14px] font-semibold ${done ? "bg-ink text-[var(--on-ink)]" : "border border-border-strong text-fg-2"}`}>
                     {done ? <Check size={16} strokeWidth={2.25} /> : i + 1}
                   </span>
                   <span className="min-w-0 flex-1">
@@ -306,6 +316,7 @@ export default function ProfilePage() {
                       {summary[s.id]}
                     </span>
                   </span>
+                  <m.span key={`${s.id}-${done}`} aria-hidden="true" initial={done && !motion.reduce ? { scale: 1.2, rotate: -7 } : false} animate={{ scale: 1, rotate: -2 }} transition={motion.spring.stamp} className={`hidden shrink-0 rounded-[4px] border-2 px-2 py-0.5 font-mono text-xs font-bold sm:inline-flex ${done ? "border-ink-strong text-ink-strong" : "border-rule text-fg-2"}`}>{done ? "DONE" : "2 MIN"}</m.span>
                   {savedFlash === s.id && (
                     <span role="status" className={`${chip} animate-enter bg-ink-tint text-ink-strong`}>
                       <Check size={14} strokeWidth={2.25} aria-hidden="true" /> Saved
@@ -315,7 +326,8 @@ export default function ProfilePage() {
                 </button>
               </h2>
               {isOpen && (
-                <div id={`step-${s.id}`} className="animate-enter border-t border-border px-4 pb-5 pt-4 sm:px-5">
+                <div id={`step-${s.id}`} className="animate-enter border-t border-rule px-4 pb-5 pt-4 sm:px-5">
+                  <p className="mb-5 border-l-2 border-ink pl-3 text-sm text-fg-2">Why we ask: {WHY[s.id]}</p>
                   {s.id === "resume" && <ResumeStep onSaved={() => flash("resume")} />}
                   {s.id === "roles" && (
                     <ChipInput label="Target roles" items={prefs.roles} max={8} ideas={ROLE_IDEAS} placeholder="e.g. Backend intern" onChange={(roles) => { setPrefs({ ...prefs, roles }); flash("roles"); }} />
@@ -339,6 +351,8 @@ export default function ProfilePage() {
           );
         })}
       </ol>
+
+      <section aria-labelledby="appearance-h" className="mt-10 border-t border-rule pt-6"><h2 id="appearance-h" className="font-display text-xl">Appearance</h2><p className="mt-1 mb-3 text-sm text-fg-2">Choose the paper that is easiest for you to read.</p><ThemeToggle /></section>
 
       {(profile || resume || prefs.roles.length > 0 || prefs.companies.length > 0) && (
         <div className="mt-8 text-center text-[14px] text-fg-3">

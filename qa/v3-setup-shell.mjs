@@ -2,7 +2,7 @@
 // Run: QA_BASE=http://localhost:3400 QA_SHOTS=... node qa/v3-setup-shell.mjs  -> qa/out.txt
 import { activeTabs, BASE, openRoute, overflowX, PROFILE, RESUME, ROUTES, seedCheck, shot, tag, variants } from "./v3-lib.mjs";
 
-const LABEL = { "/": "Home", "/check": "Check", "/tailor": "Tailor", "/practice": "Practice", "/tracker": "Tracker", "/profile": "Profile" };
+const LABEL = { "/": "Home", "/check": "Check", "/tailor": "Tailor", "/practice": "Practice", "/tracker": "Tracker" };
 let bad = 0;
 const check = (ok, msg) => {
   if (!ok) bad++;
@@ -14,10 +14,11 @@ for (const v of variants) {
   const { browser, page, log } = await openRoute("/", { ...v, profile: PROFILE, resume: RESUME });
   for (const r of ROUTES) {
     await page.goto(BASE + r, { waitUntil: "load", timeout: 90000 }); // networkidle flakes under dev-server load
-    await page.waitForSelector('[aria-current="page"]', { state: "attached" }); // mobile Home tab is the (hidden) desktop one
+    await page.getByRole("heading", { level: 1 }).first().waitFor();
     await page.waitForTimeout(800);
     const active = await activeTabs(page);
-    check(active.some((t) => t.trim() === LABEL[r]), `${tag(v)} ${r} active=${JSON.stringify(active)}`);
+    if (r === "/profile") check(await page.getByRole("link", { name: /Profile, .* steps done/ }).isVisible(), `${tag(v)} profile avatar reachable`);
+    else check(active.some((t) => t.trim() === LABEL[r]), `${tag(v)} ${r} active=${JSON.stringify(active)}`);
     check((await overflowX(page)) <= 0, `${tag(v)} ${r} no sideways scroll`);
     await shot(page, `setup-${name(r)}-${tag(v)}`, { fullPage: false });
   }
@@ -31,9 +32,10 @@ for (const v of variants) {
   const { browser, page } = await openRoute("/");
   check(new URL(page.url()).pathname === "/", "first visit stays on Home");
   await page.goto(BASE + "/check", { waitUntil: "load", timeout: 90000 });
-  const formUp = await page.getByRole("button", { name: "a real one" }).waitFor({ timeout: 30000 }).then(() => true, () => false);
+  const formUp = await page.getByRole("button", { name: "An ordinary update" }).waitFor({ timeout: 30000 }).then(() => true, () => false);
   check(formUp, "no profile: /check shows the form directly");
-  await page.getByRole("button", { name: "a real one" }).click();
+  await page.getByRole("button", { name: "An ordinary update" }).click();
+  await page.getByRole("button", { name: "Check this message" }).click();
   await page.waitForSelector("text=/Tailor my resume for this|Save to tracker/", { timeout: 30000 }).catch(() => {});
   await shot(page, "setup-example-report-1440-light");
   const tailor = page.getByRole("button", { name: "Tailor my resume for this" });
@@ -59,7 +61,7 @@ for (const v of variants) {
   await page.goto(BASE + "/check", { waitUntil: "load", timeout: 90000 });
   await page.reload({ waitUntil: "load", timeout: 90000 });
   const report = await page.locator("text=/Medium risk|medium risk|Risk/").first().waitFor({ timeout: 30000 }).then(() => true, () => false);
-  check(report && !(await page.getByRole("button", { name: "a real one" }).isVisible()), "refresh on /check keeps the report");
+  check(report && !(await page.getByRole("button", { name: "An ordinary update" }).isVisible()), "refresh on /check keeps the report");
   await shot(page, "setup-check-refresh-1440-light", { fullPage: false });
   await browser.close();
 }

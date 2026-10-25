@@ -64,7 +64,7 @@ describe("results first, feedback matched to the question type", () => {
     expect(html(<TestResults c={c} />)).toBe("");
     const fb = html(<FeedbackCard c={c} />);
     expect(fb).toContain("Answer feedback (STAR)");
-    expect(fb).toContain("You said what you did yourself");
+    expect(fb).toContain("You used first-person wording; make your own actions clear.");
   });
 });
 
