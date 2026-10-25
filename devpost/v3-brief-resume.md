@@ -1,6 +1,6 @@
 # InternShield v3, stream RESUME (Sonnet, worktree `InternShield-v3-resume`, branch `v3-resume`, ports 3100-3199)
 
-You rebuild resume tailoring so a recruiter could not tell a tool touched it. Runs in parallel with `interview` and `shell` (they don't touch your files). Run end to end without asking; decisions for Himesh go in `devpost/v3-resume-log.md` as "Pending Himesh". When done, write `devpost/v3-resume-summary.md` and commit **`V3 resume summary`** (exact subject start = done signal).
+You rebuild resume tailoring so a recruiter could not tell a tool touched it. Runs in parallel with `interview`, `shell` and `report` (they don't touch your files). Run end to end without asking; decisions for Himesh go in `devpost/v3-resume-log.md` as "Pending Himesh". When done, write `devpost/v3-resume-summary.md` and commit **`V3 resume summary`** (exact subject start = done signal).
 
 ## Context rotation and usage (applies to the whole session)
 - The launcher watches your context size. At ~75% (150K tokens) it stops you right after your current tool call and starts a fresh session that resumes from your progress file. This is normal; plan for it.
@@ -9,6 +9,11 @@ You rebuild resume tailoring so a recruiter could not tell a tool touched it. Ru
 - A fresh session reads: the progress file first, then only the brief sections it needs, `git log --oneline v3-base..HEAD`, `git status`. Grep the research section you need instead of re-reading whole files.
 - Save usage: short tool output. `npx vitest run --reporter=dot` (rerun only failing files), pipe long output through `tail -n 40`, read files with offset/limit, look at screenshots selectively but DO look at them (quality is the point of v3).
 - Subagents run on Sonnet (forced). Give each a precise, self-contained task with exact files and acceptance checks; ask for a report of 10 lines or fewer.
+
+## Speed rules (Himesh wants v3 faster; added Oct 25, 2:30 AM ET; these override any slower habit)
+- While iterating run only the related tests (`npx vitest run <files> --reporter=dot`) and `npx tsc --noEmit` when types change. Full gates (lint, tsc, full vitest, build, eval; ~10 min) only at item-closing commits; if several items close close together, WIP-commit them and run the full gates once at the next closing commit. Never rerun green gates without code changes. Run gates as one background command and poll it. The final summary commit must be fully green (the launcher re-runs all gates after you exit).
+- Screenshots: at most 1-2 quick shots per item to check your work (1440 light, plus 390 when layout matters). The full matrix (1440 + 390, light + dark, plus states) is taken once, at the end of the stream, and you look at every shot then.
+- Parallelize with subagents where files don't overlap (e.g. tests + QA script + one component). Don't re-read files you already read this session.
 
 ## Why v3 exists (Himesh's verdict on v2, Oct 25, 2026)
 He tested v2 by hand. The scoring logic works. Everything else fell short: the tailored resume was too long, lost the original format and read as AI-written ("it will get rejected"); no loading state, no preview before download, no way to adjust and see changes. No nav bar, no home screen, no profile screen, no icons; very hard to navigate; unclear how to build the profile; flows dropped him back into the questions. Answers/details he added showed no visible effect ("no score impacted" is a dead end). The UI looked basic and AI-generated, only black and blue, unresponsive, no motion. The interview showed only one question. v2's checks only proved things rendered; **v3 is judged on whether it is actually good to use.** Every brief has a Quality bar: treat each line as a test you must pass and prove with a screenshot or an automated check.

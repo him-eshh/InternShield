@@ -3,7 +3,21 @@
 // Mounted once in app/layout.tsx; pages read it through the typed hooks below.
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { PipelineInput, PipelineOutcome } from "@/lib/client/pipeline";
-import { clearMyData, KEYS, loadProfile, loadResume, readKey, removeResume, saveProfile, saveResume, writeKey } from "@/lib/client/storage";
+import {
+  clearMyData,
+  KEYS,
+  loadPrefs,
+  loadProfile,
+  loadResume,
+  NO_PREFS,
+  readKey,
+  removeResume,
+  savePrefs,
+  saveProfile,
+  saveResume,
+  writeKey,
+  type ProfilePrefs,
+} from "@/lib/client/storage";
 import type { Profile, ResumeData } from "@/lib/types";
 import type { PostingContext } from "@/lib/tiers/types";
 import type { CheckSubmit } from "../CheckForm";
@@ -18,6 +32,8 @@ type State = {
   resume: ResumeData | null;
   lastCheck: LastCheck | null;
   targets: Targets;
+  prefs: ProfilePrefs;
+  setPrefs: (p: ProfilePrefs) => void;
   setProfile: (p: Profile | null) => void;
   setResume: (r: ResumeData | null) => void;
   setLastCheck: (c: LastCheck | null) => void;
@@ -34,6 +50,7 @@ export default function AppStateProvider({ children }: { children: React.ReactNo
   const [resume, setResumeState] = useState<ResumeData | null>(null);
   const [lastCheck, setLastCheckState] = useState<LastCheck | null>(null);
   const [targets, setTargets] = useState<Targets>(NO_TARGETS);
+  const [prefs, setPrefsState] = useState<ProfilePrefs>(NO_PREFS);
 
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect -- read browser storage once after mount (SSR has none) */
@@ -42,6 +59,7 @@ export default function AppStateProvider({ children }: { children: React.ReactNo
     const c = readKey<LastCheck>(KEYS.lastCheck);
     setLastCheckState(c?.outcome && c.input ? c : null);
     setTargets({ ...NO_TARGETS, ...readKey<Targets>(KEYS.targets) });
+    setPrefsState(loadPrefs());
     setReady(true);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
@@ -49,6 +67,10 @@ export default function AppStateProvider({ children }: { children: React.ReactNo
   const setProfile = useCallback((p: Profile | null) => {
     if (p) saveProfile(p);
     setProfileState(p);
+  }, []);
+  const setPrefs = useCallback((p: ProfilePrefs) => {
+    savePrefs(p);
+    setPrefsState(p);
   }, []);
   const setResume = useCallback((r: ResumeData | null) => {
     if (r) saveResume(r);
@@ -72,11 +94,12 @@ export default function AppStateProvider({ children }: { children: React.ReactNo
     setResumeState(null);
     setLastCheckState(null);
     setTargets(NO_TARGETS);
+    setPrefsState(NO_PREFS);
   }, []);
 
   const value = useMemo(
-    () => ({ ready, profile, resume, lastCheck, targets, setProfile, setResume, setLastCheck, setTarget, clearAll }),
-    [ready, profile, resume, lastCheck, targets, setProfile, setResume, setLastCheck, setTarget, clearAll],
+    () => ({ ready, profile, resume, lastCheck, targets, prefs, setPrefs, setProfile, setResume, setLastCheck, setTarget, clearAll }),
+    [ready, profile, resume, lastCheck, targets, prefs, setPrefs, setProfile, setResume, setLastCheck, setTarget, clearAll],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
