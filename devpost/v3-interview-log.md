@@ -45,3 +45,7 @@ Complete. No repeated main questions or runnable IDs; exact question/round limit
 ### I5: progress scorecards and history
 
 Complete. Segmented progress with round counts; overall and per-round evidence-based scorecards, including SQL query correctness and discussion rubrics. Distinct next drills, strengths, expandable recaps/links, weak-topic retry setup and 20-entry local history. Celebration completes within 1.2 seconds and skips reduced motion.
+
+### I6: bounded model reviews
+
+Complete. One compact review combines last-answer feedback and optional follow-up. Route rejects earlier-turn feedback, enforces the 30-call practice cap and keeps the daily guard. Client accounts for hints/failures and continues without AI at the cap. Model calls are mocked in tests and QA.
