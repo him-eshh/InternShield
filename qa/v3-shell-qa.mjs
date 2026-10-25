@@ -30,7 +30,7 @@ for (const v of variants) {
       check(await home.isVisible(), `${tag(v)} ${route} home reachable`);
       if (route !== "/") await shot(page, `shell-${route.slice(1)}-${tag(v)}`, { fullPage: route === "/profile" || route === "/tracker" });
     }
-    check(log.filter(x => x.startsWith("pageerror")).length === 0, `${tag(v)} no runtime errors`);
+    check(log.filter(x => x.startsWith("pageerror") || /hydrat/i.test(x)).length === 0, `${tag(v)} no runtime errors`);
   } finally { await browser.close(); }
 }
 // Complete each optional profile step, prove confirmation and persistence.
