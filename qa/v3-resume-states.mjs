@@ -1,5 +1,7 @@
 // Additional mocked browser checks without screenshots: cancellation, DOCX, capped intel, manual guard.
 import assert from "node:assert/strict";
+import JSZip from "jszip";
+import { readFileSync } from "node:fs";
 import { setTimeout as delay } from "node:timers/promises";
 const base = new URL(process.env.QA_BASE ?? "http://localhost:3100");
 assert(base.hostname === "localhost" && Number(base.port) >= 3100 && Number(base.port) <= 3199);
@@ -8,7 +10,14 @@ process.env.QA_BASE = base.origin;
 const { openRoute, done } = await import("./v3-lib.mjs");
 const { browser, page, log } = await openRoute("/tailor", { width: 390, theme: "dark", profile: false, reducedMotion: "reduce" });
 try {
-  await page.getByLabel("Upload resume").setInputFiles("tests/fixtures/resume/one-page.docx");
+  const zip = await JSZip.loadAsync(readFileSync("tests/fixtures/resume/one-page.docx"));
+  let xml = await zip.file("word/document.xml").async("string");
+  if (!xml.includes("xmlns:r=")) xml = xml.replace("<w:document ", '<w:document xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" ');
+  xml = xml.replace("</w:body>", '<w:p><w:hyperlink r:id="qa-link"><w:r><w:t>Contact portfolio</w:t></w:r></w:hyperlink></w:p></w:body>');
+  zip.file("word/document.xml", xml);
+  zip.file("word/_rels/document.xml.rels", '<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="qa-link" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="javascript:alert(1)" TargetMode="External"/></Relationships>');
+  const buffer = await zip.generateAsync({ type: "nodebuffer" });
+  await page.getByLabel("Upload resume").setInputFiles({ name: "links.docx", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", buffer });
   await page.getByLabel("Company (optional)").fill("Northwind");
   await page.getByLabel("Job posting", { exact: true }).fill("Required: Python, SQL. Preferred: React.");
   let lookups = 0;
@@ -43,6 +52,8 @@ try {
   const download = page.getByRole("button", { name: "Download DOCX", exact: true });
   await page.waitForFunction(() => [...document.querySelectorAll("button")].some((b) => b.textContent.includes("Download DOCX") && !b.disabled), null, { timeout: 30000 });
   assert(await page.locator(".resume-document .resume-highlight-text").count());
+  assert((await page.locator(".resume-document").innerText()).includes("Contact portfolio"), "DOCX preview keeps hyperlink text");
+  assert.equal(await page.locator('.resume-document a,.resume-document script,.resume-document [onclick]').count(), 0, "DOCX preview removes active HTML");
   const event = page.waitForEvent("download"); await download.click();
   assert((await event).suggestedFilename().endsWith(".docx"));
   await page.getByRole("button", { name: "Edits", exact: true }).click();

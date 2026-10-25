@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { PDFWorker } from "pdfjs-dist";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle, ZoomIn, ZoomOut } from "lucide-react";
 import type { ResumeLine } from "@/lib/tiers/resumeTypes";
 import type { Rendered } from "@/lib/tiers/resumeRender";
 
@@ -10,6 +10,7 @@ export function DocumentPreview({ output, version, onReady, highlights }: { outp
   const worker = useRef<PDFWorker | null>(null);
   useEffect(() => () => { worker.current?.destroy(); worker.current = null; }, []);
   const host = useRef<HTMLDivElement>(null);
+  const [zoom, setZoom] = useState(false);
   const [error, setError] = useState("");
   const [ready, setReady] = useState("");
   useEffect(() => {
@@ -64,7 +65,11 @@ export function DocumentPreview({ output, version, onReady, highlights }: { outp
         const parsed = new DOMParser().parseFromString(result.value, "text/html");
         const allowed = new Set(["P", "BR", "STRONG", "EM", "U", "S", "UL", "OL", "LI", "TABLE", "TBODY", "TR", "TD", "TH", "H1", "H2", "H3", "SPAN"]);
         for (const element of [...parsed.body.querySelectorAll("*")]) {
-          if (!allowed.has(element.tagName)) { element.remove(); continue; }
+          if (!allowed.has(element.tagName)) {
+            if (["SCRIPT", "STYLE", "IFRAME", "OBJECT", "SVG", "MATH", "IMG", "LINK", "META"].includes(element.tagName)) element.remove();
+            else element.replaceWith(...Array.from(element.childNodes));
+            continue;
+          }
           for (const attr of [...element.attributes]) element.removeAttribute(attr.name);
         }
         for (const paragraph of parsed.body.querySelectorAll("p,li")) {
@@ -92,6 +97,7 @@ export function DocumentPreview({ output, version, onReady, highlights }: { outp
   return <div aria-label="Resume preview" className="overflow-hidden rounded-xl border border-border bg-surface">
     {ready !== version && !error && <p role="status" className="flex items-center gap-2 p-4 text-sm text-fg-2"><LoaderCircle size={16} className="animate-spin motion-reduce:animate-none" />Rendering your preview</p>}
     {error && <p role="alert" className="p-4 text-sm">{error}</p>}
-    <div ref={host} className={output.ext === "pdf" ? "space-y-3" : "resume-document p-5 text-sm leading-relaxed"} />
+    {output.ext === "pdf" && <div className="flex justify-end border-b border-border px-2"><button type="button" aria-pressed={zoom} onClick={() => setZoom((value) => !value)} className="inline-flex min-h-11 items-center gap-1.5 px-2 text-xs text-tool-strong">{zoom ? <ZoomOut size={16} /> : <ZoomIn size={16} />}{zoom ? "Fit page" : "Zoom in"}</button></div>}
+    <div className="max-w-full overflow-x-auto"><div ref={host} style={zoom && output.ext === "pdf" ? { minWidth: 720 } : undefined} className={output.ext === "pdf" ? "space-y-3" : "resume-document p-5 text-sm leading-relaxed"} /></div>
   </div>;
 }

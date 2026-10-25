@@ -7,6 +7,8 @@ process.env.QA_BASE = base.origin;
 assert(process.env.QA_SHOTS, "QA_SHOTS required");
 const { openRoute, shot, tag, done, overflowX, variants } = await import("./v3-lib.mjs");
 const full = process.argv.includes("--full");
+const fixes = process.argv.includes("--fix-shots");
+const capture = (state) => full && (!fixes || ["loading", "accepted-glow", "preview", "download-ready"].includes(state));
 const runs = full ? variants : [{ width: 1440, theme: "light" }, { width: 390, theme: "light" }];
 for (const variant of runs) {
   const { browser, page, log } = await openRoute("/tailor", { ...variant, profile: false });
@@ -26,7 +28,7 @@ for (const variant of runs) {
         if (timing.accept && document.querySelector(".resume-highlight")) { timing.preview = performance.now() - timing.accept; timing.accept = 0; }
       }).observe(document.body, { childList: true, subtree: true });
     });
-    if (full) await shot(page, `resume-empty-${tag(variant)}`);
+    if (capture("empty")) await shot(page, `resume-empty-${tag(variant)}`);
     await page.getByLabel("Upload resume").setInputFiles("tests/fixtures/resume/one-page.pdf");
     await page.getByLabel("Company (optional)").fill("Northwind");
     await page.getByLabel("Role (optional)").fill("Data Intern");
@@ -50,22 +52,28 @@ for (const variant of runs) {
     const started = Date.now();
     await page.getByRole("button", { name: "Tailor my resume", exact: true }).click();
     await page.getByRole("status").filter({ hasText: "Reading your resume" }).waitFor({ timeout: 1000 });
+    await page.waitForFunction(() => {
+      const panel = [...document.querySelectorAll('[role="status"]')].find((n) => n.textContent.includes("Reading your resume"));
+      if (!panel) return false;
+      const box = panel.getBoundingClientRect();
+      return box.top >= 56 && box.bottom <= innerHeight - (innerWidth < 768 ? 56 : 0);
+    }, null, { timeout: 1000 });
     const loadingMs = await page.evaluate(() => window.__resumeTiming.loading);
     assert(loadingMs <= 300, `loading took ${loadingMs}ms after click`);
     console.log(`${tag(variant)} loading ${Math.round(loadingMs)}ms after click (${Date.now() - started}ms with Playwright overhead)`);
-    if (full) await shot(page, `resume-loading-${tag(variant)}`, { fullPage: false });
+    if (capture("loading")) await shot(page, `resume-loading-${tag(variant)}`, { fullPage: false });
     const cards = page.getByRole("article", { name: /Suggested edit/ });
     await cards.first().waitFor({ timeout: 60000 });
     assert.equal(await cards.count(), 4, "four safe suggestions should survive all client checks");
     assert(await page.getByRole("link", { name: "Engineering notes" }).count());
-    if (full) await shot(page, `resume-plan-${tag(variant)}`);
-    if (!process.argv.includes("--no-shots")) await shot(page, `resume-review-${tag(variant)}`);
+    if (capture("plan")) await shot(page, `resume-plan-${tag(variant)}`);
+    if (!process.argv.includes("--no-shots") && !fixes) await shot(page, `resume-review-${tag(variant)}`);
     await cards.nth(0).getByRole("button", { name: "Accept", exact: true }).click();
     await page.locator(".resume-highlight").first().waitFor({ state: "attached", timeout: 30000 });
     const previewMs = await page.evaluate(() => window.__resumeTiming.preview);
     assert(previewMs < 200, `accepted preview took ${previewMs}ms`);
     console.log(`${tag(variant)} accept-to-preview ${Math.round(previewMs)}ms`);
-    if (full) {
+    if (capture("accepted-glow")) {
       if (variant.width < 1000) await page.getByRole("button", { name: "Preview", exact: true }).click();
       await page.screenshot({ path: `${process.env.QA_SHOTS}/resume-accepted-glow-${tag(variant)}.png`, fullPage: false, animations: "allow" });
       if (variant.width < 1000) await page.getByRole("button", { name: "Edits", exact: true }).click();
@@ -86,8 +94,14 @@ for (const variant of runs) {
     assert((await result).suggestedFilename().endsWith("-tailored.pdf"));
     assert.equal(await overflowX(page), 0);
     if (full) {
-      await shot(page, `resume-download-ready-${tag(variant)}`);
-      await shot(page, `resume-preview-${tag(variant)}`);
+      if (capture("download-ready")) await shot(page, `resume-download-ready-${tag(variant)}`);
+      if (capture("preview")) await shot(page, `resume-preview-${tag(variant)}`);
+      if (variant.width < 1000) {
+        await page.getByRole("button", { name: "Zoom in", exact: true }).click();
+        assert.equal(await overflowX(page), 0, "zoom scroll stays inside the preview");
+        await shot(page, `resume-zoom-${tag(variant)}`, { fullPage: false });
+        await page.getByRole("button", { name: "Fit page", exact: true }).click();
+      }
       if (variant.width < 1000) await page.getByRole("button", { name: "Edits", exact: true }).click();
       await cards.nth(3).getByRole("button", { name: "Edit", exact: true }).click();
       const draft = cards.nth(3).getByRole("textbox", { name: "Your wording" });
@@ -95,7 +109,7 @@ for (const variant of runs) {
       await draft.press("Tab");
       await cards.nth(3).getByRole("alert").waitFor();
       assert.match(await cards.nth(3).getByRole("alert").innerText(), /Too long/);
-      await shot(page, `resume-too-long-${tag(variant)}`);
+      if (capture("too-long")) await shot(page, `resume-too-long-${tag(variant)}`);
     }
     assert.deepEqual(log.filter((line) => line.startsWith("pageerror")), []);
     console.log(`${tag(variant)} upload -> loading -> review -> accept 2/reject 1/edit 1 -> preview -> PDF download passed`);
