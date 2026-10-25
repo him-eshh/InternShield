@@ -3,12 +3,13 @@
 Dev server: none started in Codex continuation; never use port 3000.
 
 ## Done
-- R1: structure-preserving model + made-up fixtures; PDF/DOCX zero-edit byte identity, section/text/page round trips, PDF resource cleanup. Item-closing commit is the commit containing this update.
+- R1: structure-preserving model + made-up fixtures; PDF/DOCX zero-edit byte identity, section/text/page round trips, PDF resource cleanup. Closed in 4665e74.
 - Prior work preserved: 4c36675 (parser/render WIP), b1a42ca (handoff updates + shared edit checks WIP).
 - R1 gates: lint 0 errors (2 existing QA warnings), tsc clean after stale suppression removed, 76 files / 1215 tests, build green, eval 88/88 and held-out 24/27.
 
 ## Current
-- R2: next unchecked brief item; build company/role plan using keywordGap + mocked /api/intel client (resume-owned module name resumePlan.ts).
+- R2 implementation: resumePlan.ts + PlanPanel.tsx + 9 mocked tests pass. Required/preferred terms, confirmed facts, safe source links, capped/error fallback, cancellation. Needs R5 wiring + visual verification before item closure.
+- Next coding sub-item: R3 server edits mode and adversarial shared-check tests.
 
 ## Next
 - R3 shared edit checks (resumeTells.ts, resumeEdits.ts already WIP), server edits mode in lib/server/rewrite*.
