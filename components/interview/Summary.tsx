@@ -1,0 +1,22 @@
+"use client";
+import { motion, useReducedMotion } from "motion/react";
+import { ArrowRight, Trophy, ExternalLink, History as HistoryIcon } from "lucide-react";
+import { buildSummary, practiceAgain, roundLabel, type HistoryEntry, type PracticeState } from "@/lib/tiers/session";
+import type { SessionConfig, SessionSummary } from "@/lib/tiers/types";
+import { btnPrimary, btnSecondary } from "../ui";
+
+export function Summary({ state, summary: saved, onAgain, onHome }: { state?: PracticeState; summary?: SessionSummary; onAgain: (c: SessionConfig) => void; onHome: () => void }) {
+  const summary = saved ?? buildSummary(state!);
+  const reduced = useReducedMotion();
+  return <div className="space-y-6"><header className="py-4 text-center"><motion.div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-tool-tint text-tool-strong" initial={reduced ? false : { scale: 0.8, rotate: -8 }} animate={{ scale: 1, rotate: 0 }} transition={{ duration: reduced ? 0 : 0.6 }}><Trophy size={30} /></motion.div><p className="text-sm font-medium text-tool-strong">{summary.endedEarly ? "Session saved" : "Session complete"}</p><h1 className="mt-2 font-display text-4xl">Keep the momentum.</h1><p className="mt-3 text-muted">{summary.answered} answered · {summary.skipped} skipped · {Math.max(1, Math.round(summary.durationMs / 60000))} min</p></header>
+    <div className="grid gap-3 sm:grid-cols-2">{summary.rounds.map((r) => <section key={r.round} className="rounded-2xl border border-border bg-card p-5"><h2 className="text-sm text-muted">{roundLabel(r.round)}</h2><p className="mt-2 font-display text-2xl text-tool-strong">{r.band}</p><p className="mt-2 text-sm">{r.note}</p></section>)}</div>
+    {!!summary.strengths?.length && <section className="rounded-2xl bg-tool-tint p-5"><h2 className="font-display text-xl">Build on these strengths</h2><ul className="mt-3 list-inside list-disc space-y-2">{summary.strengths.map((s, i) => <li key={i}>{s}</li>)}</ul></section>}
+    <section className="rounded-2xl border border-border bg-card p-5"><h2 className="font-display text-xl">Practice next</h2><ol className="mt-3 list-inside list-decimal space-y-2">{summary.next.map((n, i) => <li key={i}>{n}</li>)}</ol></section>
+    <section><h2 className="mb-3 font-display text-xl">Question recap</h2><div className="space-y-3">{summary.turns.map((t, i) => <details key={i} className="rounded-2xl border border-border bg-card p-5"><summary className="cursor-pointer font-medium">{i + 1}. {t.title ?? t.question}<span className="ml-2 text-xs text-muted">{t.skipped ? "Skipped" : t.level ?? "Answered"} · {t.hintsUsed} hints</span></summary><p className="mt-3 whitespace-pre-wrap break-words text-sm text-muted">{t.answer || "No answer saved."}</p>{t.feedback && <p className="mt-3 text-sm">{t.feedback.strength} {t.feedback.improve}</p>}{t.followUps?.map((f, k) => <div key={k} className="mt-3 border-t border-border pt-3 text-sm"><p className="font-medium">{f.question}</p><p className="mt-2">{f.answer}</p><p className="mt-2 text-muted">{f.note}</p></div>)}{t.url && <a className="mt-3 inline-flex min-h-11 items-center gap-2 text-tool-strong underline" href={t.url} target="_blank" rel="noopener noreferrer">Review on LeetCode<ExternalLink size={14} /></a>}</details>)}</div></section>
+    <div className="flex flex-wrap gap-3"><button className={btnPrimary} onClick={() => onAgain(practiceAgain(summary))}>Practice these again<ArrowRight size={17} /></button><button className={btnSecondary} onClick={onHome}>Back to Practice</button></div>
+  </div>;
+}
+
+export function History({ entries, onOpen }: { entries: HistoryEntry[]; onOpen: (entry: HistoryEntry) => void }) {
+  return <section className="mt-10 border-t border-border pt-7"><h2 className="flex items-center gap-2 font-display text-2xl"><HistoryIcon size={22} />Past sessions</h2>{!entries.length ? <p className="mt-3 text-muted">Your completed sessions will appear here.</p> : <div className="mt-4 space-y-3">{entries.map((e) => <button key={e.id} className="flex min-h-20 w-full flex-wrap items-center justify-between gap-2 rounded-2xl border border-border bg-card p-4 text-left hover:bg-tool-tint" onClick={() => onOpen(e)}><span><span className="block font-medium">{e.company || "Interview practice"}</span><span className="text-sm text-muted">{e.summary.answered} answered · {e.summary.rounds.map((r) => roundLabel(r.round)).join(", ")}</span></span><span className="text-sm text-muted">{new Date(e.finishedAt).toLocaleDateString()}</span></button>)}</div>}</section>;
+}

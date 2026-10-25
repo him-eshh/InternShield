@@ -350,7 +350,7 @@ export async function handleInterview(body: Record<string, unknown>): Promise<Re
       return failed("error", { message: FEEDBACK_FAILED });
     }
     const fb = validateFeedback(raw, input.turns, input.round);
-    if (!fb) return failed("error", { message: FEEDBACK_FAILED });
+    if (!fb || (review && (fb.items.length !== 1 || fb.items[0].index !== input.turns.length - 1))) return failed("error", { message: FEEDBACK_FAILED });
     if (!review) return done({ text: null, feedback: fb });
     const rec = raw as Rec;
     const followUp = (input.followUpsLeft ?? 0) > 0 && typeof rec.followUp === "string" ? cleanQuestion(rec.followUp) : "";
