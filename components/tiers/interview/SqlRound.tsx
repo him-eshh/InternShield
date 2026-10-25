@@ -19,14 +19,19 @@ const clock = () => Date.now();
 
 export default function SqlRound({ session, onUpdate, ask, busy }: RoundPanelProps) {
   const problem = getSqlProblem(session.problemId);
-  const [code, setCode] = useState(session.code?.language === "sql" ? session.code.code : SQL_STARTER);
-  const [approach, setApproach] = useState("");
+  const [code, setCode] = useState(session.editorDraft?.code ?? (session.code?.language === "sql" ? session.code.code : SQL_STARTER));
+  const [approach, setApproach] = useState(session.editorDraft?.approach ?? "");
   const [running, setRunning] = useState<"run" | "submit" | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ got: ResultSet; grade: SqlGrade } | null>(null);
   const [runError, setRunError] = useState<string | null>(null);
   const [status, setStatus] = useState("");
   const latest = useRef(session);
+  function persistDraft(text: string, plan: string) {
+    const next = { ...latest.current, editorDraft: { language: "sql" as const, code: text.slice(0, MAX_CODE_CHARS), approach: plan.slice(0, MAX_ANSWER_CHARS) } };
+    latest.current = next;
+    onUpdate(next);
+  }
   useEffect(() => {
     latest.current = session;
   }, [session]);
@@ -134,7 +139,7 @@ export default function SqlRound({ session, onUpdate, ask, busy }: RoundPanelPro
             id="sql-approach"
             value={approach}
             maxLength={MAX_ANSWER_CHARS}
-            onChange={(e) => setApproach(e.target.value)}
+            onChange={(e) => { setApproach(e.target.value); persistDraft(code, e.target.value); }}
             rows={4}
             className="mt-1.5 w-full rounded-[14px] border border-border bg-card p-4 text-[17px]"
           />
@@ -161,7 +166,7 @@ export default function SqlRound({ session, onUpdate, ask, busy }: RoundPanelPro
       </div>
 
       <div className="space-y-5">
-        <CodeEditor value={code} language="sql" onChange={setCode} label={`${problem.title} query editor, SQL`} />
+        <CodeEditor value={code} language="sql" onChange={(text) => { setCode(text); persistDraft(text, approach); }} label={`${problem.title} query editor, SQL`} />
 
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <button type="button" className={btnSecondary} disabled={disabled} onClick={() => run("run")}>

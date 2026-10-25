@@ -294,13 +294,19 @@ export interface InterviewSession {
   hints: string[];
   /** Coding/debugging rounds (v2): counted by the app, feeds the scorecard. Absent on older sessions. */
   stats?: CodeStats;
+  editorDraft?: { language: CodeLanguage; code: string; approach: string };
+  plannedQuestions?: number;
   feedback: InterviewFeedback | null;
   status: "active" | "done";
   createdAt: number;
   updatedAt: number;
 }
 
-export type InterviewAsk = "question" | "hint" | "feedback";
+/** "review" (v3 practice sessions): feedback on the last turn plus an optional follow-up question, in one call. */
+export type InterviewAsk = "question" | "hint" | "feedback" | "review";
+/** AI calls per v3 practice session (reviews + hints + AI questions). */
+export const MAX_PRACTICE_CALLS = 30;
+export const MAX_FOLLOWUPS = 2;
 
 /** POST /api/interview. */
 export interface InterviewRequest {
@@ -317,9 +323,16 @@ export interface InterviewRequest {
   problem: string | null;
   /** Challenge feedback only: the CHALLENGE_MINUTES timer had run out. */
   timeUp?: boolean;
+  /** v3 practice: lifts the call cap to MAX_PRACTICE_CALLS. */
+  practice?: boolean;
+  /** review only: follow-ups still allowed for this question (0-2). */
+  followUpsLeft?: number;
 }
 /** question/hint -> text; feedback -> feedback. */
-export type InterviewReply = { text: string; feedback: null } | { text: null; feedback: InterviewFeedback };
+export type AnswerLevel = "strong" | "ok" | "weak";
+export type InterviewReply =
+  | { text: string; feedback: null }
+  | { text: null; feedback: InterviewFeedback; followUp?: string | null; level?: AnswerLevel };
 export type InterviewResponse = ApiResponse<InterviewReply>;
 
 // lib/tiers/interview.ts exports (engine-builder):
@@ -473,6 +486,8 @@ export interface BoardJson {
 // ---------- Round panels (components/tiers/interview/CodingRound.tsx, DesignRound.tsx) ----------
 
 export interface RoundPanelProps {
+  initialLanguage?: CodeLanguage;
+  runnableLanguages?: CodeLanguage[];
   session: InterviewSession;
   /** Persist an updated session (the shell saves it to is:interviews). */
   onUpdate: (s: InterviewSession) => void;
@@ -511,9 +526,18 @@ export interface SessionTurn {
   answer: string;
   /** Code rounds: local grading result. */
   code?: CodeAttempt;
+  stats?: CodeStats;
   hintsUsed: number;
   skipped: boolean;
   feedback?: AnswerFeedback;
+  /** v3: bank/app metadata for the recap, and follow-ups asked after the main answer. */
+  title?: string;
+  problemId?: string;
+  url?: string;
+  difficulty?: string;
+  tags?: string[];
+  level?: AnswerLevel;
+  followUps?: { question: string; answer: string; note?: string }[];
   startedAt: number;
   endedAt: number | null;
 }
@@ -525,9 +549,11 @@ export interface SessionSummary {
   answered: number;
   skipped: number;
   /** Per-round band, rules-graded where possible. */
-  rounds: { round: RoundKind; band: ScoreBand; note: string }[];
+  rounds: { round: RoundKind; band: ScoreBand; note: string; axes?: Scorecard["axes"] }[];
   /** 2-3 concrete things to practice next. */
   next: string[];
+  strengths?: string[];
+  endedEarly?: boolean;
   durationMs: number;
 }
 

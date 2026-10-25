@@ -321,3 +321,37 @@ describe("cleanQuestion", () => {
     expect(cleanQuestion("word ".repeat(300), 300).length).toBeLessThanOrEqual(300);
   });
 });
+
+describe("v3 per-answer review", () => {
+  const reviewBody = { ...body, ask: "review", practice: true, followUpsLeft: 2 };
+  it("combines one-answer feedback, level and a follow-up in one call", async () => {
+    h.create.mockReturnValue(groqOk(JSON.stringify({ ...JSON.parse(feedbackJson(ANSWER)), level: "strong", followUp: "What would you do differently?" })));
+    const json = await (await call(reviewBody)).json();
+    expect(json.status).toBe("done");
+    expect(json.data.followUp).toBe("What would you do differently?");
+    expect(json.data.level).toBe("strong");
+    expect(json.data.feedback.items).toHaveLength(1);
+    expect(h.create).toHaveBeenCalledTimes(1);
+  });
+  it("suppresses follow-ups when no budget remains", async () => {
+    h.create.mockReturnValue(groqOk(JSON.stringify({ ...JSON.parse(feedbackJson(ANSWER)), level: "ok", followUp: "An unwanted third follow-up?" })));
+    const json = await (await call({ ...reviewBody, followUpsLeft: 0 })).json();
+    expect(json.data.followUp).toBeNull();
+  });
+  it("rejects feedback for an earlier answer instead of the last one", async () => {
+    h.create.mockReturnValue(groqOk(JSON.stringify({ ...JSON.parse(feedbackJson(ANSWER)), level: "ok", followUp: "" })));
+    const json = await (await call({ ...reviewBody, turns: [...body.turns, { question: "Result?", answer: "Ten percent" }] })).json();
+    expect(json.status).toBe("failed");
+  });
+  it("permits call 30, then enforces the practice cap without a model call", async () => {
+    h.create.mockReturnValue(groqOk(JSON.stringify({ ...JSON.parse(feedbackJson(ANSWER)), level: "ok", followUp: "" })));
+    expect((await (await call({ ...reviewBody, used: 29 })).json()).status).toBe("done");
+    h.create.mockClear();
+    expect((await call({ ...reviewBody, used: 30 })).status).toBe(429);
+    expect(h.create).not.toHaveBeenCalled();
+  });
+  it.each([-1, 3, 0.5, "2"])("rejects invalid follow-up budget %s", async (followUpsLeft) => {
+    expect((await call({ ...reviewBody, followUpsLeft })).status).toBe(400);
+    expect(h.create).not.toHaveBeenCalled();
+  });
+});
