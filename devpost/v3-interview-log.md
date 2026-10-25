@@ -37,3 +37,7 @@ Complete. Cited research preselects supported stages and seeds value-based STAR 
 ### I3: configurable session setup
 
 Complete. Eight round cards, topic chips, verbatim custom questions, all difficulties, company/preset, role, language and question/round length. Existing shared targets prefill company/role; profile/resume context is forwarded. Violet tokens, lucide icons and accessible form controls checked in all four variants.
+
+### I4: continuous session engine
+
+Complete. No repeated main questions or runnable IDs; exact question/round limits; adaptive Mixed level; maximum two follow-ups; skip/hints; native end confirmation. Active session and unfinished text/code/SQL drafts survive refresh. Real Python/SQL/TypeScript execution and recovery pass.
