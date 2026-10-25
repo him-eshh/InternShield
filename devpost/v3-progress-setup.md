@@ -7,9 +7,11 @@
 
 - Step 2 commit: 2b85603. Step 3 code WIP: 500b8c3 (routes, provider, Nav, PageTransition, pages, qa/v3-lib.mjs; tsc green).
 
+- WIP commit after rotation: step 3 QA fixes + step 4 drafts.
+
 ## Current
-- Step 3: QA `qa/v3-setup-shell.mjs` ALL OK (shots in QA_SHOTS setup-*). Added `--nav-bottom` var (globals.css) so Tailor sticky bar / Tracker toast sit above mobile tab bar. Dev server stopped. Gates running -> commit `V3 setup 3: app shell, routes, nav, shared state`.
-- Meanwhile drafting step 4 contracts.
+- Steps 3-5 code all written: hex test `tests/shared/noHexInComponents.test.ts`, `tests/api/intel.test.ts` (6 pass), `.env.example` INTEL_DAILY_CAP, CLAUDE.md v3 section. Step 3 QA was ALL OK (shots setup-*).
+- Running full gates (`node qa/v3-gates.mjs`). When green: commit `V3 setup 3` (hex test + progress), `V3 setup 4` (intel test, .env.example), `V3 setup: done` (CLAUDE.md, log).
 
 ## Next
 1. Step 3 shell: routes, AppStateProvider, Nav, PageTransition, no forced gating, qa/v3-lib.mjs, screenshots 1440/390 light/dark.
