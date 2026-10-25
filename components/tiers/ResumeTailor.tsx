@@ -132,6 +132,9 @@ export default function ResumeTailor({ resume, target, onOpenProfile, onBack }: 
     if (!check.ok) return check.failures.includes("width") ? WORD_LAYOUT : check.failures.includes("length") ? TOO_LONG : "Keep your original facts, voice and punctuation. Remove AI phrases.";
     const texts = new Map(edits.filter((e) => e.id !== id).map((e) => [e.lineId, e.proposed])); texts.set(edit.lineId, proposed);
     if (!withinTotalBudget(file.doc, texts)) return "Longer than your original. Shorten this line.";
+    const selected = new Map(accepted.filter((e) => e.id !== id).map((e) => [e.lineId, e.proposed]));
+    selected.set(edit.lineId, proposed);
+    if (!withinTotalBudget(file.doc, selected)) return "Longer than your original. Shorten this line.";
     const output = await renderEdited(file.doc, file.bytes, [{ lineId: edit.lineId, text: proposed }]);
     if (output.rejected.length) return output.rejected[0].reason;
     const next = edits.map((e) => e.id === id ? { ...e, proposed, keywords: addedKeywords(plan?.keywords ?? [], e.original, proposed), reason: "Your wording, checked against your original facts.", status: "accepted" as const } : e);
