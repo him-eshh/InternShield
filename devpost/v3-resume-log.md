@@ -30,3 +30,10 @@ Do not read or print .env.local. Use integration's already-configured server env
 3. Optional last call: repeat POST /api/rewrite with facts=["React"] after explicitly confirming that made-up skill. Verify it is the only new skill permitted. Never send a new number/employer as a confirmed skill. If any prior call used the three-call allowance, skip this step.
 
 No live lookup or model calls were made here. All Vitest and Playwright calls use mocks.
+
+## Final verification
+- Final gates: lint/tsc/build/eval green; 81 files / 1267 tests; eval 88/88, held-out 24/27.
+- Manual wording is checked against actually accepted edits; pending shortenings cannot subsidize its +3% budget. Browser regression passes.
+- Accept and Reject (including restored original text) glow briefly; reduced motion disables the glow. No-shot flow passed at 1440/390 after this fix.
+- PDF rendering preserves supported punctuation and rejects unsupported glyphs instead of changing facts into question marks. Two regression tests pass.
+- Complete artifact index and handoff: devpost/v3-resume-summary.md. All owned QA servers and Word processes stopped.

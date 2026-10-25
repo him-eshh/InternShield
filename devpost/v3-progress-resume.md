@@ -1,32 +1,34 @@
 # v3 resume progress
 
-Dev server: none. All owned 3100 QA trees stopped (last 21948). Never use port 3000.
+## Status
+- COMPLETE: the commit containing this file has subject V3 resume summary.
+- Branch v3-resume, worktree InternShield-v3-resume. No push/merge/deploy.
+- No owned QA server or Word process remains. Port 3000 was never used or stopped.
 
 ## Done
-- R1: 4665e74; PDF/DOCX/text model, fixtures, zero-edit byte/text/order/page round trips, PDF cleanup.
-- R2 + R3 core: 84ad3f9; cited company/role plan, required/preferred keywords, intel fallback; <=6 bullet edits, shared/API fact/tell/style/length guards, PDF width checks. DOCX width proof remains in R4 below.
-- R5/R6/R7: closed in 9918713. Real cancellable steps; source panel; accept/reject/manual edit + diffs; reversible confirmed skills; exact-byte PDF/DOCX preview and gated download; PDF zoom. R7 live-call recipes in devpost/v3-resume-log.md (zero live calls here).
-- Latest full gates ALL GREEN: lint (2 existing warnings), tsc, 81 files / 1265 tests, build, eval 88/88; held-out 24/27.
-- QA: qa/v3-resume-flow.mjs --full passed 1440/390 light/dark; all 32 matrix shots viewed. Targeted fixes also passed; all 18 replacement/zoom shots viewed. Final loading 210-220ms; first Accept 58-69ms; second Accept and Reject <200ms (completed preview version, not an early highlight).
-- qa/v3-resume-states.mjs passed DOCX preview/download, cancellation, capped intel, unsafe manual wording, reversible skill, active-link stripping with contact text preserved.
-- Checkpoints: b1a42ca initial work preserved; 3056009 UI; ab0ef08 widths; 9729ab5 mobile fixes; bfbeff6 prepared previews + cache-safety tests.
+- R1 4665e74: structure-preserving PDF/DOCX/text model, made-up fixtures, round trips and resource cleanup.
+- R2/R3 84ad3f9: cited company/role plan, required/preferred terms, capped fallback, shared/API guards and <=6 existing bullet edits.
+- R5/R6/R7 9918713: cancellable progress, edit review, exact-byte preview/download, responsive QA and integration live-check recipes (zero live calls here).
+- R4 d732ae1: original-format exports; per-row PDF widths, <=5% shrink, +3% total budget; conservative Word whole-word deletions enforced shared/API/export.
+- Actual Word fixture measured 1 page -> 1 page with three edits present and text inside original margins. Both page images inspected. No runtime Word dependency.
+- Final follow-ups: 320 bounded-input wrapping/landmark (481e6db), accepted manual subset budget (fcdf11d), restored-line rejection glow (0fe0d07), PDF glyph integrity (675a8dd), Unicode AI-tell variants (8344aac).
+- Final gates ALL GREEN: lint (2 existing QA warnings), tsc, 81 files / 1267 tests, build, eval 88/88 (0 low false positives), held-out 24/27.
+- All 36 current PNG artifacts viewed: 32 matrix states at 1440/390 light/dark, 2 mobile zoom, 2 actual Word pages. Affected replacements were re-inspected.
+- Final four-variant performance: loading 210-220ms; first Accept 58-69ms, second Accept/Reject <200ms. Later rejection-glow checks: 63/66ms Accept, 221/250ms loading. Reduced-motion and manual-budget checks pass.
+- qa/v3-resume-responsive.mjs: Tailor content fits 320/768 including long bounded company/role; shared header issue logged below.
 
-## Current
-- R4 complete with conservative Word edits: only whole-word deletion, surviving order/run/paragraph formatting preserved. Enforced shared/API/export; PDF used for broader wording. Actual Word QA: 1 page -> 1 page, 3 supported edits present, within original margins; before/after images viewed. Closing commit contains this update.
-- Latest gates ALL GREEN: lint/tsc, 81 files / 1265 tests, build, eval 88/88; held-out 24/27. Typography follow-up included.
-- All Word instances and owned 3100 QA servers closed. Optional actual-Word QA: npx tsx qa/v3-resume-word.ts (Windows, existing Word; cold start can be slow; COM needs [ref] + .NET string paths).
-- R4 closed d732ae1. Final responsive check found unbroken company/role overflow at 320; fixed with overflow-wrap:anywhere in owned CSS. qa/v3-resume-responsive.mjs tests 320/768 empty/review/preview. 320 fix passes. At 768 Tailor root fits 768/768; shared Nav/ThemeToggle overflows 105px outside our ownership (Needs integration log). 320/768 Tailor empty/review/preview checks now pass, with shared 768 header issue explicitly logged for integration. Nested main landmark also corrected to a named section. All QA servers stopped. CSS/markup follow-up gates passed (81/1265). Last small fix: manual blur must check the actually accepted subset budget, not rely on pending shortenings. qa/v3-resume-budget.mjs regression passed; manual over-budget wording remains a draft. Budget checkpoint fcdf11d. One remaining feedback fix: restored line must glow briefly on Reject; added transient line highlight and explicit QA assertion. Typecheck and no-shot flow/reduced-motion checks passed: first Accept 63/66ms, loading 221/250ms; Reject glow asserted. Last integrity fix: PDF must reject unencodable characters, never convert them to question marks. 26 focused tests and tsc pass. Accept/Reject glow (including restored text) and reduced motion passed browser checks; latest first Accept 63/66ms. Commit follow-ups, final gates, summary; no more planned product changes.
+## Handoff
+- Full summary + quality checklist + all artifact paths: devpost/v3-resume-summary.md.
+- Decisions/live-call recipes: devpost/v3-resume-log.md.
+- NEEDS INTEGRATION: at 768 shared Nav/ThemeToggle overflows 105px; Tailor itself fits. Shell owns that fix.
+- NEEDS INTEGRATION: replace allowed FilePenLine fallback with TailorIllustration when shell supplies it; retain original-byte upload vs text-only Profile distinction; coordinate CSS import location.
+- Word deliberately only removes existing whole words in order; PDF supports broader wording. PDF cover/redraw keeps old text underneath, uses white covers and closest standard fonts; unencodable text is rejected. Plain-text export available.
 
-## Next
-- Final summary: brief/quality checklist, 1265 tests, screenshot index, integration seams + exact live-call recipes, conservative Word restriction and PDF old text layer.
-- No push/merge/deploy. Final V3 resume summary commit only after summary is written and all remaining checks complete.
-
-## Gotchas
-- Personal vault intentionally not read; .env.local/keys never read. No pushes/merges/deploys.
-- Default filesystem read-only; authorized edits/tests/commits need escalated exec. No approvals rejected so far.
-- rg unavailable; Get-ChildItem/Select-String. Python IO needs encoding="utf-8"; Unicode in piped scripts becomes ?, so use ASCII escapes.
-- Gates: node qa/v3-gates.mjs -> qa/gates-out.txt; runner exits 0 even if individual gates fail, inspect every exit.
-- QA env: QA_BASE=http://localhost:3100; QA_SHOTS=C:\my_projects\projects\InternShield\.git\internshield-relay\v3-shots\resume; QA_OUT=qa/v3-resume-*-out.txt.
-- Prepared PDF previews enumerate <=64 valid subsets while layout-check step runs, one worker; each cached PNG is tied to exactly its downloadable bytes. Cache-safety tests prove matching/invalidation/cancel. Manual wording prepares new variants and applies immediately.
-- PDF cover/redraw leaves old text layer (known brief limit); white cover; plain-text export offered. PDF standard-font warnings in tests remain.
-- Profile stores text only; upload original bytes to preserve layout. No illustrations directory here; allowed FilePenLine fallback (integration note).
+## Working commands / constraints
+- Gates: node qa/v3-gates.mjs -> qa/gates-out.txt. Inspect all exits; runner itself can exit 0 on red gates.
+- Browser QA: qa/v3-resume-flow.mjs, states.mjs, responsive.mjs, budget.mjs. All APIs mocked.
+- Actual Word QA: npx tsx qa/v3-resume-word.ts (optional Windows/existing Word); COM needs [ref] arguments and .NET string paths. Cold startup can be slow.
+- QA_BASE=http://localhost:3100; QA_SHOTS=C:\my_projects\projects\InternShield\.git\internshield-relay\v3-shots\resume; QA_OUT=qa/v3-resume-*-out.txt.
+- Prepared PDF previews cache valid <=64 subset PNGs paired with exact output bytes during layout checking; toggles stay local. Cancellation/invalidation are tested.
+- Default filesystem read-only; authorized writes/tests/commits used escalated exec. rg absent; use Select-String/Get-ChildItem. Python IO needs UTF-8; use escapes for Unicode in piped scripts.
+- No personal vault or .env.local read, no secrets printed, no forbidden paths or learner profile changed. Original eval cases unchanged.
