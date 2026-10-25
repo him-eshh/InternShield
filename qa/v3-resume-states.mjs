@@ -32,8 +32,8 @@ try {
     const data = route.request().postDataJSON();
     const lines = data.resume.split("\n");
     const edits = [
-      { lineId: `l${lines.findIndex((l) => l.includes("Cleaned and merged"))}`, proposed: "Cleaned and merged 3 shipment data sources with Python and fixed duplicate records." },
-      ...(data.facts.includes("React") ? [{ lineId: `l${lines.findIndex((l) => l.includes("Wrote a short"))}`, proposed: "Wrote a short React guide for the checkout desk that new staff use." }] : []),
+      { lineId: `l${lines.findIndex((l) => l.includes("Cleaned and merged"))}`, proposed: data.source === "docx" ? "Cleaned 3 shipment data sources with Python to fix duplicate records." : "Cleaned and merged 3 shipment data sources with Python and fixed duplicate records." },
+      ...(data.facts.includes("React") ? [{ lineId: `l${lines.findIndex((l) => l.includes("Wrote a short"))}`, proposed: "Wrote a React guide for the checkout desk that new staff use." }] : []),
     ];
     await route.fulfill(done({ edits }));
   });
@@ -64,6 +64,10 @@ try {
   await cards.first().getByRole("alert").waitFor();
   assert(await cards.first().getByRole("button", { name: "Accepted", exact: true }).isDisabled());
   await cards.first().getByRole("button", { name: "Cancel edit", exact: true }).click();
+  await page.getByRole("button", { name: "Change inputs", exact: true }).click();
+  await page.getByLabel("Upload resume").setInputFiles("tests/fixtures/resume/one-page.pdf");
+  await page.getByRole("button", { name: "Tailor my resume", exact: true }).click();
+  await cards.first().waitFor({ timeout: 60000 });
   const chip = page.getByRole("button", { name: "I have this", exact: true });
   await chip.click();
   await page.getByRole("button", { name: "Confirmed", exact: true }).waitFor({ timeout: 30000 });

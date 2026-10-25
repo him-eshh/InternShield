@@ -4,7 +4,7 @@ import { canon } from "@/lib/tiers/resumeGuard";
 import { checkedEdits, editableLines } from "@/lib/tiers/resumeEdits";
 import { parseTextResume, docLines } from "@/lib/tiers/resumeModel";
 import { buildResumePlan } from "@/lib/tiers/resumePlan";
-import { MAX_EDITS } from "@/lib/tiers/resumeTypes";
+import { MAX_EDITS, type ResumeSource } from "@/lib/tiers/resumeTypes";
 import { MAX_FACTS, MAX_FACT_CHARS, MAX_JOB_CHARS, MAX_CONTEXT_FIELD } from "@/lib/tiers/types";
 import { callGroq } from "./groq";
 import { takeRewrite } from "./guard";
@@ -38,17 +38,20 @@ export function parseEditsRequest(body: Record<string, unknown>) {
   }
   const facts = body.facts ?? [];
   if (!Array.isArray(facts) || facts.length > MAX_FACTS || !facts.every((f) => typeof f === "string" && !!f.trim() && f.length <= MAX_FACT_CHARS)) return null;
+  const source = body.source ?? "text";
+  if (source !== "pdf" && source !== "docx" && source !== "text") return null;
   const guidance = body.guidance ?? [];
   if (!Array.isArray(guidance) || guidance.length > 4 || !guidance.every((g) => typeof g === "string" && g.length <= 240)) return null;
   const terms = buildResumePlan({ resume: body.resume, posting: body.posting }).keywords;
   if (!facts.every((f) => terms.some((term) => canon(term) === canon(f)))) return null;
-  return { resume: body.resume, posting: body.posting, company: body.company as string | undefined, role: body.role as string | undefined, facts: [...new Set(facts as string[])], guidance: guidance as string[] };
+  return { source: source as ResumeSource, resume: body.resume, posting: body.posting, company: body.company as string | undefined, role: body.role as string | undefined, facts: [...new Set(facts as string[])], guidance: guidance as string[] };
 }
 
 export async function handleEdits(body: Record<string, unknown>): Promise<Response> {
   const input = parseEditsRequest(body);
   if (!input) return failed("error", { status: 400, message: MESSAGES.bad });
   const doc = parseTextResume(input.resume);
+  doc.source = input.source;
   if (!attachResumeBoxes(doc, body.geometry)) return failed("error", { status: 400, message: MESSAGES.bad });
   const eligible = editableLines(doc);
   if (!eligible.length) return done({ edits: [] });
@@ -64,7 +67,8 @@ export async function handleEdits(body: Record<string, unknown>): Promise<Respon
       return { lineId: l.id, text: l.text, previous: lines[index - 1]?.text, next: lines[index + 1]?.text };
     }),
   });
-  const result = await callGroq("rewrite", { system: SYSTEM, user, maxTokens: 1800, schema: SCHEMA });
+  const wordRule = input.source === "docx" ? " For this Word document, only remove complete existing words; keep every surviving word exactly as written and in its original order. Do not add or reorder words or change punctuation. Remove filler or off-target detail to emphasize the supported keywords. Return no edit when a change would require new wording." : "";
+  const result = await callGroq("rewrite", { system: SYSTEM + wordRule, user, maxTokens: 1800, schema: SCHEMA });
   if (!result.ok) return fromOutcome(result);
   try {
     const json = JSON.parse(result.data);

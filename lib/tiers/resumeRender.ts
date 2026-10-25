@@ -1,3 +1,4 @@
+import { keepsWordLayout, WORD_LAYOUT } from "./resumeLayout";
 // Render accepted edits back into the user's own file (brief R4) and check the result is no longer.
 import { applyDocxEdits } from "./resumeDocx";
 import { docLines, docText } from "./resumeModel";
@@ -126,14 +127,16 @@ export async function renderEdited(doc: ResumeDoc, original: Uint8Array | null, 
   }
   if (doc.source === "docx" && original) {
     const lines = new Map(docLines(doc).map((l) => [l.id, l]));
+    const rejected: Rendered["rejected"] = [];
     const list = edits.flatMap((e) => {
       const line = lines.get(e.lineId);
+      if (!line || !keepsWordLayout(line.text, e.text)) { rejected.push({ lineId: e.lineId, reason: WORD_LAYOUT }); return []; }
       const p = line?.paragraph;
       const text = line?.markerInText && line.marker ? `${line.marker} ${e.text}` : e.text;
       return p === undefined ? [] : [{ paragraph: p, text }];
     });
     const bytes = await applyDocxEdits(original, list);
-    return { bytes, mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", ext: "docx", pageCount: doc.pageCount, rejected: [] };
+    return { bytes, mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", ext: "docx", pageCount: doc.pageCount, rejected };
   }
   const bytes = new TextEncoder().encode(renderPlainText(doc, edits));
   return { bytes, mime: "text/plain;charset=utf-8", ext: "txt", pageCount: doc.pageCount, rejected: [] };

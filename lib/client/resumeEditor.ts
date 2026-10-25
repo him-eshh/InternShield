@@ -71,7 +71,7 @@ export async function openResumeFile(file: File): Promise<ResumeFile> {
 export async function draftResumeEdits(file: ResumeFile, posting: string, plan: ResumePlan, facts: string[], signal: AbortSignal, onChecking?: () => void) {
   const response = await fetch("/api/rewrite", {
     method: "POST", headers: { "content-type": "application/json" }, signal,
-    body: JSON.stringify({ mode: "edits", resume: docText(file.doc), posting, company: plan.company, role: plan.role, facts, guidance: plan.emphasis, geometry: docLines(file.doc).filter((l) => l.kind === "bullet" && l.boxes?.length).map((l) => ({ lineId: l.id, boxes: l.boxes })) }),
+    body: JSON.stringify({ mode: "edits", source: file.doc.source, resume: docText(file.doc), posting, company: plan.company, role: plan.role, facts, guidance: plan.emphasis, geometry: docLines(file.doc).filter((l) => l.kind === "bullet" && l.boxes?.length).map((l) => ({ lineId: l.id, boxes: l.boxes })) }),
   });
   const json = await response.json();
   signal.throwIfAborted();

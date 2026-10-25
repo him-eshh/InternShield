@@ -105,8 +105,8 @@ describe("DOCX parse and in-place edit (R1, R4)", () => {
     const doc = await parseDocx(bytes);
     const line = docLines(doc)[0];
     expect(line.markerInText).toBe(true);
-    const output = await renderEdited(doc, bytes, [{ lineId: line.id, text: "Built a thing for the whole team." }]);
-    expect(docText(await parseDocx(output.bytes))).toBe("- Built a thing for the whole team.");
+    const output = await renderEdited(doc, bytes, [{ lineId: line.id, text: "Built a thing for team." }]);
+    expect(docText(await parseDocx(output.bytes))).toBe("- Built a thing for team.");
   });
 
   it("keeps the first run's formatting (italic lead word) when words change", () => {

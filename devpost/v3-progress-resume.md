@@ -12,9 +12,9 @@ Dev server: none. All owned 3100 QA trees stopped (last 46024). Never use port 3
 - Checkpoints: b1a42ca initial work preserved; 3056009 UI; ab0ef08 widths; 9729ab5 mobile fixes; bfbeff6 prepared previews + cache-safety tests.
 
 ## Current
-- R4 remains PARTIAL: DOCX pagination and rendered width are not enforced/proven by a real layout engine. Page count is stored/estimated metadata. UI says check Word page breaks. Need a real layout constraint/check before calling the stream complete.
-- Local WINWORD.EXE exists, but hidden COM test timed out after 90s without PDF export. Own WINWORD 45268 was stopped; experimental scripts removed. No local soffice executable found.
-- Small R3 follow-up implemented: AI-tell checks normalize typographic hyphens/apostrophes/whitespace and invisible separators; six new adversarial cases. Focused tests next, then checkpoint.
+- R4 current: conservative Word constraint implemented at shared/API/export boundaries (only remove whole existing words in order; no new glyphs/expanding whitespace). UI explains PDF for broader wording. Focused 38 tests and tsc pass. Word deletion-only QA running; next DOCX browser states and 2 R4 shots, then gates. Next: actual Word QA with deletion-only edits + updated DOCX browser states, then full gates.
+- Word retry succeeded after warm startup + COM [ref] arguments. Actual fixture QA: original 1 page -> edited 1 page, all 3 changes present, text inside original margins. Correct optional qa/v3-resume-word.ts + .ps1 restored; rerun now with deletion-only edits. Own Word instances closed; no server running.
+- R3 typography follow-up: 8344aac, 24 focused tests pass; six new Unicode phrase cases. R5/R6/R7 closed 9918713.
 
 ## Next
 - Finish R4 DOCX layout/overflow guarantee; consider a conservative deterministic layout constraint rather than metadata assertions. PDF per-row fitter and total +3% budget already tested.

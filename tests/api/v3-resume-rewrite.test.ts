@@ -45,6 +45,13 @@ describe("v3 rewrite route enforces edits guard", () => {
     expect((await call(data)).status).toBe(400);
     expect(h.call).not.toHaveBeenCalled();
   });
+  it("keeps Word layout by permitting deletions, never new or reordered words", async () => {
+    h.call.mockResolvedValueOnce({ ok: true, data: JSON.stringify({ edits: [{ lineId, proposed: "Built a club website using JavaScript." }] }) });
+    expect((await (await call({ ...body, source: "docx" })).json()).data.edits).toEqual([]);
+    h.call.mockResolvedValueOnce({ ok: true, data: JSON.stringify({ edits: [{ lineId, proposed: "Built a website with JavaScript." }] }) });
+    expect((await (await call({ ...body, source: "docx" })).json()).data.edits).toHaveLength(1);
+  });
+
   it("uses the shared rendered-width guard before returning a PDF suggestion", async () => {
     h.call.mockResolvedValue({ ok: true, data: JSON.stringify({ edits: [{ lineId, proposed: "Built a club website using JavaScript." }] }) });
     const box = { pageIndex: 0, x: 20, y: 100, w: 1, h: 10, family: "Helvetica", bold: false, italic: false };

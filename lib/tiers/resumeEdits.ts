@@ -1,12 +1,13 @@
+import { keepsWordLayout, WORD_LAYOUT } from "./resumeLayout";
 // Deterministic checks every suggested edit must pass (brief R3), shared by the browser and /api/rewrite.
 // Order of cost: cheap string rules first, the fact guard last.
 import { guardRewrite } from "./resumeGuard";
 import { canon, termRe } from "./resumeGuard";
 import { docLines, docText, sectionOf } from "./resumeModel";
 import { adjectiveStack, bannedIn, emDashCount, styleIssues } from "./resumeTells";
-import { LINE_GROWTH, MAX_EDITS, TOTAL_GROWTH, type ResumeDoc, type ResumeLine, type ResumeEdit } from "./resumeTypes";
+import { LINE_GROWTH, MAX_EDITS, TOTAL_GROWTH, type ResumeDoc, type ResumeLine, type ResumeEdit, type ResumeSource } from "./resumeTypes";
 
-export type EditFailure = "empty" | "unchanged" | "multiline" | "length" | "rewrite" | "fact" | "tell" | "dash" | "stack" | "style";
+export type EditFailure = "empty" | "unchanged" | "multiline" | "length" | "rewrite" | "fact" | "tell" | "dash" | "stack" | "style" | "width";
 
 export interface EditCheck {
   ok: boolean;
@@ -23,6 +24,7 @@ export interface CheckInput {
   /** Terms the user confirmed with "I have this". */
   facts?: string[];
   posting?: string | null;
+  source?: ResumeSource;
 }
 
 const words = (s: string) => canon(s).trim().split(" ").filter(Boolean);
@@ -49,6 +51,7 @@ export function checkEdit(i: CheckInput): EditCheck {
     return { ok: false, failures, details };
   }
   if (/[\r\n]/.test(proposed)) fail("multiline");
+  if (i.source === "docx" && !keepsWordLayout(original, proposed)) fail("width", WORD_LAYOUT);
   if (canon(proposed) === canon(original) && proposed === original) fail("unchanged");
   if (proposed.length > Math.floor(original.length * LINE_GROWTH)) fail("length", `${proposed.length} > ${Math.floor(original.length * LINE_GROWTH)} chars`);
   if (keptShare(original, proposed) < 0.5) fail("rewrite", "keeps under half of the original words");
@@ -109,7 +112,7 @@ export function checkedEdits(doc: ResumeDoc, candidates: unknown, keywords: stri
     const line = allowed.get(c.lineId);
     if (!line) continue;
     const proposed = c.proposed.trim();
-    if (!checkEdit({ resume, original: line.text, proposed, facts, posting }).ok) continue;
+    if (!checkEdit({ resume, original: line.text, proposed, facts, posting, source: doc.source }).ok) continue;
     const next = new Map(texts).set(line.id, proposed);
     if (!withinTotalBudget(doc, next)) continue;
     const dashes = lines.reduce((n, l) => n + emDashCount(next.get(l.id) ?? l.text), 0);
