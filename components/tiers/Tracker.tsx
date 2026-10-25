@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 
 import { addCard, loadCards, moveCard, removeCard, saveCards, updateNotes } from "@/lib/tiers/tracker";
 import { TRACKER_COLUMNS, type TrackerCard } from "@/lib/tiers/types";
 import { LEVEL_LABELS, type RiskLevel } from "@/lib/types";
-import { CircleAlert, CircleCheck, TriangleAlert, SquareKanban, ArrowRight } from "lucide-react";
+import { CircleAlert, CircleCheck, TriangleAlert, SquareKanban } from "lucide-react";
 import { EmptyIllustration } from "../illustrations";
 import { ArrowLeftIcon, ExternalIcon } from "../icons";
 import { btnPrimary, card as cardCls, chip, fieldInput, linkClass } from "../ui";
