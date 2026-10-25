@@ -1,3 +1,4 @@
+import { attachResumeBoxes, fittingResumeEdits } from "@/lib/tiers/resumeWidth";
 // v3 suggestions: selected existing bullets, shared deterministic checks before returning JSON.
 import { canon } from "@/lib/tiers/resumeGuard";
 import { checkedEdits, editableLines } from "@/lib/tiers/resumeEdits";
@@ -37,15 +38,18 @@ export function parseEditsRequest(body: Record<string, unknown>) {
   }
   const facts = body.facts ?? [];
   if (!Array.isArray(facts) || facts.length > MAX_FACTS || !facts.every((f) => typeof f === "string" && !!f.trim() && f.length <= MAX_FACT_CHARS)) return null;
+  const guidance = body.guidance ?? [];
+  if (!Array.isArray(guidance) || guidance.length > 4 || !guidance.every((g) => typeof g === "string" && g.length <= 240)) return null;
   const terms = buildResumePlan({ resume: body.resume, posting: body.posting }).keywords;
   if (!facts.every((f) => terms.some((term) => canon(term) === canon(f)))) return null;
-  return { resume: body.resume, posting: body.posting, company: body.company as string | undefined, role: body.role as string | undefined, facts: [...new Set(facts as string[])] };
+  return { resume: body.resume, posting: body.posting, company: body.company as string | undefined, role: body.role as string | undefined, facts: [...new Set(facts as string[])], guidance: guidance as string[] };
 }
 
 export async function handleEdits(body: Record<string, unknown>): Promise<Response> {
   const input = parseEditsRequest(body);
   if (!input) return failed("error", { status: 400, message: MESSAGES.bad });
   const doc = parseTextResume(input.resume);
+  if (!attachResumeBoxes(doc, body.geometry)) return failed("error", { status: 400, message: MESSAGES.bad });
   const eligible = editableLines(doc);
   if (!eligible.length) return done({ edits: [] });
   const cap = takeRewrite();
@@ -54,7 +58,7 @@ export async function handleEdits(body: Record<string, unknown>): Promise<Respon
   const lines = docLines(doc);
   const user = JSON.stringify({
     RESUME: input.resume, POSTING: input.posting, COMPANY: input.company, ROLE: input.role,
-    KEYWORDS: plan.keywords, CONFIRMED_SKILLS: input.facts,
+    KEYWORDS: plan.keywords, COMPANY_GUIDANCE: input.guidance, CONFIRMED_SKILLS: input.facts,
     BULLETS: eligible.map((l) => {
       const index = lines.indexOf(l);
       return { lineId: l.id, text: l.text, previous: lines[index - 1]?.text, next: lines[index + 1]?.text };
@@ -64,7 +68,8 @@ export async function handleEdits(body: Record<string, unknown>): Promise<Respon
   if (!result.ok) return fromOutcome(result);
   try {
     const json = JSON.parse(result.data);
-    return done({ edits: checkedEdits(doc, json?.edits, plan.keywords, input.facts, input.posting) });
+    const checked = checkedEdits(doc, json?.edits, plan.keywords, input.facts, input.posting);
+    return done({ edits: await fittingResumeEdits(doc, checked) });
   } catch {
     return failed("error", { message: "Couldn't draft edits right now. Try again in a minute." });
   }

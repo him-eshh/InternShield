@@ -70,7 +70,13 @@ export function DocumentPreview({ output, version, onReady, highlights }: { outp
         if (cancelled) return;
         const pre = document.createElement("pre");
         pre.style.whiteSpace = "pre-wrap"; pre.style.overflowWrap = "anywhere";
-        pre.textContent = new TextDecoder().decode(output.bytes);
+        const lines = new TextDecoder().decode(output.bytes).split("\n");
+        lines.forEach((text, i) => {
+          const span = document.createElement("span");
+          if (highlights.some((l) => text.includes(l.text))) span.className = "resume-highlight-text";
+          span.textContent = text + (i < lines.length - 1 ? "\n" : "");
+          pre.appendChild(span);
+        });
         node!.appendChild(pre);
       }
       if (!cancelled) { setError(""); setReady(version); onReady(version); }

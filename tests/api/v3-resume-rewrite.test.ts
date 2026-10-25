@@ -45,6 +45,17 @@ describe("v3 rewrite route enforces edits guard", () => {
     expect((await call(data)).status).toBe(400);
     expect(h.call).not.toHaveBeenCalled();
   });
+  it("uses the shared rendered-width guard before returning a PDF suggestion", async () => {
+    h.call.mockResolvedValue({ ok: true, data: JSON.stringify({ edits: [{ lineId, proposed: "Built a club website using JavaScript." }] }) });
+    const box = { pageIndex: 0, x: 20, y: 100, w: 1, h: 10, family: "Helvetica", bold: false, italic: false };
+    const data = { ...body, geometry: [{ lineId, boxes: [box] }], guidance: ["Explain your testing choices."] };
+    expect((await (await call(data)).json()).data.edits).toEqual([]);
+    expect(h.call.mock.calls[0][1].user).toContain("Explain your testing choices.");
+    const wide = { ...data, geometry: [{ lineId, boxes: [{ ...box, w: 500 }] }] };
+    expect((await (await call(wide)).json()).data.edits).toHaveLength(1);
+    expect((await call({ ...body, geometry: [{ lineId, boxes: [{ ...box, w: -1 }] }] })).status).toBe(400);
+  });
+
   it("handles bad JSON and upstream limits without leaking output", async () => {
     h.call.mockResolvedValueOnce({ ok: true, data: "not json" }).mockResolvedValueOnce({ ok: false, reason: "limit", retryAfter: 20 });
     expect((await call()).status).toBe(502);

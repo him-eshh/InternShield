@@ -5,6 +5,7 @@ import type { ResumeData } from "@/lib/types";
 import type { PostingContext } from "@/lib/tiers/types";
 import type { ResumeEdit } from "@/lib/tiers/resumeTypes";
 import { docLines, docText, parseTextResume } from "@/lib/tiers/resumeModel";
+import { keywordGap } from "@/lib/tiers/keywordGap";
 import { checkEdit, withinTotalBudget } from "@/lib/tiers/resumeEdits";
 import { loadResumePlan, type ResumePlan } from "@/lib/tiers/resumePlan";
 import { lengthCheck, renderEdited, renderPlainText, TOO_LONG, type Rendered } from "@/lib/tiers/resumeRender";
@@ -89,7 +90,11 @@ export default function ResumeTailor({ resume, target, onOpenProfile, onBack }: 
       });
       abort.signal.throwIfAborted();
       setFile(original); setRevision((n) => n + 1);
-      setEdits((previous) => addOne ? [...previous, ...suggestions.filter((e) => !previous.some((p) => p.lineId === e.lineId)).slice(0, Math.min(1, 6 - previous.length))] : suggestions);
+      setEdits((previous) => {
+        if (!addOne) return suggestions;
+        const combined = [...previous, ...suggestions.filter((e) => !previous.some((p) => p.lineId === e.lineId)).slice(0, Math.min(1, 6 - previous.length))];
+        return withinTotalBudget(original.doc, new Map(combined.map((e) => [e.lineId, e.proposed]))) ? combined : previous;
+      });
       setOutcomes((o) => [...o, `${suggestions.length} edits passed checks`]); setStage(5);
       setPreviewOpen(false);
     } catch (issue) {
@@ -119,6 +124,11 @@ export default function ResumeTailor({ resume, target, onOpenProfile, onBack }: 
     const next = facts.includes(term) ? facts.filter((f) => f !== term) : [...facts, term];
     if (next.length > 12) { setError("Confirm up to 12 skills."); return; }
     setFacts(next);
+    if (file) setPlan((previous) => {
+      if (!previous) return previous;
+      const gap = keywordGap(posting, docText(file.doc), next);
+      return { ...previous, gap, missing: [...gap.required, ...gap.preferred].filter((t) => t.bucket === "missing").map((t) => t.term) };
+    });
     // Removing confirmation removes every dependent suggestion immediately.
     if (facts.includes(term) && file) setEdits((all) => all.filter((e) => checkEdit({ resume: docText(file.doc), original: e.original, proposed: e.proposed, facts: next, posting }).ok));
     else if (file) void start(next, true);
@@ -142,7 +152,7 @@ export default function ResumeTailor({ resume, target, onOpenProfile, onBack }: 
     {showProgress && busy && <section role="status" aria-live="polite" className="my-5 rounded-2xl border border-border bg-surface p-5"><ol className="space-y-3">{steps.map((label, i) => <li key={label} className={`flex items-start gap-3 text-sm ${i > stage ? "text-fg-3" : "text-fg"}`}>{i < stage ? <Check size={18} className="text-tool-strong" /> : i === stage ? <LoaderCircle size={18} className="animate-spin motion-reduce:animate-none text-tool-strong" /> : <span className="mt-1 h-3 w-3 rounded-full border border-border-strong" />}<span>{label}{outcomes[i] && <span className="ml-2 text-fg-2">{outcomes[i]}</span>}</span></li>)}</ol></section>}
     {error && <p role="alert" className="my-4 rounded-xl border border-border bg-surface p-4 text-sm">{error}</p>}
     {review && plan && !busy && <div className="space-y-6"><div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-fg-2">{edits.length} suggestions <span aria-hidden="true">/</span> {accepted.length} accepted</p><button type="button" className={secondary} onClick={() => { setFile(null); setEdits([]); setPlan(null); setFacts([]); }}>Change inputs</button></div><PlanPanel plan={plan} />
-      <section aria-label="Posting keyword gaps" className="rounded-2xl border border-border bg-surface p-5"><h2 className="text-sm font-semibold">Posting keywords</h2><p className="mt-1 text-xs text-fg-2">Only add a missing skill if you have it.</p><div className="mt-3 flex flex-wrap gap-2">{[...plan.gap.required, ...plan.gap.preferred].map((term) => <div key={term.term} className="flex min-h-11 items-center gap-2 rounded-xl border border-border px-3 text-sm">{term.bucket !== "missing" && <Check size={15} className="text-tool-strong" />}<span>{term.term}</span>{term.bucket === "missing" && <button type="button" onClick={() => toggleFact(term.term)} aria-pressed={facts.includes(term.term)} className="min-h-11 text-xs font-medium text-tool-strong">{facts.includes(term.term) ? "Confirmed" : "I have this"}</button>}</div>)}</div></section>
+      <section aria-label="Posting keyword gaps" className="rounded-2xl border border-border bg-surface p-5"><h2 className="text-sm font-semibold">Posting keywords</h2><p className="mt-1 text-xs text-fg-2">Only add a missing skill if you have it.</p><div className="mt-3 flex flex-wrap gap-2">{[...plan.gap.required, ...plan.gap.preferred].map((term) => <div key={term.term} className="flex min-h-11 items-center gap-2 rounded-xl border border-border px-3 text-sm">{term.bucket !== "missing" && <Check size={15} className="text-tool-strong" />}<span>{term.term}</span>{(term.bucket === "missing" || facts.includes(term.term)) && <button type="button" onClick={() => toggleFact(term.term)} aria-pressed={facts.includes(term.term)} className="min-h-11 text-xs font-medium text-tool-strong">{facts.includes(term.term) ? "Confirmed" : "I have this"}</button>}</div>)}</div></section>
       <div className="flex gap-2 lg:hidden"><button type="button" className={secondary} aria-pressed={!previewOpen} onClick={() => setPreviewOpen(false)}>Edits</button><button type="button" className={secondary} aria-pressed={previewOpen} onClick={() => setPreviewOpen(true)}><Eye size={16} />Preview</button></div>
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]"><section aria-label="Suggested edits" className={`${previewOpen ? "hidden lg:block" : "block"} space-y-4`}>{edits.length ? edits.map((edit) => <EditCard key={edit.id} edit={edit} onStatus={status} onEdit={editText} />) : <div className="rounded-2xl border border-border bg-surface p-6"><h2 className="font-display text-lg font-semibold">Your wording already fits</h2><p className="mt-2 text-sm text-fg-2">No suggestions passed all the checks. You can confirm a missing skill above or try another posting.</p></div>}</section>
         <section className={`${previewOpen ? "block" : "hidden lg:block"} min-w-0 space-y-3 lg:sticky lg:top-24`} aria-label="Live preview"><div className="flex items-center justify-between gap-3"><h2 className="font-display text-lg font-semibold">Your resume</h2><span className="text-xs text-fg-2">{file.doc.pageCount} {file.doc.pageCount === 1 ? "page" : "pages"}</span></div>{generated && <DocumentPreview output={generated.output} version={generated.version} onReady={markReady} highlights={highlight} />}{renderError && <p role="alert" className="text-sm">{renderError}</p>}<p className="text-xs text-fg-2">{file.doc.source === "docx" ? "Original Word layout kept. Check page breaks in Word." : "Same length as your original"}</p>{file.doc.source === "pdf" && <p className="text-xs text-fg-3">PDF changes cover the old text visually. Use plain text for a clean text layer.</p>}<div className="flex flex-wrap gap-2"><button type="button" disabled={!ready} className={primary} onClick={() => generated && saveResumeBytes(generated.output.bytes, generated.output.mime, `${baseName}-tailored.${generated.output.ext}`)}><Download size={16} />Download {generated?.output.ext.toUpperCase() ?? "resume"}</button><button type="button" disabled={!ready} className={secondary} onClick={() => saveResumeBytes(new TextEncoder().encode(renderPlainText(file.doc, accepted.map((e) => ({ lineId: e.lineId, text: e.proposed })))), "text/plain", `${baseName}-tailored.txt`)}>Plain text</button></div>{!ready && <p className="text-xs text-fg-2">Preview first, then download.</p>}</section>
