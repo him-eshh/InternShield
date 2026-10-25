@@ -1,25 +1,26 @@
 # v3 shell progress
 
 ## Done
-- S1 implementation: 8bbf788 (WIP; gates/visual proof pending).
-- Inherited Home/Profile and updated launcher briefs: 04d2016 (WIP).
-- S3 Nav avatar/completeness, indicator, tablet/mobile controls: f6b0296 (WIP).
-- S7 Tracker restyle + S4 instant location save/announced Saved: f71cb4f (WIP).
+- S1 implementation: 8bbf788; Home/Profile inherited work: 04d2016.
+- S3 Nav/completeness/tablet/mobile: f6b0296; S7 Tracker/S4 save feedback: f71cb4f.
+- QA/storage regressions: ba530e0; visual contrast/touch/reduced-motion fixes: be32798.
+- Home hydration fix: 1ecc2ef. All implementations still WIP until final green gates.
+- Browser QA: 132 checks pass; accessibility/Profile: 16 checks pass. 29 screenshots personally reviewed.
 
 ## Current
-- S1/S2/S3/S4/S7 implemented, not item-closed. Full gate runner active (qa/gates-out.txt; first lint still running).
-- Add mocked shell QA: Home/returning, routes/active states, Profile 0->4, Tracker move/delete/undo, reduced motion and 320/768 overflow.
-- Need personally inspect screenshots before claiming Quality bar.
+- Final full gates running via node qa/v3-gates.mjs (qa/gates-out.txt).
+- Earlier gates: lint/tsc/build/eval green; PDF timeout under parallel load passed isolated (10/10 incl storage tests).
+- Final code includes hydration-safe mount animation and explicit on-ink text tokens.
 
 ## Next
-- Finish S8/S9 QA and fix findings; run/finish green gates and close items.
-- Write shell log with integration needs (prefs consumers owned by other streams).
-- Final summary only after all brief items and Quality bar proven.
+- Finish final gates; item-close S1/S2/S3/S4/S7/S8/S9 with green evidence.
+- Confirm server stopped, ownership clean, screenshot index and integration notes.
+- Write summary and exact V3 shell summary commit only if all Quality bar lines proven.
 
 ## Gotchas
-- Branch v3-shell; personal vault/report-owned files untouched.
-- No server started yet. Hidden 3300 only; stop after screenshots.
+- v3-shell only; personal vault/report-owned files untouched; no theme value changes.
+- Hidden 3300 server round complete; cleanup requested for known cmd PID 27860 (verified command first).
 - QA_SHOTS=C:\my_projects\projects\InternShield\.git\internshield-relay\v3-shots\shell
-- Gates: node qa/v3-gates.mjs; qa/gates-out.txt. Do not overlap another build/gate runner.
-- rg unavailable; use Select-String/Get-ChildItem. Next docs are .md.
-- Profile stays {field,level,skills}; optional target prefs use is:prefs. Tablet nav breakpoint now 1024px.
+- QA: QA_BASE=http://localhost:3300; node qa/v3-shell-qa.mjs / qa/v3-shell-accessibility.mjs. All APIs mocked.
+- Profile prefs use is:prefs; other streams must consume roles/companies/preferences at integration (see shell log).
+- rg unavailable. Next docs use .md. Never overlap gates with dev-server compilation if avoidable.
