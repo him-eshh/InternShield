@@ -10,11 +10,11 @@
 - All five final gates GREEN: lint, tsc, 76 files/1204 tests, build, eval 88/88; held-out 24/27, zero low false positives.
 
 ## Current
-- Closing all shell brief items with green gates. Prepare final summary/done-signal commit next.
+- All shell items closed in 38f9768. Summary and screenshot index written; final done-signal commit follows.
 
 ## Next
 - Integration consumes is:prefs in Tailor/Practice, adopts illustrations in their empty states, audits report-owned profile loops.
-- See devpost/v3-shell-log.md and forthcoming summary. No remaining shell implementation work.
+- Read devpost/v3-shell-summary.md and devpost/v3-shell-screenshots.md. No remaining shell implementation work.
 
 ## Gotchas
 - v3-shell only; personal vault/report-owned source untouched; no theme value changes.
