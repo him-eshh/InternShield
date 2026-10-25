@@ -37,7 +37,7 @@ export const SETUP_ROUNDS: RoundKind[] = ["coding", "sql", "debugging", "design"
 /** Questions in one "round" when the session is counted in rounds. */
 export const ROUND_LEN: Partial<Record<RoundKind, number>> = { screen: 2, behavioral: 3, coding: 1, sql: 2, debugging: 1, design: 1, case: 1, portfolio: 2 };
 /** Languages whose code runs in the browser; the rest are discussed only. */
-export const RUNNABLE_LANGS = ["python", "typescript", "javascript"] as const;
+export const RUNNABLE_LANGS = ["python", "typescript"] as const;
 export const MIN_COUNT = 1;
 export const MAX_COUNT = 15;
 const LEVELS = ["easy", "medium", "hard"] as const;
@@ -170,7 +170,7 @@ const usedKeys = (s: PracticeState): Set<string> => {
   if (s.current) used.add(s.current.item.question);
   return used;
 };
-const usedIds = (s: PracticeState): Set<string> => new Set([...s.turns.map((t) => t.source), ...(s.current ? [s.current.item.source, s.current.item.problemId ?? ""] : [])]);
+const usedIds = (s: PracticeState): Set<string> => new Set([...s.turns.flatMap((t) => [t.source, t.problemId ?? "", t.code?.problemId ?? ""]), ...(s.current ? [s.current.item.source, s.current.item.problemId ?? ""] : [])]);
 
 function levelFor(s: PracticeState): "easy" | "medium" | "hard" {
   return s.config.difficulty === "mixed" ? LEVELS[Math.min(2, Math.max(0, s.level))] : s.config.difficulty;
@@ -219,8 +219,9 @@ export function makeItem(s: PracticeState, i: number, bank: BankQuestion[]): Pla
   const unused = <T extends { id: string }>(xs: T[]): T[] => xs.filter((x) => !ids.has(x.id));
   if (slot.round === "coding") {
     const nth = s.turns.filter((t) => t.round === "coding").length + (s.current?.item.round === "coding" ? 1 : 0);
+    const constrained = s.config.topics.length > 0 || s.config.difficulty !== "mixed" || !!s.config.company;
     const problems = unused(PROBLEMS);
-    if (runs && nth % 2 === 0 && problems.length) {
+    if (runs && !constrained && nth % 2 === 0 && problems.length) {
       const p = problems[Math.floor(rand() * problems.length)];
       return mk({ kind: "code", question: p.prompt, source: "app", title: p.title, problemId: p.id });
     }
@@ -322,7 +323,7 @@ export const followUpsLeft = (c: Current): number => Math.max(0, MAX_FOLLOWUPS -
 export function applyQuestion(s: PracticeState, text: string, now: number): PracticeState {
   const c = s.current;
   const q = text.trim().slice(0, 400);
-  if (!c || !q) return { ...s, calls: s.calls + 1, updatedAt: now };
+  if (!c || !q || s.turns.some((t) => t.question === q)) return { ...s, calls: s.calls + 1, updatedAt: now };
   const inner = c.inner ? { ...c.inner, pending: q } : null;
   return { ...s, calls: s.calls + 1, updatedAt: now, current: { ...c, item: { ...c.item, question: q }, inner } };
 }
@@ -449,6 +450,7 @@ function finalize(s: PracticeState, now: number, skipped: boolean): SessionTurn 
     hintsUsed: c.hints.length,
     skipped,
     ...(c.feedback ? { feedback: c.feedback } : {}),
+    ...(c.item.problemId ? { problemId: c.item.problemId } : {}),
     ...(c.item.title ? { title: c.item.title } : {}),
     ...(c.item.url ? { url: c.item.url } : {}),
     ...(c.item.difficulty ? { difficulty: c.item.difficulty } : {}),
@@ -473,7 +475,7 @@ function moveOn(s: PracticeState, turn: SessionTurn, bank: BankQuestion[], now: 
 /** Done with this question: store it and open the next, or finish the session after the last slot. */
 export function advance(s: PracticeState, bank: BankQuestion[], now: number): PracticeState {
   const t = s.status === "active" ? finalize(s, now, false) : null;
-  return t && s.current?.answer !== null ? moveOn(s, t, bank, now) : s;
+  return t && awaiting(s) === "next" ? moveOn(s, t, bank, now) : s;
 }
 
 export function skip(s: PracticeState, bank: BankQuestion[], now: number): PracticeState {

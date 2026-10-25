@@ -527,6 +527,7 @@ export interface SessionTurn {
   feedback?: AnswerFeedback;
   /** v3: bank/app metadata for the recap, and follow-ups asked after the main answer. */
   title?: string;
+  problemId?: string;
   url?: string;
   difficulty?: string;
   tags?: string[];
