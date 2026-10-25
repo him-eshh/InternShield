@@ -1,6 +1,6 @@
 # v3 resume progress
 
-Dev server: none; QA trees 45528/39380/48048/19440 stopped after rounds (3100). Never use port 3000.
+Dev server: none; QA trees 45528/39380/48048/19440/46768/37028/46500/31228 stopped after rounds (3100). Never use port 3000.
 
 ## Done
 - R2/R3: cited company/role plan, required/preferred keywords, capped/error fallback; guarded edits API + client, <=6 bullets, fact/tell/style/+3% checks, PDF row widths, confirmed posting skills only. Closed in 84ad3f9.
@@ -12,7 +12,7 @@ Dev server: none; QA trees 45528/39380/48048/19440 stopped after rounds (3100). 
 ## Current
 - R4/R5/R6 finish: guarded editor/preview wired (3056009), width checks (ab0ef08), PDF worker optimization + DOCX/cancel tests (324acf0).
 - Quick review shots at 1440/390 light viewed; mocked PDF flow and DOCX/cancel/skill reversal pass. Loading 210/214ms, first accept 118/50ms before final bytes/highlight snapshot pairing fix. Rerun timing now that pairing is corrected.
-- Final matrix passed and all 32 shots viewed. Loading 212-232ms; byte-matched PDF accept 100-133ms. Found mobile progress below fold; adding auto-scroll + nearby Cancel and PDF zoom. Next rerun affected shots with --full --fix-shots; inspect them, then gates.
+- Final matrix passed and all 32 shots viewed. Loading 212-232ms; byte-matched PDF accept 100-133ms. Found mobile progress below fold; adding auto-scroll + nearby Cancel and PDF zoom. Fixes checkpoint 9729ab5. Targeted recheck: desktop passed (133/198ms), mobile 248ms FAILED. Now scale canvas to actual display width (rerender at higher resolution on zoom). Next run regressed to desktop 506ms despite canvas size reduction. Profile: bytes ~9ms, PDF parse/draw dominates. Implemented prepareResumePreviews: pre-render <=64 exact-byte PNG variants during layout checks; Accept/Reject switches prepared snapshots. Typecheck green; no-shot QA passed with first Accept 82ms at both widths, loading 215/219ms. Manual wording prepares new variants. Diagnostic marks removed. Added completed-version timing for second Accept + Reject; next browser/affected-shot recheck.
 
 ## Next
 - R4: DOCX pagination remains unproven (stored page metadata only); no local soffice. Need conservative handling/explicit limitation; do not claim full quality bar.

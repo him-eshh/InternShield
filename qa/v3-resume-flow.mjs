@@ -20,13 +20,17 @@ for (const variant of runs) {
       document.addEventListener("click", (event) => {
         const button = event.target.closest("button");
         if (button?.textContent.includes("Tailor my resume")) window.__resumeTiming.start = performance.now();
-        if (button?.textContent.trim() === "Accept") window.__resumeTiming.accept = performance.now();
+        const action = button?.textContent.trim();
+        if (action === "Accept" || action === "Accepted" || (action === "Reject" && button.closest("article")?.querySelector('button[aria-pressed="true"]')?.textContent.includes("Accepted"))) {
+          window.__resumeTiming.accept = performance.now();
+          window.__resumeTiming.before = document.querySelector('[data-preview-ready]')?.getAttribute("data-preview-ready");
+        }
       }, true);
       new MutationObserver(() => {
         const timing = window.__resumeTiming;
         if (timing.start && !timing.loading && [...document.querySelectorAll('[role="status"]')].some((n) => n.textContent.includes("Reading your resume"))) timing.loading = performance.now() - timing.start;
-        if (timing.accept && document.querySelector(".resume-highlight")) { timing.preview = performance.now() - timing.accept; timing.accept = 0; }
-      }).observe(document.body, { childList: true, subtree: true });
+        if (timing.accept && document.querySelector("[data-preview-ready]")?.getAttribute("data-preview-ready") !== timing.before) { timing.preview = performance.now() - timing.accept; timing.accept = 0; }
+      }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-preview-ready"] });
     });
     if (capture("empty")) await shot(page, `resume-empty-${tag(variant)}`);
     await page.getByLabel("Upload resume").setInputFiles("tests/fixtures/resume/one-page.pdf");
@@ -69,7 +73,7 @@ for (const variant of runs) {
     if (capture("plan")) await shot(page, `resume-plan-${tag(variant)}`);
     if (!process.argv.includes("--no-shots") && !fixes) await shot(page, `resume-review-${tag(variant)}`);
     await cards.nth(0).getByRole("button", { name: "Accept", exact: true }).click();
-    await page.locator(".resume-highlight").first().waitFor({ state: "attached", timeout: 30000 });
+    await page.waitForFunction(() => !window.__resumeTiming.accept, null, { timeout: 30000 });
     const previewMs = await page.evaluate(() => window.__resumeTiming.preview);
     assert(previewMs < 200, `accepted preview took ${previewMs}ms`);
     console.log(`${tag(variant)} accept-to-preview ${Math.round(previewMs)}ms`);
@@ -79,12 +83,19 @@ for (const variant of runs) {
       if (variant.width < 1000) await page.getByRole("button", { name: "Edits", exact: true }).click();
     }
     await cards.nth(1).getByRole("button", { name: "Accept", exact: true }).click();
+    await page.waitForFunction(() => !window.__resumeTiming.accept, null, { timeout: 30000 });
+    assert((await page.evaluate(() => window.__resumeTiming.preview)) < 200, "second Accept updates the completed byte-matched preview under 200ms");
+    await cards.nth(0).getByRole("button", { name: "Reject", exact: true }).click();
+    await page.waitForFunction(() => !window.__resumeTiming.accept, null, { timeout: 30000 });
+    assert((await page.evaluate(() => window.__resumeTiming.preview)) < 200, "Reject of an accepted edit updates preview under 200ms");
+    await cards.nth(0).getByRole("button", { name: "Accept", exact: true }).click();
+    await page.waitForFunction(() => !window.__resumeTiming.accept, null, { timeout: 30000 });
     await cards.nth(2).getByRole("button", { name: "Reject", exact: true }).click();
     await cards.nth(3).getByRole("button", { name: "Edit", exact: true }).click();
     const wording = cards.nth(3).getByRole("textbox", { name: "Your wording" });
     await wording.fill("Wrote a brief guide for the checkout desk that new staff still use.");
     await wording.press("Tab");
-    await cards.nth(3).getByRole("button", { name: "Accept", exact: true }).waitFor({ state: "visible" });
+    await wording.waitFor({ state: "hidden", timeout: 60000 });
     assert.equal(await cards.nth(3).getByRole("alert").count(), 0);
     if (variant.width < 1000) await page.getByRole("button", { name: "Preview", exact: true }).click();
     const download = page.getByRole("button", { name: "Download PDF", exact: true });
