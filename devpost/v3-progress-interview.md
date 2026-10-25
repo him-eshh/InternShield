@@ -1,9 +1,10 @@
 # v3 interview progress
 
 ## Done
+- I1: licensed question bank - `dc735de`
 
 ## Current
-- Closing I1; implementation, gates and quality evidence are complete.
+- Closing I2; implementation, gates and quality evidence are complete.
 
 ## Next
 - Finish any remaining item-closing records, then write and commit the final summary only after all seven are closed.

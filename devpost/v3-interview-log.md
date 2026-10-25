@@ -29,3 +29,7 @@ None for this stream. Shared integration follows its separate brief.
 ### I1: licensed question bank
 
 Complete. 1,130 unique metadata-only public questions; both MIT datasets have pinned source commits and dates. Lazy loader and combined company/role/difficulty/topic filters pass. No statements or solutions copied.
+
+### I2: company research shapes practice
+
+Complete. Cited research preselects supported stages and seeds value-based STAR prompts. Unavailable or uncited research falls back to unaffiliated company-style presets. Adapter tests and mocked source/fallback browser flows pass.
