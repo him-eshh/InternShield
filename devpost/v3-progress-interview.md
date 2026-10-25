@@ -1,41 +1,20 @@
-﻿# v3 interview progress
+# v3 interview progress
 
 ## Done
-- Bank metadata: d341e03 (1130 questions, MIT sources); item-closing gates pending.
-- Preserved inherited handoff: 0a353b0; engine regressions: 695900e.
-- Setup/intel WIP: f433eee; runner/summary/review API WIP: de68963.
-- First full gates: tsc/build green, 1225 tests green, eval 88/88 + held-out 24/27. Lint initially failed; focused lint fixed since.
-- Desktop QA: 5 answered, real Python + SQL, follow-ups, refresh recovery, auto-summary/history, early stop. Setup + summary shots inspected.
 
 ## Current
-- Hardened filters (never relax selected constraints), custom wording, storage recovery and variable-length scorecards. 71 focused tests + tsc green.
-- New active state field is activeQuestion (avoids React compiler ref inference). No public session migration needed: only this WIP stream used it.
-- components/interview/{Setup,IntelCard,Runner,Summary}.tsx, PracticePage.tsx. QA: qa/v3-interview-session.mjs.
-- About to run final screenshot matrix + extra edge/TypeScript browser checks, then full gates.
+- Closing I1; implementation, gates and quality evidence are complete.
 
 ## Next
-1. Commit current sub-item; add edge QA for TypeScript, rounds mode, custom questions, hints, cap and intel fallback.
-2. Hidden 3200 server; run matrix 1440/390 light/dark, inspect EVERY shot, stop own server.
-3. Fix any failures; run full gates before item-closing commits I1-I7.
-4. Summary only when every quality line is proven; no final summary signal yet.
+- Finish any remaining item-closing records, then write and commit the final summary only after all seven are closed.
+- Integration seams are listed in devpost/v3-interview-log.md; do not edit shared owner files here.
 
 ## Gotchas
-- No server currently running from this task. Verified own next PID 37600 + children stopped after desktop QA.
-- Windows Get-NetTCPConnection omitted own listener; use CIM worktree command line to identify only own next dev -p 3200 process and taskkill /PID <verified> /T /F.
-- Server launcher hidden, exact command from user; screenshots under authorized .git/internshield-relay/v3-shots/interview.
-- Never touch 3000, main tree, secrets, personal vault, prohibited agent files. rg unavailable.
-- No jsdom installed; tests stub localStorage. New writes use UTF-8 explicitly.
-- Strict LazyMotion requires m from motion/react-m, not motion components.
-- React event timestamps use module-level clock wrapper (same as SqlRound).
-- Runnable language prop keeps old panel defaults intact; v3 offers Python/TypeScript execution and JS discussion only.
-- Needs integration: shell supplies Practice illustration and cross-tool clear-data/continue links (shared files out of scope).
-- Final QA round starting: hidden launcher 40256, port 3200; run edge checks before matrix, then stop verified own next process.
-- Edge QA and all four matrix variants passed. Own port-3200 next tree stopped. About to inspect all 36 matrix shots, then full gates.
-- Inspection refinement: removed duplicate runnable prompt, added per-round labels + overall summary, persisted unfinished text/code/SQL drafts. Recheck draft refresh in edge + matrix scripts before closing gates.
-- Draft/layout QA retry: hidden launcher 46980, port 3200; stop its verified next tree after the round.
-- Draft-recovery edge + four-variant matrix passed; own next PID 3288 tree stopped. Corrected a round-label separator encoding artifact. Inspect shots and refresh affected captures before full gates.
-- All five closing gates green on e4847c9: 78 files / 1230 tests; eval 88/88, held-out 24/27. Refreshing captures only (await hydrated editor and hide dev-only overlay after reload); hidden launcher 39512, 3200.
-- Final capture refresh passed all four variants; owned server stopped. One usability fix after inspection: scroll to the start of new questions/summary, never on draft edits. Rerun gates for that source change before closing.
-- Final scorecard audit: SQL now uses local query-correctness evidence; regression covers failed SQL plus positive model feedback. Discussion round bands use the same evidence caps as their axes. Re-gate these source changes and refresh summary captures.
-- Final SQL audit gates green on 0507d4a: lint/tsc/build/eval, 78 files / 1231 tests, eval 88/88 held-out 24/27. Last capture round hidden launcher 26820, 3200; no further app changes planned.
-- Final image review found repeated next-drill text when coding and SQL share a weak skill. Deduplicated it; added engine and browser assertions. Re-gate and refresh summary evidence before completion.
+- Final source c710ba0: lint/tsc/vitest/build/eval all green; 78 files / 1232 tests; eval 88/88, held-out 24/27.
+- All browser edge checks and four screenshot variants pass; all 36 final captures personally inspected.
+- Own hidden port-3200 Next server tree stopped (PID 29176 + children). No servers from this task remain.
+- QA root: C:\my_projects\projects\InternShield\.git\internshield-relay\v3-shots\interview.
+- No live model/intel calls, keys, personal vault or prohibited agent files touched. No push/merge/deploy.
+- No rg/jsdom here. Explicit UTF-8 writes; tests stub localStorage. Strict LazyMotion uses motion/react-m.
+- Initial uncommitted work preserved in 0a353b0. Old Interview stays for compatibility/tests.
+- New storage keys: is:practice-active, is:practice-history; shared clear-data/Home Continue need integration.
