@@ -4,14 +4,14 @@ Done
 - P1 form/checklist: 6e1b559 + a09485a; coral form, real outcomes, 200ms spinner, screenshot upload, useful validation.
 - P2 report: bee484b + 2e1f5e2 + a09485a; neutral hero, lucide icons, animated ring, one primary, live risk actions, inline tracker confirmation.
 - P3 impact: bee484b + 2e1f5e2 + a09485a; named diffs, changed weights, confirmations, collapsed answers, in-place additions and persistence.
-- P4 QA: a09485a + closing commit; 77 files / 1,212 tests, all five gates green.
+- P4 QA: a09485a + d57555b; 77 files / 1,212 tests, all five gates green.
 - Browser matrix PASS at 1440/390 light/dark; all 56 final screenshots inspected.
 - Motion reveal/update PASS normal/reduced. 320 page fits; 768 report content fits.
 - QA server stopped; no listener on report port 3600.
 Current
-- P1-P4 complete in report ownership. Recording closing commit and writing final summary.
+- COMPLETE: P1-P4 closed at d57555b; summary and all evidence recorded.
 Next
-- Write devpost/v3-report-summary.md and exact V3 report summary commit.
+- Integration only: shell-owned tablet header; optional illustration swap.
 Gotchas
 - Shared shell has 95px overflow at 768px (theme control); logged Needs integration.
 - Shell may swap the form lucide placeholder for CheckIllustration as approved.
