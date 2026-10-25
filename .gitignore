@@ -20,5 +20,6 @@ npm-debug.log*
 
 # QA harness output (images live in .git/internshield-relay/fix-shots)
 /qa/out*.txt
+/qa/*-out.txt
 /qa/shots/
 /qa/examples.json
