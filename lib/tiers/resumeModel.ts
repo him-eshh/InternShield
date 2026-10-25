@@ -84,7 +84,7 @@ export function buildDoc(rows: RawRow[], pageCount: number, source: ResumeSource
       kind: heading ? "heading" : marker || row.listItem ? "bullet" : "text",
       pageIndex: row.pageIndex,
     };
-    if (marker) line.marker = marker;
+    if (marker) { line.marker = marker; line.markerInText = true; }
     else if (row.listItem) line.marker = "•";
     if (row.box) line.boxes = [row.box];
     if (row.paragraph !== undefined) line.paragraph = row.paragraph;

@@ -98,6 +98,17 @@ describe("DOCX parse and in-place edit (R1, R4)", () => {
     expect(docText(after).split("\n").filter((l, i) => l !== docText(doc).split("\n")[i])).toEqual([`• ${next}`]);
   });
 
+  it("preserves a literal DOCX bullet marker when replacing its body", async () => {
+    const zip = new JSZip();
+    zip.file("word/document.xml", '<w:document><w:body><w:p><w:r><w:t>- Built a thing for the team.</w:t></w:r></w:p></w:body></w:document>');
+    const bytes = await zip.generateAsync({ type: "uint8array" });
+    const doc = await parseDocx(bytes);
+    const line = docLines(doc)[0];
+    expect(line.markerInText).toBe(true);
+    const output = await renderEdited(doc, bytes, [{ lineId: line.id, text: "Built a thing for the whole team." }]);
+    expect(docText(await parseDocx(output.bytes))).toBe("- Built a thing for the whole team.");
+  });
+
   it("keeps the first run's formatting (italic lead word) when words change", () => {
     const p = '<w:p><w:r><w:rPr><w:i/></w:rPr><w:t xml:space="preserve">Built </w:t></w:r><w:r><w:rPr><w:sz w:val="21"/></w:rPr><w:t xml:space="preserve">a dashboard for the team.</w:t></w:r></w:p>';
     const out = replaceParagraphText(p, "Built a dashboard for the whole team.");
@@ -154,6 +165,19 @@ describe("PDF in-place render (R4)", () => {
     const wide: Measure = (_f, size, s) => s.length * size * 0.5;
     const fit = fitInBoxes(l, l.text, wide);
     expect(fit === null || fit.size >= l.boxes![0].h * 0.95 - 1e-9).toBe(true);
+  });
+});
+
+describe("individual PDF row widths", () => {
+  it("rejects text that fits the widest row but overflows the shorter row", () => {
+    const line = docLines(parseTextResume("- Built a thing for the team."))[0];
+    const base = { pageIndex: 0, x: 10, y: 100, w: 5, h: 1, family: "Helvetica" as const, bold: false, italic: false };
+    line.boxes = [base, { ...base, y: 98, w: 2 }];
+    const measure: Measure = (_font, size, text) => text.length * size;
+    expect(fitInBoxes(line, "aa aa aa aa", measure)).toBeNull();
+    const fit = fitInBoxes(line, "aa aa aa", measure)!;
+    expect(fit.rows).toEqual(["aa aa", "aa"]);
+    fit.rows.forEach((text, i) => expect(measure(base, fit.size, text)).toBeLessThanOrEqual(line.boxes![i].w));
   });
 });
 

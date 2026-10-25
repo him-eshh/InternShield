@@ -26,6 +26,8 @@ export interface ResumeLine {
   pageIndex: number;
   /** The bullet glyph that stood in front of `text`, kept so the round trip is exact. */
   marker?: string;
+  /** True when the marker is literal paragraph text rather than DOCX numbering. */
+  markerInText?: boolean;
   /** PDF: one box per visual row (a wrapped bullet has several). */
   boxes?: LineBox[];
   /** DOCX: index of the paragraph in word/document.xml. */

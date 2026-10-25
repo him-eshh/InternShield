@@ -8,20 +8,24 @@ export const TOO_LONG = "Too long for this line";
 
 export type Measure = (font: Pick<LineBox, "family" | "bold" | "italic">, size: number, text: string) => number;
 
-/** Words wrapped into rows no wider than `maxW`; null when one word alone is wider. */
-function wrap(text: string, maxW: number, width: (s: string) => number): string[] | null {
+/** Place words inside each original row's own width, not the widest row's width. */
+function wrap(text: string, widths: number[], width: (s: string) => number): string[] | null {
+  const words = text.split(/\s+/).filter(Boolean);
   const rows: string[] = [];
-  let cur = "";
-  for (const w of text.split(/\s+/).filter(Boolean)) {
-    if (width(w) > maxW) return null;
-    const t = cur ? `${cur} ${w}` : w;
-    if (cur && width(t) > maxW) {
-      rows.push(cur);
-      cur = w;
-    } else cur = t;
+  let at = 0;
+  for (const maxW of widths) {
+    let row = "";
+    while (at < words.length) {
+      const next = row ? `${row} ${words[at]}` : words[at];
+      if (width(next) > maxW) break;
+      row = next;
+      at++;
+    }
+    if (!row && at < words.length) return null;
+    if (row) rows.push(row);
+    if (at === words.length) return rows;
   }
-  if (cur) rows.push(cur);
-  return rows;
+  return null;
 }
 
 export interface Fit {
@@ -36,12 +40,12 @@ export interface Fit {
 export function fitInBoxes(line: ResumeLine, text: string, measure: Measure): Fit | null {
   const boxes = line.boxes;
   if (!boxes?.length) return null;
-  const maxW = Math.max(...boxes.map((b) => b.w));
+  if (boxes.some((b) => !Number.isFinite(b.w) || b.w <= 0 || !Number.isFinite(b.h) || b.h <= 0)) return null;
   const font = boxes[0];
   const body = toWinAnsi(text);
   for (const f of [1, 0.975, 0.95]) {
     const size = font.h * f;
-    const rows = wrap(body, maxW, (s) => measure(font, size, s));
+    const rows = wrap(body, boxes.map((b) => b.w), (s) => measure(font, size, s));
     if (rows && rows.length <= boxes.length) return { size, rows };
   }
   return null;
@@ -123,8 +127,10 @@ export async function renderEdited(doc: ResumeDoc, original: Uint8Array | null, 
   if (doc.source === "docx" && original) {
     const lines = new Map(docLines(doc).map((l) => [l.id, l]));
     const list = edits.flatMap((e) => {
-      const p = lines.get(e.lineId)?.paragraph;
-      return p === undefined ? [] : [{ paragraph: p, text: e.text }];
+      const line = lines.get(e.lineId);
+      const p = line?.paragraph;
+      const text = line?.markerInText && line.marker ? `${line.marker} ${e.text}` : e.text;
+      return p === undefined ? [] : [{ paragraph: p, text }];
     });
     const bytes = await applyDocxEdits(original, list);
     return { bytes, mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", ext: "docx", pageCount: doc.pageCount, rejected: [] };
