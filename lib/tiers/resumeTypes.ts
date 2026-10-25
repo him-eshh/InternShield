@@ -34,6 +34,8 @@ export interface ResumeLine {
   paragraph?: number;
 }
 
+export type ResumeHighlight = ResumeLine & { glow?: boolean };
+
 export interface ResumeSection {
   /** "" for the block above the first heading (name, contact). */
   heading: string;

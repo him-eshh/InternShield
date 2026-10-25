@@ -88,6 +88,10 @@ for (const variant of runs) {
     await cards.nth(0).getByRole("button", { name: "Reject", exact: true }).click();
     await page.waitForFunction(() => !window.__resumeTiming.accept, null, { timeout: 30000 });
     assert((await page.evaluate(() => window.__resumeTiming.preview)) < 200, "Reject of an accepted edit updates preview under 200ms");
+    const restoredLine = await cards.nth(0).getAttribute("data-line-id");
+    const revertedGlow = page.locator(`.resume-highlight-glow[data-line-id="${restoredLine}"]`);
+    await revertedGlow.first().waitFor({ state: "attached", timeout: 700 });
+    assert.equal(await revertedGlow.first().evaluate((node) => getComputedStyle(node).animationName), "resume-line-glow", "restored line glows briefly on rejection");
     await cards.nth(0).getByRole("button", { name: "Accept", exact: true }).click();
     await page.waitForFunction(() => !window.__resumeTiming.accept, null, { timeout: 30000 });
     await cards.nth(2).getByRole("button", { name: "Reject", exact: true }).click();

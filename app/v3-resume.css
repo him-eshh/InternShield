@@ -5,7 +5,8 @@
 .resume-document li { margin-bottom: 0.35em; }
 .resume-document table { width: 100%; border-collapse: collapse; }
 .resume-document td, .resume-document th { padding: 0.3em; border: 1px solid var(--border); }
-.resume-highlight { position: absolute; pointer-events: none; background: var(--tool-tint); opacity: 0.35; border-inline-start: 2px solid var(--tool); animation: resume-line-glow 900ms ease-out; }
-.resume-document .resume-highlight-text { background: var(--tool-tint); border-inline-start: 2px solid var(--tool); padding-inline-start: 0.3em; animation: resume-line-glow 900ms ease-out; }
+.resume-highlight { position: absolute; pointer-events: none; background: var(--tool-tint); opacity: 0.35; border-inline-start: 2px solid var(--tool); }
+.resume-document .resume-highlight-text { background: var(--tool-tint); border-inline-start: 2px solid var(--tool); padding-inline-start: 0.3em; }
+.resume-highlight-glow { animation: resume-line-glow 900ms ease-out; }
 @keyframes resume-line-glow { from { background-color: var(--tool); } to { background-color: var(--tool-tint); } }
-@media (prefers-reduced-motion: reduce) { .resume-highlight, .resume-document .resume-highlight-text { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .resume-highlight-glow { animation: none; } }

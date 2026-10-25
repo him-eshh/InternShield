@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Check, Download, Eye, FilePenLine, FileUp, LoaderCircle, X } from "lucide-react";
 import type { ResumeData } from "@/lib/types";
 import type { PostingContext } from "@/lib/tiers/types";
-import type { ResumeEdit, ResumeLine } from "@/lib/tiers/resumeTypes";
+import type { ResumeEdit, ResumeHighlight } from "@/lib/tiers/resumeTypes";
 import { docLines, docText, parseTextResume } from "@/lib/tiers/resumeModel";
 import { WORD_LAYOUT } from "@/lib/tiers/resumeLayout";
 import { keywordGap } from "@/lib/tiers/keywordGap";
@@ -31,6 +31,12 @@ export default function ResumeTailor({ resume, target, onOpenProfile, onBack }: 
   const [revision, setRevision] = useState(0);
   const [plan, setPlan] = useState<ResumePlan | null>(null);
   const [edits, setEdits] = useState<ResumeEdit[]>([]);
+  const [changed, setChanged] = useState<{ lineId: string } | null>(null);
+  useEffect(() => {
+    if (!changed) return;
+    const timeout = setTimeout(() => setChanged(null), 900);
+    return () => clearTimeout(timeout);
+  }, [changed]);
   const [facts, setFacts] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [showProgress, setShowProgress] = useState(false);
@@ -38,7 +44,7 @@ export default function ResumeTailor({ resume, target, onOpenProfile, onBack }: 
   const [outcomes, setOutcomes] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [generated, setGenerated] = useState<{ version: string; output: Rendered; highlights: ResumeLine[]; preparedPages?: PdfPreviewPage[] } | null>(null);
+  const [generated, setGenerated] = useState<{ version: string; output: Rendered; highlights: ResumeHighlight[]; preparedPages?: PdfPreviewPage[] } | null>(null);
   const [previewReady, setPreviewReady] = useState("");
   const [renderError, setRenderError] = useState("");
   const progressPanel = useRef<HTMLElement>(null);
@@ -51,10 +57,19 @@ export default function ResumeTailor({ resume, target, onOpenProfile, onBack }: 
   const version = useMemo(() => previewKey(accepted), [accepted]);
   const previewVersion = `${revision}:${version}`;
   const ready = generated?.version === previewVersion && previewReady === previewVersion && !renderError;
-  const highlight = useMemo(() => file ? accepted.flatMap((edit) => {
-    const line = docLines(file.doc).find((l) => l.id === edit.lineId);
-    return line ? [{ ...line, text: edit.proposed }] : [];
-  }) : [], [file, accepted]);
+  const highlight = useMemo<ResumeHighlight[]>(() => {
+    if (!file) return [];
+    const lines = docLines(file.doc);
+    const highlights = accepted.flatMap((edit) => {
+      const line = lines.find((l) => l.id === edit.lineId);
+      return line ? [{ ...line, text: edit.proposed, glow: changed?.lineId === line.id }] : [];
+    });
+    if (changed && !highlights.some((line) => line.id === changed.lineId)) {
+      const restored = lines.find((line) => line.id === changed.lineId);
+      if (restored) highlights.push({ ...restored, glow: true });
+    }
+    return highlights;
+  }, [file, accepted, changed]);
   const markReady = useCallback((key: string) => setPreviewReady(key), []);
 
   useEffect(() => () => { controller.current?.abort(); if (timer.current) clearTimeout(timer.current); }, []);
@@ -79,7 +94,7 @@ export default function ResumeTailor({ resume, target, onOpenProfile, onBack }: 
   }
   async function start(nextFacts = facts, addOne = false) {
     const abort = new AbortController(); controller.current?.abort(); controller.current = abort;
-    setBusy(true); setError(""); setOutcomes([]); setStage(0); setShowProgress(false);
+    setChanged(null); setBusy(true); setError(""); setOutcomes([]); setStage(0); setShowProgress(false);
     timer.current = setTimeout(() => setShowProgress(true), 200);
     try {
       const original = addOne && file ? file : upload ? await openResumeFile(upload) : { doc: parseTextResume(text), bytes: null, name: resume?.fileName ?? "resume.txt" };
@@ -121,7 +136,7 @@ export default function ResumeTailor({ resume, target, onOpenProfile, onBack }: 
     if (file && !withinTotalBudget(file.doc, new Map(next.filter((e) => e.status === "accepted").map((e) => [e.lineId, e.proposed])))) {
       setError("That combination is longer than your original. Reject another edit first."); return;
     }
-    setError(""); setEdits(next);
+    setError(""); setChanged({ lineId: edits.find((edit) => edit.id === id)!.lineId }); setEdits(next);
   }
   async function editText(id: string, proposed: string): Promise<string | null> {
     proposed = proposed.trim();
@@ -142,7 +157,7 @@ export default function ResumeTailor({ resume, target, onOpenProfile, onBack }: 
       const signal = controller.current?.signal ?? new AbortController().signal;
       await prepareResumePreviews(file, next, signal);
       signal.throwIfAborted();
-      setEdits(next);
+      setChanged({ lineId: edit.lineId }); setEdits(next);
       return null;
     } catch { return "Couldn't prepare that preview. Try again."; }
   }
@@ -178,7 +193,7 @@ export default function ResumeTailor({ resume, target, onOpenProfile, onBack }: 
     </section>}
     {showProgress && busy && <section ref={progressPanel} role="status" aria-live="polite" className="my-5 rounded-2xl border border-border bg-surface p-5"><div className="mb-3 flex items-center justify-between gap-3"><h2 className="font-display text-base font-semibold">Preparing your edits</h2><button type="button" className={secondary} onClick={cancel}>Cancel tailoring</button></div><ol className="space-y-3">{steps.map((label, i) => <li key={label} className={`flex items-start gap-3 text-sm ${i > stage ? "text-fg-3" : "text-fg"}`}>{i < stage ? <Check size={18} className="text-tool-strong" /> : i === stage ? <LoaderCircle size={18} className="animate-spin motion-reduce:animate-none text-tool-strong" /> : <span className="mt-1 h-3 w-3 rounded-full border border-border-strong" />}<span>{label}{outcomes[i] && <span className="ml-2 text-fg-2">{outcomes[i]}</span>}</span></li>)}</ol></section>}
     {error && <p role="alert" className="my-4 rounded-xl border border-border bg-surface p-4 text-sm">{error}</p>}
-    {review && plan && !busy && <div className="space-y-6"><div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-fg-2">{edits.length} suggestions <span aria-hidden="true">/</span> {accepted.length} accepted</p><button type="button" className={secondary} onClick={() => { controller.current?.abort(); setFile(null); setEdits([]); setPlan(null); setFacts([]); }}>Change inputs</button></div>{file.doc.source === "docx" && <p className="text-sm text-fg-2">Word edits shorten your wording while keeping the remaining words in order. Use a PDF for broader rewrites.</p>}<PlanPanel plan={plan} />
+    {review && plan && !busy && <div className="space-y-6"><div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-fg-2">{edits.length} suggestions <span aria-hidden="true">/</span> {accepted.length} accepted</p><button type="button" className={secondary} onClick={() => { controller.current?.abort(); setChanged(null); setFile(null); setEdits([]); setPlan(null); setFacts([]); }}>Change inputs</button></div>{file.doc.source === "docx" && <p className="text-sm text-fg-2">Word edits shorten your wording while keeping the remaining words in order. Use a PDF for broader rewrites.</p>}<PlanPanel plan={plan} />
       <section aria-label="Posting keyword gaps" className="rounded-2xl border border-border bg-surface p-5"><h2 className="text-sm font-semibold">Posting keywords</h2><p className="mt-1 text-xs text-fg-2">Only add a missing skill if you have it.</p><div className="mt-3 flex flex-wrap gap-2">{[...plan.gap.required, ...plan.gap.preferred].map((term) => <div key={term.term} className="flex min-h-11 items-center gap-2 rounded-xl border border-border px-3 text-sm">{term.bucket !== "missing" && <Check size={15} className="text-tool-strong" />}<span>{term.term}</span>{(term.bucket === "missing" || facts.includes(term.term)) && <button type="button" onClick={() => toggleFact(term.term)} aria-pressed={facts.includes(term.term)} className="min-h-11 text-xs font-medium text-tool-strong">{facts.includes(term.term) ? "Confirmed" : "I have this"}</button>}</div>)}</div></section>
       <div className="flex gap-2 lg:hidden"><button type="button" className={secondary} aria-pressed={!previewOpen} onClick={() => setPreviewOpen(false)}>Edits</button><button type="button" className={secondary} aria-pressed={previewOpen} onClick={() => setPreviewOpen(true)}><Eye size={16} />Preview</button></div>
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)]"><section aria-label="Suggested edits" className={`${previewOpen ? "hidden lg:block" : "block"} space-y-4`}>{edits.length ? edits.map((edit) => <EditCard key={edit.id} edit={edit} onStatus={status} onEdit={editText} />) : <div className="rounded-2xl border border-border bg-surface p-6"><h2 className="font-display text-lg font-semibold">No changes to review</h2><p className="mt-2 text-sm text-fg-2">No suggestions passed all the checks. You can confirm a missing skill above or try another posting.</p></div>}</section>
