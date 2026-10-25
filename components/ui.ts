@@ -12,7 +12,7 @@ export const btnPrimary = `${btn} bg-accent text-accent-contrast shadow-[var(--s
 export const btnSecondary = `${btn} border border-border bg-card text-text shadow-[var(--shadow-1)] hover:bg-bg-soft active:scale-[0.98]`;
 export const linkClass = "text-accent-fg underline-offset-4 hover:underline";
 export const pillBase =
-  "inline-flex min-h-10 items-center rounded-full border px-4 py-1.5 text-[15px] transition-[background-color,border-color,transform] duration-200 active:scale-[0.97]";
+  "inline-flex min-h-11 items-center rounded-full border px-4 py-1.5 text-[15px] transition-[background-color,border-color,transform] duration-200 active:scale-[0.97]";
 export const pillOn = `${pillBase} border-accent bg-accent-tint text-accent-fg font-medium`;
 export const pillOff = `${pillBase} border-border bg-card text-text hover:bg-bg-soft`;
 /** Small status chip; pair with a tone from theme (never a risk color unless it is a risk result). */

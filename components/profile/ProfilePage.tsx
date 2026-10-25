@@ -137,7 +137,7 @@ function ResumeStep({ onSaved }: { onSaved: () => void }) {
       </div>
       {msg && <p role="status" className="mt-3 text-[15px] text-fg-2">{msg}</p>}
       <details className="mt-3">
-        <summary className={`${linkClass} min-h-10 cursor-pointer py-2 text-[15px]`}>Paste text instead</summary>
+        <summary className={`${linkClass} min-h-11 cursor-pointer py-2 text-[15px]`}>Paste text instead</summary>
         <label htmlFor="resume-paste" className="sr-only">Resume text</label>
         <textarea id="resume-paste" value={paste} onChange={(e) => setPaste(e.target.value)} rows={6} className="mt-2 w-full rounded-[14px] border border-border bg-card p-3 text-[15px]" />
         <button
@@ -157,7 +157,6 @@ function AboutStep({ onSaved }: { onSaved: () => void }) {
   const { profile, setProfile, prefs, setPrefs } = useAppState();
   const [field, setField] = useState<Field | null>(profile?.field ?? null);
   const [level, setLevel] = useState<UserLevel | null>(profile?.level ?? null);
-  const [location, setLocation] = useState(prefs.location);
   const skills = profile?.skills ?? [];
 
   function save(next: { field?: Field; level?: UserLevel; skills?: string[] }) {
@@ -200,10 +199,9 @@ function AboutStep({ onSaved }: { onSaved: () => void }) {
           <label htmlFor="f-loc" className="text-[15px] font-medium">Location <span className="font-normal text-fg-3">(optional)</span></label>
           <input
             id="f-loc"
-            value={location}
+            value={prefs.location}
             maxLength={80}
-            onChange={(e) => setLocation(e.target.value)}
-            onBlur={() => { if (location !== prefs.location) { setPrefs({ ...prefs, location: location.trim() }); onSaved(); } }}
+            onChange={(e) => { setPrefs({ ...prefs, location: e.target.value }); onSaved(); }}
             placeholder="City or region"
             className={`${fieldInput} mt-1.5`}
           />
@@ -309,7 +307,7 @@ export default function ProfilePage() {
                     </span>
                   </span>
                   {savedFlash === s.id && (
-                    <span className={`${chip} animate-enter bg-ink-tint text-ink-strong`}>
+                    <span role="status" className={`${chip} animate-enter bg-ink-tint text-ink-strong`}>
                       <Check size={14} strokeWidth={2.25} aria-hidden="true" /> Saved
                     </span>
                   )}
@@ -346,11 +344,11 @@ export default function ProfilePage() {
           {confirmClear ? (
             <p role="alert" className="flex flex-wrap items-center justify-center gap-3">
               Remove your profile, resume, tracker and saved results from this device?
-              <button type="button" className={`${linkClass} min-h-10 font-semibold`} onClick={() => { clearAll(); setConfirmClear(false); setOpen("resume"); }}>Yes, remove</button>
-              <button type="button" className={`${linkClass} min-h-10`} onClick={() => setConfirmClear(false)}>Cancel</button>
+              <button type="button" className={`${linkClass} min-h-11 font-semibold`} onClick={() => { clearAll(); setConfirmClear(false); setOpen("resume"); }}>Yes, remove</button>
+              <button type="button" className={`${linkClass} min-h-11`} onClick={() => setConfirmClear(false)}>Cancel</button>
             </p>
           ) : (
-            <button type="button" className={`${linkClass} min-h-10`} onClick={() => setConfirmClear(true)}>Clear my data</button>
+            <button type="button" className={`${linkClass} min-h-11`} onClick={() => setConfirmClear(true)}>Clear my data</button>
           )}
         </div>
       )}

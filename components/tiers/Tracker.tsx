@@ -3,8 +3,10 @@ import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 
 import { addCard, loadCards, moveCard, removeCard, saveCards, updateNotes } from "@/lib/tiers/tracker";
 import { TRACKER_COLUMNS, type TrackerCard } from "@/lib/tiers/types";
 import { LEVEL_LABELS, type RiskLevel } from "@/lib/types";
+import { CircleAlert, CircleCheck, TriangleAlert, SquareKanban, ArrowRight } from "lucide-react";
+import { EmptyIllustration } from "../illustrations";
 import { ArrowLeftIcon, ExternalIcon } from "../icons";
-import { btnPrimary, card as cardCls, linkClass } from "../ui";
+import { btnPrimary, card as cardCls, chip, fieldInput, linkClass } from "../ui";
 
 // Same wording as the report, so a card never contradicts it.
 const RISK: Record<RiskLevel, { label: string; cls: string }> = {
@@ -23,9 +25,9 @@ const EMPTY: Record<string, string> = {
 const nameOf = (c: TrackerCard) => c.company.trim() || "Untitled application";
 
 const small =
-  "inline-flex min-h-10 items-center rounded-full border border-border bg-card px-3.5 text-[14px] font-medium transition-colors duration-200 hover:bg-bg-soft disabled:opacity-40";
-const menuItem = "min-h-10 rounded-[10px] px-3 text-left text-[15px] hover:bg-bg-soft";
-const fieldCls = "mt-1.5 min-h-12 w-full rounded-[14px] border border-border bg-card px-4 text-[17px] placeholder:text-muted";
+  "inline-flex min-h-11 items-center rounded-full border border-border bg-card px-3.5 text-[14px] font-medium transition-colors duration-200 hover:bg-bg-soft disabled:opacity-40";
+const menuItem = "min-h-11 rounded-[10px] px-3 text-left text-[15px] hover:bg-bg-soft";
+const fieldCls = `${fieldInput} mt-1.5`;
 
 function isHttp(s: string): boolean {
   try {
@@ -143,12 +145,12 @@ export default function Tracker({
   }
 
   return (
-    <section className="mx-auto max-w-[1040px] px-6 py-10 sm:py-16">
-      <button type="button" onClick={onBack} className={`${linkClass} inline-flex min-h-10 items-center gap-1.5 text-[15px]`}>
+    <section className="mx-auto max-w-[1120px] px-4 py-8 sm:px-6 sm:py-12">
+      <button type="button" onClick={onBack} className={`${linkClass} inline-flex min-h-11 items-center gap-1.5 text-[15px]`}>
         <ArrowLeftIcon size={16} /> Back
       </button>
-      <h1 className="mt-4 text-[clamp(30px,5vw,48px)] font-bold leading-[1.1] tracking-[-0.025em]">My applications</h1>
-      <p className="mt-2 max-w-[560px] text-[17px] text-muted">Saved in this browser.</p>
+      <h1 className="mt-4 font-display text-[clamp(30px,5vw,48px)] font-bold leading-[1.1] tracking-[-0.025em]">My applications</h1>
+      <p className="mt-2 max-w-[560px] text-[17px] text-fg-2">Keep your next move in view. Saved on this device.</p>
 
       <p role="status" aria-live="polite" className="sr-only">
         {announce}
@@ -158,9 +160,13 @@ export default function Tracker({
       </p>
 
       {ready && cards.length === 0 && (
-        <p className={`${cardCls} mt-8 p-6 text-[17px] text-muted`}>
-          Nothing here yet. Add a job below or save one from a report.
-        </p>
+        <div className={`${cardCls} mt-8 flex flex-col items-center gap-4 p-6 text-center sm:flex-row sm:text-left`}>
+          <EmptyIllustration size={144} />
+          <div>
+            <h2 className="font-display text-[24px] font-bold">Your next opportunity starts here</h2>
+            <p className="mt-1 max-w-[42ch] text-[16px] text-fg-2">Nothing here yet. Add a job below or save one from a report.</p>
+          </div>
+        </div>
       )}
 
       <div className="mt-8 grid gap-6 md:grid-cols-3">
@@ -168,7 +174,8 @@ export default function Tracker({
           const items = cards.filter((c) => c.column === col.id);
           return (
             <section key={col.id} aria-labelledby={`col-${col.id}`} className="min-w-0">
-              <h2 id={`col-${col.id}`} className="flex items-baseline gap-2 text-[17px] font-semibold">
+              <h2 id={`col-${col.id}`} className="flex items-center gap-2 font-display text-[18px] font-bold">
+                <SquareKanban size={18} strokeWidth={1.75} aria-hidden="true" className="text-ink-strong" />
                 {col.label}
                 <span className="text-[15px] font-normal text-muted">
                   <span className="sr-only">, </span>
@@ -188,12 +195,16 @@ export default function Tracker({
                       tabIndex={0}
                       onKeyDown={(e) => onKey(e, c)}
                       aria-describedby="card-hint"
-                      className={`${cardCls} animate-enter p-4 outline-offset-2`}
+                      className={`${cardCls} animate-enter p-4 outline-offset-2 transition-[border-color,box-shadow] hover:border-border-strong hover:shadow-[var(--shadow-2)]`}
                     >
                       <p className="break-words text-[17px] font-semibold leading-snug">{nameOf(c)}</p>
                       {c.role.trim() && <p className="break-words text-[15px] text-muted">{c.role}</p>}
+                      <p className={`${chip} mt-2 bg-ink-tint text-ink-strong`}>{col.label}</p>
                       {risk && (
-                        <p className={`mt-2 inline-block max-w-full rounded-full border px-2.5 py-0.5 text-[13px] font-medium ${risk.cls}`}>{risk.label}</p>
+                        <p className={`mt-2 inline-flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[13px] font-medium ${risk.cls}`}>
+                          {c.risk === "high" ? <CircleAlert size={14} aria-hidden="true" /> : c.risk === "medium" ? <TriangleAlert size={14} aria-hidden="true" /> : <CircleCheck size={14} aria-hidden="true" />}
+                          {risk.label}
+                        </p>
                       )}
                       {c.link && (
                         <p className="mt-2 break-all text-[14px]">
@@ -293,12 +304,12 @@ export default function Tracker({
       </div>
 
       {undo && (
-        <div role="status" className="animate-enter fixed bottom-[calc(var(--nav-bottom)+1rem)] left-1/2 z-20 flex -translate-x-1/2 items-center gap-3 rounded-full border border-border bg-card px-5 py-2 shadow-lg">
-          <span className="text-[15px]">Deleted {nameOf(undo.card)}</span>
-          <button type="button" onClick={undoDelete} className={`${linkClass} min-h-10 text-[15px] font-semibold`}>
+        <div role="status" className="shell-tracker-toast animate-enter fixed bottom-[calc(var(--nav-bottom)+1rem)] left-1/2 z-20 flex w-max -translate-x-1/2 flex-wrap items-center justify-center gap-3 rounded-[18px] border border-border bg-card px-5 py-2 shadow-lg">
+          <span className="min-w-0 break-words text-[15px]">Deleted {nameOf(undo.card)}</span>
+          <button type="button" onClick={undoDelete} className={`${linkClass} min-h-11 text-[15px] font-semibold`}>
             Undo
           </button>
-          <button type="button" onClick={() => setUndo(null)} aria-label="Dismiss" className="min-h-10 px-1 text-muted">
+          <button type="button" onClick={() => setUndo(null)} aria-label="Dismiss" className="min-h-11 px-1 text-muted">
             <span aria-hidden="true">×</span>
           </button>
         </div>
