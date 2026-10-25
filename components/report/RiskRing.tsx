@@ -3,7 +3,7 @@ import { animate, m, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { coverageTicks, deltaAnnouncement, deltaLabel } from "@/lib/reportView";
 import { LEVEL_LABELS, type Report, type RiskLevel } from "@/lib/types";
-import { AlertIcon, WarningIcon } from "../icons";
+import { CircleAlert, TriangleAlert, CircleCheck } from "lucide-react";
 
 const R = 86;
 const C = 2 * Math.PI * R;
@@ -37,7 +37,7 @@ interface ViewProps {
 
 /** Pure presentation: no state, so it renders the same on the server and in tests. */
 export function RingView({ value, score, level, ticks, staggerTicks = false, delta = null, chipKey = 0 }: ViewProps) {
-  const Icon = level === "high" ? AlertIcon : level === "medium" ? WarningIcon : null;
+  const Icon = level === "high" ? CircleAlert : level === "medium" ? TriangleAlert : CircleCheck;
   const n = ticks.length;
   return (
     <div className="flex flex-col items-center text-center">
@@ -86,7 +86,7 @@ export function RingView({ value, score, level, ticks, staggerTicks = false, del
             key={chipKey}
             data-delta
             aria-hidden="true"
-            initial={{ opacity: 0, y: 4 }}
+            initial={staggerTicks ? { opacity: 0, y: 4 } : false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25, ease: EASE }}
             className="rounded-full bg-sunken px-2.5 py-0.5 text-[13px] font-medium tabular-nums text-fg-2"

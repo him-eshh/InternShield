@@ -1,8 +1,9 @@
 # V3 report progress
 Done
 - Preserved incoming approved briefs: ebcb4c0.
+- P1 form/checklist sub-item: 6e1b559 (WIP; gates pending).
 Current
-- P1 form/checklist polish; P2 report polish; P3 impact and in-place additions.
+- P2 hero surface and ring polish; P3 impact and in-place additions implemented, validating.
 - Files: components/CheckForm.tsx, Checklist.tsx, report/**, lib/impact.ts.
 Next
 - Commit P1 sub-item, implement P3 and regression tests.

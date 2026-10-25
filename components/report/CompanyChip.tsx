@@ -33,19 +33,19 @@ export default function CompanyChip({ name, busy, note, onSave }: { name: string
           maxLength={80}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={(e) => e.key === "Escape" && close()}
-          className="h-9 w-[min(16rem,60vw)] rounded-full border border-border-strong bg-bg px-3 text-[15px] text-text"
+          className="min-h-11 w-[min(16rem,60vw)] rounded-full border border-border-strong bg-bg px-3 text-[15px] text-text"
         />
-        <button type="submit" className="h-9 rounded-full bg-accent px-4 text-[14px] font-medium text-accent-contrast">Recheck</button>
-        <button type="button" onClick={close} className="h-9 rounded-full px-3 text-[14px] text-muted hover:text-text">Cancel</button>
+        <button type="submit" className="min-h-11 rounded-full bg-accent px-4 text-[14px] font-medium text-accent-contrast">Recheck</button>
+        <button type="button" onClick={close} className="min-h-11 rounded-full px-3 text-[14px] text-muted hover:text-text">Cancel</button>
       </form>
     );
   }
 
   return (
     <div className="mt-4 flex flex-col items-center gap-1">
-      <span className="inline-flex items-center gap-2 rounded-full border border-border bg-bg-soft py-1 pl-3 pr-1 text-[14px]">
+      <span className="inline-flex max-w-full flex-wrap justify-center items-center gap-2 rounded-full border border-border bg-bg-soft py-1 pl-3 pr-1 text-[14px]">
         <span className="text-muted">Company</span>
-        <span className="font-medium text-text">{name ?? "Not found"}</span>
+        <span className="min-w-0 break-words font-medium text-text">{name ?? "Not found"}</span>
         <button
           ref={editBtn}
           type="button"
@@ -57,7 +57,7 @@ export default function CompanyChip({ name, busy, note, onSave }: { name: string
             setValue(name ?? "");
             setEditing(true);
           }}
-          className="rounded-full px-2.5 py-0.5 text-accent-fg hover:bg-accent-tint aria-disabled:text-muted"
+          className="min-h-11 rounded-full px-2.5 py-0.5 text-accent-fg hover:bg-accent-tint aria-disabled:text-muted"
         >
           {busy ? "Checking…" : name ? "Edit" : "Add"}
           {!busy && <span className="sr-only"> company name</span>}
