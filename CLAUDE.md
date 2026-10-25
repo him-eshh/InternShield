@@ -72,3 +72,27 @@ npx vitest run
 npm run build
 npm run eval    # 26/26
 ```
+
+## v3 (parallel worktrees from `v3-base`)
+
+| Stream | Worktree / branch | Ports |
+|---|---|---|
+| setup, then integration | `InternShield-v3` / `v3-base` | 3400-3499 |
+| resume | `InternShield-v3-resume` / `v3-resume` | 3100-3199 |
+| interview | `InternShield-v3-interview` / `v3-interview` | 3200-3299 |
+| shell | `InternShield-v3-shell` / `v3-shell` | 3300-3399 |
+
+Port 3000 and the main tree belong to Himesh: never touch them. Dev servers start hidden and stop after each screenshot round. Anything outside your table goes under "Needs integration" in your log.
+
+| Owner | Files |
+|---|---|
+| resume | `components/tiers/ResumeTailor*`, `components/resume/**`, `lib/tiers/{tailored,resumeGuard,resumeLines,keywordGap,pdf}*`, new `lib/tiers/resume*` (incl. `resumeTypes.ts`), `lib/client/resume*`, `lib/server/rewrite*`, `app/api/rewrite/**`, `app/v3-resume.css`, its tests/qa/devpost files |
+| interview | `components/tiers/interview/**`, `components/interview/**`, `lib/tiers/{interview,scripted,scorecard,presets,problems,debugging,sql,runner,board}*`, `lib/tiers/types.ts` (session/bank types), new `lib/tiers/session*`, `lib/tiers/bank*`, `data/question-bank/**`, `lib/server/interview*`, `app/api/interview/**`, `public/workers/**`, `app/v3-interview.css`, its tests/qa/devpost files |
+| shell | `components/{App,CheckForm,Checklist,Intro,Logo,icons,ThemeToggle,ProfileSteps,ProfileChip,ui}*`, `components/shell/**`, `components/home/**`, `components/profile/**`, `components/illustrations/**`, `components/report/**`, `components/tiers/{Tracker,SaveToTracker,ScreenshotUpload}*`, `lib/impact.ts`, `lib/{reportView,autofill,recovery}.ts`, `lib/client/{storage,pipeline}.ts`, `lib/scoring/questions.ts` (copy/impact only), `app/{page,layout}.tsx`, `app/{check,tracker,profile}/**`, `app/icon*`, `app/apple-icon*`, `app/opengraph-image*`, `app/v3-shell.css`, its tests/qa/devpost files |
+| shared (nobody edits) | `package.json`, lockfile, `app/theme.css` (shell may tune values, not names; log it), `app/globals.css`, `lib/types.ts`, `lib/server/{guard,companyIntel,cache,tavily,wikidata}.ts`, `app/api/intel/**`, `next.config.ts`, `CLAUDE.md` |
+
+- **Theme rule:** every color comes from a token in `app/theme.css`; never a hex literal in `components/**` (`tests/shared/v3-theme.test.ts` enforces it, plus contrast). Inside a tool, use `--tool`, `--tool-tint`, `--tool-strong`, `--on-tool` (set by `data-tool`). Risk red/amber/green only on risk results, always with an icon + words.
+- **Icons:** `lucide-react` only. **Motion:** `motion/react`, reduced-motion aware.
+- **Company intel:** `POST /api/intel { company, role, kind }` -> `CompanyIntel` (`lib/server/companyIntel.ts`); cached 7 days, capped by `INTEL_DAILY_CAP`, `limited: true` when capped/unconfigured. Tests mock it; no live calls.
+- **Quality bar:** v3 is judged on whether it is good to use, not whether it renders. Each brief's Quality bar line is a test: prove it with a screenshot you actually looked at, or an automated check.
+- Gates: the v2 list above; eval stays 88/88 (held-out >= 24/27).

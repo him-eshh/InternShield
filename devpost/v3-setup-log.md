@@ -16,5 +16,17 @@
 - Fonts: Bricolage Grotesque (`--font-bricolage`, headings + `font-display`) and Inter (`--font-inter`, body) via next/font in `app/layout.tsx`.
 - Code syntax tokens moved from `app/v2-tools.css` into theme.css; Board.tsx `#888` fallback -> `gray`. Hex-free components enforced by the same test.
 
+## Step 3: app shell
+- Routes `/`, `/check`, `/tailor`, `/practice`, `/tracker`, `/profile` (thin pages), `components/shell/{AppStateProvider,Nav,PageTransition}.tsx`, no forced intro/profile gating; first visit lands on Home.
+- `qa/v3-lib.mjs` opens routes and seeds profile/resume/finished check via localStorage; `qa/v3-setup-shell.mjs` passes at 1440/390, light/dark (shots `setup-*` in QA_SHOTS), incl. back from `/tailor` and refresh on `/check` showing the report.
+- `--nav-bottom` (globals.css) keeps the Tailor sticky bar and Tracker toast above the mobile tab bar.
+
+## Step 4: contracts
+- `lib/impact.ts` (`AnswerImpact`, basic `diffReports`, TODO for shell), `lib/tiers/types.ts` (`SessionConfig`, `SessionTurn`, `SessionSummary`, `BankQuestion`), `lib/tiers/resumeTypes.ts` (`ResumeEdit`, `TailorPlan`).
+- Company intel: `lib/server/companyIntel.ts` + `POST /api/intel`. Cache (7 days) -> Wikidata official site -> Tavily restricted to that domain -> general Tavily (excludes linkedin + people-search sites) when < 3 hits -> Groq (`intel` task, 20b then 120b) returns claims with a snippet number; claims without a valid source are dropped and only cited sources are returned. `takeIntel()` caps lookups at `INTEL_DAILY_CAP` (15) on top of `TAVILY_DAILY_CAP`; `limited: true` when capped, unconfigured, no hits or Groq fails (failures not cached). Route visitor limit 4/min, 20/day. `tests/api/intel.test.ts` (6, all mocked).
+
+## Step 5
+- CLAUDE.md v3 section: worktrees/ports, ownership, theme rule, intel, quality bar.
+
 ## Pending Himesh
 - (none yet)
