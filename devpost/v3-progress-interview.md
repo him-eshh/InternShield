@@ -2,9 +2,10 @@
 
 ## Done
 - I1: licensed question bank - `dc735de`
+- I2: company research shapes practice - `8d6d9a2`
 
 ## Current
-- Closing I2; implementation, gates and quality evidence are complete.
+- Closing I3; implementation, gates and quality evidence are complete.
 
 ## Next
 - Finish any remaining item-closing records, then write and commit the final summary only after all seven are closed.

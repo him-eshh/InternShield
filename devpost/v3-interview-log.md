@@ -33,3 +33,7 @@ Complete. 1,130 unique metadata-only public questions; both MIT datasets have pi
 ### I2: company research shapes practice
 
 Complete. Cited research preselects supported stages and seeds value-based STAR prompts. Unavailable or uncited research falls back to unaffiliated company-style presets. Adapter tests and mocked source/fallback browser flows pass.
+
+### I3: configurable session setup
+
+Complete. Eight round cards, topic chips, verbatim custom questions, all difficulties, company/preset, role, language and question/round length. Existing shared targets prefill company/role; profile/resume context is forwarded. Violet tokens, lucide icons and accessible form controls checked in all four variants.
