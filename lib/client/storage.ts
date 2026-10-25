@@ -9,6 +9,8 @@ export const KEYS = {
   tracker: "is:tracker", // Tier 2: TrackerCard[]
   tailored: "is:tailored", // Tier 2: TailoredResume (accepted rewrites)
   interviews: "is:interviews", // Tier 3: InterviewSession[] (newest first)
+  lastCheck: "is:lastCheck", // v3: last finished check { outcome, input, submit } so /check survives refresh
+  targets: "is:targets", // v3: { tailor, practice } PostingContext handed from the report/tracker to a tool
 } as const;
 
 function read<T>(key: string): T | null {
@@ -63,11 +65,13 @@ export const saveTheme = (t: Theme) => write(KEYS.theme, t);
 export const readKey = <T>(key: string): T | null => read<T>(key);
 export const writeKey = (key: string, value: unknown): void => write(key, value);
 
-/** Removes profile, resume and every tier store (not theme). The caller returns to the intro. */
+/** Removes profile, resume, the last check and every tier store (not theme). The caller returns home. */
 export function clearMyData(): void {
   remove(KEYS.profile);
   remove(KEYS.resume);
   remove(KEYS.tracker);
   remove(KEYS.tailored);
   remove(KEYS.interviews);
+  remove(KEYS.lastCheck);
+  remove(KEYS.targets);
 }

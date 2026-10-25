@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Inter } from "next/font/google";
 import MotionProvider from "@/components/MotionProvider";
+import AppStateProvider from "@/components/shell/AppStateProvider";
+import Nav from "@/components/shell/Nav";
+import PageTransition from "@/components/shell/PageTransition";
 import "./globals.css";
 import "./v2-check.css";
 import "./v2-tools.css";
@@ -35,7 +38,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="min-h-dvh bg-bg text-text">
-        <MotionProvider>{children}</MotionProvider>
+        <MotionProvider>
+          <AppStateProvider>
+            <Nav />
+            <PageTransition>{children}</PageTransition>
+          </AppStateProvider>
+        </MotionProvider>
       </body>
     </html>
   );
