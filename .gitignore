@@ -23,3 +23,7 @@ npm-debug.log*
 /qa/*-out.txt
 /qa/shots/
 /qa/examples.json
+
+# local review aids / agent state
+.codex/
+/images/

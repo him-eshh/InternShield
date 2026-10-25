@@ -6,10 +6,8 @@ import Nav from "@/components/shell/Nav";
 import PageTransition from "@/components/shell/PageTransition";
 import "./globals.css";
 import "./v2-check.css";
-import "./v2-tools.css";
 import "./v3-shell.css";
 import "./v3-resume.css";
-import "./v3-interview.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"], axes: ["opsz"] });
 const bricolage = Bricolage_Grotesque({ variable: "--font-bricolage", subsets: ["latin"] });

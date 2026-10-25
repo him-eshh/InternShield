@@ -1,8 +1,10 @@
 "use client";
 import { useId, useRef, useState } from "react";
+import { impactCopy, type AnswerImpact } from "@/lib/impact";
+import ImpactCard from "./ImpactCard";
 
 /** Editable company name. Saving re-runs only the company and posting lookups. */
-export default function CompanyChip({ name, busy, note, onSave }: { name: string | null; busy: boolean; note: string | null; onSave: (name: string) => void }) {
+export default function CompanyChip({ name, busy, note, onSave }: { name: string | null; busy: boolean; note: AnswerImpact | string | null; onSave: (name: string) => void }) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(name ?? "");
   const id = useId();
@@ -42,7 +44,7 @@ export default function CompanyChip({ name, busy, note, onSave }: { name: string
   }
 
   return (
-    <div className="mt-4 flex flex-col items-center gap-1">
+    <div className="mt-4 flex w-full flex-col items-center gap-3">
       <span className="inline-flex max-w-full flex-wrap justify-center items-center gap-2 rounded-full border border-border bg-bg-soft py-1 pl-3 pr-1 text-[14px]">
         <span className="text-muted">Company</span>
         <span className="min-w-0 break-words font-medium text-text">{name ?? "Not found"}</span>
@@ -63,7 +65,8 @@ export default function CompanyChip({ name, busy, note, onSave }: { name: string
           {!busy && <span className="sr-only"> company name</span>}
         </button>
       </span>
-      <p role="status" aria-live="polite" className="whitespace-pre-line text-[13px] text-muted">{note}</p>
+      <p role="status" aria-live="polite" className={typeof note === "string" || !note ? "whitespace-pre-line text-[14px] text-muted" : "sr-only"}>{typeof note === "string" || !note ? note : impactCopy(note)}</p>
+      {note && typeof note !== "string" && <div className="w-full max-w-[560px]" aria-hidden="true"><ImpactCard impact={note} /></div>}
     </div>
   );
 }

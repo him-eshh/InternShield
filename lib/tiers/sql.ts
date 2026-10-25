@@ -164,3 +164,25 @@ export function compareResults(want: ResultSet, got: ResultSet, ordered: boolean
   for (const r of extra) if (diffs.length < 5) diffs.push(`Extra ${showRow(r)}`);
   return { ok: false, message: `Rows: ${missing.length} missing, ${extra.length} extra`, diffs };
 }
+
+export interface SampleTable {
+  name: string;
+  columns: string[];
+  rows: string[][];
+}
+/** The seeded tables as rows to preview (parsed from SQL_SCHEMA, so the preview can never drift from the data the query runs on). */
+export function sampleTables(schema: string = SQL_SCHEMA): SampleTable[] {
+  const tables = new Map<string, SampleTable>();
+  for (const m of schema.matchAll(/CREATE TABLE (\w+) \(([^;]*?)\);/g)) {
+    tables.set(m[1], { name: m[1], columns: m[2].split(",").map((c) => c.trim().split(/\s+/)[0]), rows: [] });
+  }
+  for (const m of schema.matchAll(/INSERT INTO (\w+) VALUES([^;]*);/g)) {
+    const t = tables.get(m[1]);
+    if (!t) continue;
+    for (const row of m[2].matchAll(/\(((?:'[^']*'|[^()'])*)\)/g)) {
+      const cells = [...row[1].matchAll(/'([^']*)'|([^,]+)/g)].map((c) => (c[1] ?? c[2]).trim());
+      t.rows.push(cells);
+    }
+  }
+  return [...tables.values()];
+}

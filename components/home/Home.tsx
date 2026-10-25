@@ -15,6 +15,11 @@ import { useAppState } from "../shell/AppStateProvider";
 import { useReveal } from "../shell/reveal";
 import { btnPrimary, cardInteractive, eyebrow, subhead } from "../ui";
 
+// Hero actions share one hover: the button lifts a touch and its arrow slides (both off under reduced motion).
+const heroArrow = "transition-transform duration-200 motion-safe:group-hover:translate-x-1";
+const heroToolButton =
+  "group inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-tool/40 bg-tool-tint px-6 py-3 text-[17px] font-semibold text-tool-strong shadow-[var(--shadow-1)] transition-[background-color,border-color,box-shadow,transform] duration-200 ease-out hover:border-tool hover:shadow-[var(--shadow-2)] motion-safe:hover:-translate-y-0.5 active:scale-[0.98] max-sm:w-full";
+
 // The hero's mini report is the real engine run on the saved scam example, so it can't drift from the app.
 const ex = EXAMPLES.scam;
 const sample = score({
@@ -87,12 +92,16 @@ export default function Home() {
               Check a recruiter message, tailor your resume, practice the interview.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3" data-tool="check">
-              <Link href="/check" className={`${btnPrimary} max-sm:w-full`}>
-                Check a message <ArrowRight size={18} strokeWidth={2} aria-hidden="true" />
+              <Link href="/check" className={`${btnPrimary} group motion-safe:hover:-translate-y-0.5 max-sm:w-full`}>
+                Check a message <ArrowRight size={18} strokeWidth={2} aria-hidden="true" className={heroArrow} />
               </Link>
-              <span className="flex flex-wrap gap-x-5 gap-y-1 text-[16px] font-medium">
-                <Link href="/tailor" data-tool="tailor" className="inline-flex min-h-11 items-center text-tool-strong underline-offset-4 hover:underline">Tailor my resume</Link>
-                <Link href="/practice" data-tool="practice" className="inline-flex min-h-11 items-center text-tool-strong underline-offset-4 hover:underline">Practice interviews</Link>
+              <span className="flex flex-wrap gap-3">
+                <Link href="/tailor" data-tool="tailor" className={heroToolButton}>
+                  Tailor my resume <ArrowRight size={18} strokeWidth={2} aria-hidden="true" className={heroArrow} />
+                </Link>
+                <Link href="/practice" data-tool="practice" className={heroToolButton}>
+                  Practice interviews <ArrowRight size={18} strokeWidth={2} aria-hidden="true" className={heroArrow} />
+                </Link>
               </span>
             </div>
           </div>
@@ -105,7 +114,7 @@ export default function Home() {
               {topReasons(sample.flags).map((f) => (
                 <li key={f.id} className="flex gap-3">
                   <CircleAlert size={18} strokeWidth={1.75} aria-hidden="true" className="mt-0.5 shrink-0 text-bad" />
-                  <span>{f.title}</span>
+                  <span className="min-w-0 [overflow-wrap:anywhere]">{f.title}</span>
                 </li>
               ))}
             </ul>
@@ -125,11 +134,11 @@ export default function Home() {
                       <r.Icon size={20} strokeWidth={1.75} aria-hidden="true" />
                     </span>
                     <span className="min-w-0">
-                      <span className="block truncate font-semibold">{r.title}</span>
-                      <span className="flex items-center gap-1.5 truncate text-[14px] text-fg-2">
+                      <span className="block break-words font-semibold leading-snug">{r.title}</span>
+                      <span className="flex items-start gap-1.5 text-[14px] leading-snug text-fg-2">
                         {r.risk === "high" && <CircleAlert size={14} strokeWidth={1.75} aria-hidden="true" className="shrink-0 text-bad" />}
                         {r.risk === "medium" && <TriangleAlert size={14} strokeWidth={1.75} aria-hidden="true" className="shrink-0 text-warn" />}
-                        <span className="truncate">{r.detail}</span>
+                        <span className="break-words">{r.detail}</span>
                       </span>
                     </span>
                   </Link>

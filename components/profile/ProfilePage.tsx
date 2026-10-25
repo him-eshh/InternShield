@@ -325,8 +325,9 @@ export default function ProfilePage() {
                   )}
                   {s.id === "about" && <AboutStep onSaved={() => flash("about")} />}
                   {i < STEPS.length - 1 && (
-                    <div className="mt-5 flex items-center gap-4">
-                      <button type="button" className={btnPrimary} onClick={() => next(s.id)}>{done ? "Next step" : "Skip for now"}</button>
+                    <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-1">
+                      <button type="button" className={btnPrimary} onClick={() => next(s.id)}>{done ? "Save and next" : "Next step"}</button>
+                      {!done && <button type="button" className={`${linkClass} min-h-11 text-[15px] font-medium text-fg-2`} onClick={() => next(s.id)}>Skip for now</button>}
                     </div>
                   )}
                   {i === STEPS.length - 1 && (

@@ -107,11 +107,22 @@ describe("continuous session engine", () => {
 
 // Regression coverage for chosen filters, custom wording, saved data and variable-length scorecards.
 describe("practice configuration and recovery", () => {
-  it("does not substitute an unrelated company/topic/difficulty when no bank match exists", async () => {
+  it("falls back to the closest pool, same topic and difficulty, and says what it substituted", async () => {
     const bank = await loadBank();
     const s = newPractice(defaultConfig({ company: "No such company", rounds: ["coding"], topics: ["graph"], difficulty: "hard" }), context, { id: "none", now: 0, seed: 3 }, bank);
+    const item = s.activeQuestion!.item;
+    expect(item.source).not.toBe("unavailable");
+    expect(item.tags).toContain("graph");
+    expect(item.difficulty).toBe("Hard");
+    expect(item.note).toMatch(/No No such company-tagged questions; showing/);
+  });
+  it("only reports no question when the whole bank is used up", () => {
+    const tiny = [{ id: "lc-x", title: "X", difficulty: "Easy" as const, url: "https://leetcode.com/problems/x/", tags: ["array"], companies: ["Amazon"], source: "t" }];
+    let s = newPractice(defaultConfig({ rounds: ["coding"], language: "java", limit: { kind: "questions", count: 3 } }), context, { id: "tiny", now: 0, seed: 3 }, tiny);
+    expect(s.activeQuestion!.item.source).toBe("lc-x");
+    s = skip(s, tiny, 5);
     expect(s.activeQuestion!.item.source).toBe("unavailable");
-    expect(s.activeQuestion!.item.note).toMatch(/filters/);
+    expect(s.activeQuestion!.item.note).toMatch(/used/);
   });
   it("preserves custom question whitespace and removes duplicate questions", () => {
     const question = "  Explain your trade-offs?  ";

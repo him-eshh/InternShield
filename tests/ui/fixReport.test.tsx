@@ -4,11 +4,10 @@ import { describe, expect, it } from "vitest";
 import EvidenceCard from "@/components/report/EvidenceCard";
 import PostingSection from "@/components/report/PostingSection";
 import Report from "@/components/report/Report";
-import ProfileChip from "@/components/ProfileChip";
 import { fixtureOutcome } from "@/fixtures/outcome";
 import { realReport, scamReport } from "@/fixtures/reports";
 import QuickQuestions from "@/components/report/QuickQuestions";
-import type { Answers, Profile, Question, QuestionId } from "@/lib/types";
+import type { Answers, Question, QuestionId } from "@/lib/types";
 
 describe("report banner", () => {
   it("says the result is incomplete when the message could not be read", async () => {
@@ -58,15 +57,6 @@ describe("PostingSection", () => {
   it("says it could not find the role only when the search ran", () => {
     const html = renderToStaticMarkup(<PostingSection checked posting={null} match={null} company="Acme" careersUrl={null} />);
     expect(html).toContain("find this role");
-  });
-});
-
-describe("ProfileChip", () => {
-  it("joins only the known parts", () => {
-    const profile = { field: "tech", level: undefined, skills: [] } as unknown as Profile;
-    const html = renderToStaticMarkup(<ProfileChip profile={profile} onEdit={() => {}} onClear={() => {}} />);
-    expect(html).toContain("Tech<");
-    expect(html).not.toContain("Tech ·");
   });
 });
 

@@ -40,7 +40,7 @@ function TabLink({ tab, path, mobile }: { tab: Tab; path: string; mobile?: boole
       aria-current={on ? "page" : undefined}
       className={
         mobile
-          ? `relative flex min-h-[56px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 text-[12px] font-medium ${on ? "text-tool-strong" : "text-fg-2"}`
+          ? `relative flex min-h-[56px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 text-[11px] font-medium sm:text-[12px] ${on ? "text-tool-strong" : "text-fg-2"}`
           : `relative isolate inline-flex h-11 items-center gap-1.5 rounded-full px-3 text-[15px] font-medium transition-colors ${
               on ? "text-tool-strong" : "text-fg-2 hover:bg-sunken hover:text-fg"
             }`
@@ -74,19 +74,20 @@ export default function Nav() {
             <Link href="/profile" aria-label={`Profile, ${progress.count} of ${progress.total} steps done`} title="Your profile" className="relative grid size-11 shrink-0 place-items-center rounded-full text-ink-strong">
               <svg viewBox="0 0 44 44" className="absolute inset-0 size-11 -rotate-90" aria-hidden="true">
                 <circle cx="22" cy="22" r="19" fill="none" stroke="var(--border)" strokeWidth="2" />
-                <circle cx="22" cy="22" r="19" fill="none" stroke="var(--ink-strong)" strokeWidth="2" strokeDasharray={`${(progress.count / progress.total) * 119.38} 119.38`} strokeLinecap="round" />
+                {/* No arc at 0: a round cap on a zero-length dash draws a stray dot above the avatar. */}
+                {progress.count > 0 && <circle cx="22" cy="22" r="19" fill="none" stroke="var(--ink-strong)" strokeWidth="2" strokeDasharray={`${(progress.count / progress.total) * 119.38} 119.38`} strokeLinecap="round" />}
               </svg>
               {initials ? <span className="text-[13px] font-semibold">{initials}</span> : <UserRound size={18} strokeWidth={1.75} aria-hidden="true" />}
             </Link>
           </div>
         </nav>
       </header>
-      {/* Mobile: Home is the logo, so the bar holds the five tools. */}
+      {/* Mobile and tablet: all six destinations, Home first. */}
       <nav
         aria-label="Tools"
         className="fixed inset-x-0 bottom-0 z-40 flex border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden"
       >
-        {TABS.slice(1).map((t) => (
+        {TABS.map((t) => (
           <TabLink key={t.href} tab={t} path={path} mobile />
         ))}
       </nav>

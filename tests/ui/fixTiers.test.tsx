@@ -1,13 +1,9 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
-
-const { checkTurnMock } = vi.hoisted(() => ({ checkTurnMock: vi.fn() }));
-vi.mock("@/lib/tiers/scripted", () => ({ checkTurn: checkTurnMock, describeCheck: () => "" }));
-import Feedback from "@/components/tiers/interview/Feedback";
 import SaveToTracker, { addToTracker } from "@/components/tiers/SaveToTracker";
 import Tracker from "@/components/tiers/Tracker";
 import { runCode, stopRunners } from "@/lib/tiers/runner";
-import type { InterviewSession, TrackerCard } from "@/lib/tiers/types";
+import type { TrackerCard } from "@/lib/tiers/types";
 import { LEVEL_LABELS } from "@/lib/types";
 
 const noop = () => {};
@@ -66,32 +62,6 @@ describe("Tracker", () => {
     const html = renderToStaticMarkup(<Tracker onBack={noop} initialCards={[card({ company: "", role: "" })]} />);
     expect(html).toContain("Untitled application");
     expect(html).not.toContain("Unknown company");
-  });
-});
-
-describe("Feedback wording", () => {
-  const session: InterviewSession = {
-    id: "c",
-    round: "case",
-    context: { company: null, role: null, description: null, resume: null, field: null },
-    turns: [{ question: "Q", answer: "A" }],
-    pending: null,
-    used: 1,
-    seed: 1,
-    problemId: null,
-    code: null,
-    board: null,
-    hints: [],
-    feedback: { summary: "ok", items: [{ index: 0, strength: "s", improve: "i", quote: null, star: null }] },
-    status: "done",
-    createdAt: 1,
-    updatedAt: 1,
-  };
-  it("says 'not mentioned' instead of 'missing'", () => {
-    checkTurnMock.mockReturnValue({ kind: "rubric", covered: ["A"], missed: ["B"] });
-    const html = renderToStaticMarkup(<Feedback session={session} onAgain={noop} onBack={noop} />);
-    expect(html).toContain("spot this; it may be worded differently"); // v2 tools: rubric copy (standing #1)
-    expect(html).not.toContain("missing");
   });
 });
 

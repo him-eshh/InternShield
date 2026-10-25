@@ -135,14 +135,13 @@ describe("footer per level", () => {
 });
 
 describe("Report order", () => {
-  it("ring, verdict, action line, top reasons, evidence, quick questions, footer", async () => {
+  it("ring, verdict, action line, evidence, quick questions, footer", async () => {
     const fx = (await fixtureOutcome("medium"))!;
     const html = renderToStaticMarkup(<Report outcome={fx.outcome} input={fx.input} onRetry={() => {}} onAgain={() => {}} />);
     const order = [
       "Risk ",
       "<h2",
       actionLine(fx.outcome.report!.level).replaceAll("'", "&#x27;"),
-      "Top reasons",
       ">Evidence<",
       "A few quick questions",
       "Check another message",

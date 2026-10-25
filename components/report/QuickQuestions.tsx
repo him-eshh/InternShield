@@ -2,7 +2,9 @@
 import { useState } from "react";
 import type { Answers, Question, QuestionId } from "@/lib/types";
 import { Info as InfoIcon } from "lucide-react";
+import { impactCopy, type AnswerImpact } from "@/lib/impact";
 import { btnSecondary, pillOff, pillOn } from "../ui";
+import ImpactCard from "./ImpactCard";
 
 export type AnswerValue = string | string[];
 
@@ -14,7 +16,8 @@ interface Props {
   /** The question answered most recently; the confirmation shows under it. */
   lastId?: QuestionId | null;
   disabled?: boolean;
-  confirmations?: Partial<Record<QuestionId, string>>;
+  /** What each answer changed: a structured impact (rendered as a card) or plain text. */
+  confirmations?: Partial<Record<QuestionId, AnswerImpact | string>>;
   onAnswer: (id: QuestionId, value: AnswerValue) => void;
 }
 
@@ -70,7 +73,8 @@ export default function QuickQuestions({ questions, answers, change, lastId = nu
   const [showAll, setShowAll] = useState(false);
   const [editing, setEditing] = useState<QuestionId | null>(null);
   if (questions.length === 0) return null;
-  const message = lastId && answers[lastId] !== undefined ? confirmations[lastId] ?? confirmation(change) : "";
+  const said = lastId && answers[lastId] !== undefined ? confirmations[lastId] ?? confirmation(change) : "";
+  const message = typeof said === "string" ? said : impactCopy(said);
   // Prefix the chosen answer so two answers with the same result are both announced.
   const lastQ = questions.find((q) => q.id === lastId);
   const picked = lastQ ? labelOf(lastQ, answers[lastQ.id]) : undefined;
@@ -108,11 +112,15 @@ export default function QuickQuestions({ questions, answers, change, lastId = nu
                 })}
               </div>
             )}
-            {(confirmations[q.id] || (message && lastId === q.id)) && (
-              <p aria-hidden="true" className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-muted">
-                {confirmations[q.id] ?? message}
-              </p>
-            )}
+            {(() => {
+              const c = confirmations[q.id] ?? (message && lastId === q.id ? message : null);
+              if (!c) return null;
+              return typeof c === "string" ? (
+                <p aria-hidden="true" className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-muted">{c}</p>
+              ) : (
+                <div aria-hidden="true" className="mt-3"><ImpactCard impact={c} /></div>
+              );
+            })()}
           </fieldset>
         ))}
       </div>

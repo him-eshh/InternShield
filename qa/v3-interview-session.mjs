@@ -65,7 +65,7 @@ for (const v of all ? variants : [variants[0]]) {
         await page.getByLabel("Your answer", { exact: true }).fill(answer);
         await page.getByRole("button", { name: "Get feedback", exact: true }).click();
       }
-      await page.getByRole("heading", { name: "Your feedback" }).waitFor();
+      await page.getByRole("heading", { name: /Code review|SQL review|Answer feedback/ }).waitFor();
       if (i === 1) { await shot(page, `v3-interview-feedback-${t}`); await shot(page, `v3-interview-followup-${t}`); }
       if (i === 2) {
         await page.getByLabel("Your follow-up answer").fill("My in-progress follow-up draft");

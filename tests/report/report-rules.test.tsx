@@ -22,11 +22,12 @@ describe("v3 report rules", () => {
   it("places the full impact directly below its collapsed answer", () => {
     const q = { id: "channel" as const, text: "Where did it reach you?", options: [{ value: "email", label: "Email" }] };
     const value = "email" as const;
-    const copy = impactCopy(diffReports(realReport, realReport, "question", q.options[0].label));
-    const html = renderToStaticMarkup(<QuickQuestions questions={[q]} answers={{ [q.id]: value }} change={copy} lastId={q.id} confirmations={{ [q.id]: copy }} onAnswer={() => {}} />);
+    const impact = diffReports(realReport, realReport, "question", q.options[0].label, q.text);
+    const html = renderToStaticMarkup(<QuickQuestions questions={[q]} answers={{ [q.id]: value }} change={impactCopy(impact)} lastId={q.id} confirmations={{ [q.id]: impact }} onAnswer={() => {}} />);
     const fieldset = html.slice(html.indexOf("<fieldset"), html.indexOf("</fieldset>"));
-    expect(fieldset.indexOf("Added:")).toBeGreaterThan(fieldset.indexOf("Change"));
-    expect(fieldset).toContain(`Score unchanged at ${realReport.score}`);
+    expect(fieldset.indexOf("What you added")).toBeGreaterThan(fieldset.indexOf("Change"));
+    expect(fieldset).toContain(`Score ${realReport.score} → ${realReport.score}, still`);
+    expect(html).toContain("You added:");
     expect(html).toContain('aria-live="polite"');
     expect(html).not.toContain("no score impact");
   });

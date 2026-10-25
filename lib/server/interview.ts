@@ -161,6 +161,26 @@ function roundLabel(round: InterviewRound): string {
   return INTERVIEW_ROUNDS.find((r) => r.id === round)?.label ?? round;
 }
 
+/** What to judge and what a follow-up may ask, by question type (coding, SQL, behavioral); other rounds keep the generic wording. */
+export function typeGuide(r: Pick<InterviewRequest, "round" | "code">): { judge: string; followUp: string } {
+  if (r.round === "sql" || r.code?.language === "sql") {
+    return {
+      judge: ` This is a SQL question: after the Tests line (fact), comment on NULL handling, join type and grouping. Do not use STAR wording.`,
+      followUp: `ONE short follow-up question under 40 words about NULL handling, indexes, or duplicate rows`,
+    };
+  }
+  if (r.round === "coding" || r.round === "debugging") {
+    return {
+      judge: ` This is a coding question: after the Tests line (fact), comment on edge cases, time and space complexity and code clarity. Do not use STAR wording.`,
+      followUp: `ONE short follow-up question under 40 words about an edge case, the complexity, or an alternative approach (never "ten times the scale" or "at scale")`,
+    };
+  }
+  if (r.round === "behavioral" || r.round === "screen") {
+    return { judge: "", followUp: `ONE short follow-up question under 40 words about the measurable result, what they learned, what happened next, or a missing STAR part` };
+  }
+  return { judge: "", followUp: `ONE short follow-up question under 40 words (complexity, an edge case, a trade-off, or a missing STAR part)` };
+}
+
 function systemFor(r: InterviewRequest): string {
   const label = roundLabel(r.round);
   const preset = getPreset(r.context.preset);
@@ -171,11 +191,12 @@ function systemFor(r: InterviewRequest): string {
   if (r.ask === "review") {
     const star = r.round === "behavioral" ? "Judge STAR (situation, task, action, result) for the answer." : "Set every star field to false; STAR applies only to behavioral rounds.";
     const tests = r.code ? ` The line starting "Tests:" is fact; do not re-grade correctness.` : "";
+    const guide = typeGuide(r);
     const fu =
       (r.followUpsLeft ?? 0) > 0
-        ? `If the answer left a real gap, set followUp to ONE short follow-up question under 40 words (complexity, an edge case, what changes if the input is 10x larger, or a missing STAR part); otherwise set it to "".`
+        ? `If the answer left a real gap, set followUp to ${guide.followUp}; otherwise set it to "".`
         : `Set followUp to "".`;
-    return `You are a kind, honest interviewer reviewing the LAST answer in a ${label} mock interview for a student or early-career candidate. Return JSON only: a short summary, exactly one item for the LAST answer (index = its position, 0-based) with one strength, one concrete improvement and a quote copied exactly from that answer (or "" if none fits), a level (strong, ok or weak), and followUp. Earlier answers are context only. ${star}${tests}${style} ${fu} Do not claim to know hiring outcomes. ${SAFETY}`;
+    return `You are a kind, honest interviewer reviewing the LAST answer in a ${label} mock interview for a student or early-career candidate. Return JSON only: a short summary, exactly one item for the LAST answer (index = its position, 0-based) with one strength, one concrete improvement and a quote copied exactly from that answer (or "" if none fits), a level (strong, ok or weak), and followUp. Earlier answers are context only. ${star}${tests}${guide.judge}${style} ${fu} Do not claim to know hiring outcomes. ${SAFETY}`;
   }
   if (r.ask === "feedback") {
     const star =
@@ -193,7 +214,7 @@ function systemFor(r: InterviewRequest): string {
       tests += ` Comment on the user flow shown on the BOARD. The ${CHALLENGE_MINUTES}-minute timer ${r.timeUp ? "ran out before they finished; mention time management kindly" : "had not run out"}.`;
     }
     if (r.round === "portfolio") tests += " The links were NOT opened; never claim to have seen the work.";
-    tests += style;
+    tests += typeGuide(r).judge + style;
     return `You are a kind, honest coach reviewing a ${label} mock interview for a student or early-career candidate. Return JSON only: a short summary and one item per answer, with index (0-based), one strength, one concrete improvement, and a quote. The quote must be copied exactly from that answer, or "" if none fits. ${star}${tests} Be specific and encouraging; do not claim to know hiring outcomes. ${SAFETY}`;
   }
   const extra: Partial<Record<InterviewRound, string>> = {

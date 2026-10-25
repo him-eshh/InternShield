@@ -1,10 +1,9 @@
 "use client";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import "@/app/v2-check.css";
 import { fetchExplanation, rerunWithCompany, runPipeline, type Explanation as ExplanationData, type PipelineInput, type PipelineOutcome, type StepKey } from "@/lib/client/pipeline";
 import { annotate } from "@/lib/client/annotate";
 import { actionLine, goods, reds } from "@/lib/reportView";
-import { diffReports, impactCopy } from "@/lib/impact";
+import { diffReports, impactCopy, type AnswerImpact } from "@/lib/impact";
 import { score } from "@/lib/scoring/score";
 import { MAX_MESSAGE_CHARS, LEVEL_LABELS, type Answers, type QuestionId, type Report as ReportData, type RiskLevel } from "@/lib/types";
 import { Info as InfoIcon } from "lucide-react";
@@ -19,7 +18,6 @@ import QuickQuestions, { type AnswerValue } from "./QuickQuestions";
 import RecoveryCard from "./RecoveryCard";
 import ReportFooter from "./ReportFooter";
 import RiskRing from "./RiskRing";
-import TopReasons from "./TopReasons";
 import AddInformation from "./AddInformation";
 
 const RESTING_AFTER_SECONDS = 900; // a retryAfter this long means a daily cap, not a blip
@@ -34,6 +32,8 @@ interface Props {
   fetchImpl?: typeof fetch;
   /** Optional extra actions, shown in the footer's secondary row; a function gets the live level. */
   extras?: ReactNode | ((level: RiskLevel) => ReactNode);
+  /** Tailor / Practice next steps, tool-colored; a function gets the live level. */
+  nextSteps?: ReactNode | ((level: RiskLevel) => ReactNode);
   /** Slot for the recovery card ("Already sent money or shared info?"), shown after the quick questions. */
   recovery?: ReactNode;
 }
@@ -51,9 +51,9 @@ export default function Report(props: Props) {
   const [base, setBase] = useState(props.outcome);
   const [rerun, setRerun] = useState<{ outcome: PipelineOutcome; input: PipelineInput; n: number } | null>(null);
   const [busy, setBusy] = useState(false);
-  const [note, setNote] = useState<string | null>(null);
+  const [note, setNote] = useState<AnswerImpact | string | null>(null);
   const liveReport = useRef(props.outcome.report);
-  const [additionNote, setAdditionNote] = useState<string | null>(null);
+  const [additionNote, setAdditionNote] = useState<AnswerImpact | string | null>(null);
   const [kept, setKept] = useState<Answers>(props.outcome.scoreInput.answers); // quick answers survive a company recheck
   if (base !== props.outcome) {
     setBase(props.outcome);
@@ -73,7 +73,7 @@ export default function Report(props: Props) {
     if (next.report && liveReport.current) {
       const after = Object.keys(kept).length ? score({ ...next.scoreInput, answers: kept }) : next.report;
       const pendingExplanation = after.level !== next.report.level ? fetchExplanation(after, { fetch: props.fetchImpl }) : next.pendingExplanation;
-      setNote(impactCopy(diffReports(liveReport.current, after, "detail", `Company: ${name}`)));
+      setNote(diffReports(liveReport.current, after, "detail", `Company: ${name}`));
       setRerun((r) => ({ outcome: { ...next, report: after, pendingExplanation }, input: nextInput, n: (r?.n ?? 0) + 1 }));
     } else setNote("We couldn't recheck that company. Your previous report is still here.");
     setBusy(false);
@@ -93,7 +93,7 @@ export default function Report(props: Props) {
     const next = await runPipeline(nextInput, { fetch: props.fetchImpl });
     if (next.report && liveReport.current) {
       const after = score({ ...next.scoreInput, answers: kept });
-      setAdditionNote(impactCopy(diffReports(liveReport.current, after, text ? "message" : "detail", [text ? "Additional message" : "", sender ? `Sender: ${sender}` : ""].filter(Boolean).join(", "))));
+      setAdditionNote(diffReports(liveReport.current, after, text ? "message" : "detail", [text ? "Additional message" : "", sender ? `Sender: ${sender}` : ""].filter(Boolean).join(", ")));
       const pendingExplanation = after.level !== next.report.level ? fetchExplanation(after, { fetch: props.fetchImpl }) : next.pendingExplanation;
       setRerun((r) => ({ outcome: { ...next, report: after, pendingExplanation }, input: nextInput, n: (r?.n ?? 0) + 1 }));
     } else setAdditionNote("We couldn't read that addition. Your previous report is still here. Try pasting the full message.");
@@ -118,20 +118,20 @@ export default function Report(props: Props) {
 interface BodyProps extends Props {
   additions?: ReactNode;
   onLiveReport?: (report: ReportData) => void;
-  company?: { busy: boolean; note: string | null; onSave: (name: string) => void };
+  company?: { busy: boolean; note: AnswerImpact | string | null; onSave: (name: string) => void };
   /** Answers given before a company recheck; the remounted body re-scores with them. */
   kept?: Answers;
   onAnswers?: (a: Answers) => void;
 }
 
-function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, recovery, company, kept, onAnswers, additions, onLiveReport, onPersist }: BodyProps) {
+function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, nextSteps, recovery, company, kept, onAnswers, additions, onLiveReport, onPersist }: BodyProps) {
   const fresh = outcome.report as ReportData;
   const [answers, setAnswers] = useState<Answers>(kept ?? {});
   const [initial] = useState<ReportData>(() => (Object.keys(answers).length ? score({ ...outcome.scoreInput, answers }) : fresh));
   const [report, setReport] = useState<ReportData>(initial);
   const [questions, setQuestions] = useState(fresh.questions);
   const [seen, setSeen] = useState(fresh);
-  const [confirmations, setConfirmations] = useState<Partial<Record<QuestionId, string>>>({});
+  const [confirmations, setConfirmations] = useState<Partial<Record<QuestionId, AnswerImpact>>>({});
   if (seen !== fresh) {
     setSeen(fresh);
     setReport(Object.keys(answers).length ? score({ ...outcome.scoreInput, answers }) : fresh);
@@ -201,9 +201,9 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, recov
     const question = questions.find((q) => q.id === id);
     const values = Array.isArray(value) ? value : [value];
     const label = values.map((v) => question?.options.find((o) => o.value === v)?.label ?? v).join(", ");
-    const copy = impactCopy(diffReports(report, nextReport, "question", label));
-    setChange(copy);
-    setConfirmations((old) => ({ ...old, [id]: copy }));
+    const impact = diffReports(report, nextReport, "question", label, question?.text);
+    setChange(impactCopy(impact));
+    setConfirmations((old) => ({ ...old, [id]: impact }));
     setLastId(id);
     const levelChanged = nextReport.level !== report.level;
     setReport(nextReport);
@@ -308,8 +308,6 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, recov
           </p>
         )}
 
-        <TopReasons flags={report.flags} />
-
         {explanation ? (
           <Explanation text={explanation.text} source={explanation.source} quotes={quotes} loading={explaining} />
         ) : (
@@ -339,6 +337,7 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, recov
           source={channel ?? input.source}
           onAgain={onAgain}
           extras={extras}
+          nextSteps={nextSteps}
         />
       </div>
     </article>

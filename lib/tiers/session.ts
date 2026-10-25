@@ -2,12 +2,14 @@
 // A session is a list of slots (one per question). Each slot becomes a PlanItem when it comes up, so "Mixed" difficulty can adapt.
 // Flow per question: answer -> review (feedback + optional follow-up) -> follow-up answers -> Continue.
 import { readKey, writeKey } from "../client/storage";
-import { filterBank, type BankFilter, type BankRole } from "./bank";
+import type { BankFilter, BankRole } from "./bank";
+import { pickFromBank } from "./bankPool";
 import { DEBUG_PROBLEMS } from "./debugging";
 import { buildScorecard } from "./scorecard";
 import { PROBLEMS } from "./problems";
 import { SQL_PROBLEMS } from "./sql";
 import { textPool } from "./sessionPools";
+import { fitFollowUp, localReview, questionType } from "./sessionFeedback";
 import {
   CODE_ROUNDS,
   INTERVIEW_ROUNDS,
@@ -159,14 +161,12 @@ const usedIds = (s: PracticeState): Set<string> => new Set([...s.turns.flatMap((
 function levelFor(s: PracticeState): "easy" | "medium" | "hard" {
   return s.config.difficulty === "mixed" ? LEVELS[Math.min(2, Math.max(0, s.level))] : s.config.difficulty;
 }
-/** Bank selection keeps every user filter; an exhausted filter set is reported to the runner. */
+/** Bank selection keeps the user's filters while they match; otherwise it falls back to the closest pool and says so in `note`. */
 function pickBank(s: PracticeState, bank: BankQuestion[], rand: () => number): { q: BankQuestion; note?: string } | null {
   const roleText = (s.config.role ?? s.context.role ?? "").toLowerCase();
   const role: BankRole | null = /front.?end/.test(roleText) ? "frontend" : /back.?end/.test(roleText) ? "backend" : /machine|\bml\b/.test(roleText) ? "ml" : /data|analyst/.test(roleText) ? "data" : null;
   const filter: BankFilter = { role, company: s.config.company ?? s.context.company, topics: s.config.topics, difficulty: levelFor(s) };
-  const ids = usedIds(s);
-  const pool = filterBank(bank, filter).filter((q) => !ids.has(q.id));
-  return pool.length ? { q: pool[Math.floor(rand() * pool.length)] } : null;
+  return pickFromBank(bank, filter, usedIds(s), rand, !!s.config.mostAsked);
 }
 const bankItem = (slot: number, q: BankQuestion, note?: string): PlanItem => ({
   id: `${slot}-${q.id}`,
@@ -192,7 +192,7 @@ export function makeItem(s: PracticeState, i: number, bank: BankQuestion[]): Pla
   const unused = <T extends { id: string }>(xs: T[]): T[] => xs.filter((x) => !ids.has(x.id));
   if (slot.round === "coding") {
     const nth = s.turns.filter((t) => t.round === "coding").length + (s.activeQuestion?.item.round === "coding" ? 1 : 0);
-    const constrained = s.config.topics.length > 0 || s.config.difficulty !== "mixed" || !!s.config.company;
+    const constrained = s.config.topics.length > 0 || s.config.difficulty !== "mixed" || !!s.config.company || !!s.config.mostAsked;
     const problems = unused(PROBLEMS);
     if (runs && !constrained && nth % 2 === 0 && problems.length) {
       const p = problems[Math.floor(rand() * problems.length)];
@@ -223,7 +223,7 @@ export function makeItem(s: PracticeState, i: number, bank: BankQuestion[]): Pla
     if (first) return mk({ kind: "text", question: first.text, source: first.source, id: `${i}-${slot.round}` });
   }
   // Pool exhausted (or no bank): the model writes this one.
-  return mk({ kind: "text", question: "", source: "unavailable", id: `${i}-unavailable`, note: "No unused question matches these filters. Skip this slot or end the session, then choose a broader mix." });
+  return mk({ kind: "text", question: "", source: "unavailable", id: `${i}-unavailable`, note: "Every question the bank has for this mix has been used. Skip this slot or end the session, then start a new one." });
 }
 // ---------- Lifecycle ----------
 function startCurrent(s: PracticeState, i: number, bank: BankQuestion[], now: number): PracticeState {
@@ -284,14 +284,6 @@ export function awaiting(s: PracticeState): Awaiting {
 }
 export const canCallModel = (s: PracticeState): boolean => s.calls < MAX_PRACTICE_CALLS;
 export const followUpsLeft = (c: Current): number => Math.max(0, MAX_FOLLOWUPS - c.followUps.length);
-/** The model wrote this slot's question. */
-export function applyQuestion(s: PracticeState, text: string, now: number): PracticeState {
-  const c = s.activeQuestion;
-  const q = text.trim().slice(0, 400);
-  if (!c || !q || s.turns.some((t) => t.question === q)) return { ...s, calls: s.calls + 1, updatedAt: now };
-  const inner = c.inner ? { ...c.inner, pending: q } : null;
-  return { ...s, calls: s.calls + 1, updatedAt: now, activeQuestion: { ...c, item: { ...c.item, question: q }, inner } };
-}
 /** Saves the typed answer (and the last submitted code, for runnable items). */
 export function submitAnswer(s: PracticeState, answer: string, now: number, code: CodeAttempt | null = null): PracticeState {
   const c = s.activeQuestion;
@@ -358,7 +350,9 @@ export function applyReview(s: PracticeState, reply: InterviewReply, now: number
     const k = answered - 2;
     followUps[k] = { ...followUps[k], note: [fb.strength, fb.improve].filter(Boolean).join(" ") };
   }
-  const q = typeof reply.followUp === "string" ? reply.followUp.trim().slice(0, 400) : "";
+  const raw = typeof reply.followUp === "string" ? reply.followUp.trim().slice(0, 400) : "";
+  // A follow-up must fit the question type; "ten times the scale" is swapped for one from that type's own pool.
+  const q = raw ? fitFollowUp(questionType(c.item), raw, c.item.id + followUps.length, [...followUps.map((f) => f.question), c.item.question]) : "";
   if (q && q !== c.item.question && !s.turns.some((t) => t.question === q) && followUpsLeft(c) > 0 && !followUps.some((f) => f.answer === null) && !followUps.some((f) => f.question === q)) followUps.push({ question: q, answer: null });
   return {
     ...next,
@@ -370,6 +364,15 @@ export function skipReview(s: PracticeState, now: number): PracticeState {
   const c = s.activeQuestion;
   if (!c) return s;
   return { ...s, updatedAt: now, activeQuestion: { ...c, reviewed: 1 + c.followUps.filter((f) => f.answer !== null).length } };
+}
+/** No model feedback (call failed or budget spent): code-built, type-specific feedback so the session still says something true. */
+export function applyLocalReview(s: PracticeState, now: number): PracticeState {
+  const c = s.activeQuestion;
+  if (!c) return s;
+  const answered = 1 + c.followUps.filter((f) => f.answer !== null).length;
+  if (answered > 1) return skipReview(s, now); // follow-up answers are noted by the model only
+  const { feedback, level } = localReview(c);
+  return { ...s, updatedAt: now, activeQuestion: { ...c, feedback: { ...feedback, index: 0 }, level: c.level ?? level, reviewed: answered } };
 }
 /** A model hint (runnable items keep theirs in inner.hints). */
 export function addHint(s: PracticeState, text: string, now: number): PracticeState {
@@ -596,4 +599,3 @@ export function saveToHistory(s: PracticeState): HistoryEntry {
   writeKey(HISTORY_KEY, [entry, ...loadHistory().filter((e) => e.id !== s.id)].slice(0, MAX_HISTORY));
   return entry;
 }
-export const removeHistory = (id: string): void => writeKey(HISTORY_KEY, loadHistory().filter((e) => e.id !== id));

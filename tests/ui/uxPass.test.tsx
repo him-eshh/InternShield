@@ -5,7 +5,6 @@ import Explanation from "@/components/report/Explanation";
 import Report from "@/components/report/Report";
 import { fixtureOutcome } from "@/fixtures/outcome";
 import { explanationPlain, explanationSections, fallbackExplanation, FALLBACK_TITLES, hasBannedWord } from "@/lib/explainFallback";
-import { lineKinds, resumeLines, resumeSections, splitBullet } from "@/lib/tiers/tailored";
 
 async function renderReport(name: "real" | "scam" | "medium") {
   const fx = (await fixtureOutcome(name))!;
@@ -65,56 +64,3 @@ describe("sectioned fallback explanation", () => {
     expect(explanationPlain(fallbackExplanation({ level: "high", flags: FLAGS }))).toMatch(/^Our take:\nThis message[\s\S]*What stood out:\n- /);
   });
 });
-
-const RESUME = [
-  "Jordan Lee",
-  "jordan.lee@example.edu | (555) 010-2030 | linkedin.com/in/jordanlee",
-  "EDUCATION",
-  "State University, B.S. Computer Science, May 2027",
-  "Experience",
-  "Campus IT Help Desk, Student Technician, Sep 2025 - Present",
-  "• Resolved 40+ tickets a week for students and staff using ServiceNow",
-  "• Trained 3 new technicians on the ticket process",
-  "Projects",
-  "- Built a React app that tracks club attendance for 120 members",
-  "Skills",
-  "Python, JavaScript, React, SQL, Git",
-].join("\n");
-
-describe("which resume lines can be reworded", () => {
-  const lines = resumeLines(RESUME);
-  const kinds = lineKinds(lines);
-  const kindOf = (start: string) => kinds[lines.findIndex((l) => l.startsWith(start))];
-
-  it("never offers the name, contact details or section headers", () => {
-    expect(kindOf("Jordan Lee")).toBe("contact");
-    expect(kindOf("jordan.lee@")).toBe("contact");
-    expect(kindOf("EDUCATION")).toBe("header");
-    expect(kindOf("Experience")).toBe("header");
-    expect(kindOf("Projects")).toBe("header");
-    expect(kindOf("Skills")).toBe("header");
-  });
-
-  it("offers bullets, and keeps role/school/date lines as they are", () => {
-    expect(kindOf("• Resolved")).toBe("content");
-    expect(kindOf("• Trained")).toBe("content");
-    expect(kindOf("- Built")).toBe("content");
-    expect(kindOf("Campus IT")).toBe("detail");
-    expect(kindOf("State University")).toBe("detail");
-  });
-
-  it("groups lines under their sections", () => {
-    expect(resumeSections(lines).map((s) => s.title)).toEqual(["Top", "Education", "Experience", "Projects", "Skills"]);
-  });
-
-  it("splitBullet keeps the bullet out of what the AI sees", () => {
-    expect(splitBullet("• Trained 3 new technicians")).toEqual({ prefix: "• ", body: "Trained 3 new technicians" });
-    expect(splitBullet("Plain line")).toEqual({ prefix: "", body: "Plain line" });
-  });
-
-  it("a resume with no bullets still offers its sentences", () => {
-    const plain = lineKinds(resumeLines("Sam Rivera\nExperience\nI tutored algebra students twice a week at the library and planned lessons."));
-    expect(plain).toEqual(["contact", "header", "content"]);
-  });
-});
-

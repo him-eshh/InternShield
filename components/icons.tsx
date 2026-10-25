@@ -2,7 +2,6 @@
 // Decorative by default (lucide sets aria-hidden when there is no label).
 import {
   ArrowLeft,
-  ArrowRight,
   Check,
   ChevronDown,
   CircleCheck,
@@ -13,11 +12,9 @@ import {
   Monitor,
   Moon,
   OctagonAlert,
-  Shield,
   Sun,
   TriangleAlert,
   Upload,
-  User,
   X,
   type LucideProps,
 } from "lucide-react";
@@ -29,14 +26,12 @@ const wrap = (Icon: React.ComponentType<LucideProps>, base = 20) =>
     return <Icon size={size} strokeWidth={STROKE} {...rest} />;
   };
 
-export const ShieldIcon = wrap(Shield);
 export const CheckIcon = wrap(Check);
 export const CheckCircleIcon = wrap(CircleCheck);
 export const WarningIcon = wrap(TriangleAlert);
 export const AlertIcon = wrap(OctagonAlert);
 export const InfoIcon = wrap(Info);
 export const ArrowLeftIcon = wrap(ArrowLeft);
-export const ArrowRightIcon = wrap(ArrowRight);
 export const ChevronIcon = wrap(ChevronDown);
 export const ExternalIcon = wrap(ExternalLink);
 export const CopyIcon = wrap(Copy);
@@ -45,7 +40,6 @@ export const CloseIcon = wrap(X);
 export const SunIcon = wrap(Sun);
 export const MoonIcon = wrap(Moon);
 export const MonitorIcon = wrap(Monitor);
-export const UserIcon = wrap(User);
 
 export function Spinner({ size = 18, className = "" }: { size?: number; className?: string }) {
   return <LoaderCircle size={size} strokeWidth={2.25} aria-hidden="true" className={`animate-spin ${className}`} />;

@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Check, Download, Eye, FilePenLine, FileUp, LoaderCircle, X } from "lucide-react";
+import { TailorIllustration } from "../illustrations";
 import type { ResumeData } from "@/lib/types";
 import type { PostingContext } from "@/lib/tiers/types";
 import type { ResumeEdit, ResumeHighlight } from "@/lib/tiers/resumeTypes";
@@ -14,7 +15,6 @@ import { draftResumeEdits, openResumeFile, prepareResumePreviews, previewKey, sa
 import { PlanPanel } from "../resume/PlanPanel";
 import { EditCard } from "../resume/EditCard";
 import { DocumentPreview } from "../resume/DocumentPreview";
-import "@/app/v3-resume.css";
 
 interface Props { resume: ResumeData | null; target: PostingContext | null; onOpenProfile: () => void; onBack: () => void }
 const field = "mt-1.5 w-full rounded-xl border border-border-strong bg-surface px-3 py-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-tool";
@@ -180,7 +180,7 @@ export default function ResumeTailor({ resume, target, onOpenProfile, onBack }: 
 
   return <section data-resume-editor="" aria-label="Resume tailoring" data-tool="tailor" className="mx-auto max-w-6xl px-4 pb-12 pt-6 sm:px-6 sm:pt-9">
     <button type="button" onClick={onBack} className="inline-flex min-h-11 items-center gap-2 text-sm text-fg-2"><ArrowLeft size={17} strokeWidth={1.75} />Back</button>
-    <header className="mb-7 mt-3 flex items-start gap-4"><div className="rounded-2xl bg-tool-tint p-3 text-tool-strong"><FilePenLine size={30} strokeWidth={1.75} aria-hidden="true" /></div><div><h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">Tailor your resume</h1><p className="mt-2 max-w-xl text-sm leading-relaxed text-fg-2">Small edits for this role. Your facts, your voice, your original layout.</p></div></header>
+    <header className="mb-7 mt-3 flex items-center gap-4 sm:gap-6"><TailorIllustration size={96} className="shrink-0" /><div><h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">Tailor your resume</h1><p className="mt-2 max-w-xl text-sm leading-relaxed text-fg-2">Small edits for this role. Your facts, your voice, your original layout.</p></div></header>
     {(!review || busy) && <section className="grid gap-6 lg:grid-cols-[1fr_1.1fr]" aria-label="Tailoring inputs">
       <div className="rounded-2xl border border-border bg-surface p-5 sm:p-6"><h2 className="font-display text-lg font-semibold">Your resume</h2><p className="mt-1 text-sm text-fg-2">Upload your file to keep its layout, or use your profile text.</p>
         <label className="mt-4 flex min-h-24 cursor-pointer items-center gap-3 rounded-xl border border-dashed border-border-strong bg-bg-subtle p-4"><FileUp size={24} strokeWidth={1.75} className="shrink-0 text-tool-strong" /><span className="min-w-0 text-sm"><span className="block font-medium break-words">{upload?.name ?? "Choose PDF or Word"}</span><span className="text-xs text-fg-2">Up to 5 MB. Edited in your browser.</span></span><input type="file" accept=".pdf,.docx" aria-label="Upload resume" disabled={busy} className="sr-only" onChange={(e) => { setUpload(e.target.files?.[0] ?? null); setError(""); }} /></label>

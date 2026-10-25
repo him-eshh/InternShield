@@ -16,3 +16,9 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Programmatic focus (a new screen's heading) must not draw a ring around a heading; keyboard users still get rings on controls. */
+:is(h1, h2, h3, h4)[tabindex="-1"]:focus,
+:is(h1, h2, h3, h4)[tabindex="-1"]:focus-visible {
+  outline: none;
+}

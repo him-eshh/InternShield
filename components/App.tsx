@@ -1,6 +1,7 @@
 "use client";
 // The /check flow: form -> checking -> report (or "not a job message"). Cross-route state lives in
 // components/shell/AppStateProvider; the last finished check is persisted so a refresh shows the report again.
+import { ArrowRight, FilePen, MessagesSquare } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -18,7 +19,10 @@ import CheckForm, { type CheckSubmit } from "./CheckForm";
 import Checklist, { initialLines, type LineInfo } from "./Checklist";
 import Report from "./report/Report";
 import { useAppState } from "./shell/AppStateProvider";
-import { btnPrimary, btnSecondary, subhead } from "./ui";
+import { btnPrimary, subhead } from "./ui";
+
+const nextStep =
+  "inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-full border border-tool bg-tool-tint px-5 py-3 text-[16px] font-semibold text-tool-strong transition-[background-color,transform] duration-200 ease-out hover:bg-surface active:scale-[0.98] sm:max-w-[300px]";
 
 type Screen = "loading" | "check" | "checking" | "report" | "notjob";
 
@@ -170,21 +174,27 @@ export default function App() {
   // Gated on the live level: a quick answer that raises the report to high hides Tailor/Practice.
   const liveTarget = target && { company: target.company, role: target.role, description: null };
   const reportExtras = (level: RiskLevel) =>
-    target && (TIER_FLAGS.tracker || TIER_FLAGS.resume || TIER_FLAGS.interview) ? (
-      <div className="flex flex-wrap items-center justify-center gap-3">
-        {TIER_FLAGS.tracker && <SaveToTracker key={reportKey} card={{ ...target, risk: level }} onOpen={() => router.push("/tracker")} />}
-        {TIER_FLAGS.resume && level !== "high" && (
-          <button type="button" className={btnSecondary} onClick={() => openTool("tailor", liveTarget)}>
+    target && TIER_FLAGS.tracker ? <SaveToTracker key={reportKey} card={{ ...target, risk: level }} onOpen={() => router.push("/tracker")} /> : null;
+  // Next steps wear their own tool colors (data-tool on the button), never the Check coral or a risk color.
+  const nextSteps = (level: RiskLevel) =>
+    target && level !== "high" && (TIER_FLAGS.resume || TIER_FLAGS.interview) ? (
+      <>
+        {TIER_FLAGS.resume && (
+          <button type="button" data-tool="tailor" className={nextStep} onClick={() => openTool("tailor", liveTarget)}>
+            <FilePen size={18} aria-hidden="true" />
             Tailor my resume for this
+            <ArrowRight size={16} aria-hidden="true" />
           </button>
         )}
         {/* No interview coaching on high-risk reports: we don't prep people for a likely scam. */}
-        {TIER_FLAGS.interview && level !== "high" && (
-          <button type="button" className={btnSecondary} onClick={() => openTool("practice", liveTarget)}>
+        {TIER_FLAGS.interview && (
+          <button type="button" data-tool="practice" className={nextStep} onClick={() => openTool("practice", liveTarget)}>
+            <MessagesSquare size={18} aria-hidden="true" />
             Practice an interview for this
+            <ArrowRight size={16} aria-hidden="true" />
           </button>
         )}
-      </div>
+      </>
     ) : null;
 
   return (
@@ -205,6 +215,7 @@ export default function App() {
               setScreen("check");
             }}
             extras={reportExtras}
+            nextSteps={nextSteps}
           />
         </div>
       )}

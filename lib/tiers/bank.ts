@@ -5,14 +5,6 @@ import type { BankQuestion } from "./types";
 export type BankRole = "swe" | "frontend" | "backend" | "data" | "ml";
 export type BankDifficulty = "easy" | "medium" | "hard" | "mixed";
 
-export const BANK_ROLES: { id: BankRole; label: string }[] = [
-  { id: "swe", label: "Software engineer" },
-  { id: "frontend", label: "Frontend" },
-  { id: "backend", label: "Backend" },
-  { id: "data", label: "Data" },
-  { id: "ml", label: "Machine learning" },
-];
-
 /** A role keeps a question when it carries at least one of these tags. SWE keeps everything. */
 export const ROLE_TAGS: Record<BankRole, string[] | null> = {
   swe: null,

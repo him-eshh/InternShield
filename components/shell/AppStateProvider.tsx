@@ -110,17 +110,9 @@ export function useAppState(): State {
   return s;
 }
 
-export const useProfile = () => {
-  const { ready, profile, setProfile } = useAppState();
-  return { ready, profile, setProfile };
-};
 export const useResume = () => {
   const { ready, resume, setResume } = useAppState();
   return { ready, resume, setResume };
-};
-export const useLastCheck = () => {
-  const { ready, lastCheck, setLastCheck } = useAppState();
-  return { ready, lastCheck, setLastCheck };
 };
 export const useTargets = () => {
   const { ready, targets, setTarget } = useAppState();

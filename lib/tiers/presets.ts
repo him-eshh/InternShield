@@ -53,7 +53,6 @@ export const PRESETS: InterviewPreset[] = [
   },
 ];
 
-export const PRESET_IDS = PRESETS.map((p) => p.id);
 export const getPreset = (id: unknown): InterviewPreset | null => PRESETS.find((p) => p.id === id) ?? null;
 
 /** Made-up Amazon-style behavioral prompts, each tagged with 1-2 official Leadership Principles. */

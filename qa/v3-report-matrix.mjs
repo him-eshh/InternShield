@@ -40,7 +40,7 @@ for (const width of [1440, 390]) for (const theme of ["light", "dark"]) {
     assert.deepEqual(shortTargets, [], "report controls must be 44px");
     const qq = page.locator("#qq-title").locator("..");
     await qq.getByRole("button", { name: "None yet", exact: true }).click();
-    await qq.locator("fieldset p").filter({ hasText: "Confirmed: None yet" }).waitFor();
+    await qq.locator("[data-impact]").filter({ hasText: "None yet" }).waitFor();
     await capture(page, `v3-report-answer-confirmed-${suffix}`, qq);
     await qq.getByRole("button", { name: /None yet.*Change/ }).click();
     await qq.getByRole("button", { name: "Deposit a check", exact: true }).click();
@@ -61,25 +61,25 @@ for (const width of [1440, 390]) for (const theme of ["light", "dark"]) {
     await page.getByRole("button", { name: /Edit company name/ }).click();
     await page.getByLabel("Company", { exact: true }).fill("Northbeam Analytics");
     await page.getByRole("button", { name: "Recheck", exact: true }).click();
-    await page.locator("header [role=status]").filter({ hasText: "Added: Company:" }).waitFor();
+    await page.locator("header [role=status]").filter({ hasText: /You added: .*Company/ }).waitFor();
     await capture(page, `v3-report-company-impact-${suffix}`, page.locator("article header"));
     await page.getByText("Add to this check", { exact: true }).click();
     const form = page.getByRole("form", { name: "Add information" });
     await page.getByLabel("Another message", { exact: true }).fill("They now want a payment before the interview. Please deposit a check and send money to our vendor.");
     await form.getByRole("button", { name: "Update this check", exact: true }).click();
-    await form.getByRole("status").filter({ hasText: "Added: Additional message" }).waitFor();
+    await form.getByRole("status").filter({ hasText: /You added: .*Additional message/ }).waitFor();
     await capture(page, `v3-report-message-impact-${suffix}`, form);
     await page.getByLabel("Another message", { exact: true }).fill("");
     await page.getByLabel("Sender's email or phone", { exact: true }).fill("recruiter@example.com");
     await form.getByRole("button", { name: "Update this check", exact: true }).click();
-    await form.getByRole("status").filter({ hasText: "Added: Sender:" }).waitFor();
+    await form.getByRole("status").filter({ hasText: /You added: .*Sender/ }).waitFor();
     await capture(page, `v3-report-sender-impact-${suffix}`, form);
     await mockApi(page, { transcribe: () => done({ text: "Another recruiter message asking for a deposit before hiring.", partial: false }) });
     const buffer = await page.screenshot();
     await page.locator('input[type=file]').setInputFiles({ name: "message.png", mimeType: "image/png", buffer });
     await page.waitForFunction(() => document.querySelector("#additional-message")?.value.includes("Another recruiter"));
     await form.getByRole("button", { name: "Update this check", exact: true }).click();
-    await form.getByRole("status").filter({ hasText: "Added: Additional message" }).waitFor();
+    await form.getByRole("status").filter({ hasText: /You added: .*Additional message/ }).waitFor();
     await capture(page, `v3-report-screenshot-impact-${suffix}`, form);
     // Start a separate check for the held-out link example, keeping the original eval file read-only.
     await page.getByRole("button", { name: "Check another message", exact: true }).click();

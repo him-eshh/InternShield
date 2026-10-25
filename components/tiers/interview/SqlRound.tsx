@@ -2,10 +2,10 @@
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { MAX_ANSWER_CHARS, MAX_CODE_CHARS, type CodeStats, type RoundPanelProps } from "@/lib/tiers/types";
-import { compareResults, getSqlProblem, showCell, SQL_SCHEMA, SQL_STARTER, SQL_TABLES, type ResultSet, type SqlGrade } from "@/lib/tiers/sql";
+import { compareResults, getSqlProblem, sampleTables, showCell, SQL_SCHEMA, SQL_STARTER, type ResultSet, type SqlGrade } from "@/lib/tiers/sql";
 import { runSql, stopRunners } from "@/lib/tiers/runner";
-import { Spinner } from "../../icons";
-import { btnPrimary, btnSecondary, card as cardCls } from "../../ui";
+import { card as cardCls } from "../../ui";
+import { ActionBar, FinishStep, HintList, StatusLine } from "./RoundActions";
 
 const CodeEditor = dynamic(() => import("./CodeEditor"), {
   ssr: false,
@@ -14,16 +14,18 @@ const CodeEditor = dynamic(() => import("./CodeEditor"), {
 
 const NO_STATS: CodeStats = { runsBeforeSubmit: 0, submits: 0, firstSubmitAt: null };
 const PREVIEW_ROWS = 8;
+const SAMPLE_ROWS = 4;
+const TABLES = sampleTables();
 // ponytail: module helper so the React compiler's purity rule doesn't flag clock reads in handlers.
 const clock = () => Date.now();
 
-export default function SqlRound({ session, onUpdate, ask, busy }: RoundPanelProps) {
+export default function SqlRound({ session, onUpdate, ask, busy, onSkip }: RoundPanelProps) {
   const problem = getSqlProblem(session.problemId);
   const [code, setCode] = useState(session.editorDraft?.code ?? (session.code?.language === "sql" ? session.code.code : SQL_STARTER));
   const [approach, setApproach] = useState(session.editorDraft?.approach ?? "");
   const [running, setRunning] = useState<"run" | "submit" | null>(null);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{ got: ResultSet; grade: SqlGrade } | null>(null);
+  const [result, setResult] = useState<{ got: ResultSet; want: ResultSet; grade: SqlGrade } | null>(null);
   const [runError, setRunError] = useState<string | null>(null);
   const [status, setStatus] = useState("");
   const latest = useRef(session);
@@ -62,7 +64,7 @@ export default function SqlRound({ session, onUpdate, ask, busy }: RoundPanelPro
       return;
     }
     const grade = compareResults(res.want, res.got, problem.ordered);
-    setResult({ got: res.got, grade });
+    setResult({ got: res.got, want: res.want, grade });
     const st = latest.current.stats ?? NO_STATS;
     if (kind === "run") {
       setStatus(grade.message);
@@ -73,7 +75,14 @@ export default function SqlRound({ session, onUpdate, ask, busy }: RoundPanelPro
     const now = clock();
     onUpdate({
       ...latest.current,
-      code: { problemId: problem.id, language: "sql", code: code.slice(0, MAX_CODE_CHARS), passed: grade.ok ? 1 : 0, total: 1 },
+      code: {
+        problemId: problem.id,
+        language: "sql",
+        code: code.slice(0, MAX_CODE_CHARS),
+        passed: grade.ok ? 1 : 0,
+        total: 1,
+        detail: { message: grade.message, ...(grade.diffs.length ? { diffs: grade.diffs.slice(0, 3) } : {}) },
+      },
       stats: { ...st, submits: st.submits + 1, firstSubmitAt: st.firstSubmitAt ?? now },
       updatedAt: now,
     });
@@ -110,25 +119,53 @@ export default function SqlRound({ session, onUpdate, ask, busy }: RoundPanelPro
 
   const hints = session.hints ?? [];
   const matched = submitted ? submitted.passed === submitted.total : false;
+  const showResult = !loading && !status && !!submitted;
+  const statusText = loading ? "Loading SQL… (first time takes a few seconds)" : status || (submitted ? (matched ? "Result matches the expected rows" : "Result doesn't match the expected rows") : "");
 
   return (
-    <div className="space-y-5 lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start lg:gap-6 lg:space-y-0">
-      <div className="space-y-5">
+    <div className="space-y-4 lg:grid lg:grid-cols-[minmax(0,6fr)_minmax(0,7fr)] lg:items-start lg:gap-6 lg:space-y-0">
+      <div className="space-y-4">
         <section className={`${cardCls} p-5 sm:p-6`}>
-          <h2 className="text-[22px] font-semibold tracking-[-0.01em]">{problem.title}</h2>
+          <h2 className="text-[22px] font-semibold tracking-[-0.01em] text-pretty!">{problem.title}</h2>
           <p className="mt-2 break-words text-[17px] leading-relaxed">{problem.prompt}</p>
           <p className="mt-2 text-[15px] text-muted">
-            Columns: <code className="font-mono">{problem.columns.join(", ")}</code>
+            Return columns: <code className="font-mono">{problem.columns.join(", ")}</code>
             {problem.ordered ? " · order counts" : ""}
           </p>
-          <h3 className="mt-4 text-[15px] font-semibold">Tables (SQLite)</h3>
-          <ul className="mt-1 space-y-1 text-[15px]">
-            {SQL_TABLES.map((t) => (
-              <li key={t.name} className="break-words">
-                <code className="font-mono font-semibold">{t.name}</code> <span className="text-muted">({t.columns})</span>
-              </li>
-            ))}
-          </ul>
+        </section>
+
+        <section aria-label="Tables" className="space-y-3">
+          <h3 className="text-[15px] font-semibold">Tables (SQLite), first {SAMPLE_ROWS} rows</h3>
+          {TABLES.map((t) => (
+            <div key={t.name} className="max-w-full overflow-x-auto rounded-[14px] border border-border bg-card">
+              <table className="w-full border-collapse text-left font-mono text-[13px]">
+                <caption className="border-b border-border bg-bg-soft px-3 py-1.5 text-left font-semibold">
+                  {t.name} <span className="font-normal text-muted">({t.rows.length} rows)</span>
+                </caption>
+                <thead>
+                  <tr>
+                    {t.columns.map((c) => (
+                      <th key={c} scope="col" className="px-3 py-1.5 font-semibold">
+                        {c}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {t.rows.slice(0, SAMPLE_ROWS).map((r, i) => (
+                    <tr key={i} className="border-t border-border">
+                      {r.map((v, j) => (
+                        <td key={j} className="px-3 py-1">
+                          {v}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
+          <p className="text-[13px] text-muted">A grade of NULL means the course is still in progress.</p>
         </section>
 
         <section>
@@ -141,60 +178,21 @@ export default function SqlRound({ session, onUpdate, ask, busy }: RoundPanelPro
             maxLength={MAX_ANSWER_CHARS}
             onChange={(e) => { setApproach(e.target.value); persistDraft(code, e.target.value); }}
             rows={4}
+            placeholder="Which tables you join, how NULLs are handled, and why."
             className="mt-1.5 w-full rounded-[14px] border border-border bg-card p-4 text-[17px]"
           />
           <p className="mt-1 text-[13px] text-muted">
             {approach.length} / {MAX_ANSWER_CHARS}
           </p>
         </section>
-
-        <section className="space-y-3">
-          <button type="button" className={btnSecondary} disabled={disabled} onClick={hint}>
-            {busy && <Spinner size={16} />} Ask for a hint
-          </button>
-          {hints.length > 0 && (
-            <ol className="space-y-2" aria-label="Hints">
-              {hints.map((h, i) => (
-                <li key={i} className={`${cardCls} p-4 text-[16px]`}>
-                  <span className="text-muted">Hint {i + 1}. </span>
-                  {h}
-                </li>
-              ))}
-            </ol>
-          )}
-        </section>
       </div>
 
-      <div className="space-y-5">
+      <div className="space-y-4">
         <CodeEditor value={code} language="sql" onChange={(text) => { setCode(text); persistDraft(text, approach); }} label={`${problem.title} query editor, SQL`} />
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          <button type="button" className={btnSecondary} disabled={disabled} onClick={() => run("run")}>
-            {running === "run" && <Spinner size={16} />} Run query
-          </button>
-          <button type="button" className={btnPrimary} disabled={disabled} onClick={() => run("submit")}>
-            {running === "submit" && <Spinner size={16} />} Submit
-          </button>
-          {running && (
-            <button type="button" className={btnSecondary} onClick={stop}>
-              Stop
-            </button>
-          )}
-        </div>
+        <ActionBar runKey="run" runLabel="Run query" running={running} disabled={disabled} busy={busy} passed={matched} onRun={() => run("run")} onSubmit={() => run("submit")} onStop={stop} onHint={hint} onSkip={onSkip} />
 
-        <p
-          role="status"
-          aria-live="polite"
-          className={
-            !loading && !status && submitted
-              ? `${cardCls} p-4 text-[17px] font-semibold ${matched ? "text-good" : "text-warn"}`
-              : "min-h-6 text-[15px] text-muted"
-          }
-        >
-          {loading
-            ? "Loading SQL… (first time takes a few seconds)"
-            : status || (submitted ? (matched ? "Result matches the expected rows" : "Result doesn't match the expected rows") : "")}
-        </p>
+        <StatusLine text={statusText} result={showResult} ok={matched} />
 
         {runError && (
           <p role="alert" className="rounded-[14px] border border-border bg-bg-soft p-4 text-[15px] text-bad">
@@ -212,46 +210,51 @@ export default function SqlRound({ session, onUpdate, ask, busy }: RoundPanelPro
           </ul>
         )}
 
-        {result && result.got.columns.length > 0 && (
-          <div className="max-w-full overflow-x-auto rounded-[14px] border border-border">
-            <table className="w-full border-collapse text-left font-mono text-[14px]">
-              <caption className="sr-only">Your result</caption>
-              <thead className="bg-bg-soft">
-                <tr>
-                  {result.got.columns.map((c, i) => (
-                    <th key={i} scope="col" className="px-3 py-2 font-semibold">
-                      {c}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {result.got.rows.slice(0, PREVIEW_ROWS).map((r, i) => (
-                  <tr key={i} className="border-t border-border">
-                    {r.map((v, j) => (
-                      <td key={j} className="px-3 py-1.5">
-                        {showCell(v)}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {result.got.rows.length > PREVIEW_ROWS && (
-              <p className="border-t border-border px-3 py-2 text-[13px] text-muted">
-                {PREVIEW_ROWS} of {result.got.rows.length} rows shown
-              </p>
-            )}
+        {result && (
+          <div className="grid gap-3 xl:grid-cols-2">
+            <ResultTable title="Your result" set={result.got} />
+            <ResultTable title="Expected result" set={result.want} />
           </div>
         )}
 
-        <div>
-          <button type="button" className={btnPrimary} disabled={disabled || !submitted} onClick={finish}>
-            {busy && <Spinner size={16} />} Finish and get feedback
-          </button>
-          {!submitted && <p className="mt-2 text-[15px] text-muted">Submit your query first.</p>}
-        </div>
+        <HintList hints={hints} />
+
+        <FinishStep submitted={!!submitted} passed={matched} what="query" disabled={disabled} busy={busy} onFinish={finish} />
       </div>
+    </div>
+  );
+}
+
+function ResultTable({ title, set }: { title: string; set: ResultSet }) {
+  if (!set.columns.length) return null;
+  return (
+    <div className="max-w-full overflow-x-auto rounded-[14px] border border-border bg-card">
+      <table className="w-full border-collapse text-left font-mono text-[14px]">
+        <caption className="border-b border-border bg-bg-soft px-3 py-1.5 text-left font-sans text-[14px] font-semibold">
+          {title} <span className="font-normal text-muted">({set.rows.length} {set.rows.length === 1 ? "row" : "rows"})</span>
+        </caption>
+        <thead>
+          <tr>
+            {set.columns.map((c, i) => (
+              <th key={i} scope="col" className="px-3 py-2 font-semibold">
+                {c}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {set.rows.slice(0, PREVIEW_ROWS).map((r, i) => (
+            <tr key={i} className="border-t border-border">
+              {r.map((v, j) => (
+                <td key={j} className="px-3 py-1.5">
+                  {showCell(v)}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {set.rows.length > PREVIEW_ROWS && <p className="border-t border-border px-3 py-2 text-[13px] text-muted">{PREVIEW_ROWS} of {set.rows.length} rows shown</p>}
     </div>
   );
 }

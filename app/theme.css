@@ -135,7 +135,7 @@
   --good-tint: #12271c;
   --warn: #e3a94f;
   --warn-tint: #2a200f;
-  --bad: #f2777a;
+  --bad: #ff6378; /* crimson-pink: stays distinct from the peach Check coral (#ffa77a) */
   --bad-tint: #2d1618;
 
   --ink-1: #0f1424; --ink-2: #131a2b; --ink-3: #1c2540; --ink-4: #222c4a; --ink-5: #283355; --ink-6: #313d62;

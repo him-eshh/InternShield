@@ -145,14 +145,7 @@ export type NewCard = Pick<TrackerCard, "company" | "role" | "link" | "risk">;
 
 /** Max total data-URL length per transcribe request (all strips). Under guard.ts's 3.6 MiB body cap. */
 export const MAX_IMAGE_DATA_URL = 3_500_000;
-export const IMAGE_MAX_SIDE = 1600;
 
-/** POST /api/transcribe. `image` is a data:image/(jpeg|png|webp);base64 URL. */
-export interface TranscribeRequest {
-  image?: string;
-  /** A tall screenshot cut into at most 2 strips, top first (lib/tiers/image.ts prepareStrips). */
-  images?: string[];
-}
 export type TranscribeResponse = ApiResponse<{ text: string; partial?: boolean }>;
 
 // ---------- Tier 3: mock interview ----------
@@ -242,6 +235,8 @@ export interface CodeAttempt {
   code: string;
   passed: number;
   total: number;
+  /** Shown with the results after Finish: the first hidden test that failed (code) or the first differing rows (SQL). Not sent to the model. */
+  detail?: { failed?: { input: string; expected: string; got: string }; diffs?: string[]; message?: string };
 }
 
 export interface CodeStats {
@@ -495,6 +490,8 @@ export interface RoundPanelProps {
   ask: (s: InterviewSession, ask: InterviewAsk) => Promise<InterviewSession | null>;
   /** True while a call is in flight. */
   busy: boolean;
+  /** Practice sessions: skips this question (shown next to Hint). Omitted in the single-round flow. */
+  onSkip?: () => void;
 }
 
 // ---------- v3: continuous practice sessions + question bank (interview stream owns after setup) ----------
@@ -513,6 +510,8 @@ export interface SessionConfig {
   companyPreset?: string;
   company?: string;
   role?: string;
+  /** Coding bank questions: take the questions most often asked (at `company` when set) before the rest. */
+  mostAsked?: boolean;
   language: SessionLanguage;
   limit: { kind: "questions" | "rounds"; count: number };
 }

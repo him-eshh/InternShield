@@ -31,6 +31,6 @@ describe("CodingRound (v2 T3)", () => {
   });
   it("uses the split pane at lg", () => {
     const html = renderToStaticMarkup(<CodingRound session={session} onUpdate={() => {}} ask={async () => null} busy={false} />);
-    expect(html).toContain("lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]");
+    expect(html).toContain("lg:grid-cols-[minmax(0,6fr)_minmax(0,7fr)]");
   });
 });

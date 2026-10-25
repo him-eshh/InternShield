@@ -2,10 +2,6 @@
 import type { SenderData } from "@/lib/types";
 import { normalizeFetchInit } from "./http";
 
-export function hunterEnabled(): boolean {
-  return Boolean(process.env.HUNTER_API_KEY);
-}
-
 /** null = no key, or the call failed (the check simply doesn't exist). */
 export async function getHunterInsight(email: string): Promise<SenderData["hunter"]> {
   const key = process.env.HUNTER_API_KEY;

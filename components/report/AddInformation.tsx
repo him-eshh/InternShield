@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import { MessageSquarePlus } from "lucide-react";
+import { impactCopy, type AnswerImpact } from "@/lib/impact";
+import ImpactCard from "./ImpactCard";
 import { MAX_MESSAGE_CHARS } from "@/lib/types";
 import ScreenshotUpload from "../tiers/ScreenshotUpload";
 import { TIER_FLAGS } from "@/lib/tiers/flags";
@@ -8,7 +10,7 @@ import { btnSecondary } from "../ui";
 
 /** Keep additions next to their confirmation; the report and answered questions stay mounted. */
 export default function AddInformation({ busy, note, onSave }: {
-  busy: boolean; note: string | null; onSave: (text: string, sender: string) => void;
+  busy: boolean; note: AnswerImpact | string | null; onSave: (text: string, sender: string) => void;
 }) {
   const [text, setText] = useState("");
   const [sender, setSender] = useState("");
@@ -30,7 +32,8 @@ export default function AddInformation({ busy, note, onSave }: {
         <div><label htmlFor="additional-sender">Sender&apos;s email or phone</label><input id="additional-sender" value={sender} maxLength={200} onChange={(e) => setSender(e.target.value)} className={field} placeholder="name@company.com" /></div>
         <button type="submit" disabled={busy} className={btnSecondary}>{busy ? "Checking addition..." : "Update this check"}</button>
         {error && <p role="alert" className="text-[15px]">{error}</p>}
-        <p role="status" aria-live="polite" className="whitespace-pre-line text-[15px] leading-relaxed text-muted">{note}</p>
+        <p role="status" aria-live="polite" className={typeof note === "string" || !note ? "whitespace-pre-line text-[15px] leading-relaxed text-muted" : "sr-only"}>{typeof note === "string" || !note ? note : impactCopy(note)}</p>
+        {note && typeof note !== "string" && <div aria-hidden="true"><ImpactCard impact={note} /></div>}
       </form>
     </details>
   );
