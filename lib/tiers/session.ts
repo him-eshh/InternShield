@@ -495,7 +495,11 @@ function innerFor(round: RoundKind, turns: SessionTurn[]): InterviewSession {
 }
 function sessionCard(round: RoundKind, turns: SessionTurn[]) {
   const inner = innerFor(round, turns);
-  if (round !== "design" && !(round === "coding" && !inner.code)) return buildScorecard(inner);
+  if (round === "sql" && inner.code) {
+    const card = buildScorecard({ ...inner, round: "coding", turns: inner.turns.map((t) => ({ ...t, answer: t.answer.replace("\n\nQuery:\n", "\n\nCode:\n") })) });
+    return card ? { ...card, axes: card.axes.map((a) => a.id === "coding" ? { ...a, label: "Query correctness" } : a), ...(inner.code.passed < inner.code.total ? { nextDrill: "Compare your query result with the expected rows; check joins, NULLs and duplicate rows." } : {}) } : null;
+  }
+  if (round !== "design" && !(["coding", "sql"].includes(round) && !inner.code)) return buildScorecard(inner);
   const card = buildScorecard({ ...inner, round: "screen" });
   const quoted = turns.filter((t) => t.feedback?.quote);
   const mean = turns.length ? turns.reduce((n, t) => n + LEVEL_BAND[t.level ?? "weak"], 0) / turns.length : 3;
@@ -506,8 +510,7 @@ function sessionCard(round: RoundKind, turns: SessionTurn[]) {
 function roundBand(round: RoundKind, turns: SessionTurn[]): { band: ScoreBand; note: string } {
   const answered = turns.filter((t) => !t.skipped);
   if (!answered.length) return { band: "Not yet", note: "Every question was skipped." };
-  const graded = answered.some((t) => t.code) || round !== "coding";
-  const card = graded ? sessionCard(round, turns) : null;
+  const card = sessionCard(round, turns);
   let band: ScoreBand;
   if (card && card.axes.length) {
     const mean = card.axes.reduce((a, x) => a + BAND_ORDER.indexOf(x.band), 0) / card.axes.length;

@@ -87,6 +87,7 @@ for (const v of all ? variants : [variants[0]]) {
     assert.equal(history[0].summary.turns.length, 5);
     assert.equal(new Set(history[0].summary.turns.map((x) => x.question)).size, 5);
     assert.equal(history[0].summary.answered, 5);
+    assert.equal(history[0].summary.rounds.find((r) => r.round === "sql").axes.find((a) => a.id === "coding").label, "Query correctness");
     assert.ok(calls.filter((c) => c.name === "interview").length <= 15);
     await shot(page, `v3-interview-summary-${t}`);
     await page.getByRole("button", { name: "Back to Practice", exact: true }).click();

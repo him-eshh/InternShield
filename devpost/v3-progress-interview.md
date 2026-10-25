@@ -36,3 +36,4 @@
 - Draft-recovery edge + four-variant matrix passed; own next PID 3288 tree stopped. Corrected a round-label separator encoding artifact. Inspect shots and refresh affected captures before full gates.
 - All five closing gates green on e4847c9: 78 files / 1230 tests; eval 88/88, held-out 24/27. Refreshing captures only (await hydrated editor and hide dev-only overlay after reload); hidden launcher 39512, 3200.
 - Final capture refresh passed all four variants; owned server stopped. One usability fix after inspection: scroll to the start of new questions/summary, never on draft edits. Rerun gates for that source change before closing.
+- Final scorecard audit: SQL now uses local query-correctness evidence; regression covers failed SQL plus positive model feedback. Discussion round bands use the same evidence caps as their axes. Re-gate these source changes and refresh summary captures.

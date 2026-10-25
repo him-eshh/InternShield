@@ -139,3 +139,13 @@ describe("practice configuration and recovery", () => {
     expect(buildSummary(s).rounds[0].axes!.some((a) => a.id === "reasoning")).toBe(true);
   });
 });
+
+it("keeps failed SQL correctness visible in the summary instead of grading answer length", () => {
+  let s = start({ rounds: ["sql"], limit: { kind: "questions", count: 1 } });
+  s = submitAnswer(s, "I joined the tables and explained the result in detail.\n\nQuery:\nSELECT 123", 12, { problemId: s.activeQuestion!.item.problemId!, language: "sql", code: "SELECT 123", passed: 0, total: 1 });
+  s = advance(applyReview(s, review(null, "strong"), 13), [], 14);
+  const summary = buildSummary(s);
+  expect(summary.rounds[0].axes!.find((a) => a.id === "coding")!.band).toBe("Not yet");
+  expect(summary.rounds[0].axes!.find((a) => a.id === "coding")!.label).toBe("Query correctness");
+  expect(summary.rounds[0].band).not.toBe("Strong");
+});
