@@ -1,1 +1,12 @@
-/* Resume stream styles (tailor). Colors via app/theme.css tokens only. */
+[data-resume-editor] { overflow-wrap: anywhere; }
+.resume-document p { margin: 0 0 0.7em; }
+.resume-document h1, .resume-document h2, .resume-document h3 { margin: 1em 0 0.5em; font-weight: 600; }
+.resume-document ul, .resume-document ol { padding-inline-start: 1.2em; }
+.resume-document li { margin-bottom: 0.35em; }
+.resume-document table { width: 100%; border-collapse: collapse; }
+.resume-document td, .resume-document th { padding: 0.3em; border: 1px solid var(--border); }
+.resume-highlight { position: absolute; pointer-events: none; background: var(--tool-tint); opacity: 0.35; border-inline-start: 2px solid var(--tool); }
+.resume-document .resume-highlight-text { background: var(--tool-tint); border-inline-start: 2px solid var(--tool); padding-inline-start: 0.3em; }
+.resume-highlight-glow { animation: resume-line-glow 900ms ease-out; }
+@keyframes resume-line-glow { from { background-color: var(--tool); } to { background-color: var(--tool-tint); } }
+@media (prefers-reduced-motion: reduce) { .resume-highlight-glow { animation: none; } }
