@@ -1,4 +1,5 @@
 "use client";
+import { MessageSquareText, ChevronRight } from "lucide-react";
 import { useRef, useState } from "react";
 import { autofill } from "@/lib/autofill";
 import { EXAMPLES } from "@/lib/examples";
@@ -128,8 +129,10 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
   const describedBy = hint ? "message-hint" : trimmed ? "message-trimmed" : undefined;
 
   return (
-    <section className="mx-auto max-w-[640px] px-6 py-10 sm:py-16">
+    <section data-tool="check" className="mx-auto max-w-[640px] px-6 py-10 sm:py-16">
+      <span className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-tool-tint text-tool-strong"><MessageSquareText size={25} strokeWidth={1.75} aria-hidden="true" /></span>
       <h1 className="text-[clamp(36px,6vw,72px)] font-bold leading-[1.05] tracking-[-0.025em]">Is this offer real?</h1>
+      <p className="mt-4 max-w-[42ch] text-[17px] leading-relaxed text-muted">Paste a recruiter message. See the warning signs, the evidence, and what to do next.</p>
       <form
         className="mt-8"
         noValidate
@@ -218,23 +221,14 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
             </div>
           </div>
         ) : (
-          <button type="button" className={`${linkClass} mt-3 inline-flex min-h-10 items-center text-[15px]`} onClick={() => setShowFields(true)}>
+          <button type="button" className={`${linkClass} mt-3 inline-flex min-h-11 items-center text-[15px]`} onClick={() => setShowFields(true)}>
             Add details
           </button>
         )}
 
         <details className="group mt-4 rounded-[14px] border border-border bg-card px-4">
           <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 text-[15px] font-medium [&::-webkit-details-marker]:hidden">
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 16 16"
-              fill="none"
-              aria-hidden="true"
-              className="text-muted transition-transform duration-200 ease-out group-open:rotate-90"
-            >
-              <path d="M6 3.5 10.5 8 6 12.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <ChevronRight size={16} aria-hidden="true" className="text-muted transition-transform motion-reduce:transition-none group-open:rotate-90" />
             <span>
               Add context <span className="font-normal text-muted">(optional)</span>
             </span>

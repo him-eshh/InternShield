@@ -52,7 +52,7 @@ function Marker({ state }: { state: LineState }) {
         </span>
       )}
       {state === "done" && (
-        <span className="animate-enter flex h-7 w-7 items-center justify-center rounded-full bg-good/15 text-good">
+        <span className="animate-enter flex h-7 w-7 items-center justify-center rounded-full bg-tool-tint text-tool-strong">
           <CheckIcon size={16} />
         </span>
       )}
@@ -68,9 +68,10 @@ function Marker({ state }: { state: LineState }) {
 
 export default function Checklist({ lines, example, slowAfterMs = SLOW_AFTER_MS }: { lines: Record<StepKey, LineInfo>; example?: boolean; slowAfterMs?: number }) {
   return (
-    <section className="mx-auto max-w-[640px] px-6 py-16 sm:py-24">
+    <section data-tool="check" className="mx-auto max-w-[640px] px-6 py-16 sm:py-24">
       <h2 className={subhead}>Checking the message</h2>
       {example && <p className="mt-2 text-[15px] text-muted">Example</p>}
+      <p className="mt-3 text-[17px] leading-relaxed text-muted">Following the evidence, one check at a time.</p>
       <ol aria-live="polite" aria-label="Checks in progress" className="mt-10 space-y-3">
         {KEYS_IN_ORDER.map((k) => {
           const info = lines[k];
