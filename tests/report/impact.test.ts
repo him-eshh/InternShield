@@ -3,6 +3,7 @@ import { diffReports, impactCopy } from "@/lib/impact";
 import { realReport, scamReport } from "@/fixtures/reports";
 
 describe("report additions", () => {
+  it("supports a before/after-only diff", () => { expect(diffReports(realReport, realReport).scoreAfter).toBe(realReport.score); });
   it("names added and removed signals and level changes", () => {
     const impact = diffReports(realReport, scamReport, "question", "Asked for money");
     expect(impact.added.length).toBeGreaterThan(0);

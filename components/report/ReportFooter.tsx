@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { FTC_URL, IC3_URL } from "@/lib/client/copyReport";
 import type { Report, RiskLevel, Source } from "@/lib/types";
-import { ExternalIcon } from "../icons";
+import { ExternalLink as ExternalIcon } from "lucide-react";
 import { btnPrimary } from "../ui";
 import CopyReportButton, { secondaryItem } from "./CopyReportButton";
 import { PLATFORM } from "./ScamOutcome";

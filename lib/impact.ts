@@ -21,7 +21,7 @@ export type AnswerImpact = {
 /**
  * Compare evidence by stable signal ID, including changed weights and unchanged-score confirmation.
  */
-export function diffReports(before: Report, after: Report, kind: AnswerImpact["kind"], label: string): AnswerImpact {
+export function diffReports(before: Report, after: Report, kind: AnswerImpact["kind"] = "detail", label = "Updated details"): AnswerImpact {
   const ids = (r: Report) => new Set(r.flags.map((f) => f.id));
   const was = ids(before);
   const now = ids(after);
@@ -53,5 +53,5 @@ export function impactCopy(impact: AnswerImpact): string {
     ...impact.removed.map((f) => `\u2212 ${f.title}`),
     ...impact.changed.map((f) => `${f.title}: ${f.before} \u2192 ${f.after} points`),
   ];
-  return [`Added: ${label}.`, result, ...signals].join(" ");
+  return [`Added: ${label}.`, result, ...signals].join("\n");
 }

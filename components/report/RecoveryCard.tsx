@@ -1,6 +1,6 @@
 import { RECOVERY_INTRO, RECOVERY_STEPS, showRecovery } from "@/lib/recovery";
 import type { RiskLevel } from "@/lib/types";
-import { ChevronIcon, ExternalIcon } from "../icons";
+import { ChevronDown as ChevronIcon, ExternalLink as ExternalIcon } from "lucide-react";
 
 /** "Already sent money or shared info?" Medium/high only; never changes the score. */
 export default function RecoveryCard({ level }: { level: RiskLevel }) {
@@ -23,7 +23,7 @@ export default function RecoveryCard({ level }: { level: RiskLevel }) {
                 <span className="block font-medium text-text">{s.title}</span>
                 <span className="block text-muted">{s.body}</span>
                 {s.link && (
-                  <a href={s.link.url} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex items-center gap-1 text-accent underline-offset-4 hover:underline">
+                  <a href={s.link.url} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex min-h-11 items-center gap-1 text-accent underline-offset-4 hover:underline">
                     {s.link.label}
                     <ExternalIcon size={13} />
                     <span className="sr-only">(opens in a new tab)</span>

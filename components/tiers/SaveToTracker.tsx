@@ -2,7 +2,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import { addCard, loadCards, saveCards } from "@/lib/tiers/tracker";
 import type { NewCard, TrackerCard } from "@/lib/tiers/types";
-import { CheckIcon } from "../icons";
+import { Check as CheckIcon } from "lucide-react";
 import { btnSecondary, linkClass } from "../ui";
 
 interface Props {

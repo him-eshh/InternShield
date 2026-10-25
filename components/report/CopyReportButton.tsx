@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { copyReport } from "@/lib/client/copyReport";
 import type { Report } from "@/lib/types";
-import { CopyIcon } from "../icons";
+import { Copy as CopyIcon } from "lucide-react";
 import { btnSecondary } from "../ui";
 
 /** Compact outlined item for the footer's secondary row. */

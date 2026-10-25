@@ -43,7 +43,7 @@ export function messageIssue(text: string): string | null {
 }
 
 function FilledTag({ label }: { label: string }) {
-  return <span className="ml-2 rounded-full bg-accent/10 px-2 py-0.5 text-[12px] font-medium text-accent">{label}</span>;
+  return <span className="ml-2 rounded-full bg-accent/10 px-2 py-0.5 text-[12px] font-medium text-tool-strong">{label}</span>;
 }
 
 export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit | null; onSubmit: (s: CheckSubmit) => void }) {
@@ -221,7 +221,7 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
             </div>
           </div>
         ) : (
-          <button type="button" className={`${linkClass} mt-3 inline-flex min-h-11 items-center text-[15px]`} onClick={() => setShowFields(true)}>
+          <button type="button" className={`${linkClass} !text-tool-strong mt-3 inline-flex min-h-11 items-center text-[15px]`} onClick={() => setShowFields(true)}>
             Add details
           </button>
         )}
@@ -243,7 +243,7 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
                     key={s.value}
                     type="button"
                     aria-pressed={source === s.value}
-                    className={`${source === s.value ? pillOn : pillOff} !min-h-11`}
+                    className={`${source === s.value ? pillOn : pillOff} !min-h-11 ${source === s.value ? "!text-tool-strong" : ""}`}
                     onClick={() => {
                       setSource(source === s.value ? null : s.value);
                       setTouched((t) => ({ ...t, source: true }));
@@ -262,7 +262,7 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
                     key={s.value}
                     type="button"
                     aria-pressed={stage === s.value}
-                    className={`${stage === s.value ? pillOn : pillOff} !min-h-11`}
+                    className={`${stage === s.value ? pillOn : pillOff} !min-h-11 ${stage === s.value ? "!text-tool-strong" : ""}`}
                     onClick={() => {
                       setStage(stage === s.value ? null : s.value);
                       setTouched((t) => ({ ...t, stage: true }));
@@ -282,11 +282,11 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
           </button>
           <p className="text-[15px] text-muted">
             Try an example:{" "}
-            <button type="button" className={`${linkClass} inline-flex min-h-11 items-center`} onClick={() => tryExample("scam")}>
+            <button type="button" className={`${linkClass} !text-tool-strong inline-flex min-h-11 items-center`} onClick={() => tryExample("scam")}>
               a scam
             </button>
             {" · "}
-            <button type="button" className={`${linkClass} inline-flex min-h-11 items-center`} onClick={() => tryExample("real")}>
+            <button type="button" className={`${linkClass} !text-tool-strong inline-flex min-h-11 items-center`} onClick={() => tryExample("real")}>
               a real one
             </button>
           </p>

@@ -35,7 +35,7 @@ export default function CompanyChip({ name, busy, note, onSave }: { name: string
           onKeyDown={(e) => e.key === "Escape" && close()}
           className="min-h-11 w-[min(16rem,60vw)] rounded-full border border-border-strong bg-bg px-3 text-[15px] text-text"
         />
-        <button type="submit" className="min-h-11 rounded-full bg-accent px-4 text-[14px] font-medium text-accent-contrast">Recheck</button>
+        <button type="submit" className="min-h-11 rounded-full border border-border bg-card px-4 text-[14px] font-medium text-text">Recheck</button>
         <button type="button" onClick={close} className="min-h-11 rounded-full px-3 text-[14px] text-muted hover:text-text">Cancel</button>
       </form>
     );
@@ -63,7 +63,7 @@ export default function CompanyChip({ name, busy, note, onSave }: { name: string
           {!busy && <span className="sr-only"> company name</span>}
         </button>
       </span>
-      <p role="status" aria-live="polite" className="text-[13px] text-muted">{note}</p>
+      <p role="status" aria-live="polite" className="whitespace-pre-line text-[13px] text-muted">{note}</p>
     </div>
   );
 }

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { STEP_LABELS, type LineState, type StepKey } from "@/lib/client/pipeline";
 import { stepNote } from "@/lib/client/errorCopy";
 import type { ApiErrorCode } from "@/lib/types";
-import { CheckIcon, InfoIcon, Spinner } from "./icons";
+import { Check as CheckIcon, Info as InfoIcon, LoaderCircle } from "lucide-react";
 import { subhead } from "./ui";
 
 export interface LineInfo {
@@ -16,7 +16,7 @@ export interface LineInfo {
 export const KEYS_IN_ORDER: StepKey[] = ["extract", "company", "sender", "posting", "explain"];
 
 /** Spinners wait this long before showing, so instant steps never flicker. */
-export const SHOW_DELAY_MS = 300;
+export const SHOW_DELAY_MS = 200;
 /** A step running longer than this gets the slow-step note. */
 export const SLOW_AFTER_MS = 4000;
 export const SLOW_COPY = "Still checking…";
@@ -49,7 +49,7 @@ function Marker({ state }: { state: LineState }) {
     <span className="flex h-7 w-7 shrink-0 items-center justify-center" aria-hidden="true">
       {state === "running" && (
         <span className="animate-enter flex" style={{ animationDelay: `${SHOW_DELAY_MS}ms` }}>
-          <Spinner size={22} className="text-accent" />
+          <LoaderCircle size={22} className="animate-spin text-accent motion-reduce:animate-none" />
         </span>
       )}
       {state === "done" && (
@@ -81,7 +81,7 @@ export default function Checklist({ lines, example, slowAfterMs = SLOW_AFTER_MS 
             <li
               key={k}
               data-state={info.state}
-              className={`flex min-h-14 items-start gap-4 transition-opacity duration-300 ease-out ${info.state === "pending" ? "opacity-40" : ""}`}
+              className={`flex min-h-14 items-start gap-4 transition-opacity duration-300 ease-out ${info.state === "pending" ? "text-muted" : ""}`}
             >
               <Marker key={info.state} state={info.state} />
               <span className="block pt-0.5">

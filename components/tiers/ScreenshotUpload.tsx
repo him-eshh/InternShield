@@ -80,7 +80,7 @@ export default function ScreenshotUpload({ onText, disabled }: Props) {
         type="button"
         disabled={disabled || busy}
         onClick={() => input.current?.click()}
-        className="inline-flex min-h-11 items-center gap-1.5 text-[15px] font-medium text-accent underline-offset-4 hover:underline disabled:cursor-not-allowed disabled:opacity-40"
+        className="inline-flex min-h-11 items-center gap-1.5 text-[15px] font-medium text-accent-fg underline-offset-4 hover:underline disabled:cursor-not-allowed disabled:opacity-40"
       >
         <Upload size={16} />
         Upload a screenshot

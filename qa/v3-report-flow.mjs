@@ -27,6 +27,7 @@ try {
   await qq.getByRole("button", { name: "None yet", exact: true }).click();
   assert.match(await qq.locator("fieldset p").innerText(), /Confirmed: None yet.*Score unchanged/);
   await page.getByRole("button", { name: /Edit company name/ }).click();
+  assert.equal(await page.locator('article :is(button,a)[class*="bg-accent text-accent-contrast"]').count(), 1);
   await page.getByLabel("Company", { exact: true }).fill("Northbeam Analytics");
   await page.getByRole("button", { name: "Recheck", exact: true }).click();
   await page.locator("header [role=status]").filter({ hasText: "Added: Company:" }).waitFor();

@@ -317,11 +317,12 @@ export async function runPipeline(
 
   // Step 5: explanation. Not awaited: the report shows first and the text fills in when it arrives
   // (falls back to pre-written sentences). Await `pendingExplanation` to get it.
+  line("explain", "running");
   const pendingExplanation = fetchExplanation(report, deps).then((explanation) => {
+    line("explain", "done", { status: "done", data: explanation });
     logTable(deps, steps, explanation);
     return explanation;
   });
-  line("explain", "done");
 
   const limits = (["extract", "company", "sender", "posting"] as const)
     .map((k) => steps[k])

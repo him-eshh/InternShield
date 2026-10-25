@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import type { Answers, Question, QuestionId } from "@/lib/types";
-import { InfoIcon } from "../icons";
+import { Info as InfoIcon } from "lucide-react";
 import { btnSecondary, pillOff, pillOn } from "../ui";
 
 export type AnswerValue = string | string[];
@@ -109,7 +109,7 @@ export default function QuickQuestions({ questions, answers, change, lastId = nu
               </div>
             )}
             {(confirmations[q.id] || (message && lastId === q.id)) && (
-              <p aria-hidden="true" className="mt-3 text-[15px] text-muted">
+              <p aria-hidden="true" className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-muted">
                 {confirmations[q.id] ?? message}
               </p>
             )}

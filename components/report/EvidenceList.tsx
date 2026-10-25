@@ -1,6 +1,6 @@
 import { goods, reds } from "@/lib/reportView";
 import type { Flag, RiskLevel } from "@/lib/types";
-import { ChevronIcon } from "../icons";
+import { ChevronDown as ChevronIcon } from "lucide-react";
 import EvidenceCard from "./EvidenceCard";
 import { countLabel } from "./EvidenceGroup";
 

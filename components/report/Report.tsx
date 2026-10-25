@@ -7,7 +7,7 @@ import { actionLine, goods, reds } from "@/lib/reportView";
 import { diffReports, impactCopy } from "@/lib/impact";
 import { score } from "@/lib/scoring/score";
 import { MAX_MESSAGE_CHARS, LEVEL_LABELS, type Answers, type QuestionId, type Report as ReportData, type RiskLevel } from "@/lib/types";
-import { InfoIcon } from "../icons";
+import { Info as InfoIcon } from "lucide-react";
 import { btnSecondary } from "../ui";
 import AnnotatedMessage from "./AnnotatedMessage";
 import CompanyChip from "./CompanyChip";
@@ -70,12 +70,13 @@ export default function Report(props: Props) {
     setNote(null);
     const nextInput = { ...input, form: { ...input.form, company: name } };
     const next = await rerunWithCompany(input, outcome.steps, name, { fetch: props.fetchImpl });
-    setRerun((r) => ({ outcome: next, input: nextInput, n: (r?.n ?? 0) + 1 }));
-    setBusy(false);
     if (next.report && liveReport.current) {
       const after = Object.keys(kept).length ? score({ ...next.scoreInput, answers: kept }) : next.report;
+      const pendingExplanation = after.level !== next.report.level ? fetchExplanation(after, { fetch: props.fetchImpl }) : next.pendingExplanation;
       setNote(impactCopy(diffReports(liveReport.current, after, "detail", `Company: ${name}`)));
-    }
+      setRerun((r) => ({ outcome: { ...next, report: after, pendingExplanation }, input: nextInput, n: (r?.n ?? 0) + 1 }));
+    } else setNote("We couldn't recheck that company. Your previous report is still here.");
+    setBusy(false);
   }
 
   async function onAdd(text: string, sender: string) {
@@ -93,7 +94,8 @@ export default function Report(props: Props) {
     if (next.report && liveReport.current) {
       const after = score({ ...next.scoreInput, answers: kept });
       setAdditionNote(impactCopy(diffReports(liveReport.current, after, text ? "message" : "detail", [text ? "Additional message" : "", sender ? `Sender: ${sender}` : ""].filter(Boolean).join(", "))));
-      setRerun((r) => ({ outcome: { ...next, report: after }, input: nextInput, n: (r?.n ?? 0) + 1 }));
+      const pendingExplanation = after.level !== next.report.level ? fetchExplanation(after, { fetch: props.fetchImpl }) : next.pendingExplanation;
+      setRerun((r) => ({ outcome: { ...next, report: after, pendingExplanation }, input: nextInput, n: (r?.n ?? 0) + 1 }));
     } else setAdditionNote("We couldn't read that addition. Your previous report is still here. Try pasting the full message.");
     setBusy(false);
   }

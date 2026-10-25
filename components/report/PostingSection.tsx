@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import type { MatchRow, PostingData } from "@/lib/types";
-import { CheckCircleIcon, ChevronIcon, ExternalIcon, WarningIcon } from "../icons";
+import { CircleCheck as CheckCircleIcon, ChevronDown as ChevronIcon, ExternalLink as ExternalIcon, TriangleAlert as WarningIcon } from "lucide-react";
 import { btnSecondary, card } from "../ui";
 
 const ROW_LABEL: Record<MatchRow["row"], string> = {

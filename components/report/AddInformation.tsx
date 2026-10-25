@@ -30,7 +30,7 @@ export default function AddInformation({ busy, note, onSave }: {
         <div><label htmlFor="additional-sender">Sender&apos;s email or phone</label><input id="additional-sender" value={sender} maxLength={200} onChange={(e) => setSender(e.target.value)} className={field} placeholder="name@company.com" /></div>
         <button type="submit" disabled={busy} className={btnSecondary}>{busy ? "Checking addition..." : "Update this check"}</button>
         {error && <p role="alert" className="text-[15px]">{error}</p>}
-        <p role="status" aria-live="polite" className="text-[15px] leading-relaxed text-muted">{note}</p>
+        <p role="status" aria-live="polite" className="whitespace-pre-line text-[15px] leading-relaxed text-muted">{note}</p>
       </form>
     </details>
   );
