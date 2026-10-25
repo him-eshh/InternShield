@@ -97,6 +97,7 @@ for (const variant of runs) {
     await wording.press("Tab");
     await wording.waitFor({ state: "hidden", timeout: 60000 });
     assert.equal(await cards.nth(3).getByRole("alert").count(), 0);
+    assert(await cards.nth(3).getByRole("button", { name: "Accepted", exact: true }).isEnabled(), "your valid wording applies immediately");
     if (variant.width < 1000) await page.getByRole("button", { name: "Preview", exact: true }).click();
     const download = page.getByRole("button", { name: "Download PDF", exact: true });
     await page.waitForFunction(() => [...document.querySelectorAll("button")].some((b) => b.textContent.includes("Download PDF") && !b.disabled), null, { timeout: 60000 });

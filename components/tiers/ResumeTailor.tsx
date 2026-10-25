@@ -133,7 +133,7 @@ export default function ResumeTailor({ resume, target, onOpenProfile, onBack }: 
     if (!withinTotalBudget(file.doc, texts)) return "Longer than your original. Shorten this line.";
     const output = await renderEdited(file.doc, file.bytes, [{ lineId: edit.lineId, text: proposed }]);
     if (output.rejected.length) return TOO_LONG;
-    const next = edits.map((e) => e.id === id ? { ...e, proposed, keywords: addedKeywords(plan?.keywords ?? [], e.original, proposed), reason: "Your wording, checked against your original facts.", status: "pending" as const } : e);
+    const next = edits.map((e) => e.id === id ? { ...e, proposed, keywords: addedKeywords(plan?.keywords ?? [], e.original, proposed), reason: "Your wording, checked against your original facts.", status: "accepted" as const } : e);
     try {
       const signal = controller.current?.signal ?? new AbortController().signal;
       await prepareResumePreviews(file, next, signal);
