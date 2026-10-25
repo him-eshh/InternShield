@@ -529,7 +529,7 @@ export function buildSummary(s: PracticeState): SessionSummary {
   s.turns.filter((t) => t.level === "weak").forEach((t) => (t.tags ?? []).forEach((g) => weakTags.set(g, (weakTags.get(g) ?? 0) + 1)));
   const next: string[] = [];
   [...per].sort((a, b) => BAND_ORDER.indexOf(b.band) - BAND_ORDER.indexOf(a.band)).forEach((r) => {
-    if (r.band !== "Strong" && r.note && next.length < 3) next.push(r.note);
+    if (r.band !== "Strong" && r.note && next.length < 3 && !next.includes(r.note)) next.push(r.note);
   });
   [...weakTags].sort((a, b) => b[1] - a[1]).slice(0, 2).forEach(([g]) => next.length < 3 && next.push(`Do two more ${g} problems and say the complexity out loud.`));
   const skipped = s.turns.filter((t) => t.skipped).length;

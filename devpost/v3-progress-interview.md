@@ -37,3 +37,5 @@
 - All five closing gates green on e4847c9: 78 files / 1230 tests; eval 88/88, held-out 24/27. Refreshing captures only (await hydrated editor and hide dev-only overlay after reload); hidden launcher 39512, 3200.
 - Final capture refresh passed all four variants; owned server stopped. One usability fix after inspection: scroll to the start of new questions/summary, never on draft edits. Rerun gates for that source change before closing.
 - Final scorecard audit: SQL now uses local query-correctness evidence; regression covers failed SQL plus positive model feedback. Discussion round bands use the same evidence caps as their axes. Re-gate these source changes and refresh summary captures.
+- Final SQL audit gates green on 0507d4a: lint/tsc/build/eval, 78 files / 1231 tests, eval 88/88 held-out 24/27. Last capture round hidden launcher 26820, 3200; no further app changes planned.
+- Final image review found repeated next-drill text when coding and SQL share a weak skill. Deduplicated it; added engine and browser assertions. Re-gate and refresh summary evidence before completion.

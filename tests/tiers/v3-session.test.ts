@@ -149,3 +149,11 @@ it("keeps failed SQL correctness visible in the summary instead of grading answe
   expect(summary.rounds[0].axes!.find((a) => a.id === "coding")!.label).toBe("Query correctness");
   expect(summary.rounds[0].band).not.toBe("Strong");
 });
+
+it("lists distinct next drills when several rounds share the same weakest skill", () => {
+  let s = start();
+  for (let i = 0; i < 5; i++) s = advance(applyReview(submitAnswer(s, "I made a careful plan and checked the outcome with the team.", 12), review(null, "ok"), 13), [], 14);
+  const next = buildSummary(s).next;
+  expect(next.length).toBeGreaterThan(0);
+  expect(new Set(next).size).toBe(next.length);
+});
