@@ -1,1 +1,18 @@
 /* Shell stream styles (home, nav, profile, check/report). Colors via app/theme.css tokens only. */
+
+/* The full desktop navigation fits at 1024px; tablets keep the bottom bar. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  :root { --nav-bottom: calc(56px + env(safe-area-inset-bottom)); }
+}
+@media (max-width: 639px) {
+  button, summary { touch-action: manipulation; }
+  .shell-tracker-toast { max-width: calc(100vw - 2rem); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

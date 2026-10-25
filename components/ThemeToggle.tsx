@@ -50,7 +50,7 @@ export default function ThemeToggle() {
             aria-label={label}
             title={label}
             onClick={() => choose(value)}
-            className={`inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors duration-200 ${
+            className={`inline-flex h-11 w-11 items-center justify-center rounded-full transition-colors duration-200 ${
               on ? "bg-accent text-accent-contrast" : "text-muted hover:text-text"
             }`}
           >
