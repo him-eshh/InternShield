@@ -12,6 +12,20 @@ for (const variant of runs) {
   const { browser, page, log } = await openRoute("/tailor", { ...variant, profile: false });
   try {
     await page.getByRole("heading", { name: "Tailor your resume" }).waitFor();
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+    await page.evaluate(() => {
+      window.__resumeTiming = {};
+      document.addEventListener("click", (event) => {
+        const button = event.target.closest("button");
+        if (button?.textContent.includes("Tailor my resume")) window.__resumeTiming.start = performance.now();
+        if (button?.textContent.trim() === "Accept") window.__resumeTiming.accept = performance.now();
+      }, true);
+      new MutationObserver(() => {
+        const timing = window.__resumeTiming;
+        if (timing.start && !timing.loading && [...document.querySelectorAll('[role="status"]')].some((n) => n.textContent.includes("Reading your resume"))) timing.loading = performance.now() - timing.start;
+        if (timing.accept && document.querySelector(".resume-highlight")) { timing.preview = performance.now() - timing.accept; timing.accept = 0; }
+      }).observe(document.body, { childList: true, subtree: true });
+    });
     if (full) await shot(page, `resume-empty-${tag(variant)}`);
     await page.getByLabel("Upload resume").setInputFiles("tests/fixtures/resume/one-page.pdf");
     await page.getByLabel("Company (optional)").fill("Northwind");
@@ -36,16 +50,26 @@ for (const variant of runs) {
     const started = Date.now();
     await page.getByRole("button", { name: "Tailor my resume", exact: true }).click();
     await page.getByRole("status").filter({ hasText: "Reading your resume" }).waitFor({ timeout: 1000 });
-    console.log(`${tag(variant)} loading visible ${Date.now() - started}ms (includes Playwright click overhead)`);
+    const loadingMs = await page.evaluate(() => window.__resumeTiming.loading);
+    assert(loadingMs <= 300, `loading took ${loadingMs}ms after click`);
+    console.log(`${tag(variant)} loading ${Math.round(loadingMs)}ms after click (${Date.now() - started}ms with Playwright overhead)`);
     if (full) await shot(page, `resume-loading-${tag(variant)}`, { fullPage: false });
     const cards = page.getByRole("article", { name: /Suggested edit/ });
     await cards.first().waitFor({ timeout: 60000 });
     assert.equal(await cards.count(), 4, "four safe suggestions should survive all client checks");
     assert(await page.getByRole("link", { name: "Engineering notes" }).count());
     if (full) await shot(page, `resume-plan-${tag(variant)}`);
-    if (!full) await shot(page, `resume-review-${tag(variant)}`);
-    else await shot(page, `resume-review-${tag(variant)}`);
+    if (!process.argv.includes("--no-shots")) await shot(page, `resume-review-${tag(variant)}`);
     await cards.nth(0).getByRole("button", { name: "Accept", exact: true }).click();
+    await page.locator(".resume-highlight").first().waitFor({ state: "attached", timeout: 30000 });
+    const previewMs = await page.evaluate(() => window.__resumeTiming.preview);
+    assert(previewMs < 200, `accepted preview took ${previewMs}ms`);
+    console.log(`${tag(variant)} accept-to-preview ${Math.round(previewMs)}ms`);
+    if (full) {
+      if (variant.width < 1000) await page.getByRole("button", { name: "Preview", exact: true }).click();
+      await page.screenshot({ path: `${process.env.QA_SHOTS}/resume-accepted-glow-${tag(variant)}.png`, fullPage: false, animations: "allow" });
+      if (variant.width < 1000) await page.getByRole("button", { name: "Edits", exact: true }).click();
+    }
     await cards.nth(1).getByRole("button", { name: "Accept", exact: true }).click();
     await cards.nth(2).getByRole("button", { name: "Reject", exact: true }).click();
     await cards.nth(3).getByRole("button", { name: "Edit", exact: true }).click();

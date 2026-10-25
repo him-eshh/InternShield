@@ -84,7 +84,7 @@ describe("DOCX parse and in-place edit (R1, R4)", () => {
     expect(Object.keys(b.files).sort()).toEqual(Object.keys(a.files).sort());
     for (const name of Object.keys(a.files)) {
       if (name === "word/document.xml") continue;
-      expect(await b.file(name)?.async("string")).toBe(await a.file(name)?.async("string"));
+      expect(await b.file(name)?.async("uint8array")).toEqual(await a.file(name)?.async("uint8array"));
     }
     const xa = await a.file("word/document.xml")!.async("string");
     const xb = await b.file("word/document.xml")!.async("string");
