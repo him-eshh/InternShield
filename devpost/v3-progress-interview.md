@@ -32,3 +32,5 @@
 - Final QA round starting: hidden launcher 40256, port 3200; run edge checks before matrix, then stop verified own next process.
 - Edge QA and all four matrix variants passed. Own port-3200 next tree stopped. About to inspect all 36 matrix shots, then full gates.
 - Inspection refinement: removed duplicate runnable prompt, added per-round labels + overall summary, persisted unfinished text/code/SQL drafts. Recheck draft refresh in edge + matrix scripts before closing gates.
+- Draft/layout QA retry: hidden launcher 46980, port 3200; stop its verified next tree after the round.
+- Draft-recovery edge + four-variant matrix passed; own next PID 3288 tree stopped. Corrected a round-label separator encoding artifact. Inspect shots and refresh affected captures before full gates.
