@@ -19,7 +19,7 @@ async function setup(opts = {}) {
 async function editor(page, code) { const cm=page.locator(".cm-content").first(); await cm.waitFor(); await cm.click(); await page.keyboard.press("Control+a"); await page.keyboard.insertText(code); }
 const state = (page) => page.evaluate(() => JSON.parse(localStorage.getItem("is:practice-active")));
 {
- const { browser, page } = await setup();
+ const { browser, page } = await setup({ reducedMotion: "no-preference" });
  try {
   await page.getByRole("button", { name: "Behavioral", exact: true }).click();
   await page.getByRole("button", { name: "SQL", exact: true }).click();
@@ -49,7 +49,10 @@ const state = (page) => page.evaluate(() => JSON.parse(localStorage.getItem("is:
   await page.getByRole("heading", { name: "Keep the momentum." }).waitFor();
   const summary=await page.evaluate(()=>JSON.parse(localStorage.getItem("is:practice-history"))[0].summary);
   assert.equal(summary.turns[0].hintsUsed,1); assert.equal(summary.turns[0].code.language,"typescript");
-  console.log("PASS real TypeScript, chosen language, hint note/call count and single-question end");
+  await page.waitForTimeout(1200);
+  const celebration = await page.locator("main header svg").first().evaluate((svg) => getComputedStyle(svg.parentElement).transform);
+  assert.ok(celebration === "none" || celebration === "matrix(1, 0, 0, 1, 0, 0)", "celebration reaches its final state within 1.2 seconds");
+  console.log("PASS real TypeScript, chosen language, draft refresh, hint note/call count, single-question end and normal-motion celebration");
  } finally { await browser.close(); }
 }
 {

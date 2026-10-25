@@ -49,3 +49,7 @@ Complete. Segmented progress with round counts; overall and per-round evidence-b
 ### I6: bounded model reviews
 
 Complete. One compact review combines last-answer feedback and optional follow-up. Route rejects earlier-turn feedback, enforces the 30-call practice cap and keeps the daily guard. Client accounts for hints/failures and continues without AI at the cap. Model calls are mocked in tests and QA.
+
+### I7: tests and inspected screenshot QA
+
+Complete. All five gates green on final source c710ba0: 78 files / 1,232 tests, eval 88/88, held-out 24/27. Edge browser checks and 1440/390 light/dark five-question flows pass. Every one of 36 final captures inspected via nine full-image review sheets. Verified own next PID 29176 and its children stopped after the final round.

@@ -6,9 +6,10 @@
 - I3: configurable session setup - `809d672`
 - I4: continuous session engine - `1aca116`
 - I5: progress scorecards and history - `99ec74f`
+- I6: bounded model reviews - `91c0b11`
 
 ## Current
-- Closing I6; implementation, gates and quality evidence are complete.
+- Closing I7; implementation, gates and quality evidence are complete.
 
 ## Next
 - Finish any remaining item-closing records, then write and commit the final summary only after all seven are closed.
