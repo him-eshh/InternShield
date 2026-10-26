@@ -530,11 +530,11 @@ function roundBand(round: RoundKind, turns: SessionTurn[]): { band: ScoreBand | 
   const answered = turns.filter((t) => !t.skipped);
   if (!CODE_ROUNDS.includes(round)) {
     const note = answered.map((t) => t.feedback?.improve).find(Boolean);
-    const levels = answered.flatMap((t) => (t.level ? [["strong", "ok", "weak"].indexOf(t.level)] : []));
-    // Discussion rounds get the AI's per-answer level (structure, specifics, outcome); no level means the AI never answered.
-    if (!levels.length) return { band: "Not scored", note: note ?? (answered.length ? "Feedback unavailable - AI was offline." : "Every question was skipped.") };
-    const band = BAND_ORDER[Math.min(2, Math.round(levels.reduce((a, b) => a + b, 0) / levels.length))];
-    return { band, note: note ?? "Review one decision and how you checked its outcome." };
+    // Behavioral: band from how many STAR parts the AI found in each answer; no STAR result means the AI never answered.
+    const parts = answered.flatMap((t) => { const st = round === "behavioral" ? t.feedback?.star : null; return st ? [[st.situation, st.task, st.action, st.result].filter(Boolean).length] : []; });
+    if (!parts.length) return { band: "Not scored", note: note ?? (answered.length ? "Feedback unavailable - AI was offline." : "Every question was skipped.") };
+    const mean = parts.reduce((a, b) => a + b, 0) / parts.length;
+    return { band: mean >= 3.5 ? "Strong" : mean >= 2.5 ? "Solid" : mean >= 1.5 ? "Developing" : "Not yet", note: note ?? "Say what you did and the result, with a number." };
   }
   if (!turns.some((t) => (t.code?.total ?? 0) > 0)) return { band: "Not scored", note: "No runnable test result was recorded." };
   if (!answered.length) return { band: "Not yet", note: "Every question was skipped." };

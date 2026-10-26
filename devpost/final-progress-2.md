@@ -45,3 +45,11 @@ Dev server on 3502 pre-existing from earlier session (node listening on 3502; st
 
 ## Coder review 7:00 AM (REQUIRED): R1-R7 at the end of .git/internshield-relay/final-brief-fix2.md - read and do them now.
 - [ ] R1 profile bar order  - [ ] R2 nav Display menu  - [ ] R3 tailor toast/bar  - [ ] R4 QQ good-signs logic  - [ ] R5 behavioral scoring  - [ ] R6 ERROR shots  - [ ] R7 viewport shots
+
+## 07:20 ET (resumed session)
+- [x] R1 profile bar fills first N segments  - [x] R2 single Display menu (Theme + Motion, inline groups)  - [x] R3 toast + accept bar sit in the left column beside the preview
+- [x] R4 logic is by design (scoring never applies good signs when a critical fired; 0 start = no red flags, good signs only); added plain-words line in impact.ts
+- [x] R5 Behavioral band from AI STAR coverage (Strong/Solid/Developing/Not yet); "Feedback unavailable - AI was offline." when no AI result. Test updated.
+- [x] R6 ERROR shots deleted, script fixed (Display menu selector)  - [x] R7 viewport shots for tailor preview/live-edit, practice setup-scrolled
+- Gates on previous commit: lint 0 errors, tsc clean, vitest 87 files / 1273 pass, build ok, eval 88/88, held-out 24/27.
+- 3502 dev server: could not find its PID (shell blocks netstat/Get-NetTCPConnection); it was started in an earlier session of this repo. Left running; stop manually if wanted.

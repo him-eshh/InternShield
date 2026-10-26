@@ -179,7 +179,8 @@ describe("practice configuration and recovery", () => {
     for (let i = 0; i < 2; i++) s = advance(applyReview(submitAnswer(s, "I owned the rollout and improved response time 20 percent", 12), review(null, "strong"), 13), [], 14);
     const summary = buildSummary(s);
     expect(summary.answered).toBe(2);
-    expect(summary.rounds[0]).toMatchObject({ band: "Not scored", axes: [] });
+    // Behavioral bands come from the AI's STAR check (3 of 4 parts in the fixture), not from a stored answer level.
+    expect(summary.rounds[0]).toMatchObject({ band: "Solid", axes: [] });
     expect(summary.turns.every((t) => t.level === undefined)).toBe(true);
     expect(summary.strengths).toEqual([]);
   });
