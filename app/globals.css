@@ -186,3 +186,11 @@ p { text-wrap: pretty; }
     scroll-behavior: auto !important;
   }
 }
+
+/* Shared tool hero: a tool-colored wash over the surface, same shape in every tool and theme. */
+.tool-hero {
+  background:
+    radial-gradient(70% 140% at 100% 0%, color-mix(in oklab, var(--tool) 24%, transparent) 0%, transparent 65%),
+    linear-gradient(135deg, color-mix(in oklab, var(--tool) 9%, var(--surface)) 0%, var(--surface) 70%);
+  border-left: 4px solid var(--tool);
+}

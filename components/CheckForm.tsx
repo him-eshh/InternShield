@@ -1,5 +1,7 @@
 "use client";
-import { MessageSquareText, ChevronRight, ClipboardPaste, ShieldCheck, X } from "lucide-react";
+import ToolHero from "./ToolHero";
+import { CheckIllustration } from "./illustrations";
+import { ChevronRight, ClipboardPaste, ShieldCheck, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { autofill } from "@/lib/autofill";
 import { EXAMPLES } from "@/lib/examples";
@@ -151,7 +153,7 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
 
   return (
     <section data-tool="check" className="mx-auto max-w-[1100px] px-4 py-8 sm:px-6 sm:py-12">
-      <header className="rounded-tr-[28px] bg-tool-deep px-5 py-6 text-on-deep sm:px-8"><div className="flex items-start gap-4"><MessageSquareText size={30} strokeWidth={1.75} aria-hidden="true" className="mt-1 shrink-0" /><div><p className="text-sm font-medium opacity-85">Check a message</p><h1 className="mt-1 font-display text-[clamp(2rem,4vw,3rem)] font-bold leading-tight">What does this message actually say?</h1><p className="mt-2 max-w-[62ch] opacity-90">Paste the whole recruiter message. We’ll mark the evidence, what we could not verify, and what to do next.</p></div></div></header>
+      <ToolHero Icon={ShieldCheck} name="Check" title="What does this message actually say?" art={<CheckIllustration size={150} />}>Paste the whole recruiter message. We’ll mark the evidence, what we could not verify, and what to do next.</ToolHero>
       <form
         className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(240px,1fr)]"
         noValidate
