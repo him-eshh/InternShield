@@ -1,5 +1,6 @@
 // Pure view helpers for the report screen (ordering, short copy, ring ticks).
 import { severityOf as flagSeverity } from "@/lib/scoring/flagInfo";
+import { WEIGHTS } from "@/lib/scoring/rules";
 import type { Flag, Report, RiskLevel } from "@/lib/types";
 
 export type Severity = "critical" | "high" | "medium" | "low";
@@ -46,6 +47,18 @@ export function coverageTicks(coverage: Report["coverage"], max = 14): boolean[]
   if (total <= max) return Array.from({ length: total }, (_, i) => i < ran);
   const on = Math.round((ran / total) * max);
   return Array.from({ length: max }, (_, i) => i < on);
+}
+
+/** Why the shown score isn't the plain sum of the rule weights on the cards (critical floor, good-sign cap, 0-100), else null. */
+export function scoreMathNote(report: Pick<Report, "score" | "flags">): string | null {
+  const red = report.flags.filter((f) => f.kind === "red").reduce((n, f) => n + f.points, 0);
+  const good = report.flags.filter((f) => f.kind === "good").reduce((n, f) => n + f.points, 0);
+  const sum = Math.round(red + good);
+  if (sum === report.score) return null;
+  if (report.flags.some((f) => f.critical) && report.score > sum) return `The rule weights add up to ${sum}. A critical sign sets the score to at least ${WEIGHTS.criticalFloor}.`;
+  if (sum > 100) return `The rule weights add up to ${sum}. The score stops at 100.`;
+  if (sum < 0) return `The rule weights add up to ${sum}. The score doesn't go below 0.`;
+  return `The rule weights add up to ${sum}. Good signs lower the score by at most ${-WEIGHTS.goodSignCap}.`;
 }
 
 /** "+12" / "-8" / "0" for the delta chip. */

@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { fetchExplanation, rerunWithCompany, runPipeline, type Explanation as ExplanationData, type PipelineInput, type PipelineOutcome, type StepKey } from "@/lib/client/pipeline";
 import { annotate } from "@/lib/client/annotate";
-import { actionLine, coverageTicks, goods, reds } from "@/lib/reportView";
+import { actionLine, coverageTicks, goods, reds, scoreMathNote } from "@/lib/reportView";
 import { diffReports, impactCopy, type AnswerImpact } from "@/lib/impact";
 import { score } from "@/lib/scoring/score";
 import { MAX_MESSAGE_CHARS, LEVEL_LABELS, type Answers, type QuestionId, type Report as ReportData, type RiskLevel } from "@/lib/types";
@@ -254,6 +254,7 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, nextS
   const RiskIcon = report.level === "high" ? CircleAlert : report.level === "medium" ? TriangleAlert : CircleCheck;
   const actionTone = report.level === "high" ? "border-bad bg-bad-tint" : report.level === "medium" ? "border-warn bg-warn-tint" : "border-good bg-good-tint";
   const riskTone = report.level === "high" ? "text-bad" : report.level === "medium" ? "text-warn" : "text-good";
+  const mathNote = scoreMathNote(report);
 
   return (
     <article data-tool="check" className="[&_button]:!min-h-11 [&_summary]:!min-h-11 mx-auto max-w-[1200px] px-4 py-8 sm:px-6 sm:py-12">
@@ -273,6 +274,7 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, nextS
         <aside className="min-w-0 border border-rule bg-paper-2 px-4 py-5 lg:sticky lg:top-6 lg:col-start-2 lg:row-span-2" aria-label="Risk score and checks">
           <RiskRing score={report.score} level={report.level} coverage={report.coverage} showLabel={false} />
           <p className="mt-2 text-center text-sm text-fg-2">Rule-based risk score, not a probability.</p>
+          {mathNote && <p data-score-math className="mt-2 text-center text-sm text-fg-2">{mathNote}</p>}
           <div className="mx-auto mt-5 max-w-52 border-t border-rule pt-4"><p className="text-center text-sm font-medium">Checks completed</p><div role="img" aria-label={`${coverage.ran} of ${coverage.total} checks ran`} className="mt-3 grid grid-cols-7 justify-center gap-1.5">{coverageTicks(coverage).map((ran, i) => <span key={i} data-coverage-block={ran ? "ran" : "skipped"} aria-hidden="true" className={`aspect-square min-w-0 rounded-[2px] ${ran ? "bg-tool-deep" : "border border-border-strong bg-paper"} ${i % 3 === 1 ? "translate-y-[2px]" : ""}`} />)}</div></div>
           <div className="mt-5 border-t border-rule pt-4 text-center">
             {company && !incomplete && <CompanyChip name={companyName} busy={company.busy} note={company.note} onSave={company.onSave} />}
