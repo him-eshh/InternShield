@@ -131,3 +131,31 @@ export function matchFieldPattern(
   }
   return null;
 }
+
+/** A paid remote role moving applications and personal details to a phone number. */
+export function textApplication(text: string): string | null {
+  if (!/\b(?:remote(?:ly)?|from home|home[- ]based)\b/i.test(text) ||
+      !/\b(?:weekly|(?:per|a|each) week)\b/i.test(text)) return null;
+  const handoff = firstMatch(text, [
+    /\b(?:text|sms)\b[^!?\n]{0,90}?(?:\+?\d[\d ()-]{7,}\d)/gi,
+  ], true);
+  if (!handoff) return null;
+  const window = text.slice(Math.max(0, handoff.index - 80), handoff.index + handoff.match.length + 240);
+  const details = [/\b(?:full\s+)?name\b/i, /\be-?mail\b/i, /\bdepartment\b/i, /\byear\s+of\s+study\b/i];
+  if (!/\b(?:with|send|provide|include|submit)\b/i.test(window) || details.filter((re) => re.test(window)).length < 2) return null;
+  return snippetAround(text, handoff.index, handoff.index + handoff.match.length);
+}
+
+/** Weekly pay for few hours needs another suspicious hiring or payment signal. */
+export function easyWeeklyPay(text: string): string | null {
+  if (!/\b(?:remote(?:ly)?|from home|home[- ]based)\b/i.test(text)) return null;
+  const pay = firstMatch(text, [
+    /\$\s*\d[\d,]*(?:\.\d{2})?\s*(?:weekly|(?:a|per|each|every)\s+week)/gi,
+    /\b(?:weekly\s+(?:pay|salary|compensation)(?:\s+of)?\s*[:=]?\s*)\$\s*\d[\d,]*/gi,
+  ], true);
+  if (!pay) return null;
+  const amount = Number(pay.match.match(/\$\s*([\d,]+)/)?.[1].replace(/,/g, ""));
+  const hours = /\b(\d{1,2})(?:\s*[-\u2013]\s*(\d{1,2}))?\s*(?:hours?|hrs?)\b/i.exec(text);
+  if (amount < 300 || !hours || Number(hours[2] ?? hours[1]) > 15 || Number(hours[1]) < 1) return null;
+  return snippetAround(text, pay.index, pay.index + pay.match.length);
+}

@@ -26,6 +26,8 @@ export const WEIGHTS = {
   pressure: 10,
   roleAboveLevel: 5,
   fieldPattern: 8,
+  textApplication: 70, // remote weekly-paid role collecting application details by personal text
+  easyWeeklyPay: 45, // few hours plus payment duties or an explicit no-interview offer
   paymentDuties: 30, // the job itself is making/receiving payments and buying gifts (personal-assistant scam)
   taskVocab: 40, // 2+ task-scam terms (like/subscribe, product boosting, set of N tasks, ...)
   untrustedCode: 15, // clone/npm/run with nothing else suspicious: a normal take-home can look like this

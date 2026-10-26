@@ -2,12 +2,12 @@
 // AI facts and the raw-text backstop are combined; fixed rules decide the score.
 import type { AskedTo, AskKind, Facts, Flag, FlagGroup, LinkIssue, Quoted, Report, RiskLevel, ScoreInput } from "../types";
 import { quoteIsReal, visibleQuote } from "../quotes";
-import { backstop, snippetAround, type BackstopId } from "./backstop";
+import { backstop, firstMatch, snippetAround, type BackstopId } from "./backstop";
 import { buildCoverage } from "./coverage";
 import { emailDomain, isFreeEmail, isHiringPlatform, lookalike, registrableDomain, type LookalikeKind } from "./domains";
 import { withFlagInfo } from "./flagInfo";
 import { roleAboveLevel } from "./level";
-import { matchFieldPattern, taskVocab } from "./patterns";
+import { easyWeeklyPay, matchFieldPattern, taskVocab, textApplication } from "./patterns";
 import { matchRows, payMatch, rolesClose, rolesMatch } from "./posting";
 import { pickQuestions, questionGaps, questionHint, type Relevance } from "./questions";
 import { BANNED_WORDS, CHANGE_REASONS, WEIGHTS as W } from "./rules";
@@ -405,9 +405,18 @@ function evaluate(input: ScoreInput): Evaluated {
   } else if (pattern) {
     red("field_pattern", "offer", W.fieldPattern, `This looks like ${pattern.label}`, pattern.why, pattern.quote);
   }
-  const duties = PAYMENT_DUTIES.exec(text);
+  const duties = firstMatch(text, [PAYMENT_DUTIES], true);
   if (duties) {
-    red("payment_duties", "offer", W.paymentDuties, "The job is handling payments for them", "Jobs where you make or receive payments and buy gifts for an employer you've never met are how fake-check and money-mule scams start.", snippetAround(text, duties.index, duties.index + duties[0].length));
+    red("payment_duties", "offer", W.paymentDuties, "The job is handling payments for them", "Jobs where you make or receive payments and buy gifts for an employer you've never met are how fake-check and money-mule scams start.", snippetAround(text, duties.index, duties.index + duties.match.length));
+  }
+
+  const application = textApplication(text);
+  if (application) {
+    red("text_application_details", "offer", W.textApplication, "They collect application details by personal text", "A remote weekly-paid role that asks you to text personal details to a phone number matches a common job-scam recruitment process. Confirm the opening through the employer's own hiring office.", application);
+  }
+  const easyPay = easyWeeklyPay(text);
+  if (easyPay && (duties || ((noInterviewFact || noInterviewHit) && !confirmedInterview && !appliedFirst))) {
+    red("easy_weekly_pay", "offer", W.easyWeeklyPay, "Weekly pay for very few hours with suspicious duties or hiring", "High weekly pay for little remote work, combined with handling payments and gifts or skipping an interview, is a common scam setup.", easyPay);
   }
 
   if (input.profile && input.resumeText !== null) {

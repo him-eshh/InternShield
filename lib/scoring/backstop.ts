@@ -138,6 +138,8 @@ const PATTERNS: Record<BackstopId, Pattern[]> = {
     /\bif\s+(?:the\s+|your\s+)?(?:bank|teller|anyone)\s+asks\b[^.!?\n]{0,30}\b(?:say|tell|just say)\b/gi,
   ],
   off_platform: [
+    // Applying by text with personal details is different from an ATS reminder.
+    { re: /\b(?:text|sms)\b[^!?\n]{0,90}?(?:\+?\d[\d ()-]{7,}\d)/gi, needs: /\b(?:with|send|provide|include)\b[^!?\n]{0,100}\b(?:name|e-?mail|details)\b/i },
     /\b(?:whatsapp|whats app|telegram|wechat|viber|google hangouts|wickr|threema)\b/gi,
     /\b(?:on|via|over|through|download|use)\s+signal\b(?!\s+processing)/gi,
     /\bsignal\s+(?:app|messenger)\b/gi,
