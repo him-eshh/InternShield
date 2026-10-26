@@ -14,7 +14,7 @@ export const EXTRACT_SYSTEM =
   "asks lists what the sender wants the candidate to do or pay. Use buy_equipment when the candidate must buy equipment first, even if they are promised repayment. " +
   "Use money_wrong_way when the candidate must send money onward (the rest or balance by Zelle, Cash App, wire, crypto or gift cards), deposit a check on their phone, use their own bank account for the company, keep a cut, or pay a fee or tax to withdraw earnings. " +
   "Use run_code_or_install for cloning or running code, installing tools or drivers, remote-access apps, or pasting commands into a terminal. " +
-  "Recruiter or employer messages, job offers, job postings, and job-alert emails listing openings all count as job messages. " +
+  "Recruiter or employer messages, job offers, job postings (even a pasted part of one, such as just its duties or qualifications list), and job-alert emails listing openings all count as job messages. " +
   "If it is not a job or internship message, set isJobMessage to false and leave everything else empty or null.";
 
 /** Clean Unicode tricks (invisible characters, look-alike letters, spaced-out words), trim to the cap, collapse repeated whitespace. */

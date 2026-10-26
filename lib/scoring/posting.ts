@@ -26,6 +26,17 @@ export function rolesMatch(messageRole: string | null, postingTitle: string | nu
   return false;
 }
 
+/** Close enough to count as the same role for the good sign: at least half the words of the shorter title are shared.
+ *  One shared word ("study assistants" vs "Federal Work Study") is not a match, though it isn't a mismatch either. */
+export function rolesClose(messageRole: string | null, postingTitle: string | null): boolean {
+  if (!messageRole || !postingTitle) return true;
+  const a = roleTokens(messageRole);
+  const b = roleTokens(postingTitle);
+  if (a.size === 0 || b.size === 0) return true;
+  const shared = [...a].filter((t) => b.has(t)).length;
+  return shared / Math.min(a.size, b.size) >= 0.5;
+}
+
 /** Hourly equivalent of the first amount in a pay string. */
 function hourly(pay: string): number | null {
   const m = /\$?\s*(\d[\d,]*(?:\.\d+)?)\s*(k)?/i.exec(pay);

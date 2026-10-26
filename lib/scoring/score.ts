@@ -8,7 +8,7 @@ import { emailDomain, isFreeEmail, isHiringPlatform, lookalike, registrableDomai
 import { withFlagInfo } from "./flagInfo";
 import { roleAboveLevel } from "./level";
 import { matchFieldPattern, taskVocab } from "./patterns";
-import { matchRows, payMatch, rolesMatch } from "./posting";
+import { matchRows, payMatch, rolesClose, rolesMatch } from "./posting";
 import { pickQuestions, questionGaps, questionHint, type Relevance } from "./questions";
 import { BANNED_WORDS, CHANGE_REASONS, WEIGHTS as W } from "./rules";
 import { cleanText } from "./unicode";
@@ -540,7 +540,8 @@ function evaluate(input: ScoreInput): Evaluated {
       if (roleOk === false || payOk === false) {
         const what = roleOk === false && payOk === false ? "role and pay" : roleOk === false ? "role" : "pay";
         red("posting_mismatch", "offer", W.postingMismatch, "The details don't match the real posting", `The ${what} in the message is different from the company's own posting.`, roleOk === false ? facts?.role?.quote ?? null : facts?.pay?.quote ?? null, { sourceUrl: posting.url ?? undefined });
-      } else {
+      } else if (rolesClose(role, posting.title) && !flags.some((f) => f.id === "off_platform")) {
+        // A real posting doesn't vouch for a sender who moves you to a chat app or a personal number.
         add({ id: "posting_found", group: "offer", kind: "good", title: "The role is on the company's own careers site", quote: null, why: `We found this role listed on ${officialLabel}.`, points: W.postingOnOfficialSite, critical: false, sourceUrl: posting.url ?? undefined });
       }
     }
