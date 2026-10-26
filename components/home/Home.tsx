@@ -34,7 +34,7 @@ export default function Home() {
 
   return <div data-tool="neutral">
     <section className="border-b border-rule bg-[image:var(--mesh)]"><div className="mx-auto grid max-w-[1200px] items-start gap-10 px-4 py-10 sm:px-6 md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] md:gap-14 md:py-14">
-      <div className="min-w-0"><h1 className="max-w-[12ch] font-display text-display font-extrabold">Know the signs.<br />Make your move.</h1>
+      <div className="min-w-0"><h1 className="max-w-[14ch] font-display text-display font-extrabold">Know the signs.<br />Make your move.</h1>
         <p className="mt-7 max-w-[44ch] text-[19px] leading-relaxed text-fg-2">A recruiter message can look polished and still leave questions. Check the evidence, then prepare for opportunities worth pursuing.</p>
         <div data-tool="check" className="mt-8 flex flex-wrap items-center gap-4"><Link href="/check" className={`${btnPrimary} group`}>Check a message <ArrowRight size={19} strokeWidth={1.75} aria-hidden="true" className="transition-transform duration-150 motion-safe:group-hover:translate-x-[3px]" /></Link><p className="max-w-[24ch] text-sm text-fg-2">Paste text or upload a screenshot. Review what was read before checking.</p></div>
       </div>
