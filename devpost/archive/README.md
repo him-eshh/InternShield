@@ -4,4 +4,4 @@ These files record earlier slices and reviews. Dates, test counts, UI descriptio
 
 For the integrated build, use the [current checklist](../checklist.md), [v3 summary](../v3-summary.md), and [app map](../app-map.html). The planning sources of truth are [scope](../scope.md), [PRD](../prd.md), and [spec](../spec.md).
 
-Historical notes were kept to show how the project changed. Local machine paths and private context were removed from the public-ready copy.
+Historical notes were kept to show how the project changed. Known machine paths and internal vault identifiers were removed from this public-ready copy.
