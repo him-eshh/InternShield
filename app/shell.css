@@ -2,7 +2,7 @@
 
 @keyframes mark-evidence { from { background-size: 0 40%; } to { background-size: 100% 40%; } }
 .hero-mark {
-  background-image: linear-gradient(var(--highlight-swash), var(--highlight-swash));
+  background-image: linear-gradient(color-mix(in oklab, var(--coral) 42%, transparent), color-mix(in oklab, var(--coral) 42%, transparent));
   background-repeat: no-repeat;
   background-position: 0 93%;
   background-size: 100% 40%;

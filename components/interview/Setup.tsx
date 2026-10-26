@@ -100,7 +100,7 @@ export default function Setup({ bank, initial, targetDescription = null, level =
         <label className="space-y-2"><span className="font-medium">Difficulty</span><SelectField label="Difficulty" value={config.difficulty} onChange={(v) => change({ difficulty: v as SessionConfig["difficulty"] })}>{["easy", "medium", "hard", "mixed"].map((d) => <option key={d} value={d}>{d[0].toUpperCase() + d.slice(1)}</option>)}</SelectField></label>
         <label className="space-y-2"><span className="font-medium">Language</span><SelectField label="Language" value={config.language} onChange={(v) => change({ language: v as SessionLanguage })}>{(Object.keys(LANG_LABEL) as SessionLanguage[]).map((l) => <option key={l} value={l}>{LANG_LABEL[l]}</option>)}</SelectField></label>
       </div>
-      <p className="text-sm text-muted">Python, TypeScript and SQL run in your browser. Java, C++, Go and JavaScript use discussion and code review. Fixed difficulty applies to bank questions; runnable exercises use their own test sets.</p>
+      <p className="text-sm text-muted">Python, TypeScript and SQL run in your browser. Other languages use discussion and code review.</p>
       {config.rounds.includes("coding") && <button type="button" role="switch" aria-checked={!!config.mostAsked} className={`flex min-h-14 w-full items-start gap-3 rounded-2xl border p-4 text-left transition-colors ${config.mostAsked ? "border-tool bg-tool-tint" : "border-border bg-card hover:bg-bg-soft"}`} onClick={() => change({ mostAsked: !config.mostAsked })}>
         <span aria-hidden="true" className={`mt-0.5 flex h-6 w-11 shrink-0 items-center rounded-full border p-0.5 transition-colors ${config.mostAsked ? "justify-end border-tool bg-tool" : "justify-start border-border-strong bg-bg-soft"}`}><span className={`h-4 w-4 rounded-full ${config.mostAsked ? "bg-on-tool" : "bg-border-strong"}`} /></span>
         <span><span className="flex items-center gap-2 font-medium"><TrendingUp size={17} aria-hidden="true" />{mostAskedLabel}</span><span className="mt-1 block text-sm text-muted">Starts with the coding questions that appear on the most company lists (public 2022 lists, so they show what was asked, not what is asked today).</span></span>
@@ -108,33 +108,35 @@ export default function Setup({ bank, initial, targetDescription = null, level =
       <fieldset>
         <legend className="mb-1 font-medium">Topics <span className="text-muted">(optional, coding questions)</span></legend>
         {!!config.topics.length && <ul className="mb-3 flex flex-wrap gap-2" aria-label="Selected topics">{config.topics.map((t) => <li key={t}><button type="button" className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-tool bg-tool-tint px-3 text-sm text-tool-strong" aria-label={`Remove topic ${t}`} onClick={() => toggleTopic(t)}>{t}<X size={14} aria-hidden="true" /></button></li>)}</ul>}
-        <label className="relative block"><span className="sr-only">Search topics</span><Search size={17} aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" /><input type="search" className={`${field} pl-10`} value={topicQuery} onChange={(e) => setTopicQuery(e.target.value)} placeholder={`Search ${allTopics.length} topics`} /></label>
-        <div className="mt-3 space-y-2">
-          {!groups.length && <p className="text-sm text-muted">No topic matches “{topicQuery}”.</p>}
-          {groups.map((g, i) => {
-            const picked = g.topics.filter((t) => config.topics.includes(t)).length;
-            return <details key={g.label + (query ? "-q" : "")} open={!!query || i === 0} className="group rounded-xl border border-border bg-bg-soft/50">
-              <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 rounded-xl px-4 py-2 font-medium [&::-webkit-details-marker]:hidden"><span>{g.label} <span className="text-sm font-normal text-muted">{g.topics.length}{picked ? ` · ${picked} selected` : ""}</span></span><ChevronDown size={18} aria-hidden="true" className="shrink-0 text-muted transition-transform group-open:rotate-180" /></summary>
-              <div className="flex flex-wrap gap-2 px-4 pb-4">{g.topics.map((topic) => <button key={topic} type="button" aria-pressed={config.topics.includes(topic)} className={`min-h-11 rounded-full border px-3 text-sm ${config.topics.includes(topic) ? "border-tool bg-tool-tint text-tool-strong" : "border-border bg-card hover:bg-bg-soft"}`} onClick={() => toggleTopic(topic)}>{topic}</button>)}</div>
-            </details>;
-          })}
-        </div>
+        {!query && <ul className="flex flex-wrap gap-2" aria-label="Popular topics">{allTopics.slice(0, 10).map((topic) => <li key={topic}><button type="button" aria-pressed={config.topics.includes(topic)} className={`min-h-11 rounded-full border px-3 text-sm ${config.topics.includes(topic) ? "border-tool bg-tool-tint text-tool-strong" : "border-border bg-card hover:bg-bg-soft"}`} onClick={() => toggleTopic(topic)}>{topic}</button></li>)}</ul>}
+        <details open={!!query} className="group mt-3 rounded-xl border border-border">
+          <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 rounded-xl px-4 py-2 font-medium [&::-webkit-details-marker]:hidden"><span>More topics <span className="text-sm font-normal text-muted">{Math.max(0, allTopics.length - 10)} more, searchable</span></span><ChevronDown size={18} aria-hidden="true" className="shrink-0 text-muted transition-transform group-open:rotate-180" /></summary>
+          <div className="space-y-2 px-3 pb-3">
+            <label className="relative block"><span className="sr-only">Search topics</span><Search size={17} aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" /><input type="search" className={`${field} pl-10`} value={topicQuery} onChange={(e) => setTopicQuery(e.target.value)} placeholder={`Search ${allTopics.length} topics`} /></label>
+            {!groups.length && <p className="text-sm text-muted">No topic matches “{topicQuery}”.</p>}
+            {groups.map((g, i) => {
+              const picked = g.topics.filter((t) => config.topics.includes(t)).length;
+              return <details key={g.label + (query ? "-q" : "")} open={!!query || i === 0} className="group rounded-xl border border-border bg-bg-soft/50">
+                <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 rounded-xl px-4 py-2 font-medium [&::-webkit-details-marker]:hidden"><span>{g.label} <span className="text-sm font-normal text-muted">{g.topics.length}{picked ? ` · ${picked} selected` : ""}</span></span><ChevronDown size={18} aria-hidden="true" className="shrink-0 text-muted transition-transform group-open:rotate-180" /></summary>
+                <div className="flex flex-wrap gap-2 px-4 pb-4">{g.topics.map((topic) => <button key={topic} type="button" aria-pressed={config.topics.includes(topic)} className={`min-h-11 rounded-full border px-3 text-sm ${config.topics.includes(topic) ? "border-tool bg-tool-tint text-tool-strong" : "border-border bg-card hover:bg-bg-soft"}`} onClick={() => toggleTopic(topic)}>{topic}</button>)}</div>
+              </details>;
+            })}
+          </div>
+        </details>
       </fieldset>
     </section>
 
     <section className={panel} aria-labelledby="setup-length">
       <h2 id="setup-length" className="font-display text-xl">Session</h2>
-      <label className="block space-y-2"><span className="font-medium">Your questions <span className="text-muted">(optional)</span></span><textarea className={field} rows={3} value={custom} onChange={(e) => setCustom(e.target.value)} placeholder="One question per line. We'll ask these first." maxLength={6000} /></label>
+      <details className="group rounded-xl border border-border" open={!!custom}><summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 rounded-xl px-4 py-2 font-medium [&::-webkit-details-marker]:hidden"><span>Add your own questions <span className="text-sm font-normal text-muted">optional</span></span><ChevronDown size={18} aria-hidden="true" className="shrink-0 text-muted transition-transform group-open:rotate-180" /></summary><label className="block space-y-2 px-4 pb-4"><span className="sr-only">Your questions</span><textarea className={field} rows={3} value={custom} onChange={(e) => setCustom(e.target.value)} placeholder="One question per line. We'll ask these first." maxLength={6000} /></label></details>
       {customError && <p role="alert" className="text-sm">{customError}</p>}
       <div className="flex flex-wrap items-end gap-3"><label className="space-y-2"><span className="block font-medium">Session length</span><input aria-label="Session length" className={field + " !w-24"} type="number" min={1} max={15} value={config.limit.count} onChange={(e) => change({ limit: { ...config.limit, count: Number(e.target.value) } })} /></label><SelectField label="Count by" className="w-40" value={config.limit.kind} onChange={(v) => change({ limit: { ...config.limit, kind: v as "questions" | "rounds" } })}><option value="questions">questions</option><option value="rounds">rounds</option></SelectField></div>
       <p className="text-sm text-muted">Each round has 1–3 questions. Follow-ups stay within the same question.</p>
     </section>
-    <aside className="border-l-4 border-tool bg-tool-tint px-5 py-4" aria-live="polite">
-      <p className="font-display text-xl">Your session at a glance</p>
-      <p className="mt-1 text-sm text-fg-2">{config.limit.count} {config.limit.kind} · {config.rounds.length ? config.rounds.map(roundLabel).join(", ") : "Choose at least one round"}</p>
-      <p className="mt-1 text-sm text-fg-2">About {Math.max(1, config.limit.kind === "questions" ? config.limit.count : config.limit.count * 2) * 4} minutes. Your progress is saved on this device.</p>
-    </aside>
-    <button className={btnPrimary} disabled={!config.rounds.length || loading || !bank.length}>Start session<ArrowRight size={18} /></button>
+    <div className="sticky bottom-[var(--nav-bottom)] z-20 -mx-4 flex flex-wrap items-center justify-between gap-3 border-t border-rule bg-paper/95 px-4 py-3 shadow-[var(--shadow-2)] backdrop-blur-sm sm:mx-0 sm:rounded-2xl sm:border sm:px-5" aria-live="polite">
+      <div className="min-w-0 flex-1 basis-56"><p className="font-display text-base font-bold">Your session at a glance</p><p className="text-sm text-fg-2">{config.limit.count} {config.limit.kind} · {config.rounds.length ? config.rounds.map(roundLabel).join(", ") : "Choose at least one round"} · about {Math.max(1, config.limit.kind === "questions" ? config.limit.count : config.limit.count * 2) * 4} min</p></div>
+      <button className={btnPrimary + " max-sm:!w-full sm:!w-auto"} disabled={!config.rounds.length || loading || !bank.length}>Start session<ArrowRight size={18} /></button>
+    </div>
     <p className="text-xs text-muted">Question metadata comes from two MIT-licensed public datasets; notices are in data/question-bank/LICENSES.md. Not affiliated with LeetCode.</p>
   </form>;
 }

@@ -1,7 +1,7 @@
 "use client";
 import ToolHero from "./ToolHero";
 import { CheckIllustration } from "./illustrations";
-import { ChevronRight, ClipboardPaste, ShieldCheck, X } from "lucide-react";
+import { Building2, ChevronRight, CircleCheck, CircleDollarSign, ClipboardPaste, Link2, MailCheck, ShieldCheck, Timer, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { autofill } from "@/lib/autofill";
 import { EXAMPLES } from "@/lib/examples";
@@ -17,6 +17,13 @@ export interface CheckSubmit {
   exampleId: "scam" | "real" | null;
 }
 
+const CHECKS = [
+  { Icon: MailCheck, label: "Who sent it, and from where" },
+  { Icon: Building2, label: "Whether the company is real" },
+  { Icon: Link2, label: "Links and where they lead" },
+  { Icon: CircleDollarSign, label: "Requests for money or details" },
+  { Icon: Timer, label: "Pressure to answer quickly" },
+];
 const SOURCES: { value: Source; label: string }[] = [
   { value: "company_site", label: "Applied on the company site" },
   { value: "linkedin", label: "LinkedIn" },
@@ -306,7 +313,7 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
           <p className="text-sm text-fg-2">Press Ctrl or Command + Enter to check.</p>
         </div>
         </div>
-        <aside className="border-t border-rule pt-5 lg:sticky lg:top-6"><h2 className="font-display text-xl">Try a made-up example</h2><p className="mt-2 text-sm text-fg-2">The examples fill the sheet so you can see what gets checked before submitting.</p><div className="mt-4 flex flex-wrap gap-2"><button type="button" className={`${pillOff} !w-auto`} onClick={() => tryExample("scam")}>A suspicious offer</button><button type="button" className={`${pillOff} !w-auto`} onClick={() => tryExample("real")}>An ordinary update</button></div><p className="mt-7 border-l-2 border-tool pl-4 text-sm text-fg-2">Your message is sent to AI and search services for these checks. Extracted facts may be cached temporarily in server memory; your report is saved on this device.</p></aside>
+        <aside className="border-t border-rule pt-5 lg:sticky lg:top-6"><h2 className="font-display text-xl">What we check</h2><ul className="mt-3 space-y-2.5 text-sm">{CHECKS.map(({ Icon, label }) => <li key={label} className="flex items-center gap-3"><span aria-hidden="true" className="grid size-8 shrink-0 place-items-center rounded-[var(--radius-sm)] bg-tool-tint text-tool-strong"><Icon size={17} strokeWidth={1.75} /></span>{label}</li>)}</ul><h2 className="mt-7 font-display text-xl">Try a made-up example</h2><p className="mt-2 text-sm text-fg-2">The examples fill the sheet so you can see what gets checked before submitting.</p><div className="mt-4 flex flex-wrap gap-2"><button type="button" aria-pressed={example === "scam"} className={`${example === "scam" ? pillOn : pillOff} !w-auto`} onClick={() => tryExample("scam")}>A suspicious offer</button><button type="button" aria-pressed={example === "real"} className={`${example === "real" ? pillOn : pillOff} !w-auto`} onClick={() => tryExample("real")}>An ordinary update</button></div>{example && <p role="status" className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-tool-tint px-3 py-1 text-[13px] font-medium text-tool-strong"><CircleCheck size={14} aria-hidden="true" />Filled with a made-up message</p>}<p className="mt-7 border-l-2 border-tool pl-4 text-sm text-fg-2">Your message is sent to AI and search services for these checks. Extracted facts may be cached temporarily in server memory; your report is saved on this device.</p></aside>
       </form>
     </section>
   );

@@ -7,6 +7,7 @@ import { loadActive, loadHistory, practiceContinue } from "@/lib/tiers/session";
 import { LEVEL_LABELS } from "@/lib/types";
 import { useProfileProgress } from "../profile/progress";
 import { useAppState } from "../shell/AppStateProvider";
+import { useMotion } from "../motion/useMotion";
 import { useReveal } from "../shell/reveal";
 import { btnPrimary, cardInteractive } from "../ui";
 
@@ -16,16 +17,20 @@ const TOOLS = [
   { href: "/practice", tool: "practice", title: "Practice an interview", Icon: MessagesSquare, line: "Answer, run code or SQL, and see the checks behind your feedback.", preview: "Answers turn into a next drill" },
 ] as const;
 
-type ContinueRow = { href: string; tool: "check" | "practice" | "neutral"; Icon: LucideIcon; title: string; detail: string; risk?: "low" | "medium" | "high" };
+type ContinueRow = { href: string; tool: "check" | "tailor" | "practice" | "neutral"; Icon: LucideIcon; title: string; detail: string; risk?: "low" | "medium" | "high" };
 
 export default function Home() {
   const reveal = useReveal();
-  const { ready, lastCheck } = useAppState();
+  const { reduce } = useMotion();
+  // Demo notes land one after another as each phrase gets marked (the marks use CSS delays).
+  const note = (i: number) => ({ initial: reduce === false ? { opacity: 0, x: -14 } : (false as const), animate: { opacity: 1, x: 0 }, transition: { duration: 0.32, delay: 0.5 + i * 0.22, ease: [0.22, 1, 0.36, 1] as const } });
+  const { ready, lastCheck, resume } = useAppState();
   const progress = useProfileProgress();
   const rows: ContinueRow[] = [];
   if (ready) {
     const report = lastCheck?.outcome.report;
     if (report) rows.push({ href: "/check", tool: "check", Icon: ShieldCheck, title: lastCheck?.input.form.company?.trim() ? `Last check: ${lastCheck.input.form.company.trim()}` : "Your last check", detail: LEVEL_LABELS[report.level], risk: report.level });
+    if (resume) rows.push({ href: "/tailor", tool: "tailor", Icon: FileCheck2, title: "Tailor your resume", detail: resume.fileName ? `${resume.fileName} is saved on this device` : "Your resume is saved on this device" });
     const practice = practiceContinue(loadActive(), loadHistory());
     if (practice) rows.push({ href: practice.resume ? "/practice?resume=1" : "/practice", tool: "practice", Icon: MessagesSquare, title: practice.title, detail: practice.detail });
     if (progress.count < progress.total) rows.push({ href: "/profile", tool: "neutral", Icon: UserRound, title: "Finish your profile", detail: `${progress.count} of ${progress.total} steps done` });
@@ -44,9 +49,9 @@ export default function Home() {
         <blockquote className="mt-4 max-w-[45ch] font-mono text-[15px] leading-[1.8]">We found your profile and can offer you a remote internship. <mark className="hero-mark bg-transparent text-inherit">Move the interview to Telegram<sup>1</sup></mark> so we can get started. <mark className="hero-mark bg-transparent text-inherit">Reply within two hours<sup>2</sup></mark>. Before your first day, <mark className="hero-mark bg-transparent text-inherit">pay a refundable equipment fee<sup>3</sup></mark>.</blockquote>
         <svg aria-hidden="true" focusable="false" viewBox="0 0 300 18" preserveAspectRatio="none" className="mt-4 h-4 w-full text-coral-strong"><path d="M2 8 Q80 3 154 9 T298 7" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="7 5" /></svg>
         <ol className="mt-2 space-y-2 text-sm" aria-label="Notes on the example">
-          <li className="flex items-start gap-3 border border-dashed border-coral-strong/50 bg-paper px-3 py-2"><span className="grid size-7 shrink-0 place-items-center bg-tool-deep font-mono text-xs font-bold text-on-deep">1</span><span>Interview moved off the usual channel</span></li>
-          <li className="ml-2 flex items-start gap-3 border border-dashed border-coral-strong/50 bg-paper px-3 py-2"><span className="grid size-7 shrink-0 place-items-center bg-tool-deep font-mono text-xs font-bold text-on-deep">2</span><span>Pressure to answer quickly</span></li>
-          <li className="flex items-start gap-3 border border-dashed border-coral-strong/50 bg-paper px-3 py-2"><span className="grid size-7 shrink-0 place-items-center bg-tool-deep font-mono text-xs font-bold text-on-deep">3</span><span>Money requested before work begins</span></li>
+          <m.li {...note(0)} className="flex items-start gap-3 border border-dashed border-coral-strong/50 bg-paper px-3 py-2"><span className="grid size-7 shrink-0 place-items-center bg-tool-deep font-mono text-xs font-bold text-on-deep">1</span><span>Interview moved off the usual channel</span></m.li>
+          <m.li {...note(1)} className="ml-2 flex items-start gap-3 border border-dashed border-coral-strong/50 bg-paper px-3 py-2"><span className="grid size-7 shrink-0 place-items-center bg-tool-deep font-mono text-xs font-bold text-on-deep">2</span><span>Pressure to answer quickly</span></m.li>
+          <m.li {...note(2)} className="flex items-start gap-3 border border-dashed border-coral-strong/50 bg-paper px-3 py-2"><span className="grid size-7 shrink-0 place-items-center bg-tool-deep font-mono text-xs font-bold text-on-deep">3</span><span>Money requested before work begins</span></m.li>
         </ol>
       </figure>
     </div></section>
