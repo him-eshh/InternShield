@@ -11,9 +11,9 @@ status: current-v3
 2. Check accepts a pasted message or screenshot. The user can correct extracted company, sender, and context. Two made-up examples are available.
 3. During a check, progress reflects live steps. A provider failure or cap is shown as unavailable rather than silently counted as a pass.
 4. The report shows a rule-based risk level, quoted evidence, grouped flags, coverage, unavailable checks, and a concrete next action. Quick questions and added information can recalculate the report and explain what changed. The app never labels an offer safe.
-5. Tailor takes an original PDF or DOCX and job context. The user reviews bounded edits against original facts, accepts or rejects each one, sees an updated preview, and downloads the edited file. The preview should make changed lines apparent.
-6. Practice configures role, company, rounds, topics, difficulty, and length. A continuous session supports hints, follow-ups, skip, early end, refresh recovery, type-specific review, and a numerical summary. Coding and SQL execute in browser workers; their results lead feedback.
-7. Tracker and Profile save local information. Report, Tailor, and Practice links can carry role/company context between tools.
+5. Tailor takes an original PDF or DOCX, or pasted resume text, plus a posting or company/role context. The user reviews bounded edits against original facts, accepts or rejects each one, sees an updated preview, and downloads the edited result. The preview should make changed lines apparent.
+6. Practice configures role, company, rounds, topics, difficulty, and length. A selected Tracker application can carry its pasted posting into setup; profile level guides mixed difficulty. A continuous session supports hints, follow-ups, skip, early end, refresh recovery, type-specific review, and a numerical summary. Coding and SQL execute in browser workers; their results lead feedback.
+7. Tracker and Profile save local information. Tracker cards span Saved, Applied, Interviewing, and Interviewed, move by menu or drag and drop, and can launch Tailor or Practice with exact card context. Report, Tailor, and Practice links can also carry role/company context between tools.
 
 ## Check acceptance
 
@@ -28,6 +28,7 @@ status: current-v3
 - The original resume remains the source for its page and structure. Only eligible bullet lines may change; guardrails reject unsupported claims, large growth, and unwanted style.
 - The user controls each suggestion and can inspect the generated file before download. PDF exports can retain covered original text underneath; they must not be described as redacted. DOCX wording changes are constrained by existing words/layout.
 - The service can be unavailable or capped without losing the original file or presenting an unchecked suggestion as fact.
+- Pasted text stays selectable after a file was chosen. A posting is optional when the user provides a role or company, and the result must say when it used role context alone.
 
 ## Practice acceptance
 
@@ -35,6 +36,7 @@ status: current-v3
 - “Most asked at [company]” is a ranking proxy from historical public lists. It is not measured interview frequency.
 - Code/SQL result checks run locally and are displayed before coaching. Only rounds with runnable results receive quality bands. Discussion answers are recorded and coached without a quality grade. Server feedback can show an exact answer quote and test results, but model-written achievement claims and STAR ratings are discarded. Follow-ups use question-type prompts without assuming facts the candidate did not provide.
 - A session resumes after refresh, can end early, and produces counts from actual turns. Model or intel limits trigger a visible local fallback.
+- Selected posting details guide role questions but are not candidate achievements. Runnable exercises must identify their practice source and state when a requested difficulty pool was exhausted or broadened. Historical employer list tags must not be presented as current interview frequency.
 
 ## Privacy, accessibility, and constraints
 

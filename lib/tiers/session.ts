@@ -43,6 +43,7 @@ const RUNNABLE_LANGS = ["python", "typescript"] as const;
 const MIN_COUNT = 1;
 const MAX_COUNT = 15;
 const LEVELS = ["easy", "medium", "hard"] as const;
+const PROFILE_LEVEL: Record<NonNullable<InterviewContext["level"]>, number> = { freshman: 0, sophomore: 0, junior: 1, senior: 2, grad: 2, new_grad: 2 };
 export interface Slot {
   round: RoundKind;
   /** Which round (block) this question belongs to, 0-based. */
@@ -166,6 +167,21 @@ const usedIds = (s: PracticeState): Set<string> => new Set([...s.turns.flatMap((
 function difficultyFor(s: PracticeState): "easy" | "medium" | "hard" {
   return s.config.difficulty === "mixed" ? LEVELS[Math.min(2, Math.max(0, s.level))] : s.config.difficulty;
 }
+const practiceLevel = (s: PracticeState) => s.config.difficulty === "mixed"
+  ? (s.context.level ? PROFILE_LEVEL[s.context.level] : s.level)
+  : LEVELS.indexOf(s.config.difficulty);
+const levelNote = (s: PracticeState) => `Made-up runnable exercise selected for ${LEVELS[practiceLevel(s)]} practice; it is not claimed to come from ${s.context.company ?? "an employer"}.`;
+function byLevel<T extends { id: string }>(items: T[], level: number): T[] {
+  const third = Math.max(1, Math.ceil(items.length / 3));
+  return items.slice(Math.min(level, 2) * third, Math.min(items.length, (Math.min(level, 2) + 1) * third));
+}
+function runnablePool<T extends { id: string }>(items: T[], used: ReadonlySet<string>, s: PracticeState): { items: T[]; note: string } {
+  const available = items.filter((item) => !used.has(item.id));
+  const preferred = byLevel(items, practiceLevel(s)).filter((item) => !used.has(item.id));
+  return preferred.length
+    ? { items: preferred, note: levelNote(s) }
+    : { items: available, note: `${levelNote(s)} That level's unused set was exhausted, so the difficulty filter was relaxed.` };
+}
 /** Bank selection keeps the user's filters while they match; otherwise it falls back to the closest pool and says so in `note`. */
 function pickBank(s: PracticeState, bank: BankQuestion[], rand: () => number): { q: BankQuestion; note?: string } | null {
   const roleText = (s.config.role ?? s.context.role ?? "").toLowerCase();
@@ -194,35 +210,37 @@ function makeItem(s: PracticeState, i: number, bank: BankQuestion[]): PlanItem {
   const mk = (over: Partial<PlanItem> & Pick<PlanItem, "kind" | "question" | "source">): PlanItem => ({ id: `${i}-${over.problemId ?? over.source}`, slot: i, round: slot.round, ...over });
   if (slot.custom) return mk({ kind: "text", question: slot.custom, source: "custom", id: `${i}-custom` });
   const runs = (RUNNABLE_LANGS as readonly string[]).includes(s.config.language);
-  const unused = <T extends { id: string }>(xs: T[]): T[] => xs.filter((x) => !ids.has(x.id));
   if (slot.round === "coding") {
     const nth = s.turns.filter((t) => t.round === "coding").length + (s.activeQuestion?.item.round === "coding" ? 1 : 0);
     const constrained = s.config.topics.length > 0 || s.config.difficulty !== "mixed" || !!s.config.company || !!s.config.mostAsked;
-    const problems = unused(PROBLEMS);
+    const selected = runnablePool(PROBLEMS, ids, s);
+    const problems = selected.items;
     if (runs && !constrained && nth % 2 === 0 && problems.length) {
       const p = problems[Math.floor(rand() * problems.length)];
-      return mk({ kind: "code", question: p.prompt, source: "app", title: p.title, problemId: p.id });
+      return mk({ kind: "code", question: p.prompt, source: "app", title: p.title, problemId: p.id, note: selected.note });
     }
     const b = pickBank(s, bank, rand);
     if (b) return bankItem(i, b.q, b.note);
-    if (runs && !constrained && problems.length) return mk({ kind: "code", question: problems[0].prompt, source: "app", title: problems[0].title, problemId: problems[0].id });
+    if (runs && !constrained && problems.length) return mk({ kind: "code", question: problems[0].prompt, source: "app", title: problems[0].title, problemId: problems[0].id, note: selected.note });
   } else if (slot.round === "sql") {
-    const ps = unused(SQL_PROBLEMS);
+    const selected = runnablePool(SQL_PROBLEMS, ids, s);
+    const ps = selected.items;
     if (ps.length) {
       const p = ps[Math.floor(rand() * ps.length)];
-      return mk({ kind: "sql", question: p.prompt, source: "app", title: p.title, problemId: p.id });
+      return mk({ kind: "sql", question: p.prompt, source: "app", title: p.title, problemId: p.id, note: selected.note });
     }
     return mk({ kind: "text", question: `SQL discussion ${i + 1}: How would you check a query for duplicate rows, missing values and performance on a larger data set?`, source: "app", note: "All runnable SQL exercises have been used. Discuss this one in text." });
   } else if (slot.round === "debugging") {
-    const ps = unused(DEBUG_PROBLEMS);
+    const selected = runnablePool(DEBUG_PROBLEMS, ids, s);
+    const ps = selected.items;
     if (ps.length) {
       const p = ps[Math.floor(rand() * ps.length)];
-      return mk({ kind: "debug", question: p.prompt, source: "app", title: p.title, problemId: p.id });
+      return mk({ kind: "debug", question: p.prompt, source: "app", title: p.title, problemId: p.id, note: selected.note });
     }
     return mk({ kind: "text", question: `Debugging discussion ${i + 1}: Describe how you would reproduce an intermittent bug, isolate its cause and verify the fix.`, source: "app", note: "All runnable debugging exercises have been used. Discuss this one in text." });
   } else {
     const asked = usedKeys(s);
-    const pool = textPool(slot.round, { values: s.values, company: s.context.company, preset: s.context.preset });
+    const pool = textPool(slot.round, { values: s.values, company: s.context.company, role: s.context.role, description: s.context.description, level: s.context.level, preset: s.context.preset });
     const fresh = (xs: typeof pool.ordered) => xs.filter((o) => !asked.has(o.text));
     const first = fresh(pool.ordered)[0] ?? (() => { const r = fresh(pool.shuffled); return r.length ? r[Math.floor(rand() * r.length)] : null; })();
     if (first) return mk({ kind: "text", question: first.text, source: first.source, id: `${i}-${slot.round}` });
@@ -267,7 +285,7 @@ export function newPractice(config: SessionConfig, context: InterviewContext, op
     context,
     values: (opts.values ?? []).slice(0, 6),
     slots: buildSlots(cfg),
-    level: 1,
+    level: context.level ? PROFILE_LEVEL[context.level] : 1,
     turns: [],
     activeQuestion: null,
     calls: 0,

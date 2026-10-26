@@ -24,6 +24,13 @@ describe("resume plan", () => {
     expect(html).toContain("Required:");
     expect(html).toContain("Preferred:");
   });
+  it("labels role-only context truthfully when no posting was provided", () => {
+    const plan = buildResumePlan({ ...input, posting: "" });
+    const html = renderToStaticMarkup(<PlanPanel plan={plan} />);
+    expect(html).toContain("Using the company and role details only");
+    expect(html).not.toContain("job post only");
+    expect(html).not.toContain("Required:");
+  });
   it.each([undefined, { ...intel, limited: true }, { ...intel, sources: [] }, { ...intel, sources: [{ label: "bad", url: "javascript:alert(1)" }] }])("falls back without unverified claims when unavailable or capped", (data) => {
     const plan = buildResumePlan(input, data);
     expect(plan.limited).toBe(true);

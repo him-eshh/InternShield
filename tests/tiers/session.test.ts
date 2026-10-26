@@ -56,6 +56,23 @@ describe("continuous session engine", () => {
     expect(bank.find((q) => q.id === s.activeQuestion!.item.source)!.companies).toContain("Amazon");
     expect(s.activeQuestion!.item.kind).toBe("text");
   });
+  it("uses candidate level to change mixed runnable selection and labels the source honestly", () => {
+    const freshman = newPractice(defaultConfig({ rounds: ["debugging"], limit: { kind: "questions", count: 1 } }), { ...context, level: "freshman" }, { id: "freshman", now: 0, seed: 3 }, []);
+    const senior = newPractice(defaultConfig({ rounds: ["debugging"], limit: { kind: "questions", count: 1 } }), { ...context, level: "senior", company: "Example Co" }, { id: "senior", now: 0, seed: 3 }, []);
+    expect(freshman.activeQuestion!.item.problemId).not.toBe(senior.activeQuestion!.item.problemId);
+    expect(freshman.activeQuestion!.item.note).toMatch(/easy practice/);
+    expect(senior.activeQuestion!.item.note).toMatch(/hard practice.*not claimed to come from Example Co/);
+  });
+  it("uses the selected role and posting in a local discussion prompt without treating them as experience", () => {
+    const target = { ...context, role: "Backend Intern", description: "Build TypeScript APIs with AWS." };
+    const s = newPractice(defaultConfig({ rounds: ["design"], limit: { kind: "questions", count: 1 } }), { ...target, level: "freshman" }, { id: "targeted", now: 0, seed: 3 }, []);
+    const senior = newPractice(defaultConfig({ rounds: ["design"], limit: { kind: "questions", count: 1 } }), { ...target, level: "senior" }, { id: "targeted-senior", now: 0, seed: 3 }, []);
+    expect(s.activeQuestion!.item.source).toBe("selected target");
+    expect(s.activeQuestion!.item.question).toMatch(/Backend Intern role.*TypeScript, AWS/);
+    expect(s.activeQuestion!.item.question).not.toMatch(/you (?:built|used|know)/i);
+    expect(s.activeQuestion!.item.question).toMatch(/scope small/);
+    expect(senior.activeQuestion!.item.question).toMatch(/constraints, alternatives/);
+  });
   it("requires review and limits follow-ups to two", () => {
     let s = submitAnswer(start({ rounds: ["behavioral"] }), "My example", 11);
     expect(awaiting(s)).toBe("review");

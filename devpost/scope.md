@@ -11,11 +11,11 @@ InternShield helps a job seeker check a recruiter or job message, tailor an exis
 
 Check is evidence first: the model extracts facts with message quotes, and the app explains scored flags deterministically. Rules in `lib/scoring` set the risk level. The report separates what was found from what could not be checked, asks targeted quick questions, and can recalculate after the user adds information. A found job posting is evidence, never proof of sender legitimacy; a missing posting is neutral. The app never calls a message “safe.”
 
-Tailor starts with the user's original PDF or DOCX. It proposes a small number of line edits, checks them against the original experience, and lets the user accept or reject them before preview and download. It does not invent qualifications. PDF cover-and-redraw does not remove the old text layer; generated PDFs are not suitable for redaction. DOCX editing is constrained by the original word layout.
+Tailor starts with the user's original PDF or DOCX, or pasted resume text. It can use a saved application or company/role context when a posting is unavailable. It proposes a small number of line edits, checks them against the original experience, and lets the user accept or reject them before preview and download. It does not invent qualifications. PDF cover-and-redraw does not remove the old text layer; generated PDFs are not suitable for redaction. DOCX editing is constrained by the original word layout.
 
-Practice supports a configurable multi-question session across recruiter, behavioral, coding, SQL, case, and portfolio-style discussion where available. Code and SQL checks run locally in browser workers, with test results shown before model feedback. Questions and feedback have local fallbacks when a provider or quota is unavailable. Company-specific question ranking uses historical public list metadata as a proxy, not actual employer counts.
+Practice supports a configurable multi-question session across recruiter, behavioral, coding, SQL, case, and portfolio-style discussion where available. A selected application can guide questions by its role and pasted posting, while profile level guides mixed difficulty; a posting is never treated as evidence of the candidate's experience. Code and SQL checks run locally in browser workers, with test results shown before model feedback. Questions and feedback have local fallbacks when a provider or quota is unavailable. Company-specific question ranking uses historical public list metadata as a proxy, not actual employer counts or current interview questions.
 
-Tracker stores application steps locally; Profile preferences can prefill Tailor and Practice. Check reports and Practice summaries can lead into these tools with role and company context.
+Tracker stores application steps locally across Saved, Applied, Interviewing, and Interviewed. Cards can move by menu or drag and drop and can carry a user-pasted job posting into Tailor and Practice. Profile preferences can also prefill these tools; Check reports and Practice summaries can lead into them with role and company context.
 
 ## Product boundaries
 
@@ -23,7 +23,7 @@ Tracker stores application steps locally; Profile preferences can prefill Tailor
 - All example messages, resumes, and demo fixtures are made up.
 - No login, account, server-side user record, claim of scam certainty, or “safe” verdict.
 - Live provider calls require configured server-side keys and are subject to origin checks, size limits, per-visitor limits, daily instance caps, and provider quotas.
-- Local storage holds profile, extracted resume text, last report, tracker, targets, and practice state/history. “Clear my data” removes those values but retains the theme choice.
+- Local storage holds profile, extracted resume text, last report, tracker cards (including any pasted posting), targets, and practice state/history. “Clear my data” removes those values but retains the theme choice.
 - Check sends message text to Groq; lookups may use Tavily, Wikidata, RDAP, DNS, and optional Hunter. Tailor sends extracted resume text and posting context to Groq. Practice may send answers and short resume context to Groq. Screenshot transcription sends the browser-compressed image to Groq.
 
 ## Source of truth

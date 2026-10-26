@@ -8,6 +8,7 @@ import { intelRounds, intelValues, presetForCompany } from "@/lib/tiers/sessionI
 import { PRESETS } from "@/lib/tiers/presets";
 import { roundLabel, type BankQuestion, type SessionConfig, type SessionLanguage } from "@/lib/tiers/types";
 import type { CompanyIntel } from "@/lib/server/companyIntel";
+import type { UserLevel } from "@/lib/types";
 import IntelCard from "./IntelCard";
 import { btnPrimary, btnSecondary } from "../ui";
 
@@ -26,7 +27,7 @@ function SelectField({ label, value, onChange, children, className = "" }: { lab
   );
 }
 
-export default function Setup({ bank, initial, autoResearch = true, onStart }: { bank: BankQuestion[]; initial?: SessionConfig; /** Look up a prefilled company on mount. Off for a company that only came from the profile (no surprise lookups). */ autoResearch?: boolean; onStart: (config: SessionConfig, values: string[]) => void }) {
+export default function Setup({ bank, initial, targetDescription = null, level = null, autoResearch = true, onStart }: { bank: BankQuestion[]; initial?: SessionConfig; targetDescription?: string | null; level?: UserLevel | null; /** Look up a prefilled company on mount. Off for a company that only came from the profile (no surprise lookups). */ autoResearch?: boolean; onStart: (config: SessionConfig, values: string[]) => void }) {
   const [config, setConfig] = useState(() => initial ?? defaultConfig());
   const [customError, setCustomError] = useState("");
   const [custom, setCustom] = useState(config.customQuestions.join("\n"));
@@ -80,8 +81,9 @@ export default function Setup({ bank, initial, autoResearch = true, onStart }: {
         <label className="space-y-2"><span className="font-medium">Company <span className="text-muted">(optional)</span></span><input disabled={loading} list="bank-companies" className={field} maxLength={120} value={config.company ?? ""} onChange={(e) => change({ company: e.target.value })} placeholder="e.g. Amazon, Stripe" autoComplete="off" /><datalist id="bank-companies">{companies.map((c) => <option key={c} value={c} />)}</datalist></label>
         <label className="space-y-2"><span className="font-medium">Role</span><input disabled={loading} className={field} maxLength={120} value={config.role ?? ""} onChange={(e) => change({ role: e.target.value })} placeholder="e.g. Backend engineer" /></label>
       </div>
+      {(targetDescription || level) && <p className="flex items-start gap-2 rounded-xl bg-tool-tint p-3 text-sm"><Info size={17} aria-hidden="true" className="mt-0.5 shrink-0 text-tool-strong" />Questions will use {targetDescription ? "the selected job description" : "your selected role"}{level ? ` and your ${level.replace("_", " ")} level` : ""} as context. Posting text guides the interview; it is not treated as your experience.</p>}
       {companyName && (scope.kind === "exact"
-        ? <p className="flex items-start gap-2 text-sm text-muted"><Check size={17} aria-hidden="true" className="mt-0.5 shrink-0 text-tool-strong" />{exactCount} {scope.label} coding questions in the bank.</p>
+        ? <p className="flex items-start gap-2 text-sm text-muted"><Check size={17} aria-hidden="true" className="mt-0.5 shrink-0 text-tool-strong" />{exactCount} {scope.label} coding questions in the bank (historical tags from public 2022 lists, not current employer frequency).</p>
         : scope.message && <p role="status" className="flex items-start gap-2 rounded-xl bg-tool-tint p-3 text-sm"><Info size={17} aria-hidden="true" className="mt-0.5 shrink-0 text-tool-strong" />{scope.message} Behavioral and design questions still use your company and role.</p>)}
       <div className="flex flex-wrap items-center gap-3"><button type="button" className={btnSecondary} disabled={!config.company?.trim() || loading} onClick={() => void research()}>Research company</button><label className="flex flex-wrap items-center gap-2 text-sm font-medium">Practice preset<SelectField label="Practice preset" className="min-w-52" value={config.companyPreset ?? ""} onChange={(id) => { const p = PRESETS.find((p) => p.id === id); change({ companyPreset: p?.id, ...(p ? { rounds: p.rounds.filter((r) => SETUP_ROUNDS.includes(r)) } : {}) }); }}><option value="">Your own mix</option>{PRESETS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}</SelectField></label></div>
       {researched && <IntelCard company={researched} intel={intel} loading={loading} preset={config.companyPreset} />}

@@ -23,10 +23,10 @@ This is a fact sheet for the owner, not submission prose. Under the Devpost Lear
 ## Verified facts the owner can use
 
 - Check extracts message facts with exact quotes; deterministic rules set the risk level. Unavailable lookups are visible, and the app never calls an offer safe.
-- Tailor edits the original PDF or DOCX through guarded suggestions and user review. PDF cover-and-redraw is not redaction; DOCX wording changes are deliberately narrow.
-- Practice supports multi-question sessions. Coding and SQL use browser test results for ratings; discussion answers are not quality-scored.
-- Profile and Tracker keep the journey connected in browser storage, which the user can clear.
-- Local checks passed: lint, TypeScript, 86 test files / 1,260 tests, production build, and fabricated scoring eval 88/88 labeled and 24/27 held out. Those fixture results are not real-world detection accuracy.
-- The public source must include [scope.md](scope.md), [prd.md](prd.md), [spec.md](spec.md), run instructions, and required assets. The clean local root snapshot is `codex/submission-snapshot`; do not publish the existing repository history.
+- Tailor uses guarded suggestions and user review for an original PDF, DOCX, or pasted text. It can use a company or role without a posting. PDF cover-and-redraw is not redaction; DOCX wording changes are deliberately narrow.
+- Practice supports multi-question sessions and can use a selected application's role and posting as question guidance. Coding and SQL use browser test results for ratings; discussion answers are not quality-scored. Historical employer tags do not establish current interview frequency.
+- Profile and Tracker keep the journey connected in browser storage, which the user can clear. Tracker cards span Saved, Applied, Interviewing, and Interviewed; each can carry an optional pasted posting into Tailor or Practice.
+- The October 25 baseline passed lint, TypeScript, 86 test files / 1,260 tests, production build, and fabricated scoring eval 88/88 labeled and 24/27 held out. October 26 product edits still need a final integrated rerun. Those fixture results are not real-world detection accuracy.
+- The public source must include [scope.md](scope.md), [prd.md](prd.md), [spec.md](spec.md), run instructions, and required assets. The clean local root snapshot branch is `codex/submission-snapshot`, but it predates the October 26 edits and must be rebuilt and rescanned; do not publish the existing repository history.
 
 Before submitting, verify the public links without signing in, review video frames for private data, confirm every answer accurately describes the submitted build, and put the public repository URL in Devpost's “Try it out” field. [Devpost's form update](https://learn-ai-basics.devpost.com/updates/46821-two-new-questions-on-the-submission-form) identifies the Skill Pack and age questions. Record the final URLs and submission date in [checklist.md](checklist.md) after they exist.

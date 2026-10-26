@@ -41,6 +41,21 @@ describe("v3 rewrite route enforces edits guard", () => {
     expect((await (await call()).json()).data.edits).toEqual([]);
     expect((await (await call({ ...body, facts: ["React"] })).json()).data.edits).toHaveLength(1);
   });
+  it("allows empty posting only with truthful company or role context", async () => {
+    h.call.mockResolvedValue({ ok: true, data: JSON.stringify({ edits: [] }) });
+    expect((await call({ ...body, posting: "", company: "Northwind", role: "Data Intern" })).status).toBe(200);
+    expect(h.call.mock.calls[0][1].user).toContain('"POSTING":null');
+    h.call.mockClear();
+    expect((await call({ ...body, posting: "", company: "", role: "" })).status).toBe(400);
+    expect(h.call).not.toHaveBeenCalled();
+  });
+  it("uses a validated profile level without weakening edit checks", async () => {
+    h.call.mockResolvedValue({ ok: true, data: JSON.stringify({ edits: [{ lineId, proposed: "Spearheaded a robust website at Microsoft." }] }) });
+    const response = await call({ ...body, level: "freshman" });
+    expect((await response.json()).data.edits).toEqual([]);
+    expect(h.call.mock.calls[0][1].system).toContain("credible for a freshman candidate");
+    expect((await call({ ...body, level: "executive" })).status).toBe(400);
+  });
   it("drops a metric copied from another experience before returning model edits", async () => {
     const twoJobs = "Sam Rivera\nEXPERIENCE\n- Built a club website with JavaScript for 12 members.\n- Wrote Python scripts that cut review time by 40%.";
     const first = docLines(parseTextResume(twoJobs)).find((l) => l.kind === "bullet")!;

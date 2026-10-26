@@ -1,14 +1,12 @@
 "use client";
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
-import * as m from "motion/react-m";
-import { addCard, loadCards, moveCard, removeCard, saveCards, updateNotes } from "@/lib/tiers/tracker";
-import { TRACKER_COLUMNS, type TrackerCard, type TrackerColumn } from "@/lib/tiers/types";
+import { useEffect, useRef, useState, type DragEvent, type FormEvent, type KeyboardEvent } from "react";
+import { addCard, loadCards, moveCard, removeCard, saveCards, updateDescription, updateNotes } from "@/lib/tiers/tracker";
+import { MAX_JOB_CHARS, TRACKER_COLUMNS, type TrackerCard, type TrackerColumn } from "@/lib/tiers/types";
 import { LEVEL_LABELS, type RiskLevel } from "@/lib/types";
 import { CircleAlert, CircleCheck, TriangleAlert, SquareKanban } from "lucide-react";
 import { EmptyIllustration } from "../illustrations";
 import { ArrowLeftIcon, ExternalIcon } from "../icons";
 import { btnPrimary, card as cardCls, chip, fieldInput, linkClass } from "../ui";
-import { useMotion } from "../motion/useMotion";
 
 // Same wording as the report, so a card never contradicts it.
 const RISK: Record<RiskLevel, { label: string; cls: string }> = {
@@ -21,6 +19,7 @@ const EMPTY: Record<string, string> = {
   saved: "Jobs you want to look at later land here.",
   applied: "Move a job here after you send your application.",
   interviewing: "Got an interview? Move it here to practice for it.",
+  interviewed: "Finished an interview? Keep the application here while you wait.",
 };
 
 /** Display fallback only; never stored. */
@@ -43,14 +42,15 @@ function isHttp(s: string): boolean {
 export default function Tracker({
   onBack,
   onPractice,
+  onTailor,
   initialCards,
 }: {
   onBack: () => void;
   onPractice?: (card: TrackerCard) => void;
+  onTailor?: (card: TrackerCard) => void;
   /** Seed cards (used by render tests); the saved cards replace them after mount. */
   initialCards?: TrackerCard[];
 }) {
-  const motion = useMotion();
   const [cards, setCards] = useState<TrackerCard[]>(initialCards ?? []);
   const [ready, setReady] = useState(false);
   const [announce, setAnnounceRaw] = useState("");
@@ -67,9 +67,13 @@ export default function Tracker({
   const [company, setCompany] = useState("");
   const [role, setRole] = useState("");
   const [link, setLink] = useState("");
+  const [description, setDescription] = useState("");
+  const [editingDescription, setEditingDescription] = useState<string | null>(null);
+  const [descriptionDraft, setDescriptionDraft] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
   const [added, setAdded] = useState<string | null>(null);
   const refocus = useRef<string | null>(null);
+  const dragging = useRef<string | null>(null);
 
   useEffect(() => {
     // Storage is only readable in the browser, so load after mount.
@@ -117,6 +121,14 @@ export default function Tracker({
     setAnnounce(`Moved ${nameOf(c)} to ${TRACKER_COLUMNS.find((item) => item.id === column)?.label ?? column}`);
   }
 
+  function drop(e: DragEvent<HTMLElement>, column: TrackerColumn) {
+    e.preventDefault();
+    const id = e.dataTransfer.getData("text/plain") || dragging.current;
+    const card = cards.find((item) => item.id === id);
+    if (card) setStatus(card, column);
+    dragging.current = null;
+  }
+
   function remove(c: TrackerCard) {
     setUndo({ card: c, index: cards.findIndex((x) => x.id === c.id) });
     commit(removeCard(cards, c.id));
@@ -151,12 +163,13 @@ export default function Tracker({
     const li = link.trim();
     if (!co) return setFormError("Add the company name.");
     if (li && !isHttp(li)) return setFormError("The link should start with http:// or https://.");
-    const next = addCard(cards, { company: co, role: ro, link: li || null, risk: null });
+    const next = addCard(cards, { company: co, role: ro, link: li || null, risk: null, description });
     if (next.length === cards.length) return setFormError("That one is already in your tracker.");
     commit(next);
     setCompany("");
     setRole("");
     setLink("");
+    setDescription("");
     setFormError(null);
     setAdded(`Added ${co}`);
   }
@@ -187,11 +200,11 @@ export default function Tracker({
         </div>
       )}
 
-      <div className="mt-8 grid gap-6 md:grid-cols-3">
+      <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         {TRACKER_COLUMNS.map((col, ci) => {
           const items = cards.filter((c) => c.column === col.id);
           return (
-            <section key={col.id} aria-labelledby={`col-${col.id}`} className="min-w-0 border-l border-rule bg-paper-2/30 px-3 pb-3">
+            <section key={col.id} aria-labelledby={`col-${col.id}`} onDragOver={(e) => e.preventDefault()} onDrop={(e) => drop(e, col.id)} className="min-w-0 border-l border-rule bg-paper-2/30 px-3 pb-3">
               <h2 id={`col-${col.id}`} className="flex items-center gap-2 font-display text-[18px] font-bold">
                 <SquareKanban size={18} strokeWidth={1.75} aria-hidden="true" className="text-ink-strong" />
                 {col.label}
@@ -207,13 +220,17 @@ export default function Tracker({
                   const next = TRACKER_COLUMNS[ci + 1];
                   const risk = c.risk ? RISK[c.risk] : null;
                   return (
-                    <m.li
+                    <li
                       key={c.id}
-                      layout
-                      layoutId={`tracker-${c.id}`}
-                      transition={motion.spring.layout}
                       id={`card-${c.id}`}
                       tabIndex={0}
+                      draggable
+                      onDragStart={(e) => {
+                        dragging.current = c.id;
+                        e.dataTransfer.effectAllowed = "move";
+                        e.dataTransfer.setData("text/plain", c.id);
+                      }}
+                      onDragEnd={() => { dragging.current = null; }}
                       onKeyDown={(e) => onKey(e, c)}
                       aria-describedby="card-hint"
                       className={`${cardCls} animate-enter border-l-2 border-l-ink p-4 outline-offset-2 transition-[border-color,box-shadow] hover:border-border-strong hover:shadow-[var(--shadow-2)]`}
@@ -271,6 +288,19 @@ export default function Tracker({
                       ) : (
                         c.notes && <p className="mt-3 whitespace-pre-wrap break-words text-[15px]">{c.notes}</p>
                       )}
+                      {editingDescription === c.id ? (
+                        <div className="mt-3">
+                          <label htmlFor={`posting-${c.id}`} className="text-[14px] font-medium">Job posting</label>
+                          <p id={`posting-help-${c.id}`} className="mt-1 text-[13px] text-muted">Paste the posting so Tailor and Practice can use the exact role details.</p>
+                          <textarea id={`posting-${c.id}`} value={descriptionDraft} maxLength={MAX_JOB_CHARS} rows={5} aria-describedby={`posting-help-${c.id}`} onChange={(e) => setDescriptionDraft(e.target.value)} className="mt-1 w-full rounded-[14px] border border-border bg-card p-3 text-[15px]" />
+                          <div className="mt-2 flex gap-2">
+                            <button type="button" className={small} onClick={() => { commit(updateDescription(cards, c.id, descriptionDraft)); setEditingDescription(null); }}>Save posting</button>
+                            <button type="button" className={small} onClick={() => setEditingDescription(null)}>Cancel</button>
+                          </div>
+                        </div>
+                      ) : c.description ? (
+                        <p className="mt-3 line-clamp-3 whitespace-pre-wrap break-words text-[14px] text-fg-2">Job posting saved: {c.description}</p>
+                      ) : null}
                       <div className="mt-3 flex flex-wrap items-center gap-2">
                         {next && (
                           <button type="button" className={small} onClick={() => move(c, 1)}>
@@ -291,9 +321,19 @@ export default function Tracker({
                                 Move to {prev.label}
                               </button>
                             )}
-                            {onPractice && c.column === "interviewing" && (
+                            {onTailor && (
+                              <button type="button" className={`${menuItem} text-accent`} onClick={() => onTailor(c)}>
+                                Tailor resume
+                              </button>
+                            )}
+                            {onPractice && (
                               <button type="button" className={`${menuItem} text-accent`} onClick={() => onPractice(c)}>
                                 Practice interview
+                              </button>
+                            )}
+                            {editingDescription !== c.id && (
+                              <button type="button" className={menuItem} onClick={() => { setDescriptionDraft(c.description ?? ""); setEditingDescription(c.id); }}>
+                                {c.description ? "Edit job posting" : "Add job posting"}
                               </button>
                             )}
                             {editing !== c.id && (
@@ -314,7 +354,7 @@ export default function Tracker({
                           </div>
                         </details>
                       </div>
-                    </m.li>
+                    </li>
                   );
                 })}
               </ul>
@@ -359,6 +399,11 @@ export default function Tracker({
             Link <span className="font-normal text-muted">(optional)</span>
           </label>
           <input id="t-link" type="url" inputMode="url" value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://" className={fieldCls} aria-describedby={formError ? "t-error" : undefined} />
+        </div>
+        <div className="mt-4">
+          <label htmlFor="t-posting" className="text-[15px] font-medium">Job posting <span className="font-normal text-muted">(optional)</span></label>
+          <p id="t-posting-help" className="mt-1 text-[13px] text-muted">Paste the posting to carry its details into Tailor and Practice.</p>
+          <textarea id="t-posting" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={MAX_JOB_CHARS} rows={5} aria-describedby="t-posting-help" className={fieldCls} />
         </div>
         {formError && (
           <p id="t-error" role="alert" className="mt-3 text-[15px] font-medium">

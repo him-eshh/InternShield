@@ -1,13 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { KEYS } from "@/lib/client/storage";
-import { addCard, loadCards, moveCard, removeCard, saveCards, updateNotes } from "@/lib/tiers/tracker";
+import { addCard, loadCards, moveCard, removeCard, saveCards, updateDescription, updateNotes } from "@/lib/tiers/tracker";
 import type { TrackerCard } from "@/lib/tiers/types";
 
 // Made-up companies and roles.
 const base = { company: "Brightleaf Labs", role: "Data Analyst Intern", link: null, risk: null } as const;
 
 function card(over: Partial<TrackerCard> = {}): TrackerCard {
-  return { id: "c1", company: "Acme Robotics", role: "Design Intern", link: null, risk: "low", column: "saved", notes: "", createdAt: 1, ...over };
+  return { id: "c1", company: "Acme Robotics", role: "Design Intern", link: null, risk: "low", column: "saved", notes: "", description: null, createdAt: 1, ...over };
 }
 
 describe("addCard", () => {
@@ -22,6 +22,7 @@ describe("addCard", () => {
       risk: null,
       column: "saved",
       notes: "",
+      description: null,
       createdAt: 500,
     });
     expect(next[1]).toBe(start[0]);
@@ -73,17 +74,21 @@ describe("addCard", () => {
 });
 
 describe("moveCard", () => {
-  const cards = [card({ id: "a", column: "saved" }), card({ id: "b", column: "interviewing" })];
+  const cards = [card({ id: "a", column: "saved" }), card({ id: "b", column: "interviewed" })];
 
   it("moves one column at a time", () => {
     expect(moveCard(cards, "a", 1)[0].column).toBe("applied");
-    expect(moveCard(moveCard(cards, "a", 1), "a", 1)[0].column).toBe("interviewing");
-    expect(moveCard(cards, "b", -1)[1].column).toBe("applied");
+    const applied = moveCard(cards, "a", 1);
+    const interviewing = moveCard(applied, "a", 1);
+    expect(applied[0].column).toBe("applied");
+    expect(interviewing[0].column).toBe("interviewing");
+    expect(moveCard(interviewing, "a", 1)[0].column).toBe("interviewed");
+    expect(moveCard(cards, "b", -1)[1].column).toBe("interviewing");
   });
 
   it("clamps at both ends and leaves the input alone", () => {
     expect(moveCard(cards, "a", -1)[0].column).toBe("saved");
-    expect(moveCard(cards, "b", 1)[1].column).toBe("interviewing");
+    expect(moveCard(cards, "b", 1)[1].column).toBe("interviewed");
     moveCard(cards, "a", 1);
     expect(cards[0].column).toBe("saved");
   });
@@ -109,6 +114,12 @@ describe("updateNotes and removeCard", () => {
     expect(removeCard(cards, "zzz")).toEqual(cards);
     expect(cards).toHaveLength(2);
   });
+
+  it("stores optional posting text and can clear it", () => {
+    const next = updateDescription(cards, "a", `  ${"x".repeat(2500)}  `);
+    expect(next[0].description).toHaveLength(2000);
+    expect(updateDescription(next, "a", "   ")[0].description).toBeNull();
+  });
 });
 
 describe("loadCards / saveCards", () => {
@@ -133,10 +144,18 @@ describe("loadCards / saveCards", () => {
   });
 
   it("round-trips through is:tracker", () => {
-    const cards = [card({ id: "a" }), card({ id: "b", column: "applied", link: "https://acme.example/jobs" })];
+    const cards = [card({ id: "a", description: "Analyze product data." }), card({ id: "b", column: "interviewed", link: "https://acme.example/jobs" })];
     saveCards(cards);
     expect(JSON.parse(store.get(KEYS.tracker)!)).toEqual(cards);
     expect(loadCards()).toEqual(cards);
+  });
+
+  it("migrates old cards without a posting and preserves the interviewing id", () => {
+    const old = card({ id: "old", column: "interviewing" });
+    const stored: Partial<TrackerCard> = { ...old };
+    delete stored.description;
+    store.set(KEYS.tracker, JSON.stringify([stored]));
+    expect(loadCards()).toEqual([{ ...old, description: null }]);
   });
 
   it("returns [] when nothing or junk is stored", () => {

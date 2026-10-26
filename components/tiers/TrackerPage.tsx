@@ -13,8 +13,12 @@ export default function TrackerPage() {
     <Tracker
       onBack={back}
       onPractice={(c) => {
-        setTarget("practice", { company: c.company, role: c.role, description: null });
+        setTarget("practice", { company: c.company || null, role: c.role || null, description: c.description });
         router.push("/practice");
+      }}
+      onTailor={(c) => {
+        setTarget("tailor", { company: c.company || null, role: c.role || null, description: c.description });
+        router.push("/tailor");
       }}
     />
   );

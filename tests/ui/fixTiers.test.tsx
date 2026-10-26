@@ -37,6 +37,7 @@ describe("Tracker", () => {
     risk: null,
     column: "saved",
     notes: "",
+    description: null,
     createdAt: 1,
     ...over,
   });

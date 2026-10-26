@@ -5,16 +5,16 @@ status: local-draft-recorded
 
 # InternShield demo shot list
 
-**Recording state:** a 57-second silent local draft was recorded with a fresh browser context, the built-in made-up Check example, a fictional resume and posting, and live API responses. It shows a guarded Tailor edit accepted and a Practice answer passing 6 of 6 runnable tests. The draft is local only at ignored `images/internshield-demo-draft.webm`; final owner review and public upload are pending. Check the final capture for private tabs, notifications, browser autofill, local history, and credentials before sharing.
+**Recording state:** a 57-second silent local draft was recorded before the October 26 Tracker, Tailor, and Practice changes, using a fresh browser context, the built-in made-up Check example, a fictional resume and posting, and live API responses. It shows a guarded Tailor edit accepted and a Practice answer passing 6 of 6 runnable tests. The draft is local only at ignored `images/internshield-demo-draft.webm`; final owner review and public upload are pending. Check the final capture against the final app and for private tabs, notifications, browser autofill, local history, and credentials before sharing.
 
 The owner writes any narration in their own words. This list is a technical guide to what the camera can show, not a public script.
 
 | Flow | On-screen evidence to capture |
 |---|---|
-| Check | Paste a fictional high-risk message; show the report's score, source quote, completed and unavailable checks, and a quick answer that changes the report. |
-| Tailor | Upload a fabricated PDF or DOCX and fictional posting; show an edit passing the checks, then accept or reject it and inspect the preview. Show the no-suggestion state honestly if no safe edit survives. |
-| Practice | Show the chosen session setup, one runnable coding or SQL question and its actual test results. If including discussion, show its “Not scored” treatment. |
-| Close | Show the summary and Tracker connection, then return Home if time permits. |
+| Check | Paste a fictional high-risk message; show the report's score, source quote, completed and unavailable checks, and the recorded impact of a quick answer. Do not claim the score changed if it did not. |
+| Tailor | Upload a fabricated PDF or DOCX, or paste fictional resume text. Use a fictional posting or show the company/role-only path; show an edit passing the checks, then accept or reject it and inspect the preview. Show the no-suggestion state honestly if no safe edit survives. |
+| Practice | Show the chosen application or role in setup, one runnable coding or SQL question and its actual test results. If including discussion, show its “Not scored” treatment. Do not call historical list tags current employer questions. |
+| Close | Show the summary and Tracker connection. Move a fictional card to Interviewed and open Tailor or Practice from it if time permits. |
 
 ## Recording checks
 

@@ -6,6 +6,7 @@ import { checkedEdits } from "@/lib/tiers/resumeEdits";
 import { renderEdited, lengthCheck, type Rendered } from "@/lib/tiers/resumeRender";
 import type { ResumeDoc, ResumeEdit } from "@/lib/tiers/resumeTypes";
 import type { ResumePlan } from "@/lib/tiers/resumePlan";
+import type { UserLevel } from "@/lib/types";
 
 export interface PdfPreviewPage { dataUrl: string; width: number; height: number }
 interface PreparedPreview { output: Rendered; pages: PdfPreviewPage[] }
@@ -66,10 +67,10 @@ export async function openResumeFile(file: File): Promise<ResumeFile> {
   throw new Error("Choose a PDF or Word (.docx) file.");
 }
 
-export async function draftResumeEdits(file: ResumeFile, posting: string, plan: ResumePlan, facts: string[], signal: AbortSignal, onChecking?: () => void) {
+export async function draftResumeEdits(file: ResumeFile, posting: string, plan: ResumePlan, facts: string[], signal: AbortSignal, onChecking?: () => void, level?: UserLevel) {
   const response = await fetch("/api/rewrite", {
     method: "POST", headers: { "content-type": "application/json" }, signal,
-    body: JSON.stringify({ mode: "edits", source: file.doc.source, resume: docText(file.doc), posting, company: plan.company, role: plan.role, facts, guidance: plan.emphasis, geometry: docLines(file.doc).filter((l) => l.kind === "bullet" && l.boxes?.length).map((l) => ({ lineId: l.id, boxes: l.boxes })) }),
+    body: JSON.stringify({ mode: "edits", source: file.doc.source, resume: docText(file.doc), posting, company: plan.company, role: plan.role, level, facts, guidance: plan.emphasis, geometry: docLines(file.doc).filter((l) => l.kind === "bullet" && l.boxes?.length).map((l) => ({ lineId: l.id, boxes: l.boxes })) }),
   });
   const json = await response.json();
   signal.throwIfAborted();

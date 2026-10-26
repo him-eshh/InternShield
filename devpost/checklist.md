@@ -5,7 +5,7 @@ status: current-v3
 
 # InternShield final checklist
 
-This file tracks the final integrated v3 tree. Earlier slice-by-slice build checklists and approvals are process history in `devpost/archive/`. Check off an item only with final-tree evidence; stream branch results do not count as final submission evidence.
+This file tracks the integrated v3 tree. The completed gate items below document the October 25 baseline. Tracker, Tailor, and Practice changed on October 26; the new final-tree rerun remains open below until results are recorded. Earlier slice-by-slice build checklists and approvals are process history in `devpost/archive/`. Check off an item only with final-tree evidence; stream branch results do not count as final submission evidence.
 
 ## Product
 
@@ -32,6 +32,16 @@ This file tracks the final integrated v3 tree. Earlier slice-by-slice build chec
 - [x] Final documentation, source attribution, and full isolated-snapshot history/tree secret and private-path scan
 - [x] Verified [submission fact sheet](submission-draft.md) and fabricated-data [demo storyboard](demo-storyboard.md) prepared for owner review
 - [x] Captured a silent local demo draft with fictional inputs, live Check and Tailor API responses, and 6 of 6 runnable Practice tests
+
+### October 26 product changes — final-tree rerun
+
+- [x] Tailor now has explicit Paste text and Upload file modes, accepts company or role context without a posting, and labels that path accurately. Focused tests and a browser smoke passed; final integrated gates remain below.
+- [x] Tracker has distinct Saved, Applied, Interviewing, and Interviewed columns, optional pasted posting per card, and Tailor/Practice handoffs. Focused tests and browser status/handoff smoke passed; physical pointer drag and final integrated gates remain below.
+- [x] Practice uses selected application context and profile level for questions, labels historical employer metadata, and discloses difficulty broadening. Focused tests passed; final integrated browser QA remains below.
+- [ ] Rerun lint, TypeScript, full Vitest, build, and scoring eval on the changed integrated tree; record counts and any failures.
+- [ ] Finish end-to-end browser checks for Check, Tracker handoff, Tailor text/file modes, Practice, mobile layout, and console/network errors on the changed tree.
+- [ ] Recheck the clean publication snapshot after the final product and documentation commits; older snapshot hashes below are historical.
+- [ ] Review the final demo against the changed product before any public upload.
 
 ## Final Review
 

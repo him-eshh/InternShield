@@ -1,5 +1,5 @@
 // Tier 2-4 shared contracts (devpost/tier2-spec.md, tier3-spec.md, tier4-spec.md). Read-only to workers: report needed changes.
-import type { ApiResponse, Field, RiskLevel } from "../types";
+import type { ApiResponse, Field, RiskLevel, UserLevel } from "../types";
 
 // ---------- Slice 8: tailored resume ----------
 
@@ -108,11 +108,12 @@ export interface DiffPart {
 
 // ---------- Slice 9: tracker ----------
 
-export type TrackerColumn = "saved" | "applied" | "interviewing";
+export type TrackerColumn = "saved" | "applied" | "interviewing" | "interviewed";
 export const TRACKER_COLUMNS: { id: TrackerColumn; label: string }[] = [
   { id: "saved", label: "Saved" },
   { id: "applied", label: "Applied" },
   { id: "interviewing", label: "Interviewing" },
+  { id: "interviewed", label: "Interviewed" },
 ];
 
 export interface TrackerCard {
@@ -124,6 +125,8 @@ export interface TrackerCard {
   /** Risk level from the report it was saved from; null when added by hand. */
   risk: RiskLevel | null;
   column: TrackerColumn;
+  /** Optional user-pasted job posting text; not fetched from the link. */
+  description: string | null;
   notes: string;
   createdAt: number;
 }
@@ -197,6 +200,8 @@ export interface InterviewContext {
   description: string | null;
   resume: string | null;
   field: Field | null;
+  /** Student level from the optional profile; absent on older saved sessions. */
+  level?: UserLevel | null;
   /** Company-style preset (lib/tiers/presets.ts). Absent on older sessions. */
   preset?: import("./presets").PresetId;
 }

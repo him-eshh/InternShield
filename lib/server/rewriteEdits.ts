@@ -6,6 +6,7 @@ import { parseTextResume, docLines } from "@/lib/tiers/resumeModel";
 import { buildResumePlan } from "@/lib/tiers/resumePlan";
 import { MAX_EDITS, type ResumeSource } from "@/lib/tiers/resumeTypes";
 import { MAX_FACTS, MAX_FACT_CHARS, MAX_JOB_CHARS, MAX_CONTEXT_FIELD } from "@/lib/tiers/types";
+import type { UserLevel } from "@/lib/types";
 import { callGroq } from "./groq";
 import { takeRewrite } from "./guard";
 import { done, failed, fromOutcome, MESSAGES } from "./http";
@@ -33,13 +34,18 @@ const SCHEMA = {
     properties: { lineId: { type: "string" }, proposed: { type: "string" } },
   } } },
 };
+const LEVELS = new Set<UserLevel>(["freshman", "sophomore", "junior", "senior", "grad", "new_grad"]);
 
 function parseEditsRequest(body: Record<string, unknown>) {
   if (typeof body.resume !== "string" || !body.resume.trim() || body.resume.length > 10000) return null;
-  if (typeof body.posting !== "string" || !body.posting.trim() || body.posting.length > MAX_JOB_CHARS) return null;
+  if (typeof body.posting !== "string" || body.posting.length > MAX_JOB_CHARS) return null;
   for (const key of ["company", "role"] as const) {
     if (body[key] != null && (typeof body[key] !== "string" || (body[key] as string).length > MAX_CONTEXT_FIELD)) return null;
   }
+  const company = typeof body.company === "string" ? body.company.trim() : "";
+  const role = typeof body.role === "string" ? body.role.trim() : "";
+  if (!body.posting.trim() && !company && !role) return null;
+  if (body.level != null && (typeof body.level !== "string" || !LEVELS.has(body.level as UserLevel))) return null;
   const facts = body.facts ?? [];
   if (!Array.isArray(facts) || facts.length > MAX_FACTS || !facts.every((f) => typeof f === "string" && !!f.trim() && f.length <= MAX_FACT_CHARS)) return null;
   const source = body.source ?? "text";
@@ -48,7 +54,7 @@ function parseEditsRequest(body: Record<string, unknown>) {
   if (!Array.isArray(guidance) || guidance.length > 4 || !guidance.every((g) => typeof g === "string" && g.length <= 240)) return null;
   const terms = buildResumePlan({ resume: body.resume, posting: body.posting }).keywords;
   if (!facts.every((f) => terms.some((term) => canon(term) === canon(f)))) return null;
-  return { source: source as ResumeSource, resume: body.resume, posting: body.posting, company: body.company as string | undefined, role: body.role as string | undefined, facts: [...new Set(facts as string[])], guidance: guidance as string[] };
+  return { source: source as ResumeSource, resume: body.resume, posting: body.posting, company, role, level: body.level as UserLevel | undefined, facts: [...new Set(facts as string[])], guidance: guidance as string[] };
 }
 
 export async function handleEdits(body: Record<string, unknown>): Promise<Response> {
@@ -64,7 +70,7 @@ export async function handleEdits(body: Record<string, unknown>): Promise<Respon
   const plan = buildResumePlan(input);
   const lines = docLines(doc);
   const user = JSON.stringify({
-    RESUME: input.resume, POSTING: input.posting, COMPANY: input.company, ROLE: input.role,
+    RESUME: input.resume, POSTING: input.posting || null, COMPANY: input.company || null, ROLE: input.role || null, CANDIDATE_LEVEL: input.level ?? null,
     KEYWORDS: plan.keywords, COMPANY_GUIDANCE: input.guidance, CONFIRMED_SKILLS: input.facts,
     BULLETS: eligible.map((l) => {
       const index = lines.indexOf(l);
@@ -72,7 +78,8 @@ export async function handleEdits(body: Record<string, unknown>): Promise<Respon
     }),
   });
   const wordRule = input.source === "docx" ? " For this Word document, only remove complete existing words; keep every surviving word exactly as written and in its original order. Do not add or reorder words or change punctuation. Remove filler or off-target detail to emphasize the supported keywords. Return no edit when a change would require new wording." : "";
-  const result = await callGroq("rewrite", { system: SYSTEM + wordRule, user, maxTokens: 1800, schema: SCHEMA });
+  const levelRule = input.level ? ` Keep the wording credible for a ${input.level.replace("_", " ")} candidate; never add seniority, ownership, or outcomes absent from the resume.` : "";
+  const result = await callGroq("rewrite", { system: SYSTEM + wordRule + levelRule, user, maxTokens: 1800, schema: SCHEMA });
   if (!result.ok) return fromOutcome(result);
   try {
     const json = JSON.parse(result.data);

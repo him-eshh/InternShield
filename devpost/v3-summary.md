@@ -1,6 +1,13 @@
 # InternShield v3 handoff
 
-Status: **local gates and final-tree browser checks passed; release actions pending**. Check, Tailor, Practice, setup, and shell browser checks passed on the integrated tree. Fabricated live extraction, interview feedback, and resume-edit requests were checked. A silent local demo draft was recorded with fictional data; the app has not been merged into `main`, pushed, deployed, published on video, or submitted. Current product requirements: [scope](scope.md), [PRD](prd.md), [spec](spec.md); completion items: [checklist](checklist.md).
+Status: **October 25 baseline gates passed; October 26 product changes are being reverified; release actions pending**. The earlier Check, Tailor, Practice, setup, and shell browser checks passed on the integrated baseline tree. Fabricated live extraction, interview feedback, and resume-edit requests were checked then. A silent local demo draft was recorded with fictional data; the app has not been merged into `main`, pushed, deployed, published on video, or submitted. Current product requirements: [scope](scope.md), [PRD](prd.md), [spec](spec.md); completion items: [checklist](checklist.md).
+
+## October 26 changes under final review
+
+- Tailor now exposes separate Paste text and Upload file modes. A company or role can guide edits when there is no job posting; the UI and API label and validate that path. Focused tests and a browser text-mode smoke passed.
+- Tracker now has distinct Saved, Applied, Interviewing, and Interviewed columns, optional pasted posting text, status moves, drag/drop, and Tailor/Practice actions on a card. Focused tests and browser event/status/handoff smoke passed. Physical pointer drag still needs a final manual check.
+- Practice now carries the selected application's role and optional posting and uses profile level for mixed difficulty. It labels the public employer metadata as historical, identifies made-up runnable exercises, and states when a difficulty pool was broadened. Posting text guides questions, not candidate-achievement claims. Focused tests passed; final integrated browser checks are pending.
+- These are narrow updates to Tailor, Tracker, and Practice. The Check report design and scoring were left as they were; its existing result flow is being verified for concrete failures only.
 
 ## What changed from v2
 
@@ -26,7 +33,7 @@ Retired flows: the one-screen Intro, hidden tier flags, finance round, design ch
 
 The full screenshot matrices are local, untracked artifacts; four representative fabricated captures are preserved in [screenshots](screenshots/README.md) for public review. The final report matrix produced 56 shots, Tailor 34, and Practice 36. The report, Tailor, Practice, setup, and shell final captures were visually reviewed; the repaired report, loading state, and Tailor edit wording were checked again after recapture. The earlier stream captures remain in their original folders.
 
-## Final local verification
+## October 25 baseline verification (rerun pending after October 26 edits)
 
 | Gate or check | Result | Evidence |
 |---|---|---|
@@ -68,7 +75,7 @@ The full screenshot matrices are local, untracked artifacts; four representative
 
 - Review the final screenshots and the clean single-commit root snapshot. The existing private repository retains older private-path history; do not make it public or merge `v3`/`main` into the snapshot.
 - Recheck the snapshot's full tree and history, then publish it in a separate public repository with the source, planning documents, assets, and run instructions. The owner chooses whether to add the event's recommended open-source license.
-- Review the 57-second local demo draft in ignored `images/internshield-demo-draft.webm`, then prepare the final video. Keep it under three minutes, upload it publicly to YouTube or Vimeo, and verify the link without signing in. A local app recording is sufficient under the [event rules](https://learn-ai-basics.devpost.com/rules).
+- Review the 57-second local demo draft in ignored `images/internshield-demo-draft.webm` against the final edited app, then prepare the final video. Keep it under three minutes, upload it publicly to YouTube or Vimeo, and verify the link without signing in. A local app recording is sufficient under the [event rules](https://learn-ai-basics.devpost.com/rules).
 - Have the owner write the project name, short description, other form answers, and exit survey in their own words. Use the [submission fact sheet](submission-draft.md) for verified details and the [demo storyboard](demo-storyboard.md) for recording mechanics.
 - Submit on Devpost before October 26, 2026 at 5:00 PM ET, then record the actual link and date in the [checklist](checklist.md).
 - Optional deployment: if the owner wants a live app, configure server-only keys and `ALLOWED_ORIGINS`, add shared abuse controls for public traffic, deploy, and smoke-test it. Do not expose keys in client variables or submission materials. Deployment does not replace the required video.

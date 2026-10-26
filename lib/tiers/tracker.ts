@@ -2,7 +2,7 @@
 // Every reducer returns a new array; the input is never changed.
 import type { RiskLevel } from "../types";
 import { KEYS, readKey, writeKey } from "../client/storage";
-import { TRACKER_COLUMNS, type NewCard, type TrackerCard, type TrackerColumn } from "./types";
+import { MAX_JOB_CHARS, TRACKER_COLUMNS, type NewCard, type TrackerCard, type TrackerColumn } from "./types";
 
 const MAX_CARDS = 200;
 const MAX_NOTES = 500;
@@ -35,6 +35,7 @@ function isCard(x: unknown): x is TrackerCard {
     (c.risk === null || RISKS.includes(c.risk as RiskLevel)) &&
     COLUMNS.includes(c.column as TrackerColumn) &&
     typeof c.notes === "string" &&
+    (c.description === undefined || c.description === null || typeof c.description === "string") &&
     typeof c.createdAt === "number" &&
     Number.isFinite(c.createdAt)
   );
@@ -54,6 +55,7 @@ export function loadCards(): TrackerCard[] {
       risk: c.risk,
       column: c.column,
       notes: c.notes.slice(0, MAX_NOTES),
+      description: typeof c.description === "string" ? c.description.slice(0, MAX_JOB_CHARS) : null,
       createdAt: c.createdAt,
     }));
 }
@@ -74,7 +76,7 @@ const dupKey = (company: string, role: string, link: string | null) =>
 /** Adds a card at the front. Missing company/role or a duplicate company+role+link leaves the list as is. */
 export function addCard(
   cards: TrackerCard[],
-  c: NewCard & { column?: TrackerColumn; notes?: string },
+  c: NewCard & { column?: TrackerColumn; notes?: string; description?: string | null },
   now: number = Date.now(),
   id?: string,
 ): TrackerCard[] {
@@ -92,6 +94,7 @@ export function addCard(
     risk: c.risk && RISKS.includes(c.risk) ? c.risk : null,
     column: c.column && COLUMNS.includes(c.column) ? c.column : "saved",
     notes: (c.notes ?? "").trim().slice(0, MAX_NOTES),
+    description: c.description?.trim().slice(0, MAX_JOB_CHARS) || null,
     createdAt: now,
   };
   return [card, ...cards].slice(0, MAX_CARDS);
@@ -109,6 +112,10 @@ export function moveCard(cards: TrackerCard[], id: string, dir: -1 | 1): Tracker
 
 export function updateNotes(cards: TrackerCard[], id: string, notes: string): TrackerCard[] {
   return cards.map((c) => (c.id === id ? { ...c, notes: (notes ?? "").slice(0, MAX_NOTES) } : c));
+}
+
+export function updateDescription(cards: TrackerCard[], id: string, description: string): TrackerCard[] {
+  return cards.map((c) => (c.id === id ? { ...c, description: description.trim().slice(0, MAX_JOB_CHARS) || null } : c));
 }
 
 export function removeCard(cards: TrackerCard[], id: string): TrackerCard[] {

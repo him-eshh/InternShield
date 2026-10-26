@@ -66,6 +66,7 @@ describe("interview route", () => {
     ["bad ask", { ...body, ask: "nope" }],
     ["bad round", { ...body, round: "x" }],
     ["bad field", { ...body, context: { ...context, field: "zzz" } }],
+    ["bad level", { ...body, context: { ...context, level: "staff" } }],
     ["company over 120", { ...body, context: { ...context, company: "a".repeat(121) } }],
     ["description over 2000", { ...body, context: { ...context, description: "a".repeat(2001) } }],
     ["resume over 1500", { ...body, context: { ...context, resume: "a".repeat(1501) } }],
@@ -86,6 +87,14 @@ describe("interview route", () => {
   ])("rejects %s (400)", async (_n, b) => {
     expect((await call(b)).status).toBe(400);
     expect(h.create).not.toHaveBeenCalled();
+  });
+
+  it("passes candidate level and the posting-as-guidance boundary to the interviewer", async () => {
+    h.create.mockReturnValue(groqOk("What trade-off would you make?"));
+    expect((await call({ ...body, context: { ...context, level: "senior" } })).status).toBe(200);
+    const input = h.create.mock.calls[0][0].messages.map((m: { content: string }) => m.content).join("\n");
+    expect(input).toMatch(/Candidate level: senior/);
+    expect(input).toMatch(/role guidance only, not candidate experience/);
   });
 
   it("returns 429 with the session message at the session cap", async () => {

@@ -38,6 +38,7 @@ export const FEEDBACK_FAILED = "We couldn't put feedback together right now. You
 const MAX_PROBLEM_CHARS = 2000;
 const MAX_HINT_CHARS = 300;
 const FIELDS: Field[] = ["tech", "business", "finance", "design", "other"];
+const LEVELS = ["freshman", "sophomore", "junior", "senior", "grad", "new_grad"] as const;
 const ASKS: InterviewAsk[] = ["question", "hint", "feedback", "review"];
 
 
@@ -65,7 +66,12 @@ function parseContext(v: unknown): InterviewContext | null {
     if (typeof v.field !== "string" || !FIELDS.includes(v.field as Field)) return null;
     field = v.field as Field;
   }
-  const base: InterviewContext = { company, role, description, resume, field };
+  let level: InterviewContext["level"] = null;
+  if (v.level !== null && v.level !== undefined) {
+    if (typeof v.level !== "string" || !LEVELS.includes(v.level as (typeof LEVELS)[number])) return null;
+    level = v.level as InterviewContext["level"];
+  }
+  const base: InterviewContext = { company, role, description, resume, field, level };
   if (v.preset !== null && v.preset !== undefined) {
     if (!getPreset(v.preset)) return null;
     base.preset = v.preset as InterviewContext["preset"];
@@ -188,13 +194,13 @@ function systemFor(r: InterviewRequest): string {
     case: " Ask a sensible follow-up for a business case.",
   };
   const design = extra[r.round] ?? "";
-  return `You are a friendly interviewer for a student or early-career candidate in a ${label} interview. Ask exactly one next question, under 60 words, plain text, no preamble. Do not repeat earlier questions.${design}${style} Fit the role, posting and resume when given. ${SAFETY}`;
+  return `You are a friendly interviewer for a student or early-career candidate in a ${label} interview. Ask exactly one next question, under 60 words, plain text, no preamble. Do not repeat earlier questions.${design}${style} Match the stated candidate level and selected role/posting when given. Treat posting text only as role guidance and never as evidence of the candidate's experience. ${SAFETY}`;
 }
 
 function buildUser(r: InterviewRequest): string {
   const c = r.context;
   const parts = [
-    `CONTEXT:\nCompany: ${c.company ?? "-"}\nRole: ${c.role ?? "-"}\nField: ${c.field ?? "-"}\nPosting: ${c.description ?? "-"}\nResume: ${c.resume ?? "-"}`,
+    `CONTEXT:\nCompany: ${c.company ?? "-"}\nRole: ${c.role ?? "-"}\nCandidate level: ${c.level ?? "-"}\nField: ${c.field ?? "-"}\nPosting (role guidance only, not candidate experience): ${c.description ?? "-"}\nResume: ${c.resume ?? "-"}`,
   ];
   if (r.problem) parts.push(`PROBLEM:\n${r.problem}`);
   if (r.turns.length) {

@@ -9,7 +9,7 @@ import ResumeTailor from "./ResumeTailor";
 export default function ResumeTailorPage() {
   const router = useRouter();
   const back = useBack();
-  const { ready, resume, targets, prefs } = useAppState();
+  const { ready, profile, resume, targets, prefs } = useAppState();
   if (!ready) return null;
-  return <ResumeTailor resume={resume} target={prefillTarget(targets.tailor, prefs)} onOpenProfile={() => router.push("/profile")} onBack={back} />;
+  return <ResumeTailor resume={resume} target={prefillTarget(targets.tailor, prefs)} profileLevel={profile?.level} onOpenProfile={() => router.push("/profile")} onBack={back} />;
 }
