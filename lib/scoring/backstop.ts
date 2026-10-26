@@ -71,7 +71,8 @@ const PATTERNS: Record<BackstopId, Pattern[]> = {
     /\bto (?:reserve|secure|hold|keep) your (?:internship |job )?(?:place|spot|seat|slot|position)\b[^.!?\n]{0,40}\b(?:pay|send|deposit)\b/gi,
   ],
   buy_equipment: [
-    new RegExp(String.raw`(?:(?<=(?:^|[.!?\n:])\s{0,3})|\b${YOU_BUY})(?:buy|purchase|order|pay for)\b[^.!?\n]{0,50}\b(?:equipment|laptop|computer|software|supplies|devices?|macbook|ipad|iphone|printer|starter kit|training (?:materials|kit|course))\b`, "gi"),
+    // "Your first task is to research and purchase some office supplies" (the fake-professor check scam).
+    new RegExp(String.raw`(?:(?<=(?:^|[.!?\n:])\s{0,3})|\b${YOU_BUY})(?:\w+\s+and\s+)?(?:buy|purchase|order|pay for)\b[^.!?\n]{0,50}\b(?:equipment|laptop|computer|software|supplies|devices?|macbook|ipad|iphone|printer|starter kit|training (?:materials|kit|course))\b`, "gi"),
   ],
   reship_or_forward: [
     /\b(?:you(?:\s+(?:will|must|need to|have to))?|your\s+(?:job|role|task|duties)|please|we\s+(?:need|want|ask)\s+you\s+to)\b[^.!?\n]{0,90}\bre-?ship(?:ping|ped|per|pers|ment)?\b/gi,
@@ -142,6 +143,8 @@ const PATTERNS: Record<BackstopId, Pattern[]> = {
     /\bsignal\s+(?:app|messenger)\b/gi,
     /\b(?:chat|text)[- ](?:based|only)\s+interview\b/gi,
     /\binterview\b[^.!?\n]{0,30}\b(?:via|over|through|on)\s+(?:chat|text|instant messag\w*)\b/gi,
+    // "Text Professor X at (774) 555-0199 with your full name ..." applies by text to a personal number.
+    { re: /\btext\s+(?:me|us|professor|prof\.?|dr\.?|mr\.?|mrs\.?|ms\.?)\b[^.!?\n]{0,30}?\b(?:at|on)\s+\(?\+?\d/gi, needs: /\bwith\s+your\s+(?:full\s+)?(?:name|details|info)/i },
   ],
   reply_yes: [/\b(?:reply|respond|text|answer)\s+(?:back\s+)?(?:with\s+)?["'“”‘’]?(?:yes|y)["'“”‘’]?(?=[\s.,!)]|$)/gi],
   no_interview: [

@@ -202,23 +202,23 @@ describe("rule 4: Unicode tricks, end to end", () => {
 });
 
 describe("rule 5: task-scam vocabulary", () => {
-  it("two or more terms add field_pattern +20 (not critical)", () => {
+  it("two or more terms add field_pattern +40 (not critical)", () => {
     const r = run("Your job is to like and subscribe to partner videos and finish 2 sets of 30 tasks every day for commission.");
     const f = r.flags.find((x) => x.id === "field_pattern");
-    expect(f?.points).toBe(20);
+    expect(f?.points).toBe(40);
     expect(f?.critical).toBe(false);
     expect(criticals(r)).toEqual([]);
   });
 
   it("rating apps plus boosting products counts, with no crypto words", () => {
     const r = run("Rate apps and boost product rankings for our clients, then complete 40 tasks a day.");
-    expect(r.flags.find((x) => x.id === "field_pattern")?.points).toBe(20);
+    expect(r.flags.find((x) => x.id === "field_pattern")?.points).toBe(40);
     expect(ids(r)).not.toContain("crypto_or_task_deposit");
   });
 
   it("a coach plus commission per task counts", () => {
     const r = run("Earn commission per task. Your personal coach will guide you through the first week.");
-    expect(r.flags.find((x) => x.id === "field_pattern")?.points).toBe(20);
+    expect(r.flags.find((x) => x.id === "field_pattern")?.points).toBe(40);
   });
 
   it("'follow our page' alone raises no task flag", () => {

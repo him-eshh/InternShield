@@ -67,6 +67,21 @@ describe("score rules", () => {
     expect(r.score).toBe(red - 20);
   });
 
+  it("live check: campus research scams and payment-duty jobs are not low", () => {
+    // Made-up messages shaped like the public campus alerts the live check used.
+    const supplies = "Our lab is hiring a remote Research Assistant, paid weekly. Your first task is to research and purchase some office supplies; you will be reimbursed by check.";
+    expect(ids(score(input({ text: supplies, facts: null })))).toEqual(expect.arrayContaining(["buy_equipment", "field_pattern"]));
+    const textProf = "The Biology Department is seeking study assistants who will work remotely. Text Professor Lee at (555) 555-0100 with your full name and year of study.";
+    const r = score(input({ text: textProf, facts: null }));
+    expect(ids(r)).toEqual(expect.arrayContaining(["off_platform", "field_pattern"]));
+    expect(r.flags.find((f) => f.id === "off_platform")?.title).toBe("They want to move you to texting a personal number");
+    expect(r.level).toBe("medium");
+    const pa = "Position: Personal Assistant. Duties include making or receiving payment and sending gifts. Pay: $400 weekly.";
+    expect(score(input({ text: pa, facts: null })).level).toBe("medium");
+    // A recruiter offering a call by text is not the same thing.
+    expect(ids(score(input({ text: "Happy to chat about the intern role. Feel free to text me at (555) 555-0100.", facts: null })))).not.toContain("off_platform");
+  });
+
   it("clamps to 0-100", () => {
     expect(score(fromExample(EXAMPLES.scam)).score).toBeLessThanOrEqual(100);
     expect(score(fromExample(EXAMPLES.real)).score).toBe(0);

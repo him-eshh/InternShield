@@ -61,12 +61,12 @@ The app is configured for free-tier services. Per visitor, Check allows 3 extrac
 | medium | 0 | 10 | 0 |
 | high | 0 | 0 | 43 |
 
-Held-out set (27 cases written without seeing the rules, not gating): 24/27; false positives on low: 0/9 (0%).
+Held-out set (27 cases written without seeing the rules, not gating): 25/27; false positives on low: 0/9 (0%).
 
 | expected \ got | low | medium | high |
 |---|---|---|---|
 | low | 9 | 0 | 0 |
-| medium | 2 | 5 | 1 |
+| medium | 1 | 6 | 1 |
 | high | 0 | 0 | 10 |
 
 | Message | Expected | Got | Score | Top flags |
@@ -109,7 +109,7 @@ Held-out set (27 cases written without seeing the rules, not gating): 24/27; fal
 | c7-remote-access-teamviewer | high | high | 100 | run_code_or_install*, sensitive_data*, surprise_text |
 | c7-secrecy-dont-tell | high | high | 85 | sensitive_data*, secrecy, new_domain |
 | c7-shortener-google-form-ssn | high | high | 85 | sensitive_data*, pressure, link_shortener |
-| c7-task-scam-rating-boost | high | high | 100 | crypto_or_task_deposit*, surprise_text, off_platform |
+| c7-task-scam-rating-boost | high | high | 100 | crypto_or_task_deposit*, field_pattern, surprise_text |
 | c7-terminal-command-assessment | high | high | 85 | run_code_or_install*, new_domain |
 | c7-unicode-cyrillic-zelle-fee | high | high | 85 | pay_fee*, hidden_characters |
 | c7-unicode-fullwidth-whatsapp-fee | high | high | 85 | pay_fee*, surprise_text, off_platform |
@@ -155,7 +155,7 @@ Held-out set (27 cases written without seeing the rules, not gating): 24/27; fal
 | v2-paperwork-before-interview | high | high | 65 | free_email, paperwork_too_early, no_interview |
 | v2-professor-gmail-secret | medium | medium | 55 | free_email, secrecy, impersonation |
 | v2-reimburse-laptop | high | high | 85 | buy_equipment*, new_domain |
-| v2-task-no-crypto | high | high | 73 | surprise_text, field_pattern, vague_easy_pay |
+| v2-task-no-crypto | high | high | 93 | field_pattern, surprise_text, vague_easy_pay |
 | v2-unicode-whatsapp-fee | high | high | 95 | pay_fee*, surprise_text, off_platform |
 | v2-withdraw-fee | high | high | 85 | money_wrong_way*, surprise_text |
 | v2-zelle-balance | high | high | 85 | money_wrong_way* |

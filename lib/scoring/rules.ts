@@ -26,7 +26,8 @@ export const WEIGHTS = {
   pressure: 10,
   roleAboveLevel: 5,
   fieldPattern: 8,
-  taskVocab: 20, // 2+ task-scam terms (like/subscribe, product boosting, set of N tasks, ...)
+  paymentDuties: 30, // the job itself is making/receiving payments and buying gifts (personal-assistant scam)
+  taskVocab: 40, // 2+ task-scam terms (like/subscribe, product boosting, set of N tasks, ...)
   untrustedCode: 15, // clone/npm/run with nothing else suspicious: a normal take-home can look like this
   hiddenCharacters: 10, // invisible or look-alike characters hid text
   hiddenCharactersMin: 3, // how many altered characters it takes

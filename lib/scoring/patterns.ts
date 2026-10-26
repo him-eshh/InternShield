@@ -22,6 +22,14 @@ const FIELD_PATTERNS: FieldPattern[] = [
     ],
   },
   {
+    label: "a fake campus research job",
+    why: "Remote, weekly-paid study or research assistant jobs \"from a professor\" are a common campus scam that ends with a fake check.",
+    fields: "any",
+    re: [
+      /\b(?:remote(?:ly)?|from home)\b[^.!?\n]{0,60}\b(?:study|research|lab)\s+(?:research\s+)?assistants?\b|\b(?:study|research|lab)\s+(?:research\s+)?assistants?\b[^.!?\n]{0,60}\b(?:remote(?:ly)?|from home)\b/gi,
+    ],
+  },
+  {
     label: "a task or optimization job",
     why: "Jobs paying you to rate, boost, or \"optimize\" apps and products are a known task scam.",
     fields: "any",

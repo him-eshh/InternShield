@@ -2,7 +2,7 @@
 // AI facts and the raw-text backstop are combined; fixed rules decide the score.
 import type { AskedTo, AskKind, Facts, Flag, FlagGroup, LinkIssue, Quoted, Report, RiskLevel, ScoreInput } from "../types";
 import { quoteIsReal, visibleQuote } from "../quotes";
-import { backstop, type BackstopId } from "./backstop";
+import { backstop, snippetAround, type BackstopId } from "./backstop";
 import { buildCoverage } from "./coverage";
 import { emailDomain, isFreeEmail, isHiringPlatform, lookalike, registrableDomain, type LookalikeKind } from "./domains";
 import { withFlagInfo } from "./flagInfo";
@@ -87,7 +87,8 @@ const STARTUP_WORDS =
 const APPLIED_TEXT = /\b(?:thank(?:s| you) for (?:applying|your (?:application|interest))|your (?:recent )?application|you applied)\b/i;
 /** Any hiring talk at all; "Have they asked you to..." only makes sense on a job message. */
 const JOB_TALK = /\b(?:job|role|position|internship|intern|hire|hiring|interview|offer|recruit\w*|candidate|apply|application|salary|pay)\b/i;
-const CHAT_INTERVIEW = /\binterview\w*\b[^.!?\n]{0,30}\b(?:by|over|via|through)\s+(?:text|chat)\b|\b(?:text|chat)[- ](?:based\s+)?interview/i;
+const CHAT_INTERVIEW =
+  /\binterview\w*\b[^.!?\n]{0,30}\b(?:by|over|via|through)\s+(?:text|chat)\b|\b(?:text|chat)[- ](?:based\s+)?interview|\binterview\w*\s+(?:is|will be)\s+(?:an?\s+)?(?:text|chat)\b/i;
 const IMPLIES_HIRED =
   /\b(?:offer|hired|hire you|selected|congratulations|welcome aboard|welcome to the team|onboarding|start date|you have been chosen|position is yours)\b/i;
 const GENERIC_GREETING =
@@ -101,7 +102,11 @@ const APP_NAMES:[RegExp, string][] = [
   [/wechat/i, "WeChat"],
   [/viber/i, "Viber"],
   [/hangouts/i, "Google Hangouts"],
+  [/^text\b|\bsms\b/i, "texting a personal number"],
 ];
+/** Personal-assistant scam duties: handling payments and buying gifts for someone you've never met. */
+const PAYMENT_DUTIES =
+  /\b(?:making|receiving|processing|handling|accepting)\s+(?:or\s+\w+\s+)?payments?\b[^.!?\n]{0,60}\b(?:sending|buying|purchasing)\s+(?:\w+\s+)?gifts?\b/i;
 
 // ---------- helpers ----------
 
@@ -399,6 +404,10 @@ function evaluate(input: ScoreInput): Evaluated {
     red("field_pattern", "offer", W.taskVocab, "This looks like a task scam", "Liking videos, boosting products, or finishing sets of tasks for commission is a known task scam. The money you see is bait for a deposit later.", tasks.quote, { sourceUrl: "https://consumer.ftc.gov/consumer-alerts/2025/08/how-spot-avoid-task-scams" });
   } else if (pattern) {
     red("field_pattern", "offer", W.fieldPattern, `This looks like ${pattern.label}`, pattern.why, pattern.quote);
+  }
+  const duties = PAYMENT_DUTIES.exec(text);
+  if (duties) {
+    red("payment_duties", "offer", W.paymentDuties, "The job is handling payments for them", "Jobs where you make or receive payments and buy gifts for an employer you've never met are how fake-check and money-mule scams start.", snippetAround(text, duties.index, duties.index + duties[0].length));
   }
 
   if (input.profile && input.resumeText !== null) {

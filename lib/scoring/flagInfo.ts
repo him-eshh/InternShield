@@ -45,6 +45,7 @@ export const FLAG_INFO: Record<string, Info> = {
   no_interview: { action: "Ask who will interview you and when. Real offers follow an interview.", learnMore: L.jobs },
   vague_easy_pay: { action: "Ask for a written job description and compare it with the company's own posting.", learnMore: L.jobs },
   field_pattern: { action: "Search the job title with the word scam, and check the company's careers page for the role.", learnMore: L.tasks },
+  payment_duties: { action: "Don't accept payments or buy anything for them. Ask your career center about this offer.", learnMore: L.checks },
   role_above_level: { action: "Compare the requirements with the company's own posting before replying.", learnMore: L.jobs },
   posting_mismatch: { action: "Email the company at an address from its careers page and ask about the role and pay.", learnMore: L.jobs },
 
