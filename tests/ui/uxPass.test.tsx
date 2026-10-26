@@ -48,9 +48,9 @@ describe("sectioned fallback explanation", () => {
     const text = fallbackExplanation({ level: "medium", flags: FLAGS });
     const html = renderToStaticMarkup(<Explanation text={text} source="fallback" quotes={["deposit the check we mail you"]} />);
     expect(html).toContain(">Our take</h3>");
-    expect(html).toContain(">What stood out</h3>");
-    expect(html).toContain(">What to do next</h3>");
-    expect(html.match(/<li /g)).toHaveLength(2);
+    // Evidence cards and the action box already say these, so the display layer drops them.
+    expect(html).not.toContain(">What stood out</h3>");
+    expect(html).not.toContain(">What to do next</h3>");
     expect(html).not.toContain("<mark");
     expect(html).not.toContain("## ");
   });

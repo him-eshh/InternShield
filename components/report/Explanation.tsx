@@ -59,7 +59,10 @@ interface Props {
 }
 
 export default function Explanation({ text, quotes, loading, source }: Props) {
-  const sections = source === "fallback" ? explanationSections(text) : null;
+  // "What stood out" restates the evidence cards and "What to do next" repeats the action box above, so only the take stays.
+  const all = source === "fallback" ? explanationSections(text) : null;
+  const trimmed = all?.filter((s) => s.title !== "What stood out" && s.title !== "What to do next");
+  const sections = trimmed?.length ? trimmed : all;
   if (sections) {
     return (
       <div className={`space-y-6 break-words transition-opacity duration-300 ${loading ? "opacity-50" : ""}`} aria-busy={loading}>

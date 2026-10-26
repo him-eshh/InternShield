@@ -135,10 +135,10 @@ describe("Report order", () => {
       LEVEL_LABELS[fx.outcome.report!.level],
       "What to do now",
       actionLine(fx.outcome.report!.level).replaceAll("'", "&#x27;"),
+      "A few quick questions",
       "Risk ",
       "Your message",
       ">Evidence<",
-      "A few quick questions",
       "Check another message",
     ].map((s) => html.indexOf(s));
     expect(order.every((i) => i >= 0)).toBe(true);

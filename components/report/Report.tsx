@@ -266,7 +266,7 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, nextS
             <p className="mt-1 max-w-[58ch] text-lg font-medium leading-snug">{actionLine(report.level)}</p>
           </div>
           {recovery ?? <RecoveryCard level={report.level} />}
-          {report.questionHint && shownQuestions.some((q) => answers[q.id] === undefined) && <p className="mt-4 text-sm text-fg-2">{report.questionHint}</p>}
+          <div className="mt-6"><QuickQuestions questions={shownQuestions} answers={answers} change={change} lastId={lastId} onAnswer={onAnswer} disabled={company?.busy} confirmations={confirmations} hint={shownQuestions.some((q) => answers[q.id] === undefined) ? report.questionHint : undefined} /></div>
         </header>
 
         <aside className="min-w-0 border border-rule bg-paper-2 px-4 py-5 lg:sticky lg:top-6 lg:col-start-2 lg:row-span-2" aria-label="Risk score and checks">
@@ -314,8 +314,6 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, nextS
         <CouldntCheck items={report.couldntCheck} />
 
         {explanation ? <Explanation text={explanation.text} source={explanation.source} quotes={quotes} loading={explaining} /> : pending && <p className="text-[17px] text-fg-2" aria-busy="true">Writing the explanation…</p>}
-
-        <QuickQuestions questions={shownQuestions} answers={answers} change={change} lastId={lastId} onAnswer={onAnswer} disabled={company?.busy} confirmations={confirmations} />
 
         {additions}
 

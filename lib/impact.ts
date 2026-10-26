@@ -89,11 +89,22 @@ export function scoreLine(impact: AnswerImpact): string {
 
 export type ImpactLine = { tone: "new" | "gone" | "weight" | "none"; text: string };
 
+/** One line per kind, so three dropped good signs don't read as three separate changes. */
+function groupRemoved(removed: ImpactSign[]): ImpactLine[] {
+  const lines: ImpactLine[] = [];
+  const red = removed.filter((f) => f.kind === "red");
+  const good = removed.filter((f) => f.kind === "good");
+  if (red.length) lines.push({ tone: "gone", text: `No longer flagged: ${red.map((f) => f.title).join("; ")}` });
+  if (good.length === 1) lines.push({ tone: "gone", text: `No longer counted as a good sign: ${good[0].title}` });
+  else if (good.length) lines.push({ tone: "gone", text: `${good.length} good signs no longer count: ${good.map((f) => f.title).join("; ")}` });
+  return lines;
+}
+
 /** One line per change. New reasons are "new", never a plus beside a minus for the same thing. */
 export function impactLines(impact: AnswerImpact): ImpactLine[] {
   const lines: ImpactLine[] = [
     ...impact.added.map((f): ImpactLine => ({ tone: "new", text: `${f.kind === "red" ? "New warning sign" : "New good sign"}: ${f.title}` })),
-    ...impact.removed.map((f): ImpactLine => ({ tone: "gone", text: `${f.kind === "red" ? "No longer flagged" : "No longer counted as a good sign"}: ${f.title}` })),
+    ...groupRemoved(impact.removed),
     ...impact.changed.map((f): ImpactLine => ({ tone: "weight", text: `${f.title} now counts for ${f.after > f.before ? "more" : "less"}` })),
   ];
   return lines.length ? lines : [{ tone: "none", text: "Nothing new turned up, so the evidence stays as it was." }];
@@ -101,6 +112,6 @@ export function impactLines(impact: AnswerImpact): ImpactLine[] {
 
 /** Plain-text version (screen readers, copy): the same facts the card shows. */
 export function impactCopy(impact: AnswerImpact): string {
-  const what = impact.question ? `${impact.question} ${impact.label}` : impact.label;
+  const what = impact.question && !impact.label.includes(impact.question) ? `${impact.question} ${impact.label}` : impact.label;
   return [`You added: ${what}.`, `${scoreLine(impact)}.`, ...impactLines(impact).map((l) => `${l.text}.`)].join("\n");
 }

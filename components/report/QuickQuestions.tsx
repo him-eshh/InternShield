@@ -16,6 +16,8 @@ interface Props {
   /** The question answered most recently; the confirmation shows under it. */
   lastId?: QuestionId | null;
   disabled?: boolean;
+  /** Why answering helps, e.g. "Could change to ... depending on 1 answer". */
+  hint?: string;
   /** What each answer changed: a structured impact (rendered as a card) or plain text. */
   confirmations?: Partial<Record<QuestionId, AnswerImpact | string>>;
   onAnswer: (id: QuestionId, value: AnswerValue) => void;
@@ -69,7 +71,7 @@ function MultiQuestion({ q, value, onAnswer }: { q: Question; value: Answers[Que
   );
 }
 
-export default function QuickQuestions({ questions, answers, change, lastId = null, onAnswer, confirmations = {}, disabled = false }: Props) {
+export default function QuickQuestions({ questions, answers, change, lastId = null, onAnswer, confirmations = {}, disabled = false, hint }: Props) {
   const [showAll, setShowAll] = useState(false);
   const [editing, setEditing] = useState<QuestionId | null>(null);
   if (questions.length === 0) return null;
@@ -89,7 +91,7 @@ export default function QuickQuestions({ questions, answers, change, lastId = nu
         <span className="text-accent"><InfoIcon size={20} /></span>
         A few quick questions
       </h3>
-      <p className="mt-1 text-[15px] text-muted">Make this check more accurate · Optional</p>
+      <p className="mt-1 text-[15px] text-muted">{hint ?? "Make this check more accurate"} · Optional</p>
       <div className="mt-5 space-y-6">
         {shown.map((q) => (
           <fieldset key={q.id} disabled={disabled}>

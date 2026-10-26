@@ -18,7 +18,7 @@ describe("report additions", () => {
     const copy = impactCopy(impact);
     expect(copy).toContain(`Score ${realReport.score} → ${scamReport.score}, now ${LEVEL_LABELS.high}`);
     for (const f of impact.added) expect(copy).toContain(`New warning sign: ${f.title}`);
-    for (const f of impact.removed) expect(copy).toContain(`No longer counted as a good sign: ${f.title}`);
+    for (const f of impact.removed) expect(copy).toContain(f.title);
   });
   for (const kind of ["question", "detail", "message"] as const) {
     it(`confirms unchanged ${kind} with one coherent score line`, () => {
@@ -91,9 +91,10 @@ describe("ImpactCard", () => {
     const html = renderToStaticMarkup(<ImpactCard impact={diffReports(realReport, scamReport, "question", "Asked for money", "Did they ask for money?")} />);
     expect(html).toContain('data-tool="check"');
     expect(html).toContain("bg-tool-tint");
-    expect(html.indexOf("What you added")).toBeLessThan(html.indexOf("What changed"));
+    expect(html.indexOf(">Added<")).toBeLessThan(html.indexOf("Why it moved"));
+    expect(html).toContain("data-score-change");
     expect(html).toContain("Did they ask for money?");
-    expect(html).toContain(scoreLine(diffReports(realReport, scamReport)));
+    expect(html).toContain(`${realReport.score} → ${scamReport.score}`);
     expect(html).not.toMatch(/text-\[1[0-3]px\] text-muted/);
   });
 });
