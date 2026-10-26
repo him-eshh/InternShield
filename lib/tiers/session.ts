@@ -91,6 +91,8 @@ export interface PracticeState {
   v: 1;
   /** Set on sessions created after model-written rating claims were removed. */
   grounded?: true;
+  /** Older active state has had unverified model text removed once. */
+  legacySanitized?: true;
   id: string;
   seed: number;
   createdAt: number;
@@ -566,6 +568,26 @@ export interface HistoryEntry {
   role?: string | null;
   summary: SessionSummary;
 }
+const LEGACY_QUESTION = "Describe a decision you made and how you checked the result.";
+const LEGACY_HINT = "An earlier AI hint is hidden; use the question and your own work.";
+function hideLegacyFeedback(s: PracticeState): PracticeState {
+  const c = s.activeQuestion!;
+  const followUp = (i: number) => `Follow-up ${i + 1}: What would you check or change next?`;
+  return {
+    ...s,
+    legacySanitized: true,
+    turns: s.turns.map((t) => ({ ...t, question: t.source === "ai" ? LEGACY_QUESTION : t.question, feedback: undefined, level: undefined,
+      followUps: t.followUps?.map((f, i) => ({ question: followUp(i), answer: f.answer })) })),
+    activeQuestion: {
+      ...c,
+      item: c.item.source === "ai" ? { ...c.item, question: LEGACY_QUESTION, note: undefined } : c.item,
+      feedback: null, level: null, reviewed: 0,
+      followUps: c.followUps.map((f, i) => ({ question: followUp(i), answer: f.answer })),
+      hints: c.hints.map(() => LEGACY_HINT),
+      inner: c.inner ? { ...c.inner, feedback: null, hints: c.inner.hints.map(() => LEGACY_HINT) } : null,
+    },
+  };
+}
 /** A saved active session, or null when missing, finished or damaged. */
 export function loadActive(): PracticeState | null {
   const v = readKey<unknown>(KEYS.practiceActive);
@@ -580,7 +602,8 @@ export function loadActive(): PracticeState | null {
   if (!isRec(c) || !isRec(c.item) || typeof c.item.question !== "string" || !SETUP_ROUNDS.includes(c.item.round as RoundKind) || !["text", "code", "sql", "debug"].includes(c.item.kind as string)) return null;
   if (!Array.isArray(c.followUps) || c.followUps.length > MAX_FOLLOWUPS || !c.followUps.every((f) => isRec(f) && typeof f.question === "string" && (f.answer === null || typeof f.answer === "string"))) return null;
   if (!strings(c.hints) || !finite(c.reviewed) || (c.answer !== null && typeof c.answer !== "string") || (c.inner !== null && (!isRec(c.inner) || !Array.isArray(c.inner.turns) || !strings(c.inner.hints)))) return null;
-  return v as unknown as PracticeState;
+  const state = v as unknown as PracticeState;
+  return state.grounded || state.legacySanitized ? state : hideLegacyFeedback(state);
 }
 export const saveActive = (s: PracticeState): void => writeKey(KEYS.practiceActive, s);
 export const clearActive = (): void => writeKey(KEYS.practiceActive, null);

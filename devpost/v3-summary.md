@@ -32,7 +32,7 @@ The screenshots are local, untracked artifacts. The final report matrix produced
 |---|---|---|
 | `npm run lint` | Pass | Final local tree |
 | `npx tsc --noEmit` | Pass | Final local tree |
-| `npx vitest run` | Pass | 86 files, 1,256 tests |
+| `npx vitest run` | Pass | 86 files, 1,258 tests |
 | `npm run build` | Pass | Final local tree |
 | `npm run eval` | Pass | Labeled 88/88; held-out 24/27 (misses ho-11, ho-15, ho-16) |
 | Final Check report matrix | Pass | 1440/390 light/dark; 56 shots |
@@ -59,7 +59,7 @@ The screenshots are local, untracked artifacts. The final report matrix produced
 - Browser Python, TypeScript, and SQL runtimes use pinned public-CDN assets; offline operation has not been established.
 - “Most asked at [company]” is a proxy based on historical public lists, not current employer frequency. Thin pools broaden with a notice.
 - The held-out Check evaluation misses 3 of 27 cases. Live interview feedback succeeded on one fabricated answer. Two live Tailor edit requests yielded no suggestions, so broader live provider quality and edit yield remain unproven.
-- Check explanations are built from scored flag reasons. Interview reviews discard model-written achievement and STAR claims; exact quotes prove occurrence, while runnable scores come from browser test counts supplied to the server. Discussion answers are ungraded, and earlier saved summaries hide prior model prose. This protects visible claims but limits personalized praise.
+- Check explanations are built from scored flag reasons. Interview reviews discard model-written achievement and STAR claims; exact quotes prove occurrence, while runnable scores come from browser test counts supplied to the server. Discussion answers are ungraded. Earlier saved summaries hide prior model prose, and pre-update active sessions keep answers while old claims and premises are neutralized on resume. This protects visible claims but limits personalized praise.
 - Usage caps and caches live in server memory per instance. External provider quotas are separate; unavailable checks and feedback fallbacks must remain visible.
 - Multiple older `v3` commits contain private name or workstation-path text, although the current tree is sanitized. A broad path scan matched 24 commits; a narrower name/path scan matched seven. No key-shaped values were found in the branch's changed lines. A public release should use a clean snapshot based on `main`; a history-preserving merge would carry those older commits.
 
@@ -69,4 +69,5 @@ The screenshots are local, untracked artifacts. The final report matrix produced
 - Recheck the release snapshot's full tree and history for private data and secrets, then decide whether to push.
 - If publishing, configure server-only provider keys and `ALLOWED_ORIGINS` for the deployed origin, deploy, and test that deployment. Do not expose keys in client variables or submission materials.
 - Record a demo using only fabricated messages, resumes, and company context. Verify its statements against the final build.
+- Use the [submission draft](submission-draft.md) and [demo storyboard](demo-storyboard.md) as reviewable starting materials; replace pending links only after they exist.
 - Complete the Devpost submission after the demo and deployment are actually ready. Record the final link and date here only after submission.

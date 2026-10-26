@@ -2,11 +2,12 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Setup from "@/components/interview/Setup";
 import { Summary } from "@/components/interview/Summary";
+import Runner from "@/components/interview/Runner";
 import { FeedbackCard, TestResults } from "@/components/interview/ReviewPanels";
 import CodingRound from "@/components/tiers/interview/CodingRound";
 import SqlRound from "@/components/tiers/interview/SqlRound";
 import { loadBank } from "@/lib/tiers/bank";
-import { advance, applyLocalReview, buildSummary, defaultConfig, endEarly, newPractice, submitAnswer, type PracticeState } from "@/lib/tiers/session";
+import { advance, applyLocalReview, buildSummary, defaultConfig, endEarly, loadActive, newPractice, saveActive, submitAnswer, type PracticeState } from "@/lib/tiers/session";
 import type { CodeAttempt, InterviewContext, InterviewSession } from "@/lib/tiers/types";
 
 vi.mock("@/lib/tiers/runner", () => ({ runCode: vi.fn(), runSql: vi.fn(), stopRunners: vi.fn(), preloadPython: vi.fn() }));
@@ -176,4 +177,14 @@ describe("Summary", () => {
     expect(out).toContain("14 min");
     expect(out).toContain("1 of 1 answered · 5 of 6 tests passed");
   });
+});
+
+it("does not render older model praise or an invented pending follow-up after resume", () => {
+  let s = newPractice(defaultConfig({ rounds: ["behavioral"], limit: { kind: "questions", count: 1 } }), context, { id: "old-active", now: 1, seed: 7 }, []);
+  s = submitAnswer(s, "My real answer", 5);
+  saveActive({ ...s, grounded: undefined, activeQuestion: { ...s.activeQuestion!, item: { ...s.activeQuestion!.item, source: "ai", question: "How did you double sales?" }, feedback: { index: 0, strength: "You doubled sales", improve: "Lead ten teams", quote: "My real answer", star: null }, level: "strong", followUps: [{ question: "How did you double sales?", answer: null }], reviewed: 1 } });
+  const resumed = loadActive()!;
+  const out = html(<Runner state={resumed} bank={[]} onChange={noop} />);
+  expect(out).toContain("What would you check or change next?");
+  expect(out).not.toMatch(/doubled sales|lead ten teams/i);
 });

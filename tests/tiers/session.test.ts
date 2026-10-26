@@ -97,6 +97,27 @@ describe("continuous session engine", () => {
     expect(loadHistory()).toHaveLength(1);
     expect(loadHistory()[0].summary.endedEarly).toBe(true);
   });
+  it("hides older model claims and premises while preserving answers and follow-up progress", () => {
+    let s = start({ rounds: ["behavioral"], limit: { kind: "questions", count: 2 } });
+    s = advance(applyReview(submitAnswer(s, "I checked a log.", 11), review(null, "strong"), 12), [], 13);
+    s = submitAnswer(s, "My second answer", 14);
+    const old = { ...s, grounded: undefined, turns: [{ ...s.turns[0], source: "ai", question: "How did you double sales?", feedback: { ...s.turns[0].feedback!, strength: "You doubled sales" }, followUps: [{ question: "How did you lead ten teams?", answer: "My first follow-up", note: "Strong leadership" }] }], activeQuestion: { ...s.activeQuestion!, item: { ...s.activeQuestion!.item, source: "ai", question: "How did you double sales?" }, feedback: { index: 0, strength: "You doubled sales", improve: "Lead ten teams", quote: "My second answer", star: null }, level: "strong" as const, followUps: [{ question: "How did you double sales?", answer: null }], hints: ["Your sales doubled"], reviewed: 1 } };
+    saveActive(old);
+    const resumed = loadActive()!;
+    expect(resumed.grounded).toBeUndefined();
+    expect(resumed.turns[0].answer).toBe("I checked a log.");
+    expect(resumed.activeQuestion!.answer).toBe("My second answer");
+    expect(awaiting(resumed)).toBe("followup");
+    expect(JSON.stringify(resumed)).not.toMatch(/doubled sales|ten teams|Strong leadership|Your sales doubled/i);
+    const answered = answerFollowUp(resumed, "My next answer", 15);
+    expect(JSON.stringify(buildReviewRequest(answered, "review"))).not.toMatch(/doubled sales|ten teams/i);
+    const continued = skipReview(answered, 16);
+    saveActive(continued);
+    expect(loadActive()!.activeQuestion!.reviewed).toBe(continued.activeQuestion!.reviewed);
+    const summary = buildSummary(endEarly(answered, 16));
+    expect(summary.grounded).toBeUndefined();
+    expect(overallBand(summary)).toBe("Not scored");
+  });
   it("enforces the model-call budget independently of question count", () => {
     const s = start();
     expect(canCallModel({ ...s, calls: 29 })).toBe(true);
