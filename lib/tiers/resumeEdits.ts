@@ -96,6 +96,14 @@ export function withinTotalBudget(doc: ResumeDoc, texts: Map<string, string>): b
 
 export { MAX_EDITS };
 
+/** Models often drop or add the final period; match the original's. Other endings (? or !) are left for the style check. */
+export function sameEnding(original: string, proposed: string): string {
+  const dot = original.trim().endsWith(".");
+  if (dot && !/[.!?]$/.test(proposed)) return proposed + ".";
+  if (!dot && !/[.!?]$/.test(original.trim()) && /[^.]\.$/.test(proposed)) return proposed.slice(0, -1);
+  return proposed;
+}
+
 /** Treat model JSON as untrusted. Metadata always comes from the original document. */
 export function checkedEdits(doc: ResumeDoc, candidates: unknown, keywords: string[], facts: string[] = [], posting = ""): ResumeEdit[] {
   if (!Array.isArray(candidates)) return [];
@@ -111,7 +119,7 @@ export function checkedEdits(doc: ResumeDoc, candidates: unknown, keywords: stri
     if (typeof c.lineId !== "string" || typeof c.proposed !== "string" || texts.has(c.lineId)) continue;
     const line = allowed.get(c.lineId);
     if (!line) continue;
-    const proposed = c.proposed.trim();
+    const proposed = sameEnding(line.text, c.proposed.trim());
     if (!checkEdit({ resume, original: line.text, proposed, facts, posting, source: doc.source }).ok) continue;
     const next = new Map(texts).set(line.id, proposed);
     if (!withinTotalBudget(doc, next)) continue;

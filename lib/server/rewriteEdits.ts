@@ -83,7 +83,7 @@ export async function handleEdits(body: Record<string, unknown>): Promise<Respon
   });
   const wordRule = input.source === "docx" ? " For this Word document, only remove complete existing words; keep every surviving word exactly as written and in its original order. Do not add or reorder words or change punctuation. Remove filler or off-target detail to emphasize the supported keywords. Return no edit when a change would require new wording." : "";
   const levelRule = input.level ? ` Keep the wording credible for a ${input.level.replace("_", " ")} candidate; never add seniority, ownership, or outcomes absent from the resume.` : "";
-  const result = await callGroq("rewrite", { system: SYSTEM + wordRule + levelRule, user, maxTokens: 1800, schema: SCHEMA });
+  const result = await callGroq("resumeEdits", { system: SYSTEM + wordRule + levelRule, user, maxTokens: 1800, schema: SCHEMA });
   if (!result.ok) return fromOutcome(result);
   try {
     const json = JSON.parse(result.data);
@@ -97,7 +97,7 @@ export async function handleEdits(body: Record<string, unknown>): Promise<Respon
         const c = checkEdit({ resume, original: line.text, proposed: e.proposed, facts: input.facts, posting: input.posting, source: doc.source });
         return c.ok ? [] : [`${line.id}: ${[...c.failures, ...c.details].join(", ")}`];
       });
-      const again = await callGroq("rewrite", { system: SYSTEM + wordRule + levelRule, user: `${user}\nYOUR LAST DRAFT FAILED THESE CHECKS (unchanged = same as the original; length = too long): ${notes.join("; ")}. Return new edits that change each bullet and pass.`, maxTokens: 1800, schema: SCHEMA });
+      const again = await callGroq("resumeEdits", { system: SYSTEM + wordRule + levelRule, user: `${user}\nYOUR LAST DRAFT FAILED THESE CHECKS (unchanged = same as the original; length = too long): ${notes.join("; ")}. Return new edits that change each bullet and pass.`, maxTokens: 1800, schema: SCHEMA });
       try {
         if (again?.ok) checked = checkedEdits(doc, JSON.parse(again.data)?.edits, plan.keywords, input.facts, input.posting);
       } catch {

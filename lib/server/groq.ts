@@ -4,7 +4,7 @@ import { cacheGet, cacheSet } from "./cache";
 import { classify, OUTSIDE_TIMEOUT_MS } from "./http";
 
 /** "interview" = questions and hints; "interviewFeedback" = the graded feedback JSON. */
-type GroqTask = "extract" | "rewrite" | "transcribe" | "interview" | "interviewFeedback" | "intel";
+type GroqTask = "extract" | "rewrite" | "resumeEdits" | "transcribe" | "interview" | "interviewFeedback" | "intel";
 
 export const MODEL_20B = "openai/gpt-oss-20b";
 export const MODEL_120B = "openai/gpt-oss-120b";
@@ -22,6 +22,8 @@ export function modelOrder(task: GroqTask): string[] {
     extract: [MODEL_20B, MODEL_120B],
     // gpt-oss-20b only when the rewrite model fails (rewrite is capped at REWRITE_DAILY_CAP, a small share of 20b's budget).
     rewrite: [envModel("REWRITE_MODEL", MODEL_VISION), MODEL_20B],
+    // Tailor's multi-bullet draft. Live check: Qwen echoed real, already-tight bullets unchanged; gpt-oss-120b drafts usable edits.
+    resumeEdits: [MODEL_120B, envModel("REWRITE_MODEL", MODEL_VISION), MODEL_20B],
     transcribe: [vision], // the only vision model; no fallback model
     interview: [MODEL_20B, interview], // short questions: cheap gpt-oss-20b first
     interviewFeedback: [interview, MODEL_120B, MODEL_20B],

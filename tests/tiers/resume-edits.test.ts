@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkedEdits, checkEdit } from "@/lib/tiers/resumeEdits";
+import { checkedEdits, checkEdit, sameEnding } from "@/lib/tiers/resumeEdits";
 import { bannedIn, emDashCount, styleIssues, adjectiveStack } from "@/lib/tiers/resumeTells";
 import { docLines, parseTextResume } from "@/lib/tiers/resumeModel";
 
@@ -11,6 +11,12 @@ const bullet = docLines(doc).find((l) => l.kind === "bullet")!;
 const candidate = { lineId: bullet.id, proposed };
 
 describe("shared resume edit guard", () => {
+  it("matches the original's final period", () => {
+    expect(sameEnding("Built a site.", "Built a site with React")).toBe("Built a site with React.");
+    expect(sameEnding("Built a site", "Built a site with React.")).toBe("Built a site with React");
+    expect(sameEnding("Built a site", "Built a site with React")).toBe("Built a site with React");
+    expect(checkedEdits(doc, [{ ...candidate, proposed: proposed.slice(0, -1) }], ["JavaScript"])[0]?.proposed).toBe(proposed);
+  });
   it("allows a small factual edit and derives metadata from the source", () => {
     const out = checkedEdits(doc, [{ ...candidate, original: "fake", section: "fake", reason: "Fake award", keywords: ["Rust"] }], ["JavaScript"]);
     expect(out).toHaveLength(1);
