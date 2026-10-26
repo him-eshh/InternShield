@@ -33,7 +33,7 @@ describe("guided profile preferences", () => {
     for (const key of Object.values(KEYS)) values.set(key, '"saved"');
     clearMyData();
     expect(values.get(KEYS.theme)).toBe('"saved"');
-    expect([...values.keys()]).toEqual([KEYS.theme]);
+    expect([...values.keys()]).toEqual([KEYS.theme, KEYS.motion]);
     expect(loadPrefs()).toEqual(NO_PREFS);
   });
 

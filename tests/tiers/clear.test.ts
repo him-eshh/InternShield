@@ -15,7 +15,7 @@ describe("clearMyData", () => {
       removeItem: (k: string) => void m.delete(k),
     };
     clearMyData();
-    expect([...m.keys()]).toEqual([KEYS.theme]);
+    expect([...m.keys()]).toEqual([KEYS.theme, KEYS.motion]);
   });
 
   it("also removes the stores earlier versions left behind", () => {

@@ -110,7 +110,7 @@ export const writeKey = (key: string, value: unknown): void => write(key, value)
 /** Stores earlier versions wrote and nothing reads now; "Clear my data" still removes them from browsers that kept them. */
 const LEGACY_KEYS = ["is:tailored", "is:interviews"];
 
-/** Removes profile, resume, the last check and every tool store (not theme). The caller returns home. */
+/** Removes profile, resume, the last check and every tool store (not theme or motion). The caller returns home. */
 export function clearMyData(): void {
   remove(KEYS.profile);
   remove(KEYS.resume);
