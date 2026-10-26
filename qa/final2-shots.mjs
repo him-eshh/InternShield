@@ -54,7 +54,7 @@ if (want("motion")) {
     await S("motion-setting", { fullPage: false });
   }, "/profile", { profile: true });
   await each("nav", async ({ page, S }) => {
-    await page.locator("summary", { hasText: "Motion:" }).first().click();
+    await page.locator('summary[aria-label^="Display"]').first().click();
     await page.waitForTimeout(300);
     await S("motion-control", { fullPage: false });
   }, "/", { profile: true });
@@ -120,7 +120,7 @@ if (want("tailor")) {
     await S("loading", { fullPage: false });
     await page.locator("[data-edit-id]").first().waitFor({ timeout: 40000 });
     await page.waitForTimeout(1500);
-    await S("preview");
+    await S("preview", { fullPage: false });
     const cards = page.locator("[data-edit-id]");
     say("edits:", await cards.count());
     await cards.nth(0).getByRole("button", { name: /^Accept/ }).click();
@@ -131,12 +131,12 @@ if (want("tailor")) {
       await cards.nth(1).locator("textarea").blur();
       await page.waitForTimeout(1500);
     }
-    await S("live-edit");
+    await S("live-edit", { fullPage: false });
   }, "/tailor", { profile: true });
 }
 
 if (want("practice")) {
-  await each("practice", async ({ page, S }) => { await S("setup"); }, "/practice", { profile: true });
+  await each("practice", async ({ page, S }) => { await S("setup"); await page.evaluate(() => window.scrollTo(0, 500)); await S("setup-scrolled", { fullPage: false }); }, "/practice", { profile: true });
   await each("practice", async ({ page, S }) => {
     await page.getByLabel("Difficulty", { exact: true }).selectOption("hard");
     await page.getByRole("button", { name: "Start session", exact: true }).click();
