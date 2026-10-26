@@ -349,6 +349,12 @@ const SCOPE = [
   "sole", "first ever", "award winning", "production", "at scale",
 ];
 const SENIOR = ["architected", "orchestrated", "mentored", "managed"];
+/** Purpose stated by the user must not become a completed result in the rewrite. */
+const PURPOSE_RESULTS: [string, string][] = [
+  ["fix", "fixed"], ["reduce", "reduced"], ["improve", "improved"], ["increase", "increased"],
+  ["prevent", "prevented"], ["ensure", "ensured"], ["avoid", "avoided"], ["save", "saved"],
+  ["eliminate", "eliminated"], ["resolve", "resolved"], ["remove", "removed"], ["boost", "boosted"],
+];
 export const BUZZWORDS = [
   "spearheaded", "leveraged", "synergy", "results driven", "passionate", "dynamic", "go getter", "team player", "hardworking",
 ];
@@ -387,6 +393,11 @@ export function guardRewrite(g: GuardInput): GuardReport {
   const warnings: GuardWarning[] = [];
   const was = LOW_VERBS.find(inB);
   if (!HIGH_VERBS.some(inB)) for (const v of HIGH_VERBS.filter(added)) warnings.push({ kind: "inflated", token: v, was });
+  for (const [purpose, result] of PURPOSE_RESULTS) {
+    if (inB(`to ${purpose}`) && !inA(`to ${purpose}`) && added(result)) {
+      warnings.push({ kind: "inflated", token: result, was: `to ${purpose}` });
+    }
+  }
   for (const q of QUALIFIERS) if (inB(q) && !inA(q)) warnings.push({ kind: "qualifier", token: q === "co" ? "co-" : q });
   for (const s of SCOPE.filter(added)) warnings.push({ kind: "scope", token: s });
   if (g.level === "internship" || g.level === "newgrad")

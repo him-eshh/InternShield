@@ -24,7 +24,7 @@ Retired flows: the one-screen Intro, hidden tier flags, finance round, design ch
 - **Scoring:** the generated [README eval table](../README.md#test-set-results) records 88/88 labeled fictional messages and 24/27 held-out, with zero low-risk false positives in those sets. This is fixture evidence, not a real-world accuracy claim.
 - **Attribution:** the 1,130-entry question bank stores metadata, with dataset licenses and pinned sources in [SOURCES.md](../data/question-bank/SOURCES.md). The design-skill source and MIT attribution are in [design-skills/README.md](design-skills/README.md).
 
-The screenshots are local, untracked artifacts. The final report matrix produced 56 shots, Tailor 34, and Practice 36. The report, Tailor, Practice, setup, and shell final captures were visually reviewed; the repaired report and loading-state captures were checked again after recapture. The earlier stream captures remain in their original folders.
+The full screenshot matrices are local, untracked artifacts; four representative fabricated captures are preserved in [screenshots](screenshots/README.md) for public review. The final report matrix produced 56 shots, Tailor 34, and Practice 36. The report, Tailor, Practice, setup, and shell final captures were visually reviewed; the repaired report, loading state, and Tailor edit wording were checked again after recapture. The earlier stream captures remain in their original folders.
 
 ## Final local verification
 
@@ -32,14 +32,14 @@ The screenshots are local, untracked artifacts. The final report matrix produced
 |---|---|---|
 | `npm run lint` | Pass | Final local tree |
 | `npx tsc --noEmit` | Pass | Final local tree |
-| `npx vitest run` | Pass | 86 files, 1,259 tests |
+| `npx vitest run` | Pass | 86 files, 1,260 tests |
 | `npm run build` | Pass | Final local tree |
 | `npm run eval` | Pass | Labeled 88/88; held-out 24/27 (misses ho-11, ho-15, ho-16) |
 | Final Check report matrix | Pass | 1440/390 light/dark; 56 shots |
 | Final setup and shell browser QA | Pass | Setup flow 1440/390 light/dark; shell 133 checks across 1440/390 light/dark plus 320/768, Profile, Tracker undo, reduced motion; separate clear-data browser smoke passed |
 | Final Tailor PDF/DOCX browser suite | Pass | Flow, states, budget, 320/768 fit; 34 captures |
 | Final Practice session browser matrix | Pass | 1440/390 light/dark; five answers, real Python/SQL, follow-ups, reload, summary/history, early stop; 36 captures |
-| Live API smoke | Bounded checks passed | Fabricated `/api/extract`: HTTP 200, quote-backed gift-card ask; wrong Origin 403. Fabricated `/api/interview`: HTTP 200, copied quote with conservative coaching. Deterministic `/api/explain`: HTTP 200, uses the flag reason without inventing a pay claim. Initial fabricated `/api/rewrite` requests returned zero safe suggestions. After a narrower prompt, a fabricated one-page PDF completed the real browser Tailor flow with three guarded suggestions and a downloadable PDF. |
+| Live API smoke | Bounded checks passed | Fabricated `/api/extract`: HTTP 200, quote-backed gift-card ask; wrong Origin 403. Fabricated `/api/interview`: HTTP 200, copied quote with conservative coaching. Deterministic `/api/explain`: HTTP 200, uses the flag reason without inventing a pay claim. Initial fabricated `/api/rewrite` requests returned zero suggestions that passed the checks. After a narrower prompt, a fabricated one-page PDF completed the real browser Tailor flow with three guarded suggestions and a downloadable PDF. |
 | Hydration with extension attributes | Pass | Grammarly attributes on `body`; zero hydration errors |
 | Privacy and secret scan | Pass on isolated snapshot | Full one-commit history and tracked tree had zero personal-path or key-shaped matches; `.env.local` is not tracked |
 | Final visual review | Pass for saved captures | All final report, Tailor, Practice, setup, and shell captures reviewed; repaired report and loading states rechecked |
@@ -56,18 +56,19 @@ The screenshots are local, untracked artifacts. The final report matrix produced
 
 - PDF edits visually cover old text; original wording can remain extractable. Edited PDFs are **not redacted documents**. Clean plain-text export is available when underlying wording must be removed.
 - DOCX edits are deliberately narrow: they remove existing words while preserving their order and formatting. Some otherwise useful rewrites will be rejected.
+- Tailor's automated checks reject known ownership and purpose-to-result inflation, but they cannot establish full semantic equivalence. The user must review each suggestion against their real experience.
 - Browser Python, TypeScript, and SQL runtimes use pinned public-CDN assets; offline operation has not been established.
 - “Most asked at [company]” is a proxy based on historical public lists, not current employer frequency. Thin pools broaden with a notice.
 - The held-out Check evaluation misses 3 of 27 cases. Live interview feedback succeeded on one fabricated answer. One fabricated one-page PDF produced three Tailor suggestions that passed automated checks end to end after prompt refinement; consistency across other resumes and providers is unproven.
 - Check explanations are built from scored flag reasons. Interview reviews discard model-written achievement and STAR claims; exact quotes prove occurrence, while runnable scores come from browser test counts supplied to the server. Discussion answers are ungraded. Earlier saved summaries hide prior model prose, and pre-update active sessions keep answers while old claims and premises are neutralized on resume. This protects visible claims but limits personalized praise.
-- Usage caps and caches live in server memory per instance. External provider quotas are separate; unavailable checks and feedback fallbacks must remain visible.
+- Usage caps and caches live in server memory per instance, so cold starts and parallel instances can reset or split them. They are not hard abuse controls for a public deployment; `ALLOWED_ORIGINS` is a browser-origin guard, not caller authentication. External provider quotas are separate; unavailable checks and feedback fallbacks must remain visible.
 - Older `v3` commits contain private name or workstation-path text, and a full-history scan found personal-path text reachable from `main`. The current tracked tree is sanitized and no key-shaped values were found in the branch's changed lines. Public source should come from a clean root snapshot with no old parent history; merging or publishing the older branches would retain that text.
 
-## Owner-only release actions (pending)
+## Submission actions (pending)
 
-- Review the final screenshots and this handoff, then inspect the clean single-commit root snapshot branch. Do not merge `v3` or `main` into it or publish their history.
-- Recheck the release snapshot's full tree and history for private data and secrets, then decide how to publish it without including older repository history.
-- If publishing, configure server-only provider keys and `ALLOWED_ORIGINS` for the deployed origin, deploy, and test that deployment. Do not expose keys in client variables or submission materials.
-- Record a demo using only fabricated messages, resumes, and company context. Verify its statements against the final build.
-- Use the [submission draft](submission-draft.md) and [demo storyboard](demo-storyboard.md) as reviewable starting materials; replace pending links only after they exist.
-- Complete the Devpost submission after the demo and deployment are actually ready. Record the final link and date here only after submission.
+- Review the final screenshots and the clean single-commit root snapshot. The existing private repository retains older private-path history; do not make it public or merge `v3`/`main` into the snapshot.
+- Recheck the snapshot's full tree and history, then publish it in a separate public repository with the source, planning documents, assets, and run instructions. The owner chooses whether to add the event's recommended open-source license.
+- Record a demo of the working app with fabricated inputs. Keep it under three minutes, upload it publicly to YouTube or Vimeo, and verify the link without signing in. A local app recording is sufficient under the [event rules](https://learn-ai-basics.devpost.com/rules).
+- Have the owner write the project name, short description, other form answers, and exit survey in their own words. Use the [submission fact sheet](submission-draft.md) for verified details and the [demo storyboard](demo-storyboard.md) for recording mechanics.
+- Submit on Devpost before October 26, 2026 at 5:00 PM ET, then record the actual link and date in the [checklist](checklist.md).
+- Optional deployment: if the owner wants a live app, configure server-only keys and `ALLOWED_ORIGINS`, add shared abuse controls for public traffic, deploy, and smoke-test it. Do not expose keys in client variables or submission materials. Deployment does not replace the required video.

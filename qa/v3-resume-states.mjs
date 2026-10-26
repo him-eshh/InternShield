@@ -32,7 +32,7 @@ try {
     const data = route.request().postDataJSON();
     const lines = data.resume.split("\n");
     const edits = [
-      { lineId: `l${lines.findIndex((l) => l.includes("Cleaned and merged"))}`, proposed: data.source === "docx" ? "Cleaned 3 shipment data sources with Python to fix duplicate records." : "Cleaned and merged 3 shipment data sources with Python and fixed duplicate records." },
+      { lineId: `l${lines.findIndex((l) => l.includes("Cleaned and merged"))}`, proposed: data.source === "docx" ? "Cleaned 3 shipment data sources with Python to fix duplicate records." : "Merged and cleaned 3 shipment data sources with Python to fix duplicate records." },
       ...(data.facts.includes("React") ? [{ lineId: `l${lines.findIndex((l) => l.includes("Wrote a short"))}`, proposed: "Wrote a React guide for the checkout desk that new staff use." }] : []),
     ];
     await route.fulfill(done({ edits }));

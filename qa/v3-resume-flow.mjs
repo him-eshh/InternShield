@@ -46,7 +46,7 @@ for (const variant of runs) {
       const input = route.request().postDataJSON();
       const lines = input.resume.split("\n");
       const choices = [
-        ["Cleaned and merged", "Cleaned and merged 3 shipment data sources with Python and fixed duplicate records."],
+        ["Cleaned and merged", "Merged and cleaned 3 shipment data sources with Python to fix duplicate records."],
         ["Presented route", "Presented route delay findings to a team of 8 and helped select two new carriers."],
         ["Helped 40", "Helped 40 students each week find research sources and book study rooms."],
         ["Wrote a short", "Wrote a short guide for the checkout desk that new staff use."],

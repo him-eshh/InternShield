@@ -2,6 +2,12 @@
 
 Check a job or recruiter message, tailor a resume for the role, and practice an interview in one browser-based workspace.
 
+Planning and verification: [scope](devpost/scope.md), [PRD](devpost/prd.md), [spec](devpost/spec.md), and [checklist](devpost/checklist.md). Source attribution: [question bank](data/question-bank/SOURCES.md) and [design skills](devpost/design-skills/README.md).
+
+![InternShield Home with Check, Tailor, and Practice](devpost/screenshots/home.png)
+
+More fabricated browser QA views: [Check report](devpost/screenshots/check-report.png) · [Tailor review](devpost/screenshots/tailor-review.png) · [Practice summary](devpost/screenshots/practice-summary.png). These use mocked external responses; [live check results and limits](devpost/v3-summary.md) are documented separately.
+
 ## How it works
 
 - **Check:** paste a message or upload a screenshot, review the rule-based risk report, answer quick questions, and add information to see what changed. Company, posting, and sender checks show unavailable results explicitly.
@@ -29,6 +35,8 @@ The Check screen includes two made-up examples. If a live step fails or the free
 1. Push to a GitHub repo and import it into Vercel (free Hobby plan).
 2. In Vercel → Project → Settings → Environment Variables, add `GROQ_API_KEY`, `TAVILY_API_KEY` (and optionally `HUNTER_API_KEY`, `DAILY_CHECK_CAP`, `TAVILY_DAILY_CAP`).
 3. Set `ALLOWED_ORIGINS` to include your production URL, e.g. `https://your-app.vercel.app`, then redeploy. Without it every check is refused.
+
+For public traffic, add shared rate limits or provider-side spend controls before launch. The in-memory caps below reset or split across serverless instances, and `ALLOWED_ORIGINS` limits browser origins rather than authenticating callers.
 
 ## Limits
 

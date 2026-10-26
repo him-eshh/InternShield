@@ -15,6 +15,7 @@ Return JSON {"edits":[{"lineId":"existing id","proposed":"plain rewritten bullet
 Suggest up to 5 changes, no more than one per eligible bullet. If a bullet contains filler, suggest a shorter version that preserves its facts. Return [] only when no safe change can be made.
 Example: "Helped organize weekly Excel reports for the club on a weekly basis." can become "Helped organize weekly Excel reports for the club." by removing redundant words only.
 Keep the original opening verb or full qualifier (such as "Helped" or "Was responsible for") so the edit does not claim more ownership. Shorten by deleting words after it; never change "Helped with making" to "Made" or "Was responsible for tracking" to "Tracked".
+Keep purposes as purposes: never turn "to fix/reduce/improve" into "fixed/reduced/improved" or otherwise claim the intended result happened.
 Each proposed bullet must be different from its original. Do not echo an original bullet as an edit; omit it when nothing can be safely shortened.
 Rewrite ONE bullet per edit. Keep at least half its words. Do not add bullets or sections.
 Never add facts, numbers, employers, titles, dates, tools, skills or proper nouns absent from RESUME or CONFIRMED SKILLS.
