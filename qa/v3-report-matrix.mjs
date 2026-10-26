@@ -9,15 +9,18 @@ const linkCase = JSON.parse(readFileSync("eval/messages/c7-shortener-google-form
 const shots = [];
 const results = [];
 const fullFacts = { isJobMessage: true, company: null, role: null, pay: null, sender: { name: null, email: null, phone: null }, asks: [], offPlatform: null, pressure: [], interview: { status: "unclear", quote: null }, dutiesVague: null, noExperienceNeeded: null, employerCountryHint: null, otherConcerns: [] };
-const hideDev = async (page) => page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+const hideDev = async (page) => page.addStyleTag({ content: "nextjs-portal { display: none !important; } html { scroll-behavior: auto !important; }" });
 async function capture(page, name, locator) {
   await hideDev(page);
   if (locator) {
-    await locator.scrollIntoViewIfNeeded();
     await locator.screenshot({ style: "header.sticky, nav[aria-label=Tools] { visibility: hidden !important; }", path: `${process.env.QA_SHOTS}/${name}.png`, animations: "disabled" });
   } else await shot(page, name);
   shots.push(`${name}.png`);
   assert.equal(await overflowX(page), 0, `${name}: horizontal overflow`);
+}
+async function showImpact(qq) {
+  const closed = qq.locator("[data-impact] details:not([open]) summary").last();
+  if (await closed.count()) await closed.click();
 }
 for (const width of [1440, 390]) for (const theme of ["light", "dark"]) {
   const suffix = `${width}-${theme}`;
@@ -40,11 +43,13 @@ for (const width of [1440, 390]) for (const theme of ["light", "dark"]) {
     const qq = page.locator("#qq-title").locator("..");
     await qq.getByRole("button", { name: "None yet", exact: true }).click();
     await qq.locator("[data-impact]").filter({ hasText: "None yet" }).waitFor();
+    await showImpact(qq);
     await capture(page, `v3-report-answer-confirmed-${suffix}`, qq);
     await qq.getByRole("button", { name: /None yet.*Change/ }).click();
     await qq.getByRole("button", { name: "Deposit a check", exact: true }).click();
     await qq.getByRole("button", { name: "Update the check", exact: true }).click();
     await page.getByRole("heading", { name: "Strong signs of a scam", exact: true }).waitFor();
+    await showImpact(qq);
     await capture(page, `v3-report-answer-changed-${suffix}`, qq);
     assert.equal(await page.getByRole("button", { name: /Tailor my resume|Practice an interview/ }).count(), 0);
     await page.reload();
@@ -91,6 +96,7 @@ for (const width of [1440, 390]) for (const theme of ["light", "dark"]) {
     await capture(page, `v3-report-link-scam-${suffix}`);
     await page.emulateMedia({ reducedMotion: "reduce" });
     await seedCheck(page, "scam");
+    await page.getByText("Brightline Data Solutions").first().waitFor();
     await page.waitForFunction(() => Number(document.querySelector("[data-score]")?.textContent ?? 0) >= 85);
     assert(Number(await page.locator("[data-score]").innerText()) >= 85);
     await capture(page, `v3-report-reduced-motion-${suffix}`, page.locator("article header"));

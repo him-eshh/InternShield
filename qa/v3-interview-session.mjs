@@ -25,11 +25,17 @@ async function edit(page, code) {
 }
 const getState = (page) => page.evaluate(() => JSON.parse(localStorage.getItem("is:practice-active")));
 const answer = "I owned the dashboard rollout. I interviewed five users, shipped a simpler view with the team, and reduced lookup time by 30 percent. I verified the result with usage logs and would measure adoption earlier next time.";
+const followUpAnswer = (q) => /join|row|table|query|index|null/i.test(q)
+  ? "I would compare row counts before and after each join, check duplicate keys and NULLs against expected rows, then inspect the query plan and index join keys for larger data."
+  : /code|complexity|edge|input|algorithm|test|solution/i.test(q)
+    ? "I would test empty and duplicate inputs, compare actual output with expected output, and explain the time and space cost before comparing another approach."
+    : "I would describe my own decision, measure the result, and explain what I learned or would change after feedback.";
+assert.match(followUpAnswer("Could joins produce duplicate rows?"), /duplicate keys/);
 for (const v of all ? variants : [variants[0]]) {
   const t = tag(v); const { browser, page, log } = await open({ ...v, reducedMotion: "reduce" });
   const calls = await mockApi(page, {
     intel: (body) => done({ company: body.company, cached: true, interview: { rounds: ["Coding", "Behavioral", "SQL"], notes: ["Explain decisions and test edge cases."] }, values: ["Ownership"], sources: [{ label: "Official careers", url: "https://example.com/careers" }] }),
-    interview: (body) => body.ask === "hint" ? done({ text: "Try an empty input and state the complexity.", feedback: null }) : done({ text: null, feedback: { summary: "Clear approach.", items: [{ index: body.turns.length - 1, strength: "You explained your own action and checked the result.", improve: "Name one edge case and quantify the trade-off.", quote: "", star: { situation: true, task: true, action: true, result: true } }] }, level: "strong", followUp: body.followUpsLeft === 2 ? "How would your approach change at ten times the scale?" : null }),
+    interview: (body) => body.ask === "hint" ? done({ text: "Try an empty input and state the complexity.", feedback: null }) : done({ text: null, feedback: { summary: "Practice feedback snapshot.", items: [{ index: body.turns.length - 1, strength: "You gave an answer to work from.", improve: "Add one specific way to verify your answer against the question.", quote: "", star: { situation: false, task: false, action: false, result: false } }] }, level: "ok", followUp: body.followUpsLeft === 2 ? "How would your approach change at ten times the scale?" : null }),
   });
   try {
     await page.goto(BASE + "/practice", { waitUntil: "load", timeout: 90000 });
@@ -74,7 +80,7 @@ for (const v of all ? variants : [variants[0]]) {
         assert.deepEqual((await getState(page)).activeQuestion.followUps, before.activeQuestion.followUps);
         assert.equal(await page.getByLabel("Your follow-up answer").inputValue(), "My in-progress follow-up draft");
       }
-      await page.getByLabel("Your follow-up answer").fill("I would profile the bottleneck, test with ten times the data, and compare latency before scaling capacity.");
+      await page.getByLabel("Your follow-up answer").fill(followUpAnswer(await page.locator("form:has(#followup-answer) h2").innerText()));
       await page.getByRole("button", { name: "Answer follow-up", exact: true }).click();
       const next = page.getByRole("button", { name: i === 5 ? "View summary" : "Next question", exact: true });
       await next.waitFor();

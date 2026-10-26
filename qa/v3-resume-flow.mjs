@@ -38,7 +38,7 @@ for (const variant of runs) {
     await page.getByLabel("Role (optional)").fill("Data Intern");
     await page.getByLabel("Job posting", { exact: true }).fill("Required: Python, SQL, Excel. Preferred: Tableau.");
     await page.route("**/api/intel", async (route) => {
-      await delay(700);
+      await delay(2200);
       await route.fulfill(done({ company: "Northwind", resume: { emphasis: ["Explain how you checked your data."] }, sources: [{ label: "Engineering notes", url: "https://northwind.example/engineering" }] }));
     });
     await page.route("**/api/rewrite", async (route) => {

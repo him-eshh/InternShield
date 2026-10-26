@@ -4,28 +4,25 @@ import { fallbackExplanation } from "@/lib/explainFallback";
 import { retryableSteps, type PipelineInput, type PipelineOutcome } from "@/lib/client/pipeline";
 import type { StepResults } from "@/lib/types";
 
-/** Dev-only: `?fixture=scam|real|medium` renders a hand-written report so the UI can be checked without the network. */
+/** Dev-only: `?fixture=scam|real|medium` renders a fabricated report without the network. */
 export async function fixtureOutcome(name: string): Promise<{ outcome: PipelineOutcome; input: PipelineInput } | null> {
-  const { scamReport, realReport, mediumReport } = await import("@/fixtures/reports");
+  const { scamReport, realReport, mediumReport, mediumFixture } = await import("@/fixtures/reports");
   const report = name === "real" ? realReport : name === "medium" ? mediumReport : name === "scam" ? scamReport : null;
   if (!report) return null;
   const ex = name === "real" ? EXAMPLES.real : EXAMPLES.scam;
   const steps: StepResults =
     name === "medium"
-      ? {
-          extract: ex.savedSteps.extract,
-          company: { status: "failed", reason: "timeout" },
-          sender: { status: "failed", reason: "limit", retryAfter: 20 },
-          posting: { status: "skipped", reason: "needs step 2" },
-        }
+      ? mediumFixture.steps
       : ex.savedSteps;
-  const input: PipelineInput = { text: ex.text, form: ex.form, source: ex.source, stage: ex.stage, profile: null, resumeText: null, exampleId: null };
+  const input: PipelineInput = name === "medium"
+    ? { text: mediumFixture.text, form: mediumFixture.form, source: mediumFixture.source, stage: mediumFixture.stage, profile: null, resumeText: null, exampleId: null }
+    : { text: ex.text, form: ex.form, source: ex.source, stage: ex.stage, profile: null, resumeText: null, exampleId: null };
   const facts = steps.extract.status === "done" ? steps.extract.data : null;
   const outcome: PipelineOutcome = {
     notJob: false,
     steps,
     facts,
-    scoreInput: { text: ex.text, facts, steps, profile: null, resumeText: null, source: ex.source, stage: ex.stage, answers: {}, form: ex.form },
+    scoreInput: { text: input.text, facts, steps, profile: null, resumeText: null, source: input.source, stage: input.stage, answers: {}, form: input.form },
     report,
     explanation: {
       text: fallbackExplanation({ level: report.level, flags: report.flags.slice(0, 6).map((f) => ({ title: f.title, quote: f.quote, why: f.why })) }),

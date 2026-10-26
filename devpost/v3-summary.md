@@ -1,6 +1,6 @@
 # InternShield v3 handoff
 
-Status: **local gates and final-tree browser checks passed; release actions pending**. Check, Tailor, Practice, setup, and shell browser checks passed on the integrated tree. One fabricated live extraction request was checked. The app has not been merged into `main`, pushed, deployed, recorded for demo, or submitted. Current product requirements: [scope](scope.md), [PRD](prd.md), [spec](spec.md); completion items: [checklist](checklist.md).
+Status: **local gates and final-tree browser checks passed; release actions pending**. Check, Tailor, Practice, setup, and shell browser checks passed on the integrated tree. Fabricated live extraction, interview feedback, and resume-edit requests were checked. The app has not been merged into `main`, pushed, deployed, recorded for demo, or submitted. Current product requirements: [scope](scope.md), [PRD](prd.md), [spec](spec.md); completion items: [checklist](checklist.md).
 
 ## What changed from v2
 
@@ -24,7 +24,7 @@ Retired flows: the one-screen Intro, hidden tier flags, finance round, design ch
 - **Scoring:** the generated [README eval table](../README.md#test-set-results) records 88/88 labeled fictional messages and 24/27 held-out, with zero low-risk false positives in those sets. This is fixture evidence, not a real-world accuracy claim.
 - **Attribution:** the 1,130-entry question bank stores metadata, with dataset licenses and pinned sources in [SOURCES.md](../data/question-bank/SOURCES.md). The design-skill source and MIT attribution are in [design-skills/README.md](design-skills/README.md).
 
-The screenshots are local, untracked artifacts. The final report matrix produced 56 shots, Tailor 34, and Practice 36; representative Home, report, and Practice screenshots were inspected. The earlier stream captures remain in their original folders.
+The screenshots are local, untracked artifacts. The final report matrix produced 56 shots, Tailor 34, and Practice 36. The report, Tailor, Practice, setup, and shell final captures were visually reviewed; the repaired report and loading-state captures were checked again after recapture. The earlier stream captures remain in their original folders.
 
 ## Final local verification
 
@@ -32,17 +32,17 @@ The screenshots are local, untracked artifacts. The final report matrix produced
 |---|---|---|
 | `npm run lint` | Pass | Final local tree |
 | `npx tsc --noEmit` | Pass | Final local tree |
-| `npx vitest run` | Pass | 86 files, 1,252 tests |
+| `npx vitest run` | Pass | 86 files, 1,257 tests |
 | `npm run build` | Pass | Final local tree |
 | `npm run eval` | Pass | Labeled 88/88; held-out 24/27 (misses ho-11, ho-15, ho-16) |
 | Final Check report matrix | Pass | 1440/390 light/dark; 56 shots |
 | Final setup and shell browser QA | Pass | Setup flow 1440/390 light/dark; shell 133 checks across 1440/390 light/dark plus 320/768, Profile, Tracker undo, reduced motion; separate clear-data browser smoke passed |
 | Final Tailor PDF/DOCX browser suite | Pass | Flow, states, budget, 320/768 fit; 34 captures |
 | Final Practice session browser matrix | Pass | 1440/390 light/dark; five answers, real Python/SQL, follow-ups, reload, summary/history, early stop; 36 captures |
-| Live API smoke | Pass for extraction only | One fabricated uncached `/api/extract` call: HTTP 200, status `done`, one `gift_cards` ask with source quote; cached repeats. Wrong Origin returned 403. No other live route claim. |
+| Live API smoke | Bounded checks passed | Fabricated `/api/extract`: HTTP 200, quote-backed gift-card ask; wrong Origin 403. Fabricated `/api/interview`: HTTP 200, copied quote with related feedback. Two fabricated `/api/rewrite` edit requests returned HTTP 200 with zero safe suggestions; this does not establish live suggestion yield. |
 | Hydration with extension attributes | Pass | Grammarly attributes on `body`; zero hydration errors |
 | Privacy and secret scan | Pass on current diff | Zero secret-shaped matches and tracked personal paths; `.env.local` is not tracked |
-| Final visual review | Representative review | Home, report, and Practice inspected; not every final screenshot was individually reviewed |
+| Final visual review | Pass for saved captures | All final report, Tailor, Practice, setup, and shell captures reviewed; repaired report and loading states rechecked |
 
 ## Five-minute owner check
 
@@ -58,13 +58,14 @@ The screenshots are local, untracked artifacts. The final report matrix produced
 - DOCX edits are deliberately narrow: they remove existing words while preserving their order and formatting. Some otherwise useful rewrites will be rejected.
 - Browser Python, TypeScript, and SQL runtimes use pinned public-CDN assets; offline operation has not been established.
 - “Most asked at [company]” is a proxy based on historical public lists, not current employer frequency. Thin pools broaden with a notice.
-- The held-out Check evaluation misses 3 of 27 cases. One live extraction succeeded; broader live provider quality was not established.
+- The held-out Check evaluation misses 3 of 27 cases. Live interview feedback succeeded on one fabricated answer. Two live Tailor edit requests yielded no suggestions, so broader live provider quality and edit yield remain unproven.
 - Usage caps and caches live in server memory per instance. External provider quotas are separate; unavailable checks and feedback fallbacks must remain visible.
+- Seven older `v3` commits contain private name or workstation-path text, although the current tree is sanitized. No key-shaped values were found in the branch's changed lines. A public release should use a clean snapshot based on `main`; a history-preserving merge would carry those older commits.
 
 ## Owner-only release actions (pending)
 
-- Review the final screenshots and this handoff, then decide whether to merge `v3` into `main`.
-- Recheck the exact staged diff for private data and secrets, then decide whether to push.
+- Review the final screenshots and this handoff, then inspect the clean release snapshot branch based on `main`. Do not history-preserving merge `v3` into a public branch.
+- Recheck the release snapshot's full tree and history for private data and secrets, then decide whether to push.
 - If publishing, configure server-only provider keys and `ALLOWED_ORIGINS` for the deployed origin, deploy, and test that deployment. Do not expose keys in client variables or submission materials.
 - Record a demo using only fabricated messages, resumes, and company context. Verify its statements against the final build.
 - Complete the Devpost submission after the demo and deployment are actually ready. Record the final link and date here only after submission.

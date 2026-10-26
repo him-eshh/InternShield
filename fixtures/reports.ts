@@ -1,6 +1,6 @@
-// Hand-written Report fixtures for building the UI before the engine lands.
-// Shapes match lib/types.ts. Not used at runtime.
-import type { Flag, Report } from "@/lib/types";
+// Fabricated development reports for checking UI states; medium is scored from its message and facts.
+import { score } from "@/lib/scoring/score";
+import type { Facts, Flag, Report, StepResults } from "@/lib/types";
 
 const scamFlags: Flag[] = [
   { id: "deposit_check", group: "offer", kind: "red", critical: true, points: 0, title: "Asks you to deposit a check and send money on",
@@ -69,24 +69,51 @@ export const realReport: Report = {
   thinMessage: false,
 };
 
-/** Medium report with quick questions and failed steps, for states the examples don't hit. */
-export const mediumReport: Report = {
-  score: 45,
-  level: "medium",
-  flags: [scamFlags[3], scamFlags[6]],
-  groups: group([scamFlags[3], scamFlags[6]]),
-  couldntCheck: [
-    { check: "Sender's email website", reason: "Couldn't check: the lookup took too long." },
-    { check: "Real job posting", reason: "Couldn't check: the search service is busy." },
-  ],
-  coverage: { ran: 6, total: 11, missingImportant: ["sender website"] },
-  questions: [
-    { id: "who_first", text: "Did you apply for this job first?",
-      options: [{ value: "yes", label: "Yes, I applied" }, { value: "no", label: "No, they found me" }, { value: "unknown", label: "Not sure" }] },
-    { id: "channel", text: "Where did this message reach you?",
-      options: [{ value: "email", label: "Email" }, { value: "linkedin", label: "LinkedIn" },
-        { value: "handshake", label: "Handshake" }, { value: "text_whatsapp", label: "Text or WhatsApp" }, { value: "other", label: "Other" }] },
-  ],
-  postingMatch: null,
-  thinMessage: false,
+/** Medium state with honest failed-check copy, scored from the same evidence shown in its message. */
+const mediumFacts: Facts = {
+  isJobMessage: true,
+  company: { value: "Northbeam Analytics", quote: "Northbeam Analytics" },
+  role: { value: "Software Engineering Intern", quote: "Software Engineering Intern opening" },
+  pay: null,
+  sender: { name: "Morgan Lee", email: "recruiting@northbeam.example", phone: "+1 (213) 555-0147" },
+  asks: [],
+  offPlatform: { app: "WhatsApp", quote: "Please add our hiring manager on WhatsApp at +1 (213) 555-0147" },
+  pressure: [{ quote: "This interview slot is only available for the next 24 hours" }],
+  interview: { status: "mentioned", quote: "schedule a short interview this week" },
+  dutiesVague: null,
+  noExperienceNeeded: null,
+  employerCountryHint: null,
+  otherConcerns: [],
 };
+const mediumSteps: StepResults = {
+  extract: { status: "done", data: mediumFacts },
+  company: { status: "failed", reason: "timeout" },
+  sender: { status: "failed", reason: "limit", retryAfter: 20 },
+  posting: { status: "skipped", reason: "needs step 2" },
+};
+export const mediumFixture = {
+  text: `Hi Alex,
+
+I'm Morgan Lee with Northbeam Analytics. Your portfolio looked relevant to our Software Engineering Intern opening. We'd like to schedule a short interview this week.
+
+Please add our hiring manager on WhatsApp at +1 (213) 555-0147 to arrange a time. This interview slot is only available for the next 24 hours, so please reply soon.
+
+Morgan Lee
+recruiting@northbeam.example`,
+  form: { sender: "recruiting@northbeam.example", company: "Northbeam Analytics" },
+  source: "linkedin" as const,
+  stage: "message" as const,
+  facts: mediumFacts,
+  steps: mediumSteps,
+};
+export const mediumReport: Report = score({
+  text: mediumFixture.text,
+  facts: mediumFacts,
+  steps: mediumSteps,
+  profile: null,
+  resumeText: null,
+  source: mediumFixture.source,
+  stage: mediumFixture.stage,
+  answers: {},
+  form: mediumFixture.form,
+});

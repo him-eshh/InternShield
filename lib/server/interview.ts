@@ -263,20 +263,34 @@ const REVIEW_SCHEMA = {
   properties: { ...(FEEDBACK_SCHEMA.properties as object), level: { type: "string", enum: ["strong", "ok", "weak"] }, followUp: str },
 };
 
-/** The local runner's result outranks model prose. A failed submission receives only
- * test-grounded feedback; model praise and levels can otherwise contradict it. */
-function groundFailedCodeFeedback(fb: InterviewFeedback, code: CodeAttempt | null, lastIndex: number): InterviewFeedback {
-  if (!code || code.total === 0 || code.passed >= code.total) return fb;
-  const sql = code.language === "sql";
-  const strength = sql
-    ? "Your query was checked against the expected result."
-    : `Your code passed ${code.passed} of ${code.total} hidden tests.`;
-  const improve = sql
+/** An exact answer quote or the runner's test result must support praise about the candidate. */
+function groundFeedback(fb: InterviewFeedback, code: CodeAttempt | null, lastIndex: number): InterviewFeedback {
+  const tested = code !== null && code.total > 0;
+  const failed = tested && code.passed < code.total;
+  const unquoted = fb.items.some((item) => !item.quote);
+  if (!failed && !unquoted) return fb;
+  const sql = code?.language === "sql";
+  const result = code ? sql ? "Your query was checked against the expected result." : `Your code passed ${code.passed} of ${code.total} hidden tests.` : "";
+  const fix = sql
     ? "The result differs from the expected rows. Compare the rows, joins, grouping and NULL handling."
     : "Some hidden tests failed. Use the first failing case to revise and rerun your code.";
+  let summary = fb.summary;
+  if (failed && code) summary = sql ? "The query result did not match the expected rows." : `${code.passed} of ${code.total} hidden tests passed.`;
+  else if (unquoted) summary = tested && code
+    ? sql ? "The query result matched the expected rows." : `${code.passed} of ${code.total} hidden tests passed.`
+    : "No exact answer quote was available. Use the suggestion below.";
   return {
-    summary: sql ? "The query result did not match the expected rows." : `${code.passed} of ${code.total} hidden tests passed.`,
-    items: fb.items.map((item) => item.index === lastIndex ? { ...item, strength, improve, star: null } : item),
+    summary,
+    items: fb.items.map((item) => {
+      if (failed && item.index === lastIndex) return { ...item, strength: result, improve: fix, star: null };
+      if (!item.quote) return {
+        ...item,
+        strength: tested && item.index === lastIndex ? result : "A specific strength could not be verified from this answer.",
+        improve: tested && item.index === lastIndex ? "Explain one edge case and how you checked it." : "Add one concrete example or check tied to the question.",
+        star: null,
+      };
+      return item;
+    }),
   };
 }
 
@@ -344,15 +358,21 @@ export async function handleInterview(body: Record<string, unknown>): Promise<Re
       return failed("error", { message: FEEDBACK_FAILED });
     }
     const checked = validateFeedback(raw, input.turns, input.round);
-    const fb = checked && groundFailedCodeFeedback(checked, input.code, input.turns.length - 1);
+    const fb = checked && groundFeedback(checked, input.code, input.turns.length - 1);
     if (!fb || (review && (fb.items.length !== 1 || fb.items[0].index !== input.turns.length - 1))) return failed("error", { message: FEEDBACK_FAILED });
     if (!review) return done({ text: null, feedback: fb });
     const rec = raw as Rec;
     const followUp = (input.followUpsLeft ?? 0) > 0 && typeof rec.followUp === "string" ? cleanQuestion(rec.followUp) : "";
+    const safeFollowUp = followUp && !fb.items[0].quote
+      ? input.round === "sql" ? "How would your query handle NULL values?"
+        : CODE_ROUNDS.includes(input.round) ? "Which edge case would you test next, and why?"
+          : "Can you give one concrete example and explain the outcome?"
+      : followUp;
     const modelLevel = rec.level === "strong" || rec.level === "ok" || rec.level === "weak" ? rec.level : undefined;
     const codeRatio = input.code && input.code.total > 0 ? input.code.passed / input.code.total : null;
-    const level = codeRatio !== null && codeRatio < 1 ? (codeRatio < 0.5 ? "weak" : "ok") : modelLevel;
-    return done({ text: null, feedback: fb, followUp: followUp || null, ...(level ? { level } : {}) });
+    const level = codeRatio !== null ? (codeRatio >= 1 ? "strong" : codeRatio < 0.5 ? "weak" : "ok")
+      : !fb.items[0].quote ? (input.turns.at(-1)?.answer.trim() ? "ok" : "weak") : modelLevel;
+    return done({ text: null, feedback: fb, followUp: safeFollowUp || null, ...(level ? { level } : {}) });
   }
 
   const text = cleanQuestion(r.data, input.ask === "hint" ? MAX_HINT_CHARS : MAX_QUESTION_CHARS);

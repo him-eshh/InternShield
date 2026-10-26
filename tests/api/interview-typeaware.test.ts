@@ -64,6 +64,61 @@ describe("question-type-aware review prompt (no live model: Groq is mocked)", ()
     expect(typeGuide({ round: "design", code: null }).judge).toBe("");
   });
 
+  it.each(["", "I led ten teams"])("removes unsupported candidate claims when the model quote is %j", async (quote) => {
+    h.create.mockReturnValue(groqOk(JSON.stringify({
+      summary: "Excellent leadership with verified results.", level: "strong", followUp: "Since you doubled sales, how did you lead those teams?", items: [{
+        index: 0, strength: "You led ten teams and doubled sales.", improve: "You failed to mention the result.", quote,
+        star: { situation: true, task: true, action: true, result: true },
+      }],
+    })));
+    const json = await (await review("behavioral")).json();
+    expect(json.data.feedback.summary).toBe("No exact answer quote was available. Use the suggestion below.");
+    expect(json.data.feedback.items[0]).toMatchObject({
+      quote: null,
+      strength: "A specific strength could not be verified from this answer.",
+      improve: "Add one concrete example or check tied to the question.",
+      star: null,
+    });
+    expect(json.data.level).toBe("ok");
+    expect(json.data.followUp).toBe("Can you give one concrete example and explain the outcome?");
+    expect(JSON.stringify(json.data.feedback)).not.toMatch(/led ten teams|doubled sales|verified results|failed to mention/i);
+  });
+
+  it("keeps quoted feedback and its review level", async () => {
+    h.create.mockReturnValue(groqOk(JSON.stringify({
+      summary: "Your answer was concise.", level: "strong", followUp: "", items: [{
+        index: 0, strength: "You gave a concise answer.", improve: "Add one example.", quote: "An answer",
+        star: { situation: false, task: false, action: false, result: false },
+      }],
+    })));
+    const json = await (await review("behavioral")).json();
+    expect(json.data.feedback.summary).toBe("Your answer was concise.");
+    expect(json.data.feedback.items[0].strength).toBe("You gave a concise answer.");
+    expect(json.data.feedback.items[0].quote).toBe("An answer");
+    expect(json.data.level).toBe("strong");
+  });
+
+  it("uses passing code test results when the model invents unquoted praise", async () => {
+    h.create.mockReturnValue(groqOk(JSON.stringify({
+      summary: "You demonstrated expert algorithm design.", level: "strong", followUp: "", items: [{
+        index: 0, strength: "You used an optimal graph algorithm.", improve: "No changes needed.", quote: "",
+        star: { situation: true, task: true, action: true, result: true },
+      }],
+    })));
+    const json = await (await review("coding", { code: {
+      problemId: "count-vowels", language: "python", code: "def count(s): return sum(c in 'aeiou' for c in s)", passed: 6, total: 6,
+    } })).json();
+    expect(json.data.feedback.summary).toBe("6 of 6 hidden tests passed.");
+    expect(json.data.feedback.items[0]).toMatchObject({
+      quote: null,
+      strength: "Your code passed 6 of 6 hidden tests.",
+      improve: "Explain one edge case and how you checked it.",
+      star: null,
+    });
+    expect(json.data.level).toBe("strong");
+    expect(JSON.stringify(json.data.feedback)).not.toMatch(/expert algorithm|optimal graph|No changes needed/);
+  });
+
   it.each([
     ["coding", { problemId: "count-vowels", language: "python", code: "def f(s): return 0", passed: 1, total: 6 }, "1 of 6 hidden tests passed.", "weak"],
     ["sql", { problemId: "sql-top-courses", language: "sql", code: "SELECT 1", passed: 0, total: 1 }, "The query result did not match the expected rows.", "weak"],

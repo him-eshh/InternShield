@@ -7,8 +7,26 @@ import { diffReports, impactCopy } from "@/lib/impact";
 import { realReport } from "@/fixtures/reports";
 import { EXAMPLES } from "@/lib/examples";
 import { runPipeline } from "@/lib/client/pipeline";
+import { score } from "@/lib/scoring/score";
 
 describe("v3 report rules", () => {
+  it("keeps the medium fixture's quotes, facts, and score consistent with its message", async () => {
+    const { input, outcome } = (await fixtureOutcome("medium"))!;
+    const report = outcome.report!;
+    expect(input.text).not.toMatch(/deposit (?:a |the )?check|send (?:the )?remaining balance|buy (?:your )?equipment/i);
+    expect(outcome.facts?.asks).toEqual([]);
+    expect([
+      outcome.facts?.company?.quote,
+      outcome.facts?.role?.quote,
+      outcome.facts?.offPlatform?.quote,
+      outcome.facts?.interview.quote,
+      ...outcome.facts!.pressure.map((item) => item.quote),
+    ].every((quote) => !quote || input.text.includes(quote))).toBe(true);
+    expect(report.flags.every((flag) => !flag.quote || input.text.includes(flag.quote))).toBe(true);
+    expect(report.score).toBe(report.flags.reduce((total, flag) => total + flag.points, 0));
+    expect(report).toEqual(score(outcome.scoreInput));
+    expect(outcome.facts?.offPlatform?.quote).toBe(report.flags.find((flag) => flag.id === "off_platform")?.quote);
+  });
   for (const name of ["real", "medium", "scam"]) {
     it(`${name} has exactly one filled primary action`, async () => {
       const fx = (await fixtureOutcome(name))!;

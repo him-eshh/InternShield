@@ -20,7 +20,7 @@ This file tracks the final integrated v3 tree. Earlier slice-by-slice build chec
 
 - [x] `npm run lint` on final tree
 - [x] `npx tsc --noEmit` on final tree
-- [x] `npx vitest run` on final tree: 86 files, 1,252 tests
+- [x] `npx vitest run` on final tree: 86 files, 1,257 tests
 - [x] `npm run build` on final tree
 - [x] `npm run eval` on final tree: labeled 88/88; held-out 24/27
 - [x] Browser QA at desktop and phone widths, light/dark, keyboard, and reduced motion
@@ -28,7 +28,7 @@ This file tracks the final integrated v3 tree. Earlier slice-by-slice build chec
 - [x] Tailor PDF and DOCX export, preview, layout/length, accepted edit visibility, and PDF extraction warning
 - [x] Practice coding, SQL, behavioral, fallback notice, early stop, refresh, and summary-to-Tracker
 - [x] Tracker, Profile, cross-tool prefill, and clear-data flows
-- [x] Bounded live smoke: one fabricated extraction succeeded with a source quote; wrong Origin returned 403. Other live routes were not exercised.
+- [x] Bounded live smoke: fabricated extraction and interview feedback succeeded with source quotes; wrong Origin returned 403. Two fabricated Tailor edit requests returned zero safe suggestions. Other live routes were not exercised.
 - [x] Final documentation, source attribution, and current-diff secret/private-data scan
 - [ ] Owner review of final screenshots, demo, deployment, and Devpost submission materials
 
