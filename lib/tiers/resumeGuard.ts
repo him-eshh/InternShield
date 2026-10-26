@@ -343,7 +343,7 @@ const HIGH_VERBS = [
   "led", "spearheaded", "owned", "drove", "headed", "directed", "managed", "architected", "founded", "launched",
   "single handedly", "orchestrated", "championed", "pioneered",
 ];
-const QUALIFIERS = ["co", "helped", "assisted", "with a team of", "as part of", "contributed to", "jointly", "partly", "partially"];
+const QUALIFIERS = ["co", "helped", "assisted", "responsible for", "with a team of", "as part of", "contributed to", "jointly", "partly", "partially"];
 const SCOPE = [
   "company wide", "organization wide", "end to end", "cross functional", "enterprise", "global", "entire", "all", "every",
   "sole", "first ever", "award winning", "production", "at scale",

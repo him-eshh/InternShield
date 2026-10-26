@@ -42,6 +42,12 @@ describe("shared resume edit guard", () => {
     const source = "Built 2 apps and taught 100 students.";
     expect(checkEdit({ resume: source, original: source, proposed: "Built 100 apps and taught 2 students." }).ok).toBe(false);
   });
+  it("keeps responsibility and assistance qualifiers when shortening bullets", () => {
+    const source = "Was responsible for organizing weekly Excel reports for the club.";
+    expect(checkEdit({ resume: source, original: source, proposed: "Was organizing weekly Excel reports for the club.", source: "pdf" }).ok).toBe(false);
+    const redundant = "Helped organize weekly Excel reports for the club on a weekly basis.";
+    expect(checkEdit({ resume: redundant, original: redundant, proposed: "Helped organize weekly Excel reports for the club.", source: "pdf" }).ok).toBe(true);
+  });
   it("rejects headings, fabricated ids, duplicate edits and malformed objects", () => {
     const heading = docLines(doc).find((l) => l.kind === "heading")!;
     expect(checkedEdits(doc, [null, {}, { ...candidate, lineId: heading.id }, { ...candidate, lineId: "missing" }, candidate, candidate], [])).toHaveLength(1);

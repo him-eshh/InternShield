@@ -32,16 +32,16 @@ The screenshots are local, untracked artifacts. The final report matrix produced
 |---|---|---|
 | `npm run lint` | Pass | Final local tree |
 | `npx tsc --noEmit` | Pass | Final local tree |
-| `npx vitest run` | Pass | 86 files, 1,258 tests |
+| `npx vitest run` | Pass | 86 files, 1,259 tests |
 | `npm run build` | Pass | Final local tree |
 | `npm run eval` | Pass | Labeled 88/88; held-out 24/27 (misses ho-11, ho-15, ho-16) |
 | Final Check report matrix | Pass | 1440/390 light/dark; 56 shots |
 | Final setup and shell browser QA | Pass | Setup flow 1440/390 light/dark; shell 133 checks across 1440/390 light/dark plus 320/768, Profile, Tracker undo, reduced motion; separate clear-data browser smoke passed |
 | Final Tailor PDF/DOCX browser suite | Pass | Flow, states, budget, 320/768 fit; 34 captures |
 | Final Practice session browser matrix | Pass | 1440/390 light/dark; five answers, real Python/SQL, follow-ups, reload, summary/history, early stop; 36 captures |
-| Live API smoke | Bounded checks passed | Fabricated `/api/extract`: HTTP 200, quote-backed gift-card ask; wrong Origin 403. Fabricated `/api/interview`: HTTP 200, copied quote with conservative coaching. Deterministic `/api/explain`: HTTP 200, uses the flag reason without inventing a pay claim. Two fabricated `/api/rewrite` edit requests returned HTTP 200 with zero safe suggestions; this does not establish live suggestion yield. |
+| Live API smoke | Bounded checks passed | Fabricated `/api/extract`: HTTP 200, quote-backed gift-card ask; wrong Origin 403. Fabricated `/api/interview`: HTTP 200, copied quote with conservative coaching. Deterministic `/api/explain`: HTTP 200, uses the flag reason without inventing a pay claim. Initial fabricated `/api/rewrite` requests returned zero safe suggestions. After a narrower prompt, a fabricated one-page PDF completed the real browser Tailor flow with three guarded suggestions and a downloadable PDF. |
 | Hydration with extension attributes | Pass | Grammarly attributes on `body`; zero hydration errors |
-| Privacy and secret scan | Pass on current diff | Zero secret-shaped matches and tracked personal paths; `.env.local` is not tracked |
+| Privacy and secret scan | Pass on isolated snapshot | Full one-commit history and tracked tree had zero personal-path or key-shaped matches; `.env.local` is not tracked |
 | Final visual review | Pass for saved captures | All final report, Tailor, Practice, setup, and shell captures reviewed; repaired report and loading states rechecked |
 
 ## Five-minute owner check
@@ -58,15 +58,15 @@ The screenshots are local, untracked artifacts. The final report matrix produced
 - DOCX edits are deliberately narrow: they remove existing words while preserving their order and formatting. Some otherwise useful rewrites will be rejected.
 - Browser Python, TypeScript, and SQL runtimes use pinned public-CDN assets; offline operation has not been established.
 - “Most asked at [company]” is a proxy based on historical public lists, not current employer frequency. Thin pools broaden with a notice.
-- The held-out Check evaluation misses 3 of 27 cases. Live interview feedback succeeded on one fabricated answer. Two live Tailor edit requests yielded no suggestions, so broader live provider quality and edit yield remain unproven.
+- The held-out Check evaluation misses 3 of 27 cases. Live interview feedback succeeded on one fabricated answer. One fabricated one-page PDF produced three Tailor suggestions that passed automated checks end to end after prompt refinement; consistency across other resumes and providers is unproven.
 - Check explanations are built from scored flag reasons. Interview reviews discard model-written achievement and STAR claims; exact quotes prove occurrence, while runnable scores come from browser test counts supplied to the server. Discussion answers are ungraded. Earlier saved summaries hide prior model prose, and pre-update active sessions keep answers while old claims and premises are neutralized on resume. This protects visible claims but limits personalized praise.
 - Usage caps and caches live in server memory per instance. External provider quotas are separate; unavailable checks and feedback fallbacks must remain visible.
-- Multiple older `v3` commits contain private name or workstation-path text, although the current tree is sanitized. A broad path scan matched 24 commits; a narrower name/path scan matched seven. No key-shaped values were found in the branch's changed lines. A public release should use a clean snapshot based on `main`; a history-preserving merge would carry those older commits.
+- Older `v3` commits contain private name or workstation-path text, and a full-history scan found personal-path text reachable from `main`. The current tracked tree is sanitized and no key-shaped values were found in the branch's changed lines. Public source should come from a clean root snapshot with no old parent history; merging or publishing the older branches would retain that text.
 
 ## Owner-only release actions (pending)
 
-- Review the final screenshots and this handoff, then inspect the clean release snapshot branch based on `main`. Do not history-preserving merge `v3` into a public branch.
-- Recheck the release snapshot's full tree and history for private data and secrets, then decide whether to push.
+- Review the final screenshots and this handoff, then inspect the clean single-commit root snapshot branch. Do not merge `v3` or `main` into it or publish their history.
+- Recheck the release snapshot's full tree and history for private data and secrets, then decide how to publish it without including older repository history.
 - If publishing, configure server-only provider keys and `ALLOWED_ORIGINS` for the deployed origin, deploy, and test that deployment. Do not expose keys in client variables or submission materials.
 - Record a demo using only fabricated messages, resumes, and company context. Verify its statements against the final build.
 - Use the [submission draft](submission-draft.md) and [demo storyboard](demo-storyboard.md) as reviewable starting materials; replace pending links only after they exist.

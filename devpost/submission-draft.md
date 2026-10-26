@@ -27,7 +27,7 @@ The hardest product decision was choosing when to say *less*. InternShield does 
 
 Local verification passed lint, type checking, more than 1,250 tests, production build, and browser flows across desktop/phone and light/dark modes. A labeled set of 88 fabricated messages landed in their expected risk levels; a separate held-out set landed 24 of 27. These are fixture results, **not measured real-world scam-detection accuracy**.
 
-Current limits: three held-out cases miss their expected level; live resume-edit yield is not established by the small provider smoke check; PDF edits can leave original text extractable and are not redaction; Word edits are deliberately narrow; coding runtimes need public network assets; company-question ranking uses historical lists as a proxy. Users should verify any job through the employer's official channel and review every resume edit before sharing it.
+Current limits: three held-out cases miss their expected level; one fabricated one-page PDF produced three guarded live edit suggestions, but yield across other resumes is unproven; PDF edits can leave original text extractable and are not redaction; Word edits are deliberately narrow; coding runtimes need public network assets; company-question ranking uses historical lists as a proxy. Users should verify any job through the employer's official channel and review every resume edit before sharing it.
 
 ## Suggested tags
 
