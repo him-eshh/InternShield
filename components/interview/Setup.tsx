@@ -135,5 +135,6 @@ export default function Setup({ bank, initial, targetDescription = null, level =
       <p className="mt-1 text-sm text-fg-2">About {Math.max(1, config.limit.kind === "questions" ? config.limit.count : config.limit.count * 2) * 4} minutes. Your progress is saved on this device.</p>
     </aside>
     <button className={btnPrimary} disabled={!config.rounds.length || loading || !bank.length}>Start session<ArrowRight size={18} /></button>
+    <p className="text-xs text-muted">Question metadata comes from two MIT-licensed public datasets; notices are in data/question-bank/LICENSES.md. Not affiliated with LeetCode.</p>
   </form>;
 }

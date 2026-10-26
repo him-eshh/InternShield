@@ -29,7 +29,7 @@ export default function AddInformation({ busy, note, onSave }: {
           <ScreenshotUpload disabled={busy} onText={(value) => setText(value.slice(0, MAX_MESSAGE_CHARS))} />
         </div>
         <div><label htmlFor="additional-sender">Sender&apos;s email or phone</label><input id="additional-sender" value={sender} maxLength={200} onChange={(e) => setSender(e.target.value)} className={field} placeholder="name@company.com" /></div>
-        <button type="submit" disabled={busy} className={btnSecondary}>{busy ? "Checking addition..." : "Update this check"}</button>
+        <button type="submit" disabled={busy} className={btnSecondary}>{busy ? "Checking addition…" : "Update this check"}</button>
         {error && <p role="alert" className="text-[15px]">{error}</p>}
         <p role="status" aria-live="polite" className={typeof note === "string" || !note ? "whitespace-pre-line text-[15px] leading-relaxed text-muted" : "sr-only"}>{typeof note === "string" || !note ? note : impactCopy(note)}</p>
         {note && typeof note !== "string" && <div aria-hidden="true"><ImpactCard impact={note} /></div>}

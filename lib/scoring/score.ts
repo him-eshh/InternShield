@@ -33,7 +33,7 @@ const CRITICAL_COPY: Record<CriticalAsk, { title: string; why: string; sourceUrl
     sourceUrl: FTC_JOB_SCAMS,
   },
   deposit_check: {
-    title: "They want you to deposit a check and send money on",
+    title: "They want you to deposit a check and forward the money",
     why: "This is the fake-check scam: the check bounces days later and you owe the bank everything you sent.",
     sourceUrl: FTC_FAKE_CHECKS,
   },

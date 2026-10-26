@@ -313,7 +313,7 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, nextS
         <EvidenceList flags={report.flags} level={report.level} numbers={numbers} />
         <CouldntCheck items={report.couldntCheck} />
 
-        {explanation ? <Explanation text={explanation.text} source={explanation.source} quotes={quotes} loading={explaining} /> : pending && <p className="text-[17px] text-fg-2" aria-busy="true">Writing the explanation...</p>}
+        {explanation ? <Explanation text={explanation.text} source={explanation.source} quotes={quotes} loading={explaining} /> : pending && <p className="text-[17px] text-fg-2" aria-busy="true">Writing the explanation…</p>}
 
         <QuickQuestions questions={shownQuestions} answers={answers} change={change} lastId={lastId} onAnswer={onAnswer} disabled={company?.busy} confirmations={confirmations} />
 

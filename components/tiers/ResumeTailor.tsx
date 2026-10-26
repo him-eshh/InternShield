@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
-import { ArrowLeft, Check, Download, Eye, FilePenLine, FileUp, Keyboard, LoaderCircle, Undo2, X } from "lucide-react";
+import { Check, FlaskConical, RotateCw, Download, Eye, FilePenLine, FileUp, Keyboard, LoaderCircle, Undo2, X } from "lucide-react";
+import { TAILOR_SAMPLE } from "@/lib/examples";
 import { TailorIllustration } from "../illustrations";
 import type { ResumeData, UserLevel } from "@/lib/types";
 import type { PostingContext } from "@/lib/tiers/types";
@@ -17,12 +18,12 @@ import { EditCard } from "../resume/EditCard";
 import { DocumentPreview } from "../resume/DocumentPreview";
 import { band, btnPrimary, btnSecondary } from "../ui";
 
-interface Props { resume: ResumeData | null; target: PostingContext | null; profileLevel?: UserLevel; onOpenProfile: () => void; onBack: () => void }
+interface Props { resume: ResumeData | null; target: PostingContext | null; profileLevel?: UserLevel; onOpenProfile: () => void }
 const field = "mt-1.5 w-full rounded-xl border border-border-strong bg-surface px-3 py-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-tool";
 const primary = btnPrimary;
 const secondary = btnSecondary;
 
-export default function ResumeTailor({ resume, target, profileLevel, onOpenProfile, onBack }: Props) {
+export default function ResumeTailor({ resume, target, profileLevel, onOpenProfile }: Props) {
   const [text, setText] = useState(resume?.text ?? "");
   const [posting, setPosting] = useState(target?.description?.slice(0, 2000) ?? "");
   const [company, setCompany] = useState(target?.company ?? "");
@@ -46,6 +47,7 @@ export default function ResumeTailor({ resume, target, profileLevel, onOpenProfi
   const [stage, setStage] = useState(0);
   const [outcomes, setOutcomes] = useState<string[]>([]);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [undo, setUndo] = useState<{ id: string; previous: ResumeEdit["status"]; action: string } | null>(null);
@@ -109,6 +111,9 @@ export default function ResumeTailor({ resume, target, profileLevel, onOpenProfi
     return () => { stale = true; };
   }, [file, accepted, previewVersion, highlight, version]);
 
+  function fillSample() {
+    setInputMode("text"); setText(TAILOR_SAMPLE.resume); setPosting(TAILOR_SAMPLE.posting); setCompany(TAILOR_SAMPLE.company); setRole(TAILOR_SAMPLE.role); setError(""); setNotice("Filled with a made-up resume and job post. Nothing here is a real person.");
+  }
   function cancel() {
     controller.current?.abort();
     if (timer.current) clearTimeout(timer.current);
@@ -116,7 +121,7 @@ export default function ResumeTailor({ resume, target, profileLevel, onOpenProfi
   }
   async function start(nextFacts = facts, addOne = false) {
     const abort = new AbortController(); controller.current?.abort(); controller.current = abort;
-    setChanged(null); setBusy(true); setError(""); setOutcomes([]); setStage(0); setShowProgress(false);
+    setChanged(null); setBusy(true); setError(""); setNotice(""); setOutcomes([]); setStage(0); setShowProgress(false);
     timer.current = setTimeout(() => setShowProgress(true), 200);
     try {
       const original = addOne && file ? file : inputMode === "file" && upload ? await openResumeFile(upload) : { doc: parseTextResume(text), bytes: null, name: resume?.fileName ?? "resume.txt" };
@@ -221,8 +226,7 @@ export default function ResumeTailor({ resume, target, profileLevel, onOpenProfi
 
   return (
     <section data-resume-editor="" aria-label="Resume tailoring" data-tool="tailor" className="mx-auto max-w-6xl px-4 pb-24 pt-6 sm:px-6 sm:pt-9">
-      <button type="button" onClick={onBack} className="inline-flex min-h-11 items-center gap-2 text-sm text-fg-2 hover:text-tool-strong"><ArrowLeft size={17} strokeWidth={1.75} />Back</button>
-      <header className={`${band} mb-8 mt-3 flex flex-wrap items-center justify-between gap-5`}>
+      <header className={`${band} mb-8 flex flex-wrap items-center justify-between gap-5`}>
         <div><p className="text-sm font-semibold opacity-85">Tailor / resume workspace</p><h1 className="mt-2 font-display text-4xl leading-tight sm:text-5xl">Tailor your resume</h1><p className="mt-3 max-w-xl opacity-90">Review a few careful edits in the original layout. You decide what belongs.</p></div>
         <TailorIllustration size={96} className="shrink-0" />
       </header>
@@ -237,7 +241,7 @@ export default function ResumeTailor({ resume, target, profileLevel, onOpenProfi
           {upload?.name.toLowerCase().endsWith(".docx") && <p className="mt-3 text-sm text-fg-2">Word edits remove existing words to preserve layout; new wording is limited.</p>}</>}
           {inputMode === "text" && <label className="mt-5 block text-sm font-medium">Resume text<textarea value={text} onChange={(event) => setText(event.target.value)} disabled={busy} rows={8} maxLength={10000} className={`${field} resize-y text-sm`} placeholder="Paste your resume, including its bullet points" /></label>}
           {resume && inputMode === "text" && <p className="mt-2 text-sm text-fg-2">Profile text loaded. Upload the original file to preserve formatting.</p>}
-          {!resume && <button type="button" onClick={onOpenProfile} className="mt-3 min-h-11 text-sm text-tool-strong underline underline-offset-4">Open my profile</button>}
+          <button type="button" disabled={busy} onClick={fillSample} className="mt-3 mr-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-tool px-3 text-sm font-medium text-tool-strong hover:bg-tool-tint"><FlaskConical size={16} aria-hidden="true" />Try a made-up resume</button>{!resume && <button type="button" onClick={onOpenProfile} className="mt-3 min-h-11 text-sm text-tool-strong underline underline-offset-4">Open my profile</button>}
         </div>
         <div className="border-t-2 border-tool py-5"><h2 className="font-display text-2xl">02 / The role</h2><div className="mt-4 grid gap-3 sm:grid-cols-2"><label className="text-sm font-medium">Company <span className="font-normal text-fg-2">(optional)</span><input value={company} onChange={(event) => setCompany(event.target.value)} maxLength={120} disabled={busy} className={field} /></label><label className="text-sm font-medium">Role <span className="font-normal text-fg-2">(optional)</span><input value={role} onChange={(event) => setRole(event.target.value)} maxLength={120} disabled={busy} className={field} /></label></div>
           <label className="mt-4 block text-sm font-medium">Job posting <span className="font-normal text-fg-2">(optional with a company or role)</span><textarea value={posting} onChange={(event) => setPosting(event.target.value)} disabled={busy} rows={8} maxLength={2000} className={`${field} resize-y text-sm`} placeholder="Paste the requirements and responsibilities" /></label>
@@ -246,7 +250,8 @@ export default function ResumeTailor({ resume, target, profileLevel, onOpenProfi
         </div>
       </section>}
       {showProgress && busy && <section ref={progressPanel} role="status" aria-live="polite" className="my-5 border-l-4 border-tool bg-paper-2 p-5"><div className="mb-3 flex items-center justify-between gap-3"><h2 className="font-display text-xl">Preparing your edits</h2><button type="button" className={secondary} onClick={cancel}>Cancel</button></div><ol className="space-y-3">{steps.map((label, i) => <li key={label} className={`flex items-start gap-3 text-sm ${i > stage ? "text-fg-3" : "text-fg"}`}>{i < stage ? <Check size={18} className="text-tool-strong" /> : i === stage ? <LoaderCircle size={18} className="animate-spin motion-reduce:animate-none text-tool-strong" /> : <span className="mt-1 h-3 w-3 rounded-full border border-border-strong" />}<span>{label}{outcomes[i] && <span className="ml-2 text-fg-2">{outcomes[i]}</span>}</span></li>)}</ol><div aria-hidden="true" className="mt-5 space-y-2"><div className="skeleton-paper h-4 w-4/5 rounded" /><div className="skeleton-paper h-4 w-2/3 rounded" /></div></section>}
-      {error && <p role="alert" className="my-4 border-l-4 border-tool bg-paper-2 p-4 text-sm">{error}</p>}
+      {notice && !review && <p role="status" className="my-4 border-l-4 border-tool bg-tool-tint p-4 text-sm">{notice}</p>}
+      {error && <div role="alert" className="my-4 flex flex-wrap items-center justify-between gap-3 border-l-4 border-tool bg-paper-2 p-4 text-sm"><p className="min-w-0 flex-1">{error}</p>{!busy && !review && <button type="button" className={secondary} onClick={() => void start()}><RotateCw size={16} aria-hidden="true" />Try again</button>}</div>}
       {review && plan && !busy && <div className="space-y-7">
         <div className="flex flex-wrap items-start justify-between gap-4 border-b border-rule pb-5"><div className="min-w-52 flex-1"><p className="font-display text-xl">03 / Review the edits</p><p className="mt-1 text-sm text-fg-2">{edits.length} suggestions · {accepted.length} accepted. Each edit is yours to keep or reject.</p><div role="progressbar" aria-label="Edits accepted" aria-valuemin={0} aria-valuemax={Math.max(1, edits.length)} aria-valuenow={accepted.length} className="mt-3 flex flex-wrap gap-1.5">{edits.map((edit) => <span key={edit.id} aria-hidden="true" className={`h-3 w-6 rounded-[2px] border ${edit.status === "accepted" ? "border-tool bg-tool" : "border-rule bg-paper-2"}`} />)}</div></div><button type="button" className={secondary} onClick={() => { controller.current?.abort(); setChanged(null); setFile(null); setEdits([]); setPlan(null); setFacts([]); setUndo(null); }}>Change inputs</button></div>
         {file.doc.source === "docx" && <p className="border-l-2 border-tool pl-4 text-sm text-fg-2">Word edits shorten wording while keeping the remaining words in order. Check the downloaded file in Word before sending it.</p>}
@@ -257,7 +262,7 @@ export default function ResumeTailor({ resume, target, profileLevel, onOpenProfi
             {file.doc.source === "pdf" && accepted.length > 0 && <p role="note" className="border-l-4 border-tool bg-tool-tint p-3 text-sm"><strong>Before you share an edited PDF:</strong> replacements are visual overlays. Covered original text remains extractable from the PDF. Choose clean plain text if the old wording must be removed.</p>}
             <div className="flex flex-wrap gap-3">{file.doc.source === "pdf" && accepted.length > 0 ? <><button type="button" disabled={!ready} className={primary} onClick={() => saveResumeBytes(new TextEncoder().encode(renderPlainText(file.doc, accepted.map((edit) => ({ lineId: edit.lineId, text: edit.proposed })))), "text/plain", `${baseName}-tailored.txt`)}><Download size={16} />Download clean text</button><button type="button" disabled={!ready} className={secondary} onClick={() => generated && saveResumeBytes(generated.output.bytes, generated.output.mime, `${baseName}-tailored.${generated.output.ext}`)}>Download PDF</button></> : <><button type="button" disabled={!ready} className={primary} onClick={() => generated && saveResumeBytes(generated.output.bytes, generated.output.mime, `${baseName}-tailored.${generated.output.ext}`)}><Download size={16} />Download {generated?.output.ext.toUpperCase() ?? "resume"}</button><button type="button" disabled={!ready} className={secondary} onClick={() => saveResumeBytes(new TextEncoder().encode(renderPlainText(file.doc, accepted.map((edit) => ({ lineId: edit.lineId, text: edit.proposed })))), "text/plain", `${baseName}-tailored.txt`)}>Plain text</button></>}</div>{!ready && <p className="text-sm text-fg-2">Preview first, then download.</p>}
           </section>
-          <section ref={editList} onKeyDown={handleEditKeys} aria-label="Suggested edits" className={`${previewOpen ? "hidden lg:block" : "block"} min-w-0 space-y-4`}><PlanPanel plan={plan} /><div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-display text-xl">Review each line</h2><button type="button" className="inline-flex min-h-11 items-center gap-2 text-sm text-tool-strong underline-offset-4 hover:underline" aria-expanded={shortcutsOpen} onClick={() => setShortcutsOpen((open) => !open)}><Keyboard size={17} />Shortcuts</button></div>{shortcutsOpen && <p className="border-l-2 border-tool pl-3 text-sm text-fg-2">Focus an edit, then press J or K to move, A to accept, or R to reject. Shortcuts do not run while you type in a field.</p>}{!!acceptAllIds.length && <div className="border-t border-rule pt-3"><button type="button" className={secondary} onClick={acceptAllChecked}>Accept all {acceptAllIds.length} checked edits</button><p className="mt-2 text-sm text-fg-2">Review every accepted line against your experience before downloading.</p></div>}{edits.length ? edits.map((edit) => <EditCard key={edit.id} edit={edit} onStatus={status} onEdit={editText} />) : <div className="border-l-2 border-tool bg-paper-2 p-6"><h3 className="font-display text-lg">No changes to review</h3><p className="mt-2 text-sm text-fg-2">No suggestions passed the checks. {posting.trim() ? "Confirm a missing skill above or try another posting." : "Add a job posting for more targeted suggestions."}</p></div>}</section>
+          <section ref={editList} onKeyDown={handleEditKeys} aria-label="Suggested edits" className={`${previewOpen ? "hidden lg:block" : "block"} min-w-0 space-y-4`}><PlanPanel plan={plan} /><div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-display text-xl">Review each line</h2><button type="button" className="inline-flex min-h-11 items-center gap-2 text-sm text-tool-strong underline-offset-4 hover:underline" aria-expanded={shortcutsOpen} onClick={() => setShortcutsOpen((open) => !open)}><Keyboard size={17} />Shortcuts</button></div>{shortcutsOpen && <p className="border-l-2 border-tool pl-3 text-sm text-fg-2">Focus an edit, then press J or K to move, A to accept, or R to reject. Shortcuts do not run while you type in a field.</p>}{!!acceptAllIds.length && <div className="border-t border-rule pt-3"><button type="button" className={secondary} onClick={acceptAllChecked}>Accept all {acceptAllIds.length} checked edits</button><p className="mt-2 text-sm text-fg-2">Review every accepted line against your experience before downloading.</p></div>}{edits.length ? edits.map((edit) => <EditCard key={edit.id} edit={edit} onStatus={status} onEdit={editText} />) : <div className="border-l-2 border-tool bg-paper-2 p-6"><h3 className="font-display text-lg">No changes to review</h3><p className="mt-2 text-sm text-fg-2">The drafts didn’t pass our fact and length checks, so none are shown. {posting.trim() ? "Confirm a missing skill above, or try again." : "Add a job posting for more targeted suggestions."}</p><div className="mt-4 flex flex-wrap gap-3"><button type="button" className={primary} onClick={() => void start(facts)}><RotateCw size={16} aria-hidden="true" />Draft again</button><button type="button" className={secondary} onClick={() => { controller.current?.abort(); setChanged(null); setFile(null); setEdits([]); setPlan(null); setFacts([]); setUndo(null); }}>Change inputs</button></div></div>}</section>
         </div>
       </div>}
       {undo && <div role="status" className="fixed bottom-[calc(var(--nav-bottom)+1rem)] left-4 z-30 flex max-w-sm items-center gap-3 border border-rule bg-paper-2 p-3 shadow-[var(--shadow-2)]"><span className="text-sm">{undo.action}</span><button type="button" className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-tool-strong" onClick={() => { status(undo.id, undo.previous); setUndo(null); }}><Undo2 size={16} />Undo</button></div>}

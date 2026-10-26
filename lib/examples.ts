@@ -37,6 +37,29 @@ Jordan Lee
 University Recruiting, Stripe
 jordan.lee@stripe.com`;
 
+/** Made-up resume and posting so anyone can try Tailor without their own documents. */
+export const TAILOR_SAMPLE = {
+  company: "Northwind Apps",
+  role: "Software Engineering Intern",
+  posting: "Northwind Apps is hiring a Software Engineering Intern for summer 2027. You will build features in React and TypeScript, work with REST APIs and PostgreSQL, write tests, and ship with CI/CD. Experience with Python, caching, or performance tuning is a plus. We value clear communication and teamwork.",
+  resume: [
+    "Alex Rivera",
+    "alex.rivera@example.com | github.com/alexr-example",
+    "EDUCATION",
+    "State University, B.S. Computer Science, May 2027",
+    "EXPERIENCE",
+    "Software Engineering Intern, Example Labs (Summer 2026)",
+    "- Built a React dashboard used by 40 internal users",
+    "- Cut API response time 30% by adding Redis caching",
+    "- Wrote unit tests for the billing service and fixed 12 bugs",
+    "PROJECTS",
+    "Trail Finder: Next.js app with Mapbox and Postgres",
+    "- Built a trail search page with filters and saved routes",
+    "SKILLS",
+    "Python, TypeScript, React, SQL, Git",
+  ].join("\n"),
+};
+
 export const EXAMPLES: Record<Example["id"], Example> = {
   scam: {
     id: "scam",

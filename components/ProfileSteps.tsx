@@ -258,7 +258,7 @@ export default function ProfileSteps({ initial, initialResume, onDone, onCancel 
               ) : (
                 <>
                   <span className="text-muted"><UploadIcon size={32} /></span>
-                  <p className="text-[19px] font-medium">{busy ? "Reading your resume..." : "Drop your resume here"}</p>
+                  <p className="text-[19px] font-medium">{busy ? "Reading your resume…" : "Drop your resume here"}</p>
                   <p className="text-[14px] text-muted">PDF or Word (.docx)</p>
                 </>
               )}

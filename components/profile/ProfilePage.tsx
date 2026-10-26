@@ -120,7 +120,7 @@ function ResumeStep({ onSaved }: { onSaved: () => void }) {
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
           <button type="button" className={pillOff} onClick={() => fileRef.current?.click()} disabled={busy}>
-            {busy ? "Reading..." : "Replace file"}
+            {busy ? "Reading…" : "Replace file"}
           </button>
           <button type="button" className={`${pillOff} gap-1.5`} onClick={() => { setResume(null); onSaved(); }}>
             <Trash2 size={16} strokeWidth={1.75} aria-hidden="true" /> Remove
@@ -140,7 +140,7 @@ function ResumeStep({ onSaved }: { onSaved: () => void }) {
         className={`flex flex-col items-center gap-2 rounded-[14px] border-2 border-dashed px-5 py-8 text-center transition-colors duration-200 ${dragging ? "border-accent bg-accent-tint" : "border-border-strong bg-surface-2"}`}
       >
         <Upload size={26} strokeWidth={1.75} aria-hidden="true" className="text-fg-3" />
-        <p className="font-medium">{busy ? "Reading your resume..." : "Drop a PDF or Word file"}</p>
+        <p className="font-medium">{busy ? "Reading your resume…" : "Drop a PDF or Word file"}</p>
         <button type="button" className={pillOff} onClick={() => fileRef.current?.click()} disabled={busy}>Choose a file</button>
         <input ref={fileRef} id="resume-file" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" className="sr-only" tabIndex={-1} aria-label="Resume file" onChange={(e) => { void handleFile(e.target.files?.[0]); e.target.value = ""; }} />
       </div>
