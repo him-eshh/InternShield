@@ -1,19 +1,25 @@
 # InternShield
 
-Check a job or recruiter message, tailor a resume for the role, and practice an interview in one browser-based workspace.
+InternShield helps students and early-career job seekers handle an internship or job lead in one place: **check** a recruiter or job message for scam risk, **tailor** a resume to the role, and **practice** the interview. It runs in the browser with no account.
 
-Planning and verification: [scope](devpost/scope.md), [PRD](devpost/prd.md), [spec](devpost/spec.md), [checklist](devpost/checklist.md), and [app map](devpost/app-map.html). Source attribution: [question bank](data/question-bank/SOURCES.md) and [design skills](devpost/design-skills/README.md).
+- **Demo video:** https://youtu.be/wvejd7zfGyA
+- **Devpost:** https://devpost.com/software/internshield-tzogjf
 
 ![InternShield Home with Check, Tailor, and Practice](devpost/screenshots/home.png)
 
-More fabricated browser QA views: [Check report](devpost/screenshots/check-report.png) · [Tailor review](devpost/screenshots/tailor-review.png) · [Practice summary](devpost/screenshots/practice-summary.png). These use mocked external responses; [live API checks and limits](devpost/v3-summary.md) are documented separately.
+More screenshots (mocked external responses): [Check report](devpost/screenshots/check-report.png) · [Tailor review](devpost/screenshots/tailor-review.png) · [Practice summary](devpost/screenshots/practice-summary.png).
 
-## How it works
+## Features
 
-- **Check:** paste a message or upload a screenshot, review the rule-based risk report, answer quick questions, and add information to see what changed. Company, posting, and sender checks show unavailable results explicitly.
-- **Tailor:** upload an original PDF or DOCX or paste resume text. Supply a job posting when available, or use a company or role alone. Review guarded line edits against the original facts; accept, reject, preview, and download the result. Pasted text downloads as text.
-- **Practice:** choose rounds and question count, then work through coding, SQL, behavioral, and discussion questions. A selected application can supply role and posting context, and the profile level guides mixed difficulty. Runnable questions execute in browser workers and get test-based ratings; discussion answers receive coaching without a quality grade.
-- **Tracker and profile:** save applications in Saved, Applied, Interviewing, and Interviewed, move cards by menu or drag and drop, and optionally save a pasted job posting. Open Tailor or Practice from any card; profile preferences stay local.
+- **Home:** start from any tool, and pick up where you left off (last check, resume, or practice session).
+- **Check:** paste a message or upload a screenshot and get a risk report (low / medium / high). Answer quick follow-up questions or add information to see what changed. Company, posting, and sender checks show unavailable results explicitly.
+- **Tailor:** upload a PDF or DOCX or paste resume text, add a job posting (or just a company or role), then review guarded line edits against your original facts; accept, reject, preview, and download.
+- **Practice:** choose rounds and question count, then work through coding, SQL, behavioral, and discussion questions. Runnable questions execute in browser workers and get test-based ratings; discussion answers get coaching without a quality grade.
+- **Tracker:** save applications across Saved, Applied, Interviewing, and Interviewed, move cards by menu or drag and drop, and open Tailor or Practice from any card.
+- **Profile:** local preferences, including a Motion setting (System / On / Reduced) and "Clear my data".
+
+### How Check scores a message
+
 - AI extracts facts from the message, each with an exact quote.
 - Fixed rules score those facts. The AI never decides the score.
 - The report explains scored flags using their evidence.
@@ -24,19 +30,13 @@ More fabricated browser QA views: [Check report](devpost/screenshots/check-repor
 Requires Node 20+.
 
 1. `npm install`
-2. Copy `.env.example` to `.env.local` and fill in `GROQ_API_KEY` and `TAVILY_API_KEY`. `HUNTER_API_KEY` is optional.
+2. Copy `.env.example` to `.env.local` and add your own keys: `GROQ_API_KEY` and `TAVILY_API_KEY` (`HUNTER_API_KEY` is optional). The other variables in `.env.example` are optional caps and model overrides. Keys are used only on the server; never commit `.env.local`.
 3. `npm run dev`
 4. Open http://localhost:3000
 
 The Check screen includes two made-up examples. If a live step fails or the free quota is used up, examples fall back to saved results and say so.
 
-## Deploy (optional)
-
-1. Push to a GitHub repo and import it into Vercel (free Hobby plan).
-2. In Vercel → Project → Settings → Environment Variables, add `GROQ_API_KEY`, `TAVILY_API_KEY` (and optionally `HUNTER_API_KEY`, `DAILY_CHECK_CAP`, `TAVILY_DAILY_CAP`).
-3. Set `ALLOWED_ORIGINS` to include your production URL, e.g. `https://your-app.vercel.app`, then redeploy. Without it every check is refused.
-
-For public traffic, add shared rate limits or provider-side spend controls before launch. The in-memory caps below reset or split across serverless instances, and `ALLOWED_ORIGINS` limits browser origins rather than authenticating callers.
+Other scripts: `npm run build` / `npm run start` (production build), `npm run lint`.
 
 ## Limits
 
@@ -46,7 +46,8 @@ The app is configured for free-tier services. Per visitor, Check allows 3 extrac
 
 ## Tests
 
-- `npm test` runs the unit tests.
+- `npm test` runs the unit tests (Vitest).
+- `npm run lint` runs ESLint; `npx tsc --noEmit` type-checks.
 - `npm run eval` runs the labeled test set and rewrites the results table below.
 - `npm run eval:live -- --limit 3` re-extracts the first few test messages with the real AI (your keys and quota) and flags any whose facts or level differ from the saved ones. Run it sparingly.
 
@@ -167,12 +168,17 @@ Your profile, extracted resume text, last report, tracker (including any pasted 
 
 PDF editing covers old text and redraws new text; the original text can remain extractable underneath. **An edited PDF is not a redacted document.** DOCX edits are limited by existing word layout. Review every suggested line, generated preview, and download before using it. Practice's “Most asked at” ranking is a proxy from historical public question lists, not employer question counts; model feedback can fall back to local checks when unavailable.
 
+## How it was built
+
+InternShield was built during the **Build With AI: Basics** hackathon on Devpost, starting from an empty folder with the Devpost Learn Skill Pack in Claude Code and Codex. The planning docs are in `devpost/`: [scope](devpost/scope.md), [PRD](devpost/prd.md), and [spec](devpost/spec.md). Question-bank sources: [SOURCES](data/question-bank/SOURCES.md).
+
 ## Built with
 
-- Next.js
-- TypeScript
-- Tailwind CSS
-- Groq (gpt-oss)
-- Tavily
-- RDAP
-- DNS-over-HTTPS
+- Next.js 16, React 19, TypeScript, Tailwind CSS
+- Groq (AI extraction, rewrites, interview feedback)
+- Tavily, Wikidata, RDAP, DNS-over-HTTPS (company and posting checks)
+- Vitest (unit tests) and Playwright (browser QA)
+
+## License
+
+[MIT](LICENSE) © 2026 Himesh Chordia
