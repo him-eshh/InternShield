@@ -20,6 +20,7 @@ export interface ResumeData {
   fileName: string;
 }
 export type Theme = "system" | "light" | "dark";
+export type MotionPref = "system" | "on" | "reduced";
 
 // ---------- Check form ----------
 export type Source = "company_site" | "linkedin" | "handshake" | "email" | "text_whatsapp";

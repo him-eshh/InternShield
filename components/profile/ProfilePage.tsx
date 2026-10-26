@@ -8,6 +8,7 @@ import { layoutLost, lineKind } from "@/lib/tiers/resumeLines";
 import type { Field, UserLevel } from "@/lib/types";
 import { ProfileIllustration } from "../illustrations";
 import ThemeToggle from "../ThemeToggle";
+import MotionToggle from "../MotionToggle";
 import { useMotion } from "../motion/useMotion";
 import { FIELD_LABELS, LEVEL_NAMES } from "../ProfileSteps";
 import { useAppState } from "../shell/AppStateProvider";
@@ -352,7 +353,7 @@ export default function ProfilePage() {
         })}
       </ol>
 
-      <section aria-labelledby="appearance-h" className="mt-10 border-t border-rule pt-6"><h2 id="appearance-h" className="font-display text-xl">Appearance</h2><p className="mt-1 mb-3 text-sm text-fg-2">Choose the paper that is easiest for you to read.</p><ThemeToggle /></section>
+      <section aria-labelledby="appearance-h" className="mt-10 border-t border-rule pt-6"><h2 id="appearance-h" className="font-display text-xl">Appearance</h2><p className="mt-1 mb-3 text-sm text-fg-2">Choose the paper that is easiest for you to read.</p><ThemeToggle /><h3 className="mt-6 text-base font-semibold">Motion</h3><p className="mt-1 mb-3 text-sm text-fg-2">Animations follow your device by default. Turn them on or off here.</p><MotionToggle /></section>
 
       {(profile || resume || prefs.roles.length > 0 || prefs.companies.length > 0) && (
         <div className="mt-8 text-center text-[14px] text-fg-3">

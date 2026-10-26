@@ -94,8 +94,12 @@
   animation: am-flash 1.6s ease-out;
 }
 @media (prefers-reduced-motion: reduce) {
-  [data-flash] {
+  html:not([data-motion="on"]) [data-flash] {
     animation: none;
     box-shadow: 0 0 0 3px var(--accent);
   }
+}
+html[data-motion="reduced"] [data-flash] {
+  animation: none;
+  box-shadow: 0 0 0 3px var(--accent);
 }

@@ -27,7 +27,7 @@ export const viewport: Viewport = {
 };
 
 // Runs before first paint so there's no flash of the wrong theme. "is:theme" holds a JSON string.
-const themeScript = `(function(){try{var t=JSON.parse(localStorage.getItem("is:theme")||'"system"');var d=t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d)}catch(e){}})()`;
+const themeScript = `(function(){try{var t=JSON.parse(localStorage.getItem("is:theme")||'"system"');var d=t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d)}catch(e){}try{var m=JSON.parse(localStorage.getItem("is:motion")||'"system"');document.documentElement.dataset.motion=m==="on"||m==="reduced"?m:"system"}catch(e){}})()`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

@@ -1,5 +1,6 @@
 "use client";
-import { animate, m, useReducedMotion } from "motion/react";
+import { animate, m } from "motion/react";
+import { useReduce } from "../motion/motionPref";
 import { useEffect, useRef, useState } from "react";
 import { coverageTicks, deltaAnnouncement, deltaLabel } from "@/lib/reportView";
 import { LEVEL_LABELS, type Report, type RiskLevel } from "@/lib/types";
@@ -108,7 +109,7 @@ export function RingView({ value, score, level, ticks, staggerTicks = false, del
 
 export default function RiskRing({ score, level, coverage, showLabel = true }: { score: number; level: RiskLevel; coverage?: Report["coverage"]; showLabel?: boolean }) {
   const target = clamp(score);
-  const reduce = useReducedMotion();
+  const reduce = useReduce();
   const [shown, setShown] = useState(0);
   // Remember the previous score (derived during render, no effect) so a change can show a delta.
   const [track, setTrack] = useState<{ score: number; from: number | null }>({ score: target, from: null });

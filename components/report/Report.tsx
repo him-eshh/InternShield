@@ -19,6 +19,7 @@ import RecoveryCard from "./RecoveryCard";
 import ReportFooter from "./ReportFooter";
 import RiskRing from "./RiskRing";
 import AddInformation from "./AddInformation";
+import { prefersReduce } from "../motion/motionPref";
 
 const RESTING_AFTER_SECONDS = 900; // a retryAfter this long means a daily cap, not a blip
 
@@ -224,7 +225,7 @@ function ReportBody({ outcome, input, onRetry, onAgain, fetchImpl, extras, nextS
     const el = document.getElementById(COULDNT_CHECK_ID) as HTMLDetailsElement | null;
     if (!el) return;
     el.open = true;
-    const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const smooth = !prefersReduce();
     el.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "center" });
     el.querySelector("summary")?.focus({ preventScroll: true });
   }

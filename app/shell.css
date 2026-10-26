@@ -10,7 +10,8 @@
 }
 .hero-mark:nth-of-type(2) { animation-delay: 440ms; }
 .hero-mark:nth-of-type(3) { animation-delay: 580ms; }
-@media (prefers-reduced-motion: reduce) { .hero-mark { animation: none; } }
+@media (prefers-reduced-motion: reduce) { html:not([data-motion="on"]) .hero-mark { animation: none; } }
+html[data-motion="reduced"] .hero-mark { animation: none; }
 
 /* The full desktop navigation fits at 1024px; tablets keep the bottom bar. */
 @media (min-width: 768px) and (max-width: 1023px) {
@@ -19,14 +20,6 @@
 @media (max-width: 639px) {
   button, summary { touch-action: manipulation; }
   .shell-tracker-toast { max-width: calc(100vw - 2rem); }
-}
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-delay: 0ms !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
 }
 
 /* Programmatic focus (a new screen's heading) must not draw a ring around a heading; keyboard users still get rings on controls. */

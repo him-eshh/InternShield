@@ -2,6 +2,7 @@
 import { useEffect, useId, useState, type MouseEvent } from "react";
 import type { annotate } from "@/lib/client/annotate";
 import type { Flag } from "@/lib/types";
+import { prefersReduce } from "../motion/motionPref";
 
 type Annotated = ReturnType<typeof annotate>;
 
@@ -10,7 +11,7 @@ const COLLAPSE_OVER = 700; // characters; about 12 lines on a phone
 
 const markDomId = (flagId: string) => `mk-${flagId}`;
 
-const smooth = () => (window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth");
+const smooth = () => (prefersReduce() ? "auto" : "smooth");
 
 function flash(el: HTMLElement) {
   el.setAttribute("data-flash", "");

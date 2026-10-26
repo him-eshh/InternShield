@@ -176,8 +176,9 @@ p { text-wrap: pretty; }
 }
 
 /* Reduced motion: no CSS animations or transitions anywhere; Motion handles its own via MotionConfig. */
+/* The in-app Motion setting (html[data-motion]) wins: "on" keeps animations under an OS reduce, "reduced" forces them off. */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  html:not([data-motion="on"]) *, html:not([data-motion="on"]) *::before, html:not([data-motion="on"]) *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     animation-delay: 0ms !important;
@@ -186,6 +187,15 @@ p { text-wrap: pretty; }
     scroll-behavior: auto !important;
   }
 }
+html[data-motion="reduced"] *, html[data-motion="reduced"] *::before, html[data-motion="reduced"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  animation-delay: 0ms !important;
+  transition-duration: 0.01ms !important;
+  transition-delay: 0ms !important;
+  scroll-behavior: auto !important;
+}
+html[data-motion="reduced"]::view-transition-group(*), html[data-motion="reduced"]::view-transition-old(*), html[data-motion="reduced"]::view-transition-new(*) { animation: none !important; }
 
 /* Shared tool hero: a tool-colored wash over the surface, same shape in every tool and theme. */
 .tool-hero {

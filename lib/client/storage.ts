@@ -1,12 +1,13 @@
 // Typed localStorage helpers (spec.md > Browser Storage). Values are JSON-encoded.
 // Every call is wrapped so a blocked/full/unavailable store never throws into the UI.
 import type { PostingContext } from "../tiers/types";
-import type { Profile, ResumeData, Theme } from "../types";
+import type { MotionPref, Profile, ResumeData, Theme } from "../types";
 
 export const KEYS = {
   profile: "is:profile",
   resume: "is:resume",
   theme: "is:theme",
+  motion: "is:motion",
   tracker: "is:tracker", // Tier 2: TrackerCard[]
   lastCheck: "is:lastCheck", // last finished check { outcome, input, submit } so /check survives refresh
   prefs: "is:prefs", // ProfilePrefs (target roles/companies, location, grad date) from the guided profile
@@ -95,6 +96,12 @@ export function loadTheme(): Theme {
   return t === "light" || t === "dark" ? t : "system";
 }
 export const saveTheme = (t: Theme) => write(KEYS.theme, t);
+
+export function loadMotion(): MotionPref {
+  const v = read<MotionPref>(KEYS.motion);
+  return v === "on" || v === "reduced" ? v : "system";
+}
+export const saveMotion = (v: MotionPref) => write(KEYS.motion, v);
 
 /** Raw JSON read/write for Tier 2 stores; each feature validates its own shape. */
 export const readKey = <T>(key: string): T | null => read<T>(key);

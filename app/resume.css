@@ -9,4 +9,5 @@
 .resume-document .resume-highlight-text { background: var(--tool-tint); border-inline-start: 2px solid var(--tool); padding-inline-start: 0.3em; }
 .resume-highlight-glow { animation: resume-line-glow 900ms ease-out; }
 @keyframes resume-line-glow { from { background-color: var(--tool); } to { background-color: var(--tool-tint); } }
-@media (prefers-reduced-motion: reduce) { .resume-highlight-glow { animation: none; } }
+@media (prefers-reduced-motion: reduce) { html:not([data-motion="on"]) .resume-highlight-glow { animation: none; } }
+html[data-motion="reduced"] .resume-highlight-glow { animation: none; }

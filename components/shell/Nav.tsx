@@ -7,6 +7,7 @@ import { initialsOf, useProfileProgress } from "../profile/progress";
 import { usePathname } from "next/navigation";
 import Logo from "../Logo";
 import ThemeToggle from "../ThemeToggle";
+import MotionToggle from "../MotionToggle";
 import { useMotion } from "../motion/useMotion";
 
 type Tool = "check" | "tailor" | "practice" | "neutral";
@@ -70,6 +71,7 @@ export default function Nav() {
             ))}
           </div>
           <div className="flex items-center gap-2">
+            <MotionToggle compact />
             <span className="hidden lg:block"><ThemeToggle /></span>
             <Link href="/profile" aria-label={`Profile, ${progress.count} of ${progress.total} steps done`} title="Your profile" className="flex shrink-0 items-center gap-2 rounded-full text-ink-strong"><span className="relative grid size-11 shrink-0 place-items-center">
               <svg viewBox="0 0 44 44" className="absolute inset-0 size-11 -rotate-90" aria-hidden="true">
