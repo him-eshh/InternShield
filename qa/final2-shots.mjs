@@ -44,7 +44,20 @@ if (want("home")) {
 
 if (want("profile")) {
   await each("profile", async ({ S }) => { await S("empty"); }, "/profile", { profile: false });
-  await each("profile", async ({ S }) => { await S("set"); }, "/profile", { profile: { field: "tech", level: "student", skills: ["Python", "React"], name: "Alex" } });
+  await each("profile", async ({ S }) => { await S("set"); }, "/profile", { profile: { field: "tech", level: "junior", skills: ["Python", "React"], name: "Alex" } });
+}
+
+if (want("motion")) {
+  await each("profile", async ({ page, S }) => {
+    await page.locator("summary", { hasText: "Motion:" }).last().click();
+    await page.waitForTimeout(300);
+    await S("motion-setting", { fullPage: false });
+  }, "/profile", { profile: true });
+  await each("nav", async ({ page, S }) => {
+    await page.locator("summary", { hasText: "Motion:" }).first().click();
+    await page.waitForTimeout(300);
+    await S("motion-control", { fullPage: false });
+  }, "/", { profile: true });
 }
 
 if (want("check")) {

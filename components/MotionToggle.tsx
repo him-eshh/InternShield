@@ -27,12 +27,11 @@ export default function MotionToggle({ compact = false }: { compact?: boolean })
   }
 
   const active = OPTIONS.find((o) => o.value === pref) ?? OPTIONS[0];
-  const ActiveIcon = active.Icon;
 
   return (
     <details ref={menu} className="group relative inline-block">
       <summary aria-label={`Motion: ${active.label}. Choose animation setting`} className="inline-flex min-h-11 min-w-11 cursor-pointer list-none items-center justify-center gap-2 rounded-full border border-border-strong bg-paper-2 px-3 text-fg [&::-webkit-details-marker]:hidden">
-        <ActiveIcon size={17} aria-hidden="true" />
+        <Activity size={17} aria-hidden="true" />
         <span className={compact ? "hidden text-sm xl:inline" : "text-sm"}>Motion: {active.label}</span>
         <ChevronDown size={15} aria-hidden="true" className={`transition-transform group-open:rotate-180 ${compact ? "hidden xl:block" : ""}`} />
       </summary>
