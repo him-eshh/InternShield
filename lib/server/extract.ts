@@ -1,5 +1,6 @@
 // Extract pipeline pieces: prompt, message prep, Quote Check (spec.md > Extract Route, Quote Check).
 import { createHash } from "node:crypto";
+import { hasJobContext } from "@/lib/jobMessage";
 import { stripDepartment } from "@/lib/autofill";
 import { MAX_QUOTE_CHARS, quoteIsReal } from "@/lib/quotes";
 import { backstop } from "@/lib/scoring/backstop";
@@ -14,8 +15,8 @@ export const EXTRACT_SYSTEM =
   "asks lists what the sender wants the candidate to do or pay. Use buy_equipment when the candidate must buy equipment first, even if they are promised repayment. " +
   "Use money_wrong_way when the candidate must send money onward (the rest or balance by Zelle, Cash App, wire, crypto or gift cards), deposit a check on their phone, use their own bank account for the company, keep a cut, or pay a fee or tax to withdraw earnings. " +
   "Use run_code_or_install for cloning or running code, installing tools or drivers, remote-access apps, or pasting commands into a terminal. " +
-  "Recruiter or employer messages, job offers, job postings (even a pasted part of one, such as just its duties or qualifications list), and job-alert emails listing openings all count as job messages. " +
-  "If it is not a job or internship message, set isJobMessage to false and leave everything else empty or null.";
+  "Recruiter outreach (including a recruiter signature), employer invitations to apply, employer profile-view notifications, ATS and job-board emails (such as Handshake, Greenhouse, Lever or Workday), application receipts, status updates, rejections, interview scheduling, job offers, job postings (even just duties or qualifications), and job-alert emails all count as job messages. An offer, pay, or named role is not required. " +
+  "Only clearly non-job content, such as unrelated newsletters, personal chat, or product marketing, should set isJobMessage to false and leave everything else empty or null. When hiring context is present or uncertain, set isJobMessage to true.";
 
 /** Clean Unicode tricks (invisible characters, look-alike letters, spaced-out words), trim to the cap, collapse repeated whitespace. */
 export function prepareMessage(raw: string): string {
@@ -69,7 +70,7 @@ const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
 /** Drops every fact whose quote fails quoteIsReal. Returns null if the model output isn't an object. */
 export function quoteCheck(raw: unknown, message: string): Facts | null {
   if (!isRec(raw)) return null;
-  if (raw.isJobMessage !== true) return emptyFacts(false);
+  if (raw.isJobMessage !== true) return emptyFacts(hasJobContext(message));
 
   // Email/phone must literally appear in the message (phone compared digits-only).
   const lowerMsg = message.toLowerCase();

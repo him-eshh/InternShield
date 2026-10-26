@@ -79,6 +79,18 @@ describe("extract route", () => {
     expect(body.data.isJobMessage).toBe(false);
   });
 
+  it.each([
+    "An employer viewed your profile on Handshake.",
+    "Greenhouse: Your application is under review.",
+    "Could we talk? Alex Example | Recruiter | Example Company",
+  ])("overrides a model false negative for hiring mail: %s", async (text) => {
+    h.create.mockReturnValue(groqOk(JSON.stringify({ isJobMessage: false })));
+    const { res, body } = await call(text);
+    expect(res.status).toBe(200);
+    expect(body.data.isJobMessage).toBe(true);
+    expect(body.data.asks).toEqual([]);
+  });
+
   it("sends strict json_schema, low reasoning, and never leaks the key", async () => {
     h.create.mockReturnValue(groqOk(modelFacts()));
     const { body } = await call();

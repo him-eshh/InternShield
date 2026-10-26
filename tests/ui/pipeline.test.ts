@@ -100,6 +100,22 @@ describe("runPipeline", () => {
     expect(f.count("/api/explain")).toBe(0);
   });
 
+  it.each([
+    "An employer viewed your profile on Handshake.",
+    "You are invited to apply for our internship through Greenhouse.",
+    "Your application status has changed. View details in Workday.",
+    "Let's talk next week. Alex Example | Recruiter | Example Company",
+  ])("continues after a false non-job answer for hiring mail: %s", async (text) => {
+    const bare: Facts = { ...scamFacts, isJobMessage: false, company: null, sender: { name: null, email: null, phone: null }, asks: [] };
+    const f = makeFetch({ "/api/extract": () => done(bare), "/api/explain": explain });
+    const out = await runPipeline({ ...input, text, source: "email", stage: null }, { ...opts, fetch: f.fn });
+    expect(out.notJob).toBe(false);
+    expect(out.facts?.isJobMessage).toBe(true);
+    expect(out.report).not.toBeNull();
+    expect(out.report?.level).toBe("low");
+    await out.pendingExplanation;
+  });
+
   it("does not let a non-job model answer hide a raw payment request", async () => {
     const text = "To start this internship, you must pay a $40 registration fee today.";
     const f = makeFetch({ "/api/extract": () => done({ ...scamFacts, isJobMessage: false }), "/api/explain": explain });

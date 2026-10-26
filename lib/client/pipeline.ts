@@ -1,5 +1,6 @@
 // The relay (spec.md > How the Checklist Steps Run (and Fail)).
 // A step can never throw past this file: every failure becomes a StepResult.
+import { hasJobContext } from "../jobMessage";
 import { EXAMPLES } from "../examples";
 import { fallbackExplanation } from "../explainFallback";
 import { score } from "../scoring/score";
@@ -232,7 +233,12 @@ export async function runPipeline(
     const body: ExtractRequest = { message: text, sender: input.form.sender, company: input.form.company };
     extract = settle("extract", await call<Facts>("extract", "/api/extract", body, deps));
   }
-  const facts = extract.status === "done" ? extract.data : null;
+  let facts = extract.status === "done" ? extract.data : null;
+  // Also cover reused/cached extraction results from before the gate was broadened.
+  if (facts && !facts.isJobMessage && hasJobContext(text)) {
+    facts = { ...facts, isJobMessage: true };
+    extract = { status: "done", data: facts };
+  }
 
   const decisiveRawRequest = backstop(cleanText(text).text).some((hit) => DECISIVE_RAW_REQUESTS.has(hit.id));
   if (facts && !facts.isJobMessage && !decisiveRawRequest) {
