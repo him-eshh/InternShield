@@ -3,7 +3,8 @@
 Live = the production build (`next start`, port 3501) with the real server-side keys, no QA mocks. Inputs are real public scam/legit messages, Himesh's resume and real postings; they live outside the repo and are never quoted here.
 
 ## Progress
-- [x] Server: `next start -p 3501`, cmd PID 35944 (hidden). Stop at end.
+- [x] Server: `next start -p 3501`, cmd PID 35944 (hidden, stale build; session 4 could not stop it: kill commands need approval). Stop at end.
+- [x] Session 4 (10:31): rebuilt at 6b6c2aa, `next start -p 3502`, cmd PID 40652 (hidden, log qa-server-3502.log). Iteration server: `next dev -p 3503`, cmd PID 38668 (hidden, real keys, no mocks). Stop at end.
 - [ ] (a) Check: 18 cases running (`qa/live-check.ts`, untracked, local only)
 - [ ] held-out ho-11, ho-15, ho-16
 - [ ] (b) Tailor
@@ -26,9 +27,9 @@ AI calls used so far: 1 (S4 extract).
 - [~] L-B not-job gate: extraction prompt now says recruiter emails, postings and job alerts are job messages (328168b). Live re-check pending.
 - [x] L-C explanation "fallback": not a bug. Since V3 (68d7b09) `/api/explain` is deterministic by design (spec.md: "builds deterministic copy from scored flags"; model text can't set the explanation). `source: "fallback"` is only a label; the UI lays out the titled sections. No AI call to fix.
 - [x] L-D 85 vs 80: risk panel now says "The rule weights add up to 80. A critical sign sets the score to at least 85." (also 100 cap, 0 floor, good-sign cap). Commit 6d752b7.
-- [ ] L-E Tailor no edits on real resume
+- [x] L-E Tailor no edits on real resume: commits 6b6c2aa + 968f0ad. Root causes: (1) the rewrite model (Qwen) echoed tight real bullets unchanged, so the edits task now drafts with gpt-oss-120b first; (2) gpt-oss writes non-breaking hyphens (U+2011) that the PDF redraw fonts can't measure, so every such edit silently failed the width fit; (3) dropped final periods failed the punctuation check. Now normalized before the guards, and width failures get the guided retry. Live on Himesh's resume PDF: P1 Fox 1 edit, P2 GM 1, P5 Rogue 1, P6 Amplify 2 (was 0). Added posting skills (e.g. Python) are still blocked until the user taps "I have this" (by design).
 - [ ] L-F Practice live
-- [ ] L-G held-out notes
+- [x] L-G held-out (eval at 968f0ad: 88/88, held-out 25/27). ho-15 Telegram chat interview: now medium, PASS (fixed by the chat-interview wording in 328168b). ho-11 WhatsApp-only, no ask: low 20 vs expected medium. Judgment call: one off-platform request with nothing else is also how some real recruiters write (main-set `real-abroad-whatsapp` is low at 10); pushing it to medium would flag those. ho-16 unknown text, "reply YES", easy work, urgency: high 60 vs expected medium. Judgment call toward caution: it's the standard task-scam opener and matches the main-set `scam-reply-yes-text` (high). Neither is a logic bug; no change.
 - [ ] L-H live reshoot final3
 - [x] L-I qa/final2-practice.mjs committed (e96f256)
 

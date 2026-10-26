@@ -45,7 +45,8 @@ export default function PracticePage() {
   // A target from a report or the tracker wins; the profile's first company/role only fills an empty start.
   const target = prefillTarget(targets.practice, prefs);
   const config = initial ?? defaultConfig({ company: target?.company ?? undefined, role: target?.role ?? undefined });
-  return <main data-tool="practice" className={`mx-auto w-full px-4 py-8 pb-28 sm:px-8 sm:py-12 ${session?.status === "active" && session.activeQuestion?.inner ? "max-w-7xl" : "max-w-4xl"}`}>
+  // The app layout already renders <main id="main">; a second main landmark confuses screen readers.
+  return <div data-tool="practice" className={`mx-auto w-full px-4 py-8 pb-28 sm:px-8 sm:py-12 ${session?.status === "active" && session.activeQuestion?.inner ? "max-w-7xl" : "max-w-4xl"}`}>
     {session?.status === "active" ? <Runner state={session} bank={bank} onChange={update} /> : session?.status === "done" || saved ? <Summary state={session ?? undefined} summary={saved?.summary} sessionId={session?.id ?? saved?.id} company={session?.context.company ?? saved?.company} role={session?.context.role ?? saved?.role} onAgain={home} onHome={() => home()} onOpenTracker={() => router.push("/tracker")} /> : <>
       <ToolHero Icon={MessagesSquare} name="Practice" title="Make the next answer better." art={<PracticeIllustration size={150} />}>Choose a few rounds, answer real questions, and see what to work on next.</ToolHero>
       {resumeSession && <aside className="mb-7 rounded-2xl border border-tool bg-tool-tint p-5"><h2 className="font-display text-xl">Pick up where you left off</h2><p className="mt-2 text-sm text-muted">{resumeSession.turns.length} of {resumeSession.slots.length} questions complete.</p><button className={btnPrimary + " mt-4"} onClick={() => update(resumeSession)}>Resume session<ArrowRight size={17} /></button></aside>}
@@ -56,5 +57,5 @@ export default function PracticePage() {
       <History entries={history} onOpen={setSaved} />
       <p className="mt-8 text-xs text-muted">Question metadata from public MIT-licensed datasets. Full problem statements remain on LeetCode. Practice presets are unaffiliated.</p>
     </>}
-  </main>;
+  </div>;
 }
