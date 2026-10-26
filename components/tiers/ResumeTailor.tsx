@@ -140,6 +140,7 @@ export default function ResumeTailor({ resume, target, profileLevel, onOpenProfi
         setOutcomes((o) => [...o, "Draft received"]); setStage(4);
       }, profileLevel);
       abort.signal.throwIfAborted();
+      if (!suggestions.length && !addOne) throw new Error("No safe edits found: every drafted change failed the fact and length checks, so nothing was invented. Add skills you really have above, or try again for a different draft.");
       let nextEdits = suggestions;
       if (addOne) {
         const combined = [...edits, ...suggestions.filter((e) => !edits.some((p) => p.lineId === e.lineId)).slice(0, Math.min(1, 6 - edits.length))];

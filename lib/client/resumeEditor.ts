@@ -72,9 +72,13 @@ export async function draftResumeEdits(file: ResumeFile, posting: string, plan: 
     method: "POST", headers: { "content-type": "application/json" }, signal,
     body: JSON.stringify({ mode: "edits", source: file.doc.source, resume: docText(file.doc), posting, company: plan.company, role: plan.role, level, facts, guidance: plan.emphasis, geometry: docLines(file.doc).filter((l) => l.kind === "bullet" && l.boxes?.length).map((l) => ({ lineId: l.id, boxes: l.boxes })) }),
   });
-  const json = await response.json();
+  // A gateway error or missing key can return HTML or an empty body; never surface a JSON parse error.
+  const json = await response.json().catch(() => null);
   signal.throwIfAborted();
-  if (!response.ok || json?.status !== "done") throw new Error(json?.message || "Couldn't draft edits. Try again.");
+  if (!response.ok || json?.status !== "done") {
+    const why = json?.message || (response.status === 429 ? "Too many requests right now." : "The drafting service isn't available right now.");
+    throw new Error(`${why} Your resume is still here, so try again in a minute.`);
+  }
   onChecking?.();
   // Repeat the server checks; intercepted or stale API output must also pass in the browser.
   const edits = checkedEdits(file.doc, json.data?.edits, plan.keywords, facts, posting);
