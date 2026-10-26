@@ -16,7 +16,7 @@
 
 ## Gotchas
 - Shell: chained/compound bash commands and `sh script` may need approval; run gates one per call:
-  `cd /c/my_projects/projects/InternShield-v2-check && npm run lint 2>&1 | tail -n 5` (same for `npx tsc --noEmit`,
+  `npm run lint` (same for `npx tsc --noEmit`,
   `npx vitest run --reporter=dot 2>&1 | grep -E 'FAIL|Test Files|Tests '`, `npm run build 2>&1 | grep -iE 'error|compiled|failed'`,
   `npm run eval 2>&1 | grep -E "MISS|Main set|Held-out"`).
   PowerShell rejects `$()`, script blocks, Select-String in pipes.

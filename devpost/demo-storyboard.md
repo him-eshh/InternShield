@@ -1,20 +1,20 @@
 ---
 doc: demo-storyboard
-status: ready-to-record
+status: local-draft-recorded
 ---
 
-# InternShield demo storyboard (about 2½ minutes)
+# InternShield demo shot list
 
 **Recording state:** a 57-second silent local draft was recorded with a fresh browser context, the built-in made-up Check example, a fictional resume and posting, and live API responses. It shows a guarded Tailor edit accepted and a Practice answer passing 6 of 6 runnable tests. The draft is local only at ignored `images/internshield-demo-draft.webm`; final owner review and public upload are pending. Check the final capture for private tabs, notifications, browser autofill, local history, and credentials before sharing.
 
-| Time | On screen | Say |
-|---|---|---|
-| 0:00–0:15 | Home, then open Check | “InternShield helps an internship seeker move from a questionable message to a careful next step, then into resume and interview prep.” |
-| 0:15–0:45 | Load the built-in made-up high-risk message and run Check | “The model extracts facts with source quotes. Fixed rules assign the risk level. The report points to the exact wording and says which lookups ran or could not run.” |
-| 0:45–1:05 | Open a red flag, “Couldn't check,” then answer one quick question | “A missing check is not treated as a pass. When I add information, the report shows what changed in the score and evidence.” |
-| 1:05–1:35 | Follow Tailor link. Use a fabricated one-page PDF or DOCX and a made-up posting. Show loading. If a suggestion passes the app's checks, accept/reject one and inspect the preview; otherwise show the honest no-suggestion state. | “Tailor works from the original document. It holds back edits that fail its checks. When it suggests a change, I review the claim and preview before sharing.” |
-| 1:35–2:15 | Open Practice. Show setup, a runnable coding or SQL question, local test results, then a behavioral question | “Practice runs a sequence, not a single question. Coding and SQL show test results first. Discussion answers are kept for review without a made-up quality grade.” |
-| 2:15–2:30 | Show the session summary and Tracker, then return Home | “The summary keeps concrete counts and next steps. Everything stays connected, and I can clear locally saved information.” |
+The owner writes any narration in their own words. This list is a technical guide to what the camera can show, not a public script.
+
+| Flow | On-screen evidence to capture |
+|---|---|
+| Check | Paste a fictional high-risk message; show the report's score, source quote, completed and unavailable checks, and a quick answer that changes the report. |
+| Tailor | Upload a fabricated PDF or DOCX and fictional posting; show an edit passing the checks, then accept or reject it and inspect the preview. Show the no-suggestion state honestly if no safe edit survives. |
+| Practice | Show the chosen session setup, one runnable coding or SQL question and its actual test results. If including discussion, show its “Not scored” treatment. |
+| Close | Show the summary and Tracker connection, then return Home if time permits. |
 
 ## Recording checks
 
@@ -25,5 +25,6 @@ status: ready-to-record
 - Show the PDF warning if using PDF: its original text may remain extractable under edits.
 - Show “Not scored” for discussion and a test-based result for coding/SQL.
 - Add captions, verify readable phone-size text, and check audio before upload.
+- Remove third-party trademarks, copyrighted music, and other material you do not have permission to use. [Event rules](https://learn-ai-basics.devpost.com/rules).
 - Keep the final video under three minutes, upload it publicly to YouTube or Vimeo, and verify it without signing in. [Event rules](https://learn-ai-basics.devpost.com/rules).
 - Final video link: **[pending owner review and public upload]**.

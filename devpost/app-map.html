@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>InternShield app map</title>
+  <style>
+    :root { color-scheme: light; font: 16px/1.55 system-ui, sans-serif; background: #f6f3eb; color: #172522; }
+    * { box-sizing: border-box; }
+    body { max-width: 960px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+    h1, h2 { line-height: 1.2; letter-spacing: -.025em; }
+    h1 { font-size: clamp(2rem, 5vw, 3.5rem); margin: .3rem 0 1rem; }
+    h2 { font-size: 1.35rem; margin: 2.4rem 0 .8rem; }
+    p, li { max-width: 74ch; }
+    a { color: #006b60; text-underline-offset: .15em; }
+    a:focus-visible { outline: 3px solid #d76a35; outline-offset: 3px; }
+    code { font: .9em/1.4 ui-monospace, Consolas, monospace; overflow-wrap: anywhere; }
+    .eyebrow { color: #006b60; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; font-size: .75rem; }
+    .lede { font-size: 1.12rem; }
+    .note { border-left: 4px solid #00786b; background: #e8f3ef; padding: .8rem 1rem; }
+    .flow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; padding: 0; list-style: none; }
+    .flow li { border: 1px solid #a7b6ae; border-top: 4px solid #00786b; background: #fffdf8; padding: 1rem; }
+    .flow strong { display: block; margin-bottom: .35rem; }
+    .route { padding-left: 1.5rem; }
+    .route li { padding: .15rem 0 .8rem .4rem; }
+    .route strong { display: block; }
+    .pointers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
+    .pointers p { margin: 0; border: 1px solid #c9d3cb; background: #fffdf8; padding: .8rem 1rem; }
+    footer { margin-top: 2.5rem; border-top: 1px solid #a7b6ae; padding-top: 1rem; color: #4f5e57; font-size: .9rem; }
+    @media (max-width: 640px) { .flow, .pointers { grid-template-columns: 1fr; } body { padding-top: 1.25rem; } }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">Code reference · Check journey</p>
+    <h1>InternShield app map</h1>
+    <p class="lede">InternShield turns a recruiter or job message into a source-linked risk report. Tailor and Practice continue from that role, while Tracker and Profile keep optional local context.</p>
+    <p class="note">This is a reference route through the current code. It does not claim that the owner has completed the guided code tour or final hands-on review.</p>
+
+    <h2>One action through the app</h2>
+    <ol class="flow" aria-label="Check message flow">
+      <li><strong>1 · Enter a message</strong><code>CheckForm.submit()</code> validates the input and passes it to <code>App.onCheck()</code>.</li>
+      <li><strong>2 · Check the evidence</strong><code>runPipeline()</code> gathers quoted facts and optional lookups. <code>score()</code> applies fixed risk rules.</li>
+      <li><strong>3 · Review and refine</strong><code>ReportBody</code> shows the score, evidence, and missing checks. A quick answer runs <code>score()</code> again.</li>
+    </ol>
+
+    <h2>Three stops in the source</h2>
+    <ol class="route">
+      <li><strong>Input → <a href="../components/CheckForm.tsx">components/CheckForm.tsx</a></strong>Search for <code>messageIssue</code> and <code>submit</code>. The form rejects unusable input, then sends the message, sender, company, and example state to <code>App.onCheck</code> in <a href="../components/App.tsx">components/App.tsx</a>.</li>
+      <li><strong>Checks and rules → <a href="../lib/client/pipeline.ts">lib/client/pipeline.ts</a></strong>Search for <code>runPipeline</code>. It calls the extraction and lookup routes, tracks failed or skipped checks, and passes the gathered facts to <code>score</code> in <a href="../lib/scoring/score.ts">lib/scoring/score.ts</a>. The AI supplies candidate facts; fixed rules decide the score.</li>
+      <li><strong>Visible result → <a href="../components/report/Report.tsx">components/report/Report.tsx</a></strong>Search for <code>ReportBody</code> and <code>onAnswer</code>. The report shows source quotes, risk and coverage separately, then recalculates when the user answers a quick question.</li>
+    </ol>
+
+    <h2>To change this, start here</h2>
+    <div class="pointers">
+      <p><strong>Form rules or example buttons:</strong> <a href="../components/CheckForm.tsx">CheckForm.tsx</a>, then the relevant <a href="../tests/ui/">UI tests</a>.</p>
+      <p><strong>Risk flags or weights:</strong> <a href="../lib/scoring/rules.ts">rules.ts</a> and <a href="../lib/scoring/score.ts">score.ts</a>; check <a href="../tests/scoring/score.test.ts">score.test.ts</a> and the <a href="../eval/">labeled evaluation</a>.</p>
+      <p><strong>Unavailable lookup behavior:</strong> <a href="../lib/client/pipeline.ts">pipeline.ts</a> and <a href="../lib/scoring/coverage.ts">coverage.ts</a>.</p>
+      <p><strong>Report wording or layout:</strong> <a href="../components/report/Report.tsx">Report.tsx</a> and the smaller components in <a href="../components/report/">components/report/</a>.</p>
+    </div>
+
+    <h2>A practice to reuse</h2>
+    <p>The <a href="prd.md">PRD</a> asks for an evidence-based risk report. The score rule tests cover high-risk and ordinary examples, missing lookups, and quick answers. When changing a rule, state the visible result first, add a case to <a href="../tests/scoring/score.test.ts">score.test.ts</a> or the <a href="../eval/">evaluation set</a>, then verify the report still explains the same evidence. That keeps a model-generated fact from silently becoming a model-generated verdict.</p>
+
+    <h2>Run it again</h2>
+    <p>From the repository root, run <code>npm install</code>, copy <code>.env.example</code> to <code>.env.local</code>, set the server keys described in the <a href="../README.md">README</a>, then run <code>npm run dev</code> and open <code>http://localhost:3000</code>. The built-in suspicious offer is fictional.</p>
+  </main>
+  <footer>Code route checked against <code>v3</code> commit <code>833e862</code>. This map is a snapshot; verify paths after later code changes.</footer>
+</body>
+</html>

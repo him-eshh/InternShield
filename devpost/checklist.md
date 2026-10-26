@@ -32,7 +32,8 @@ This file tracks the final integrated v3 tree. Earlier slice-by-slice build chec
 - [x] Final documentation, source attribution, and full isolated-snapshot history/tree secret and private-path scan
 - [x] Verified [submission fact sheet](submission-draft.md) and fabricated-data [demo storyboard](demo-storyboard.md) prepared for owner review
 - [x] Captured a silent local demo draft with fictional inputs, live Check and Tailor API responses, and 6 of 6 runnable Practice tests
-- [ ] Owner final review of the app and screenshots; complete the Devpost Learn code tour and app map with the owner
+- [x] Prepare the [app map](app-map.html) from the current Check journey
+- [ ] Owner final review of the app and screenshots; complete the Devpost Learn code tour using the app map with the owner
 
 ## Build With AI: Basics submission
 

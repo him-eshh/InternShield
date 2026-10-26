@@ -2,11 +2,11 @@
 
 Check a job or recruiter message, tailor a resume for the role, and practice an interview in one browser-based workspace.
 
-Planning and verification: [scope](devpost/scope.md), [PRD](devpost/prd.md), [spec](devpost/spec.md), and [checklist](devpost/checklist.md). Source attribution: [question bank](data/question-bank/SOURCES.md) and [design skills](devpost/design-skills/README.md).
+Planning and verification: [scope](devpost/scope.md), [PRD](devpost/prd.md), [spec](devpost/spec.md), [checklist](devpost/checklist.md), and [app map](devpost/app-map.html). Source attribution: [question bank](data/question-bank/SOURCES.md) and [design skills](devpost/design-skills/README.md).
 
 ![InternShield Home with Check, Tailor, and Practice](devpost/screenshots/home.png)
 
-More fabricated browser QA views: [Check report](devpost/screenshots/check-report.png) · [Tailor review](devpost/screenshots/tailor-review.png) · [Practice summary](devpost/screenshots/practice-summary.png). These use mocked external responses; [live check results and limits](devpost/v3-summary.md) are documented separately.
+More fabricated browser QA views: [Check report](devpost/screenshots/check-report.png) · [Tailor review](devpost/screenshots/tailor-review.png) · [Practice summary](devpost/screenshots/practice-summary.png). These use mocked external responses; [live API checks and limits](devpost/v3-summary.md) are documented separately.
 
 ## How it works
 

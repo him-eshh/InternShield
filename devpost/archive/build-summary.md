@@ -49,7 +49,7 @@ npm run eval:live -- --limit 3   # real Groq extraction, uses quota
 
 ## Known issues / decisions to look at
 
-- **Workers didn't use git worktrees.** Background agents had no shell access overnight, so they wrote straight into `main` with separate files each, and I ran every gate and commit. A stale, empty worktree folder may be left at `.claude/worktrees/agent-a2502dab67038db31` (Windows "Permission denied" on delete). `git worktree prune` plus deleting the folder clears it.
+- **Workers didn't use git worktrees.** Background agents had no shell access overnight, so they wrote straight into `main` with separate files each, and I ran every gate and commit. A stale, empty local worktree folder may need `git worktree prune` and manual cleanup.
 - **Accent color:** light-mode accent is `#2A5FB8`, not the spec's `#2F6FD6`, so blue text on the light-blue tint passes 4.5:1 contrast.
 - **Coverage line:** it reads as weighted checks ("13 of 14 checks ran").
 - **Untouched files:** `.agents/`, `agent/`, `.claude/skills/` and `skills-lock.json` are your hackathon skill files. I left them untracked and didn't touch them.
