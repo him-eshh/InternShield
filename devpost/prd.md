@@ -17,7 +17,7 @@ status: current-v3
 
 ## Check acceptance
 
-- Model extraction must attach exact source quotes. The deterministic engine in `lib/scoring` sets the level; explanation follows scoring.
+- Model extraction must attach exact source quotes. The deterministic engine in `lib/scoring` sets the level; explanation is built from the scored flags.
 - Posting matches and a company's official site are evidence, not proof. A missing posting is neutral. Incomplete lookups appear under “Couldn't check.”
 - Risk styling always has words and an icon. The report has a useful action even at low risk, without a guarantee of legitimacy.
 - The two examples use only fabricated messages and disclose when a saved fallback result replaces a live call.
@@ -33,7 +33,7 @@ status: current-v3
 
 - Setup supports configurable rounds, difficulty, topics, language, and question/round count. When a company-specific pool is thin, it broadens to similar or general questions and says so.
 - “Most asked at [company]” is a ranking proxy from historical public lists. It is not measured interview frequency.
-- Code/SQL result checks run locally and are displayed before qualitative feedback. Feedback respects failed tests; behavioral feedback uses the answer and STAR evidence. Follow-ups fit the question type.
+- Code/SQL result checks run locally and are displayed before coaching. Server feedback can show an exact answer quote and test results, but model-written achievement claims and STAR ratings are discarded. Follow-ups use question-type prompts without assuming facts the candidate did not provide.
 - A session resumes after refresh, can end early, and produces counts from actual turns. Model or intel limits trigger a visible local fallback.
 
 ## Privacy, accessibility, and constraints

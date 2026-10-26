@@ -9,7 +9,7 @@ InternShield helps a job seeker check a recruiter or job message, tailor an exis
 
 ## Core promise
 
-Check is evidence first: the model extracts facts with message quotes and explains after the score is fixed. Deterministic rules in `lib/scoring` set the risk level. The report separates what was found from what could not be checked, asks targeted quick questions, and can recalculate after the user adds information. A found job posting is evidence, never proof of sender legitimacy; a missing posting is neutral. The app never calls a message “safe.”
+Check is evidence first: the model extracts facts with message quotes, and the app explains scored flags deterministically. Rules in `lib/scoring` set the risk level. The report separates what was found from what could not be checked, asks targeted quick questions, and can recalculate after the user adds information. A found job posting is evidence, never proof of sender legitimacy; a missing posting is neutral. The app never calls a message “safe.”
 
 Tailor starts with the user's original PDF or DOCX. It proposes a small number of line edits, checks them against the original experience, and lets the user accept or reject them before preview and download. It does not invent qualifications. PDF cover-and-redraw does not remove the old text layer; generated PDFs are not suitable for redaction. DOCX editing is constrained by the original word layout.
 

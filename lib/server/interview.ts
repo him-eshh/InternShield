@@ -263,33 +263,54 @@ const REVIEW_SCHEMA = {
   properties: { ...(FEEDBACK_SCHEMA.properties as object), level: { type: "string", enum: ["strong", "ok", "weak"] }, followUp: str },
 };
 
-/** An exact answer quote or the runner's test result must support praise about the candidate. */
-function groundFeedback(fb: InterviewFeedback, code: CodeAttempt | null, lastIndex: number): InterviewFeedback {
+/** A quote proves occurrence, not the model's interpretation of what the candidate did. */
+function practiceStep(round: InterviewRound): string {
+  switch (round) {
+    case "sql": return "Explain how NULL values, joins, and grouping affect the expected rows.";
+    case "coding":
+    case "debugging": return "Walk through one edge case and explain the time and space costs.";
+    case "design": return "Explain one design trade-off and how you would test it.";
+    case "case": return "Show the calculation and state the assumptions behind it.";
+    case "portfolio": return "Explain your role, one decision you made, and the outcome.";
+    default: return "Go deeper on one decision: explain why you chose it and how you checked the outcome.";
+  }
+}
+
+function safeFollowUp(round: InterviewRound): string {
+  if (round === "sql") return "How would your query handle NULL values?";
+  if (CODE_ROUNDS.includes(round)) return "Which edge case would you test next, and why?";
+  if (round === "design") return "What trade-off would you check next in this design?";
+  if (round === "case") return "Which assumption would you verify first?";
+  return "What would you change next time, and why?";
+}
+
+function groundFeedback(fb: InterviewFeedback, round: InterviewRound, code: CodeAttempt | null, lastIndex: number): InterviewFeedback {
   const tested = code !== null && code.total > 0;
   const failed = tested && code.passed < code.total;
-  const unquoted = fb.items.some((item) => !item.quote);
-  if (!failed && !unquoted) return fb;
   const sql = code?.language === "sql";
   const result = code ? sql ? "Your query was checked against the expected result." : `Your code passed ${code.passed} of ${code.total} hidden tests.` : "";
   const fix = sql
     ? "The result differs from the expected rows. Compare the rows, joins, grouping and NULL handling."
     : "Some hidden tests failed. Use the first failing case to revise and rerun your code.";
-  let summary = fb.summary;
-  if (failed && code) summary = sql ? "The query result did not match the expected rows." : `${code.passed} of ${code.total} hidden tests passed.`;
-  else if (unquoted) summary = tested && code
-    ? sql ? "The query result matched the expected rows." : `${code.passed} of ${code.total} hidden tests passed.`
+  let summary = fb.items.some((item) => item.quote)
+    ? "Review the quoted answer and practice the suggested next step."
     : "No exact answer quote was available. Use the suggestion below.";
+  if (failed && code) summary = sql ? "The query result did not match the expected rows." : `${code.passed} of ${code.total} hidden tests passed.`;
+  else if (tested && code) summary = sql
+    ? "The query result matched the expected rows."
+    : `${code.passed} of ${code.total} hidden tests passed.`;
   return {
     summary,
     items: fb.items.map((item) => {
       if (failed && item.index === lastIndex) return { ...item, strength: result, improve: fix, star: null };
-      if (!item.quote) return {
-        ...item,
-        strength: tested && item.index === lastIndex ? result : "A specific strength could not be verified from this answer.",
-        improve: tested && item.index === lastIndex ? "Explain one edge case and how you checked it." : "Add one concrete example or check tied to the question.",
+      return {
+        index: item.index,
+        quote: item.quote,
+        strength: tested && item.index === lastIndex ? result
+          : item.quote ? "Your answer includes the quoted excerpt." : "A specific strength could not be verified from this answer.",
+        improve: practiceStep(round),
         star: null,
       };
-      return item;
     }),
   };
 }
@@ -358,21 +379,16 @@ export async function handleInterview(body: Record<string, unknown>): Promise<Re
       return failed("error", { message: FEEDBACK_FAILED });
     }
     const checked = validateFeedback(raw, input.turns, input.round);
-    const fb = checked && groundFeedback(checked, input.code, input.turns.length - 1);
+    const fb = checked && groundFeedback(checked, input.round, input.code, input.turns.length - 1);
     if (!fb || (review && (fb.items.length !== 1 || fb.items[0].index !== input.turns.length - 1))) return failed("error", { message: FEEDBACK_FAILED });
     if (!review) return done({ text: null, feedback: fb });
     const rec = raw as Rec;
     const followUp = (input.followUpsLeft ?? 0) > 0 && typeof rec.followUp === "string" ? cleanQuestion(rec.followUp) : "";
-    const safeFollowUp = followUp && !fb.items[0].quote
-      ? input.round === "sql" ? "How would your query handle NULL values?"
-        : CODE_ROUNDS.includes(input.round) ? "Which edge case would you test next, and why?"
-          : "Can you give one concrete example and explain the outcome?"
-      : followUp;
-    const modelLevel = rec.level === "strong" || rec.level === "ok" || rec.level === "weak" ? rec.level : undefined;
+    const groundedFollowUp = followUp ? safeFollowUp(input.round) : "";
     const codeRatio = input.code && input.code.total > 0 ? input.code.passed / input.code.total : null;
     const level = codeRatio !== null ? (codeRatio >= 1 ? "strong" : codeRatio < 0.5 ? "weak" : "ok")
-      : !fb.items[0].quote ? (input.turns.at(-1)?.answer.trim() ? "ok" : "weak") : modelLevel;
-    return done({ text: null, feedback: fb, followUp: safeFollowUp || null, ...(level ? { level } : {}) });
+      : input.turns.at(-1)?.answer.trim() ? "ok" : "weak";
+    return done({ text: null, feedback: fb, followUp: groundedFollowUp || null, level });
   }
 
   const text = cleanQuestion(r.data, input.ask === "hint" ? MAX_HINT_CHARS : MAX_QUESTION_CHARS);

@@ -141,11 +141,6 @@ export function takeCheck(): { ok: true } | { ok: false; retryAfter: number } {
   return r.ok ? { ok: true } : { ok: false, retryAfter: r.retryAfter };
 }
 
-/** Counts one live explain call against 2x DAILY_CHECK_CAP so tokens can't be drained. */
-export function takeExplain(): boolean {
-  return takeCount("global:explain", envInt("DAILY_CHECK_CAP", 120) * 2, "day").ok;
-}
-
 /** Counts one live resume rewrite against REWRITE_DAILY_CAP (site-wide). */
 export function takeRewrite(): { ok: true } | { ok: false; retryAfter: number } {
   const r = takeCount("global:rewrite", envInt("REWRITE_DAILY_CAP", 30), "day");

@@ -10,7 +10,7 @@ Check a job or recruiter message, tailor a resume for the role, and practice an 
 - **Tracker and profile:** save application steps and optional preferences locally. A Check report or Practice summary can hand a role and company to the next tool.
 - AI extracts facts from the message, each with an exact quote.
 - Fixed rules score those facts. The AI never decides the score.
-- AI explains the result only after the score is set.
+- The report explains scored flags using their evidence.
 - A posting is cross-checked against official company information when available. It never says a message is safe. If nothing is flagged, it says "No red flags found" and offers an official careers link when one was found.
 
 ## Run it locally
@@ -155,7 +155,7 @@ Held-out set (27 cases written without seeing the rules, not gating): 24/27; fal
 
 ## Privacy
 
-Your profile, extracted resume text, last report, tracker, and practice history are saved in this browser's local storage. Check sends message content to Groq for extraction and explanation; company and posting lookups use Tavily and may use Wikidata, RDAP, and public DNS. Sender checks may send an email address to Hunter if its optional key is configured. Screenshot transcription sends a browser-compressed image to Groq; Tailor sends extracted resume text and the posting to Groq for suggestions; Practice may send answers and a short resume excerpt to Groq for feedback. The app has no account or persistent application database, but server instances temporarily cache some lookup and extraction results. “Clear my data” removes the app's saved local data except the theme choice. Use made-up information for demos.
+Your profile, extracted resume text, last report, tracker, and practice history are saved in this browser's local storage. Check sends message content to Groq for extraction; the explanation is built from scored flags. Company and posting lookups use Tavily and may use Wikidata, RDAP, and public DNS. Sender checks may send an email address to Hunter if its optional key is configured. Screenshot transcription sends a browser-compressed image to Groq; Tailor sends extracted resume text and the posting to Groq for suggestions; Practice may send answers and a short resume excerpt to Groq for questions and feedback. The app has no account or persistent application database, but server instances temporarily cache some lookup and extraction results. “Clear my data” removes the app's saved local data except the theme choice. Use made-up information for demos.
 
 PDF editing covers old text and redraws new text; the original text can remain extractable underneath. **An edited PDF is not a redacted document.** DOCX edits are limited by existing word layout. Review every suggested line, generated preview, and download before using it. Practice's “Most asked at” ranking is a proxy from historical public question lists, not employer question counts; model feedback can fall back to local checks when unavailable.
 

@@ -22,8 +22,8 @@ describe("Copy report", () => {
 });
 
 const FLAGS = [
-  { title: "Asks you to deposit a check", quote: "deposit the check we mail you", why: "w" },
-  { title: "Moves the conversation to WhatsApp", quote: null, why: "w" },
+  { title: "Asks you to deposit a check", quote: "deposit the check we mail you", why: "The message asks you to deposit a check." },
+  { title: "Moves the conversation to WhatsApp", quote: null, why: "The conversation moves to a private chat app." },
 ];
 
 describe("sectioned fallback explanation", () => {

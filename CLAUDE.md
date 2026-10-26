@@ -21,7 +21,7 @@ Run gates against the final integrated tree. Browser QA and a bounded live smoke
 - Keys only via `process.env` inside `lib/server/**`; never `NEXT_PUBLIC_`, never logged, never sent to the client. Never read or print `.env.local`.
 - Never commit `.env.local` or `devpost/learner-profile.md`. Never push, deploy, or touch remotes.
 - All example messages and test resumes are made up. Keep personal recruiter/scam messages out of tracked files and demos.
-- AI extracts facts and explains; deterministic `lib/scoring` rules set risk. Never use “safe” as a verdict.
+- AI extracts quoted facts; deterministic `lib/scoring` rules set risk and the explanation uses those flags. Never use “safe” as a verdict.
 - Risk red/amber/green are reserved for risk results, always with icon and words. Tool colors: Check coral, Tailor teal, Practice violet.
 - Every UI color comes from `app/theme.css`; no hex literals in `components/**`. Use `motion/react` for JS motion and `lucide-react` for icons, plus existing inline SVG illustrations. Respect reduced motion.
 - No new dependencies without asking. Treat `lib/types.ts` contracts deliberately. Current routes and guards are documented in `devpost/spec.md`.

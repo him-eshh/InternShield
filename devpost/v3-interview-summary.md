@@ -68,7 +68,7 @@ The existing uncommitted engine/API and launcher brief updates were preserved in
 
 1. One `/api/intel` interview lookup; verify cited stages/values or the explicit fallback.
 2. One coding review with local test results; verify feedback honors those results.
-3. One behavioral review; verify STAR evidence and a useful follow-up.
+3. One behavioral review; verify the exact answer quote and conservative, question-type follow-up. Model-written STAR ratings are not used in the final server review.
 4. One review of that follow-up; verify it grades the last turn and respects the remaining follow-up budget.
 
 ## Known limitations

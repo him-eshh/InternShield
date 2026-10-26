@@ -8,43 +8,9 @@ export function hasBannedWord(text: string): boolean {
   return BANNED.test(text);
 }
 
-// Calm sentences matched on the flag title (the request carries no flag id).
-const SENTENCES: [RegExp, string][] = [
-  [/send money back out|money back out/i, "You're asked to pass money on, keep a cut, or pay to withdraw, which is how scammers move money through students."],
-  [/run their code$/i,"You're asked to run their code, so confirm it with the company and only run it somewhere disposable."],
-  [/hides characters/i, "Hidden or look-alike characters were mixed into the message, which scammers use to slip past filters."],
-  [/task scam/i, "The work described (liking, boosting, or finishing sets of tasks for commission) matches a known task scam."],
-  [/deposit|fake check|cashier|mailed (?:a )?check/i, "You're asked to deposit a check and send money on, which is a common way scammers pull cash from students before the check bounces."],
-  [/equipment|laptop|software|vendor/i, "You're asked to buy equipment yourself, and real employers don't ask new hires to front that cost."],
-  [/gift ?card/i, "Gift cards are requested, and no real employer is paid back that way."],
-  [/crypto|bitcoin|task deposit/i, "Crypto or a deposit is requested, and a real job never needs you to pay in to start earning."],
-  [/\bfees?\b|pay(?:ment)? (?:to|for)|training cost/i, "A fee is requested up front, and real employers don't charge you to hire you."],
-  [/forward|reship|re-ship|package/i, "You're asked to receive and forward money or packages, which is a common way to be used to move stolen goods."],
-  [/install|run code|download|software to/i, "You're asked to run code or install something, so check with the company before you do."],
-  [/\bssn\b|social security|bank|sensitive|passport|id (?:card|document)/i, "Sensitive personal details are requested early, so hold them back until you've confirmed the employer directly."],
-  [/whatsapp|telegram|signal|off.?platform|text message|move the conversation/i, "The conversation is being moved to a private chat app, which makes it harder to verify who you're talking to."],
-  [/urgent|pressure|24 hours|deadline|act now|respond (?:now|quickly)/i, "There's pressure to answer quickly, and a real recruiter will usually give you time to check."],
-  [/no interview|hired directly|without an? interview|interview/i, "The hiring process skips or plays down an interview, which is unusual for a genuine role."],
-  [/vague|duties|simple tasks/i, "The duties are vague, and a real posting normally describes the work clearly."],
-  [/experience/i, "The message promises a role with no experience needed, which can be a hook rather than a real requirement."],
-  [/lookalike|look-alike|impersonat|similar to/i, "The sender's website looks similar to a real company's but isn't the same, so double check the spelling."],
-  [/free email|gmail|yahoo|outlook|personal email/i, "The sender uses a free personal email instead of a company address, which is worth double checking."],
-  [/new domain|recently registered|domain age|registered/i, "The sender's website was registered very recently, which is common with throwaway scam sites."],
-  [/\bmx\b|can't receive|cannot receive|no mail/i, "The sender's website doesn't appear to receive email, so replies may not reach a real company."],
-  [/no (?:official|company|careers)|not found|couldn't find/i, "We couldn't find an official company website to compare against."],
-  [/pay|salary|wage|\$/i, "The pay sounds unusually high for the work described, so it's worth comparing with similar listings."],
-];
-
-function sentenceFor(f: ExplainRequest["flags"][number], seen: Set<string>): string {
-  const hit = SENTENCES.find(([re]) => re.test(f.title));
-  const s = (hit ? hit[1] : f.why).trim();
-  const base = s.endsWith(".") ? s : `${s}.`;
-  const q = f.quote?.trim();
-  if (!q || hasBannedWord(q)) return base;
-  const k = q.toLowerCase();
-  if (seen.has(k)) return base; // each quote at most once
-  seen.add(k);
-  return `${base} They wrote: "${q.replace(/"/g, "'")}".`;
+function sentenceFor(f: ExplainRequest["flags"][number]): string {
+  const s = (f.why || f.title).trim();
+  return s.endsWith(".") ? s : `${s}.`;
 }
 
 /** Section titles used by the pre-written explanation. Lines starting with "## " are titles, "- " are bullets. */
@@ -68,9 +34,8 @@ export function fallbackExplanation({ level, flags }: ExplainRequest): string {
       : level === "medium"
         ? "This message has some warning signs worth double checking."
         : "We didn't find strong red flags, but a few details are worth a look.";
-  const seenQuotes = new Set<string>();
   // Top 3 only and no quotes: the evidence cards right below show every flag with its quote.
-  const body = [...new Set(flags.map((f) => sentenceFor({ ...f, quote: null }, seenQuotes)))].slice(0, 3);
+  const body = [...new Set(flags.map(sentenceFor))].slice(0, 3);
   const close =
     level === "high"
       ? "Please don't send money or personal details, and report it if you can."

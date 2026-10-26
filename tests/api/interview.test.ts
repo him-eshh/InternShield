@@ -254,8 +254,10 @@ describe("v3 per-answer review", () => {
     h.create.mockReturnValue(groqOk(JSON.stringify({ ...JSON.parse(feedbackJson(ANSWER)), level: "strong", followUp: "What would you do differently?" })));
     const json = await (await call(reviewBody)).json();
     expect(json.status).toBe("done");
-    expect(json.data.followUp).toBe("What would you do differently?");
-    expect(json.data.level).toBe("strong");
+    expect(json.data.followUp).toBe("What would you change next time, and why?");
+    expect(json.data.level).toBe("ok");
+    expect(json.data.feedback.summary).toBe("Review the quoted answer and practice the suggested next step.");
+    expect(json.data.feedback.items[0].strength).toBe("Your answer includes the quoted excerpt.");
     expect(json.data.feedback.items).toHaveLength(1);
     expect(h.create).toHaveBeenCalledTimes(1);
   });
