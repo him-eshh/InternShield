@@ -15,6 +15,7 @@ describe("shared resume edit guard", () => {
     expect(sameEnding("Built a site.", "Built a site with React")).toBe("Built a site with React.");
     expect(sameEnding("Built a site", "Built a site with React.")).toBe("Built a site with React");
     expect(sameEnding("Built a site", "Built a site with React")).toBe("Built a site with React");
+    expect(sameEnding("Ran root-cause checks.", "Ran root‑cause checks")).toBe("Ran root-cause checks.");
     expect(checkedEdits(doc, [{ ...candidate, proposed: proposed.slice(0, -1) }], ["JavaScript"])[0]?.proposed).toBe(proposed);
   });
   it("allows a small factual edit and derives metadata from the source", () => {

@@ -1,7 +1,7 @@
 import { attachResumeBoxes, fittingResumeEdits } from "@/lib/tiers/resumeWidth";
 // Suggestions: selected existing bullets, shared deterministic checks before returning JSON.
 import { canon } from "@/lib/tiers/resumeGuard";
-import { checkEdit, checkedEdits, editableLines } from "@/lib/tiers/resumeEdits";
+import { checkEdit, checkedEdits, editableLines, sameEnding } from "@/lib/tiers/resumeEdits";
 import { parseTextResume, docLines, docText } from "@/lib/tiers/resumeModel";
 import { buildResumePlan } from "@/lib/tiers/resumePlan";
 import { MAX_EDITS, type ResumeSource } from "@/lib/tiers/resumeTypes";
@@ -87,24 +87,27 @@ export async function handleEdits(body: Record<string, unknown>): Promise<Respon
   if (!result.ok) return fromOutcome(result);
   try {
     const json = JSON.parse(result.data);
-    let checked = checkedEdits(doc, json?.edits, plan.keywords, input.facts, input.posting);
-    // One retry when every draft failed: tell the model why (echoed bullet, too long, punctuation...).
-    if (!checked.length && Array.isArray(json?.edits) && json.edits.length) {
+    const checked = checkedEdits(doc, json?.edits, plan.keywords, input.facts, input.posting);
+    let fit = await fittingResumeEdits(doc, checked);
+    // One retry when every draft failed: tell the model why (echoed bullet, too long, punctuation, too wide to print...).
+    if (!fit.length && Array.isArray(json?.edits) && json.edits.length) {
       const resume = docText(doc);
+      const passed = new Set(checked.map((e) => e.lineId));
       const notes = json.edits.slice(0, MAX_EDITS).flatMap((e: { lineId?: unknown; proposed?: unknown }) => {
         const line = eligible.find((l) => l.id === e?.lineId);
         if (!line || typeof e.proposed !== "string") return [];
-        const c = checkEdit({ resume, original: line.text, proposed: e.proposed, facts: input.facts, posting: input.posting, source: doc.source });
+        if (passed.has(line.id)) return [`${line.id}: too wide for the printed line, keep it within ${line.text.length} characters`];
+        const c = checkEdit({ resume, original: line.text, proposed: sameEnding(line.text, e.proposed.trim()), facts: input.facts, posting: input.posting, source: doc.source });
         return c.ok ? [] : [`${line.id}: ${[...c.failures, ...c.details].join(", ")}`];
       });
       const again = await callGroq("resumeEdits", { system: SYSTEM + wordRule + levelRule, user: `${user}\nYOUR LAST DRAFT FAILED THESE CHECKS (unchanged = same as the original; length = too long): ${notes.join("; ")}. Return new edits that change each bullet and pass.`, maxTokens: 1800, schema: SCHEMA });
       try {
-        if (again?.ok) checked = checkedEdits(doc, JSON.parse(again.data)?.edits, plan.keywords, input.facts, input.posting);
+        if (again?.ok) fit = await fittingResumeEdits(doc, checkedEdits(doc, JSON.parse(again.data)?.edits, plan.keywords, input.facts, input.posting));
       } catch {
         /* the retry is best effort; the first, empty result stands */
       }
     }
-    return done({ edits: await fittingResumeEdits(doc, checked) });
+    return done({ edits: fit });
   } catch {
     return failed("error", { message: "Couldn't draft edits right now. Try again in a minute." });
   }

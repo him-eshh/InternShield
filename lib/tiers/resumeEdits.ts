@@ -96,8 +96,12 @@ export function withinTotalBudget(doc: ResumeDoc, texts: Map<string, string>): b
 
 export { MAX_EDITS };
 
-/** Models often drop or add the final period; match the original's. Other endings (? or !) are left for the style check. */
-export function sameEnding(original: string, proposed: string): string {
+/**
+ * Undo model typography the original doesn't use: non-breaking hyphens and spaces (gpt-oss writes "root‑cause",
+ * which the PDF redraw fonts can't measure) and a dropped or added final period. Other endings are left for the style check.
+ */
+export function sameEnding(original: string, raw: string): string {
+  const proposed = raw.replace(/[‐‑]/g, "-").replace(/[  ]/g, " ");
   const dot = original.trim().endsWith(".");
   if (dot && !/[.!?]$/.test(proposed)) return proposed + ".";
   if (!dot && !/[.!?]$/.test(original.trim()) && /[^.]\.$/.test(proposed)) return proposed.slice(0, -1);
