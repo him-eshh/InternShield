@@ -71,13 +71,13 @@ export default function Nav() {
           </div>
           <div className="flex items-center gap-2">
             <span className="hidden lg:block"><ThemeToggle /></span>
-            <Link href="/profile" aria-label={`Profile, ${progress.count} of ${progress.total} steps done`} title="Your profile" className="relative grid size-11 shrink-0 place-items-center rounded-full text-ink-strong">
+            <Link href="/profile" aria-label={`Profile, ${progress.count} of ${progress.total} steps done`} title="Your profile" className="flex shrink-0 items-center gap-2 rounded-full text-ink-strong"><span className="relative grid size-11 shrink-0 place-items-center">
               <svg viewBox="0 0 44 44" className="absolute inset-0 size-11 -rotate-90" aria-hidden="true">
                 <circle cx="22" cy="22" r="19" fill="none" stroke="var(--border)" strokeWidth="2" />
                 {/* No arc at 0: a round cap on a zero-length dash draws a stray dot above the avatar. */}
                 {progress.count > 0 && <circle cx="22" cy="22" r="19" fill="none" stroke="var(--ink-strong)" strokeWidth="2" strokeDasharray={`${(progress.count / progress.total) * 119.38} 119.38`} strokeLinecap="round" />}
               </svg>
-              {initials ? <span className="text-[13px] font-semibold">{initials}</span> : <UserRound size={18} strokeWidth={1.75} aria-hidden="true" />}
+              {initials ? <span className="text-[13px] font-semibold">{initials}</span> : <UserRound size={18} strokeWidth={1.75} aria-hidden="true" />}</span><span className="hidden pr-2 text-sm font-medium lg:block">Profile</span>
             </Link>
           </div>
         </nav>

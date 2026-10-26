@@ -271,8 +271,8 @@ export default function ProfilePage() {
       <div className="flex items-center gap-5">
         <div className="hidden shrink-0 sm:block"><ProfileIllustration size={132} /></div>
         <div>
-          <p className={eyebrow}>Your profile</p>
-          <h1 className="mt-1 font-display text-[clamp(30px,5vw,44px)] font-extrabold leading-[1.08] tracking-[-0.03em]">Your starting notes</h1>
+          <p className={eyebrow}>Optional · stays on this device</p>
+          <h1 className="mt-1 font-display text-[clamp(30px,5vw,44px)] font-extrabold leading-[1.08] tracking-[-0.03em]">Your profile</h1>
           <p className="mt-2 max-w-[52ch] text-[16px] text-fg-2">Saved on this device. Tailor and Practice may send relevant resume text to AI for suggestions and feedback.</p>
         </div>
       </div>
