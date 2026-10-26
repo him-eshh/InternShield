@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { advance, answerFollowUp, applyReview, awaiting, buildReviewRequest, buildSlots, buildSummary, canCallModel, defaultConfig, endEarly, loadActive, loadHistory, newPractice, progress, saveActive, saveToHistory, skip, skipReview, submitAnswer, totalBlocks } from "@/lib/tiers/session";
+import { advance, answerFollowUp, applyLocalReview, applyReview, awaiting, buildReviewRequest, buildSlots, buildSummary, canCallModel, defaultConfig, endEarly, loadActive, loadHistory, newPractice, overallBand, progress, saveActive, saveToHistory, skip, skipReview, submitAnswer, totalBlocks } from "@/lib/tiers/session";
 import { loadBank } from "@/lib/tiers/bank";
 import type { InterviewContext, InterviewReply, SessionConfig } from "@/lib/tiers/types";
 const context: InterviewContext = { company: null, role: null, description: null, resume: null, field: "tech" };
@@ -72,11 +72,11 @@ describe("continuous session engine", () => {
     expect(buildReviewRequest(s, "review")!.followUpsLeft).toBe(0);
     expect(advance(s, [], 17).turns[0].followUps).toHaveLength(2);
   });
-  it("steps mixed difficulty up and down after reviewed answers", () => {
-    let s = start({ rounds: ["behavioral"] });
-    s = advance(applyReview(submitAnswer(s, "example", 11), review(null, "strong"), 12), [], 13);
+  it("steps mixed difficulty up and down after runnable test results", () => {
+    let s = start({ rounds: ["coding"] });
+    s = advance(applyReview(submitAnswer(s, "approach", 11, { problemId: s.activeQuestion!.item.problemId!, language: "python", code: "x", passed: 6, total: 6 }), review(null, "strong"), 12), [], 13);
     expect(s.level).toBe(2);
-    s = advance(applyReview(submitAnswer(s, "example", 14), review(null, "weak"), 15), [], 16);
+    s = advance(applyReview(submitAnswer(s, "approach", 14, { problemId: s.activeQuestion!.item.problemId!, language: "python", code: "x", passed: 0, total: 6 }), review(null, "weak"), 15), [], 16);
     expect(s.level).toBe(1);
   });
   it("ends early, saves the answered current question and produces a recap", () => {
@@ -136,18 +136,30 @@ describe("practice configuration and recovery", () => {
     localStorage.setItem("is:practice-history", JSON.stringify([{ id: "broken", summary: {} }]));
     expect(loadHistory()).toEqual([]);
   });
-  it("scores completeness against the chosen length and deduplicates strengths", () => {
+  it("records non-runnable answers without a quality band or claimed strengths", () => {
     let s = start({ rounds: ["behavioral"], limit: { kind: "questions", count: 2 } });
     for (let i = 0; i < 2; i++) s = advance(applyReview(submitAnswer(s, "I owned the rollout and improved response time 20 percent", 12), review(null, "strong"), 13), [], 14);
     const summary = buildSummary(s);
-    expect(summary.rounds[0].axes!.find((a) => a.id === "complete")!.band).toBe("Strong");
-    expect(summary.strengths).toEqual(["Clear example"]);
+    expect(summary.answered).toBe(2);
+    expect(summary.rounds[0]).toMatchObject({ band: "Not scored", axes: [] });
+    expect(summary.turns.every((t) => t.level === undefined)).toBe(true);
+    expect(summary.strengths).toEqual([]);
   });
-  it("does not score text system design as an empty drawing board", () => {
+  it("does not give unassessed text system design a quality grade", () => {
     let s = start({ rounds: ["design"], limit: { kind: "questions", count: 1 } });
     s = advance(applyReview(submitAnswer(s, "I would define load, data access, failure modes and a rollout plan.", 12), review(null, "strong"), 13), [], 14);
-    expect(buildSummary(s).rounds[0].axes!.some((a) => a.id === "components")).toBe(false);
-    expect(buildSummary(s).rounds[0].axes!.some((a) => a.id === "reasoning")).toBe(true);
+    expect(buildSummary(s).rounds[0]).toMatchObject({ band: "Not scored", axes: [] });
+  });
+  it("does not grade an answered coding round without runnable test results", () => {
+    let s = start({ rounds: ["coding"], limit: { kind: "questions", count: 1 } });
+    s = advance(applyLocalReview(submitAnswer(s, "I would loop over the input.", 12), 13), [], 14);
+    const summary = buildSummary(s);
+    expect(summary.turns[0].level).toBeUndefined();
+    expect(summary.rounds[0]).toMatchObject({ band: "Not scored", axes: [] });
+    expect(overallBand(summary)).toBe("Not scored");
+    const resumedOld = buildSummary({ ...s, grounded: undefined });
+    expect(resumedOld.grounded).toBeUndefined();
+    expect(overallBand(resumedOld)).toBe("Not scored");
   });
 });
 

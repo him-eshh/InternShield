@@ -89,6 +89,8 @@ export interface Current {
 }
 export interface PracticeState {
   v: 1;
+  /** Set on sessions created after model-written rating claims were removed. */
+  grounded?: true;
   id: string;
   seed: number;
   createdAt: number;
@@ -254,6 +256,7 @@ export function newPractice(config: SessionConfig, context: InterviewContext, op
   const cfg: SessionConfig = { ...config, limit: { kind: config.limit.kind, count: clampCount(config.limit.count) } };
   const s: PracticeState = {
     v: 1,
+    grounded: true,
     id: opts.id,
     seed: opts.seed,
     createdAt: opts.now,
@@ -381,21 +384,21 @@ export function addHint(s: PracticeState, text: string, now: number): PracticeSt
   return { ...next, activeQuestion: { ...c, hints: [...c.hints, text.trim().slice(0, 300)] } };
 }
 // ---------- Advancing ----------
-/** Level the answer earned: the model's call when present, else a rough guess from the code result or the answer's length. */
-export function outcomeOf(c: Current): AnswerLevel {
+/** Only runnable checks establish an answer level. */
+export function outcomeOf(c: Current): AnswerLevel | null {
   if (c.code && c.code.total > 0) {
     const r = c.code.passed / c.code.total;
     if (r >= 1) return c.level === "weak" ? "ok" : "strong";
     if (r < 0.5) return "weak";
     return "ok";
   }
-  if (c.level) return c.level;
-  return "ok";
+  return null;
 }
 function finalize(s: PracticeState, now: number, skipped: boolean): SessionTurn | null {
   const c = s.activeQuestion;
   if (!c) return null;
   const answered = c.followUps.filter((f) => f.answer !== null);
+  const level = skipped ? null : outcomeOf(c);
   return {
     round: c.item.round,
     question: c.item.question,
@@ -411,7 +414,7 @@ function finalize(s: PracticeState, now: number, skipped: boolean): SessionTurn 
     ...(c.item.url ? { url: c.item.url } : {}),
     ...(c.item.difficulty ? { difficulty: c.item.difficulty } : {}),
     ...(c.item.tags ? { tags: c.item.tags } : {}),
-    ...(skipped ? {} : { level: outcomeOf(c) }),
+    ...(level ? { level } : {}),
     ...(answered.length ? { followUps: answered.map((f) => ({ question: f.question, answer: f.answer ?? "", ...(f.note ? { note: f.note } : {}) })) } : {}),
     startedAt: c.startedAt,
     endedAt: now,
@@ -472,7 +475,7 @@ export function progress(s: PracticeState): Progress {
 }
 // ---------- Summary ----------
 const BAND_ORDER: ScoreBand[] = ["Strong", "Solid", "Developing", "Not yet"];
-const LEVEL_BAND: Record<AnswerLevel, number> = { strong: 0, ok: 1, weak: 2 };
+const SUMMARY_ORDER = [...BAND_ORDER, "Not scored"];
 function innerFor(round: RoundKind, turns: SessionTurn[]): InterviewSession {
   const last = [...turns].reverse().find((t) => t.code);
   return {
@@ -500,36 +503,30 @@ function sessionCard(round: RoundKind, turns: SessionTurn[]) {
     const card = buildScorecard({ ...inner, round: "coding", turns: inner.turns.map((t) => ({ ...t, answer: t.answer.replace("\n\nQuery:\n", "\n\nCode:\n") })) });
     return card ? { ...card, axes: card.axes.map((a) => a.id === "coding" ? { ...a, label: "Query correctness" } : a), ...(inner.code.passed < inner.code.total ? { nextDrill: "Compare your query result with the expected rows; check joins, NULLs and duplicate rows." } : {}) } : null;
   }
-  if (round !== "design" && !(["coding", "sql"].includes(round) && !inner.code)) return buildScorecard(inner);
-  const card = buildScorecard({ ...inner, round: "screen" });
-  const quoted = turns.filter((t) => t.feedback?.quote);
-  const mean = turns.length ? turns.reduce((n, t) => n + LEVEL_BAND[t.level ?? "weak"], 0) / turns.length : 3;
-  const band = BAND_ORDER[Math.max(quoted.length ? 0 : 2, Math.min(3, Math.round(mean)))];
-  return { axes: [{ id: "reasoning", label: "Reasoning (discussion)", band, evidence: quoted.length ? quoted.map((t) => t.feedback!.quote!) : ["No quoted evidence; discussion grade is capped."], byCode: false }, ...(card?.axes ?? [])], nextDrill: turns.find((t) => t.feedback?.improve)?.feedback?.improve };
+  return buildScorecard(inner);
 }
-/** Round band: rule-graded axes where the app can check (code, STAR, numbers), else the answer levels. */
-function roundBand(round: RoundKind, turns: SessionTurn[]): { band: ScoreBand; note: string } {
+/** Discussion answers are recorded without a quality grade; runnable rounds use checked results. */
+function roundBand(round: RoundKind, turns: SessionTurn[]): { band: ScoreBand | "Not scored"; note: string } {
   const answered = turns.filter((t) => !t.skipped);
+  if (!CODE_ROUNDS.includes(round)) return { band: "Not scored", note: answered.map((t) => t.feedback?.improve).find(Boolean) ?? "Review one decision and how you checked its outcome." };
+  if (!turns.some((t) => (t.code?.total ?? 0) > 0)) return { band: "Not scored", note: "No runnable test result was recorded." };
   if (!answered.length) return { band: "Not yet", note: "Every question was skipped." };
   const card = sessionCard(round, turns);
   let band: ScoreBand;
   if (card && card.axes.length) {
     const mean = card.axes.reduce((a, x) => a + BAND_ORDER.indexOf(x.band), 0) / card.axes.length;
     band = BAND_ORDER[Math.min(3, Math.round(mean))];
-  } else {
-    const mean = answered.reduce((a, t) => a + LEVEL_BAND[t.level ?? "ok"], 0) / answered.length;
-    band = BAND_ORDER[Math.min(3, Math.round(mean))];
-  }
+  } else band = "Not yet";
   const note = card?.nextDrill ?? answered.map((t) => t.feedback?.improve).find(Boolean) ?? "";
   return { band, note };
 }
 export function buildSummary(s: PracticeState): SessionSummary {
   const rounds = [...new Set(s.turns.map((t) => t.round))];
-  const per = rounds.map((round) => { const turns = s.turns.filter((t) => t.round === round); return { round, ...roundBand(round, turns), axes: sessionCard(round, turns)?.axes ?? [] }; });
+  const per = rounds.map((round) => { const turns = s.turns.filter((t) => t.round === round); return { round, ...roundBand(round, turns), axes: CODE_ROUNDS.includes(round) && turns.some((t) => (t.code?.total ?? 0) > 0) ? sessionCard(round, turns)?.axes ?? [] : [] }; });
   const weakTags = new Map<string, number>();
   s.turns.filter((t) => t.level === "weak").forEach((t) => (t.tags ?? []).forEach((g) => weakTags.set(g, (weakTags.get(g) ?? 0) + 1)));
   const next: string[] = [];
-  [...per].sort((a, b) => BAND_ORDER.indexOf(b.band) - BAND_ORDER.indexOf(a.band)).forEach((r) => {
+  [...per].sort((a, b) => SUMMARY_ORDER.indexOf(b.band) - SUMMARY_ORDER.indexOf(a.band)).forEach((r) => {
     if (r.band !== "Strong" && r.note && next.length < 3 && !next.includes(r.note)) next.push(r.note);
   });
   [...weakTags].sort((a, b) => b[1] - a[1]).slice(0, 2).forEach(([g]) => next.length < 3 && next.push(`Do two more ${g} problems and say the complexity out loud.`));
@@ -538,9 +535,10 @@ export function buildSummary(s: PracticeState): SessionSummary {
   for (const t of s.turns) if (next.length < 3 && t.feedback?.improve && !next.includes(t.feedback.improve)) next.push(t.feedback.improve);
   if (!next.length) next.push("Try a harder level or another company's questions.");
   const strengths = [...new Set(s.turns
-    .filter((t) => !t.skipped && t.feedback?.strength && t.level !== "weak")
+    .filter((t) => !t.skipped && t.code?.total && t.feedback?.strength && t.level !== "weak")
     .map((t) => t.feedback?.strength ?? ""))].slice(0, 3);
   return {
+    grounded: s.grounded,
     config: s.config,
     turns: s.turns,
     answered: s.turns.filter((t) => !t.skipped).length,
@@ -555,7 +553,7 @@ export function buildSummary(s: PracticeState): SessionSummary {
 /** A new session config aimed at what went worst: weak topics and the weakest rounds. */
 export function practiceAgain(summary: SessionSummary): SessionConfig {
   const weakTopics = [...new Set(summary.turns.filter((t) => t.level === "weak" || t.skipped).flatMap((t) => t.tags ?? []))].slice(0, 4);
-  const worst = [...summary.rounds].sort((a, b) => BAND_ORDER.indexOf(b.band) - BAND_ORDER.indexOf(a.band)).map((r) => r.round);
+  const worst = [...summary.rounds].sort((a, b) => SUMMARY_ORDER.indexOf(b.band) - SUMMARY_ORDER.indexOf(a.band)).map((r) => r.round);
   const rounds = (worst.length ? worst.filter((r) => SETUP_ROUNDS.includes(r)).slice(0, 3) : summary.config.rounds) as RoundKind[];
   return { ...summary.config, rounds: rounds.length ? rounds : summary.config.rounds, topics: weakTopics, customQuestions: [], limit: { kind: "questions", count: 5 } };
 }
@@ -596,10 +594,11 @@ export function saveToHistory(s: PracticeState): HistoryEntry {
   return entry;
 }
 // ---------- Hand-offs to the other tools ----------
-/** One band for the whole session: the mean of its round bands ("Not yet" when nothing was practiced). */
-export function overallBand(summary: SessionSummary): ScoreBand {
-  const r = summary.rounds;
-  return r.length ? BAND_ORDER[Math.min(3, Math.round(r.reduce((n, x) => n + BAND_ORDER.indexOf(x.band), 0) / r.length))] : "Not yet";
+/** Only runnable rounds contribute to the overall quality band. */
+export function overallBand(summary: SessionSummary): ScoreBand | "Not scored" {
+  if (!summary.grounded) return "Not scored";
+  const r = summary.rounds.filter((x) => CODE_ROUNDS.includes(x.round) && x.band !== "Not scored" && summary.turns.some((t) => t.round === x.round && (t.code?.total ?? 0) > 0));
+  return r.length ? BAND_ORDER[Math.min(3, Math.round(r.reduce((n, x) => n + SUMMARY_ORDER.indexOf(x.band), 0) / r.length))] : "Not scored";
 }
 /** What "Add to tracker" saves from a finished session: company, role and how it went (as the card's note). */
 export function trackerCardFor(summary: SessionSummary, company: string | null | undefined, role: string | null | undefined): NewCard & { notes: string } {

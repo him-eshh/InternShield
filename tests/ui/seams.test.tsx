@@ -66,7 +66,7 @@ describe("seam 3: Practice summary to the tracker", () => {
   it("builds a card with company, role and the score", () => {
     const card = trackerCardFor(buildSummary(finished()), "Example Labs", "Backend Intern");
     expect(card).toMatchObject({ company: "Example Labs", role: "Backend Intern", link: null, risk: null });
-    expect(card.notes).toMatch(/^Practice: (Strong|Solid|Developing|Not yet), 1 of 1 answered\.$/);
+    expect(card.notes).toBe("Practice: Not scored, 1 of 1 answered.");
     const cards = addCard([], card);
     expect(cards).toHaveLength(1);
     expect(cards[0].notes).toBe(card.notes);

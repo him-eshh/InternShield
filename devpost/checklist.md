@@ -20,7 +20,7 @@ This file tracks the final integrated v3 tree. Earlier slice-by-slice build chec
 
 - [x] `npm run lint` on final tree
 - [x] `npx tsc --noEmit` on final tree
-- [x] `npx vitest run` on final tree: 86 files, 1,253 tests
+- [x] `npx vitest run` on final tree: 86 files, 1,256 tests
 - [x] `npm run build` on final tree
 - [x] `npm run eval` on final tree: labeled 88/88; held-out 24/27
 - [x] Browser QA at desktop and phone widths, light/dark, keyboard, and reduced motion

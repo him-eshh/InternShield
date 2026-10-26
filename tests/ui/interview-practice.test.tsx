@@ -6,7 +6,7 @@ import { FeedbackCard, TestResults } from "@/components/interview/ReviewPanels";
 import CodingRound from "@/components/tiers/interview/CodingRound";
 import SqlRound from "@/components/tiers/interview/SqlRound";
 import { loadBank } from "@/lib/tiers/bank";
-import { advance, applyLocalReview, defaultConfig, endEarly, newPractice, submitAnswer, type PracticeState } from "@/lib/tiers/session";
+import { advance, applyLocalReview, buildSummary, defaultConfig, endEarly, newPractice, submitAnswer, type PracticeState } from "@/lib/tiers/session";
 import type { CodeAttempt, InterviewContext, InterviewSession } from "@/lib/tiers/types";
 
 vi.mock("@/lib/tiers/runner", () => ({ runCode: vi.fn(), runSql: vi.fn(), stopRunners: vi.fn(), preloadPython: vi.fn() }));
@@ -133,6 +133,37 @@ describe("Setup", () => {
 });
 
 describe("Summary", () => {
+  it("shows a trivial discussion answer as recorded without a quality grade", () => {
+    let s = newPractice(defaultConfig({ rounds: ["behavioral"], limit: { kind: "questions", count: 1 } }), context, { id: "recorded", now: 1, seed: 7 }, []);
+    s = advance(applyLocalReview(submitAnswer(s, "An answer", 5), 6), [], 7);
+    const out = html(<Summary state={s} onAgain={noop} onHome={noop} onOpenTracker={noop} />);
+    expect(out).toContain("Not scored");
+    expect(out).toContain("Answers without runnable results are recorded without a quality grade.");
+    expect(out).not.toContain("Solid");
+    expect(out).not.toContain("Build on these strengths");
+    const summary = buildSummary(s);
+    const legacy = {
+      ...summary, grounded: undefined,
+      rounds: [{ ...summary.rounds[0], band: "Strong" as const, note: "You doubled sales" }],
+      turns: summary.turns.map((t) => ({ ...t, level: "strong" as const, feedback: { ...t.feedback!, strength: "You doubled sales", improve: "You led ten teams", index: 0 }, followUps: [{ question: "How did you double sales?", answer: "My saved answer", note: "Strong leadership" }] })),
+      strengths: ["You doubled sales"], next: ["Lead ten teams"],
+    };
+    const older = html(<Summary summary={legacy} onAgain={noop} onHome={noop} onOpenTracker={noop} />);
+    expect(older).toContain("Not scored");
+    expect(older).not.toContain("You doubled sales");
+    expect(older).not.toContain("How did you double sales");
+    expect(older).not.toContain("Lead ten teams");
+    expect(older).toContain("My saved answer");
+    expect(older).not.toContain("Strong");
+  });
+  it("shows no band or axes for a coding answer with no runnable result", () => {
+    let s = newPractice(defaultConfig({ rounds: ["coding"], limit: { kind: "questions", count: 1 } }), context, { id: "no-tests", now: 1, seed: 7 }, []);
+    s = advance(applyLocalReview(submitAnswer(s, "I would loop over the input.", 5), 6), [], 7);
+    const out = html(<Summary state={s} onAgain={noop} onHome={noop} onOpenTracker={noop} />);
+    expect(out).toContain("Not scored");
+    expect(out).toContain("No runnable test result was recorded.");
+    expect(out).not.toContain("Strong");
+  });
   it("shows real numbers: answered, tests passed, time, per-round counts", () => {
     let s = answeredState("coding", { problemId: "count-vowels", language: "python", code: "x", passed: 5, total: 6 }, "Loop.");
     s = advance(s, [], 100_000);

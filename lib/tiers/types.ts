@@ -442,12 +442,14 @@ export interface SessionTurn {
 
 /** End-of-session summary (the celebration screen). */
 export interface SessionSummary {
+  /** Current grounded summary; absent on older saved sessions with model-written claims. */
+  grounded?: true;
   config: SessionConfig;
   turns: SessionTurn[];
   answered: number;
   skipped: number;
   /** Per-round band, rules-graded where possible. */
-  rounds: { round: RoundKind; band: ScoreBand; note: string; axes?: Scorecard["axes"] }[];
+  rounds: { round: RoundKind; band: ScoreBand | "Not scored"; note: string; axes?: Scorecard["axes"] }[];
   /** 2-3 concrete things to practice next. */
   next: string[];
   strengths?: string[];

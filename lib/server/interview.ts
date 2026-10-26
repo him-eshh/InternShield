@@ -386,9 +386,8 @@ export async function handleInterview(body: Record<string, unknown>): Promise<Re
     const followUp = (input.followUpsLeft ?? 0) > 0 && typeof rec.followUp === "string" ? cleanQuestion(rec.followUp) : "";
     const groundedFollowUp = followUp ? safeFollowUp(input.round) : "";
     const codeRatio = input.code && input.code.total > 0 ? input.code.passed / input.code.total : null;
-    const level = codeRatio !== null ? (codeRatio >= 1 ? "strong" : codeRatio < 0.5 ? "weak" : "ok")
-      : input.turns.at(-1)?.answer.trim() ? "ok" : "weak";
-    return done({ text: null, feedback: fb, followUp: groundedFollowUp || null, level });
+    const level = codeRatio !== null ? (codeRatio >= 1 ? "strong" : codeRatio < 0.5 ? "weak" : "ok") : null;
+    return done({ text: null, feedback: fb, followUp: groundedFollowUp || null, ...(level ? { level } : {}) });
   }
 
   const text = cleanQuestion(r.data, input.ask === "hint" ? MAX_HINT_CHARS : MAX_QUESTION_CHARS);

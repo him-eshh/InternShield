@@ -13,7 +13,7 @@ The Check client pipeline is in `lib/client/pipeline.ts`. Groq extraction runs t
 
 Resume parsing, editing, preview, and export are in `lib/client/resume*`, `lib/tiers/resume*`, and `components/resume`. AI suggests edits through `/api/rewrite`; client and server guards validate suggested lines. PDF cover-and-redraw may leave old text extractable beneath the new text. DOCX editing supports a narrower set of existing-word changes. Neither export is a redaction tool.
 
-Practice session planning and feedback are in `lib/tiers/session*`, `bank*`, `runner`, `sql`, and `sessionFeedback`; the UI is in `components/interview` and `components/tiers/interview`. Python, TypeScript, and SQL run in browser workers with pinned public-CDN runtime assets. Live questions, hints, and feedback use `/api/interview` when available; local pools and type-specific review keep a session usable when unavailable. The public question bank stores metadata only, with attribution in `data/question-bank/SOURCES.md`.
+Practice session planning and feedback are in `lib/tiers/session*`, `bank*`, `runner`, `sql`, and `sessionFeedback`; the UI is in `components/interview` and `components/tiers/interview`. Python, TypeScript, and SQL run in browser workers with pinned public-CDN runtime assets. Live questions, hints, and feedback use `/api/interview` when available; local pools and type-specific review keep a session usable when unavailable. Quality bands are shown only when runnable results were recorded; discussion rounds show “Not scored.” Older saved summaries remain readable, with earlier model-written feedback hidden. The public question bank stores metadata only, with attribution in `data/question-bank/SOURCES.md`.
 
 ## State and data flow
 

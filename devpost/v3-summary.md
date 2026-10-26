@@ -11,7 +11,7 @@ Status: **local gates and final-tree browser checks passed; release actions pend
 | Hard to navigate; no Home, nav, Profile, or clear next step | Separate routes, five-tab mobile navigation, Home continuation, optional Profile, Tracker, and context links between tools are implemented. | Final setup and shell browser checks passed |
 | Added answers seemed to have no effect | Check shows “What you added” and “What changed,” including score/level and named flag changes or an explicit unchanged result. Quick-question confirmations stay below the answer. | Final report matrix passed at 1440/390, light/dark |
 | UI felt generic and static | The latest design direction combines Levels (action hierarchy), Tetris (evidence/progress blocks), and Sketch (paper annotations), while keeping Check coral, Tailor teal, Practice violet, and separate risk colors. Reduced motion is supported in the implementation. | Final shell reduced-motion and 320/768 checks passed; representative final Home/report/Practice screenshots inspected |
-| Interview stopped after one question | Practice has a configurable continuous session, coding/SQL browser execution, behavioral feedback, follow-ups, recovery after refresh, and an end summary that can be saved to Tracker. | Final-tree five-answer browser matrix passed at 1440/390 light/dark, with real Python/SQL execution |
+| Interview stopped after one question | Practice has a configurable continuous session, coding/SQL browser execution, behavioral coaching, follow-ups, recovery after refresh, and an end summary that can be saved to Tracker. Discussion rounds are “Not scored”; runnable results determine quality bands. | Final-tree five-answer browser matrix passed at 1440/390 light/dark, with real Python/SQL execution |
 
 Retired flows: the one-screen Intro, hidden tier flags, finance round, design challenge, whiteboard, and single-round interview.
 
@@ -32,7 +32,7 @@ The screenshots are local, untracked artifacts. The final report matrix produced
 |---|---|---|
 | `npm run lint` | Pass | Final local tree |
 | `npx tsc --noEmit` | Pass | Final local tree |
-| `npx vitest run` | Pass | 86 files, 1,253 tests |
+| `npx vitest run` | Pass | 86 files, 1,256 tests |
 | `npm run build` | Pass | Final local tree |
 | `npm run eval` | Pass | Labeled 88/88; held-out 24/27 (misses ho-11, ho-15, ho-16) |
 | Final Check report matrix | Pass | 1440/390 light/dark; 56 shots |
@@ -59,7 +59,7 @@ The screenshots are local, untracked artifacts. The final report matrix produced
 - Browser Python, TypeScript, and SQL runtimes use pinned public-CDN assets; offline operation has not been established.
 - “Most asked at [company]” is a proxy based on historical public lists, not current employer frequency. Thin pools broaden with a notice.
 - The held-out Check evaluation misses 3 of 27 cases. Live interview feedback succeeded on one fabricated answer. Two live Tailor edit requests yielded no suggestions, so broader live provider quality and edit yield remain unproven.
-- Check explanations are built from scored flag reasons. Interview reviews discard model-written achievement and STAR claims; exact quotes prove occurrence, while coding scores come from browser test counts supplied to the server. This protects visible claims but limits personalized praise.
+- Check explanations are built from scored flag reasons. Interview reviews discard model-written achievement and STAR claims; exact quotes prove occurrence, while runnable scores come from browser test counts supplied to the server. Discussion answers are ungraded, and earlier saved summaries hide prior model prose. This protects visible claims but limits personalized praise.
 - Usage caps and caches live in server memory per instance. External provider quotas are separate; unavailable checks and feedback fallbacks must remain visible.
 - Multiple older `v3` commits contain private name or workstation-path text, although the current tree is sanitized. A broad path scan matched 24 commits; a narrower name/path scan matched seven. No key-shaped values were found in the branch's changed lines. A public release should use a clean snapshot based on `main`; a history-preserving merge would carry those older commits.
 

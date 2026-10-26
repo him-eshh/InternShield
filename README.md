@@ -6,7 +6,7 @@ Check a job or recruiter message, tailor a resume for the role, and practice an 
 
 - **Check:** paste a message or upload a screenshot, review the rule-based risk report, answer quick questions, and add information to see what changed. Company, posting, and sender checks show unavailable results explicitly.
 - **Tailor:** upload an original PDF or DOCX and review a small set of suggested line edits against the job posting. Accept, reject, preview, and download the edited document.
-- **Practice:** choose rounds and question count, then work through interview questions with coding, SQL, behavioral, and discussion feedback. Runnable questions execute in browser workers; test results lead the review.
+- **Practice:** choose rounds and question count, then work through coding, SQL, behavioral, and discussion questions. Runnable questions execute in browser workers and get test-based ratings; discussion answers receive coaching without a quality grade.
 - **Tracker and profile:** save application steps and optional preferences locally. A Check report or Practice summary can hand a role and company to the next tool.
 - AI extracts facts from the message, each with an exact quote.
 - Fixed rules score those facts. The AI never decides the score.

@@ -31,11 +31,23 @@ const followUpAnswer = (q) => /join|row|table|query|index|null/i.test(q)
     ? "I would test empty and duplicate inputs, compare actual output with expected output, and explain the time and space cost before comparing another approach."
     : "I would describe my own decision, measure the result, and explain what I learned or would change after feedback.";
 assert.match(followUpAnswer("Could joins produce duplicate rows?"), /duplicate keys/);
+const mockReview = (body) => {
+  if (body.ask === "hint") return done({ text: "Try an empty input and state the complexity.", feedback: null });
+  const code = body.code;
+  const tested = code?.total > 0;
+  const sqlRound = body.round === "sql";
+  const quote = body.turns.at(-1)?.answer?.split(/[,.]/)[0] ?? "";
+  const strength = tested ? sqlRound ? "Your query was checked against the expected result." : `Your code passed ${code.passed} of ${code.total} hidden tests.` : "Your answer includes the quoted excerpt.";
+  const improve = tested ? sqlRound ? "Explain how NULL values, joins, and grouping affect the expected rows." : "Walk through one edge case and explain the time and space costs." : "Go deeper on one decision: explain why you chose it and how you checked the outcome.";
+  const followUp = body.followUpsLeft === 2 ? sqlRound ? "How would your query handle NULL values?" : tested ? "Which edge case would you test next, and why?" : "What would you change next time, and why?" : null;
+  return done({ text: null, feedback: { summary: tested ? sqlRound ? "The query result matched the expected rows." : `${code.passed} of ${code.total} hidden tests passed.` : "Review the quoted answer and practice the suggested next step.", items: [{ index: body.turns.length - 1, strength, improve, quote, star: null }] }, ...(tested ? { level: code.passed === code.total ? "strong" : "ok" } : {}), followUp });
+};
+assert.match(JSON.parse(mockReview({ ask: "review", round: "coding", code: { passed: 6, total: 6 }, turns: [{ answer: "An answer" }], followUpsLeft: 2 }).body).data.feedback.items[0].strength, /6 of 6/);
 for (const v of all ? variants : [variants[0]]) {
   const t = tag(v); const { browser, page, log } = await open({ ...v, reducedMotion: "reduce" });
   const calls = await mockApi(page, {
     intel: (body) => done({ company: body.company, cached: true, interview: { rounds: ["Coding", "Behavioral", "SQL"], notes: ["Explain decisions and test edge cases."] }, values: ["Ownership"], sources: [{ label: "Official careers", url: "https://example.com/careers" }] }),
-    interview: (body) => body.ask === "hint" ? done({ text: "Try an empty input and state the complexity.", feedback: null }) : done({ text: null, feedback: { summary: "Practice feedback snapshot.", items: [{ index: body.turns.length - 1, strength: "You gave an answer to work from.", improve: "Add one specific way to verify your answer against the question.", quote: "", star: { situation: false, task: false, action: false, result: false } }] }, level: "ok", followUp: body.followUpsLeft === 2 ? "How would your approach change at ten times the scale?" : null }),
+    interview: mockReview,
   });
   try {
     await page.goto(BASE + "/practice", { waitUntil: "load", timeout: 90000 });

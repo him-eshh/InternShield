@@ -33,7 +33,7 @@ status: current-v3
 
 - Setup supports configurable rounds, difficulty, topics, language, and question/round count. When a company-specific pool is thin, it broadens to similar or general questions and says so.
 - “Most asked at [company]” is a ranking proxy from historical public lists. It is not measured interview frequency.
-- Code/SQL result checks run locally and are displayed before coaching. Server feedback can show an exact answer quote and test results, but model-written achievement claims and STAR ratings are discarded. Follow-ups use question-type prompts without assuming facts the candidate did not provide.
+- Code/SQL result checks run locally and are displayed before coaching. Only rounds with runnable results receive quality bands. Discussion answers are recorded and coached without a quality grade. Server feedback can show an exact answer quote and test results, but model-written achievement claims and STAR ratings are discarded. Follow-ups use question-type prompts without assuming facts the candidate did not provide.
 - A session resumes after refresh, can end early, and produces counts from actual turns. Model or intel limits trigger a visible local fallback.
 
 ## Privacy, accessibility, and constraints

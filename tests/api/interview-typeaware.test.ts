@@ -79,7 +79,7 @@ describe("question-type-aware review prompt (no live model: Groq is mocked)", ()
       improve: "Go deeper on one decision: explain why you chose it and how you checked the outcome.",
       star: null,
     });
-    expect(json.data.level).toBe("ok");
+    expect(json.data.level).toBeUndefined();
     expect(json.data.followUp).toBe("What would you change next time, and why?");
     expect(JSON.stringify(json.data.feedback)).not.toMatch(/led ten teams|doubled sales|verified results|failed to mention/i);
   });
@@ -99,7 +99,7 @@ describe("question-type-aware review prompt (no live model: Groq is mocked)", ()
       improve: "Go deeper on one decision: explain why you chose it and how you checked the outcome.",
       star: null,
     });
-    expect(json.data.level).toBe("ok");
+    expect(json.data.level).toBeUndefined();
     expect(json.data.followUp).toBe("What would you change next time, and why?");
     expect(JSON.stringify(json.data)).not.toMatch(/doubled sales|ten teams|better plan/i);
   });
