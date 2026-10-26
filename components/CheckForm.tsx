@@ -1,5 +1,5 @@
 "use client";
-import { MessageSquareText, ChevronRight, ClipboardPaste, X } from "lucide-react";
+import { MessageSquareText, ChevronRight, ClipboardPaste, ShieldCheck, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { autofill } from "@/lib/autofill";
 import { EXAMPLES } from "@/lib/examples";
@@ -242,7 +242,7 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
           </div>
         ) : (
           <button type="button" className={`${linkClass} !text-tool-strong mt-3 inline-flex min-h-11 items-center text-[15px]`} onClick={() => setShowFields(true)}>
-            Add details
+            Add sender and company
           </button>
         )}
 
@@ -250,7 +250,7 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
           <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 text-[15px] font-medium [&::-webkit-details-marker]:hidden">
             <ChevronRight size={16} aria-hidden="true" className="text-muted transition-transform motion-reduce:transition-none group-open:rotate-90" />
             <span>
-              Add context <span className="font-normal text-muted">(optional)</span>
+              More context <span className="font-normal text-muted">(optional)</span>
             </span>
             {contextSet > 0 && <FilledTag label={`${contextSet} set`} />}
           </summary>
@@ -298,7 +298,7 @@ export default function CheckForm({ initial, onSubmit }: { initial: CheckSubmit 
 
         <div className="mt-8 flex flex-col items-start gap-4">
           <button type="submit" className={`${btnPrimary} w-full sm:w-auto sm:min-w-56`} disabled={!!issue} aria-describedby={issue ? "submit-reason" : hint ? "message-hint" : undefined} title="Ctrl or Command + Enter">
-            Check this message
+            <ShieldCheck size={19} strokeWidth={1.75} aria-hidden="true" />Check this message
           </button>
           {issue && <p id="submit-reason" className="text-sm text-fg-2">{issue}</p>}
           <p className="text-sm text-fg-2">Press Ctrl or Command + Enter to check.</p>

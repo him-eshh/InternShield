@@ -27,20 +27,20 @@ describe("CheckForm (C8)", () => {
     const open = html.match(/<details[^>]*>/)?.[0] ?? "";
     expect(open).not.toBe("");
     expect(open).not.toMatch(/\sopen/);
-    expect(html).toContain("Add context");
+    expect(html).toContain("More context");
   });
 
-  it("hides sender and company until autofill or Add details", () => {
+  it("hides sender and company until autofill or Add sender and company", () => {
     const empty = renderToStaticMarkup(<CheckForm initial={null} onSubmit={noop} />);
     expect(empty).not.toContain('id="sender"');
     expect(empty).not.toContain('id="company"');
-    expect(empty).toContain("Add details");
+    expect(empty).toContain("Add sender and company");
 
     const init: CheckSubmit = { text: "x".repeat(40), form: { sender: "a@b.com", company: "Acme" }, source: null, stage: null, exampleId: null };
     const filled = renderToStaticMarkup(<CheckForm initial={init} onSubmit={noop} />);
     expect(filled).toContain('id="sender"');
     expect(filled).toContain('id="company"');
-    expect(filled).not.toContain("Add details");
+    expect(filled).not.toContain("Add sender and company");
   });
 
   it("never uses verdict words", () => {
