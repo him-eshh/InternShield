@@ -31,6 +31,7 @@ This file tracks the final integrated v3 tree. Earlier slice-by-slice build chec
 - [x] Bounded live smoke: fabricated extraction and interview feedback succeeded with source quotes; wrong Origin returned 403. Initial fabricated Tailor requests returned zero suggestions that passed the checks; after prompt refinement, a fabricated one-page PDF completed the real browser flow with three guarded suggestions and a downloaded PDF. Other live routes were not exercised.
 - [x] Final documentation, source attribution, and full isolated-snapshot history/tree secret and private-path scan
 - [x] Verified [submission fact sheet](submission-draft.md) and fabricated-data [demo storyboard](demo-storyboard.md) prepared for owner review
+- [x] Captured a silent local demo draft with fictional inputs, live Check and Tailor API responses, and 6 of 6 runnable Practice tests
 - [ ] Owner final review of the app and screenshots; complete the Devpost Learn code tour and app map with the owner
 
 ## Build With AI: Basics submission
@@ -40,7 +41,7 @@ The [official rules](https://learn-ai-basics.devpost.com/rules) set a deadline o
 - [ ] Publish only the isolated root snapshot in a public GitHub/GitLab/Bitbucket repository, without the older private-path history
 - [ ] Confirm the public repository opens without authentication and contains the source, assets, run instructions, `scope.md`, `prd.md`, and `spec.md`
 - [ ] Choose and add a visible open-source license if the owner agrees (recommended by the event rules)
-- [ ] Record the working app with fabricated data; review every frame for private content and verify the video is under three minutes
+- [ ] Owner reviews the local draft or final recording for private content and verifies the final video is under three minutes
 - [ ] Upload the video publicly to YouTube or Vimeo and verify the link without authentication
 - [ ] Owner writes the project name, short description, a short explanation of Devpost Learn Skill Pack use, other required fields, and exit-survey answers in their own words; owner answers the age-of-majority checkbox
 - [ ] Put the public repository URL in Devpost's “Try it out” field and verify the submitted form retains it

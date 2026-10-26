@@ -1,6 +1,6 @@
 # InternShield v3 handoff
 
-Status: **local gates and final-tree browser checks passed; release actions pending**. Check, Tailor, Practice, setup, and shell browser checks passed on the integrated tree. Fabricated live extraction, interview feedback, and resume-edit requests were checked. The app has not been merged into `main`, pushed, deployed, recorded for demo, or submitted. Current product requirements: [scope](scope.md), [PRD](prd.md), [spec](spec.md); completion items: [checklist](checklist.md).
+Status: **local gates and final-tree browser checks passed; release actions pending**. Check, Tailor, Practice, setup, and shell browser checks passed on the integrated tree. Fabricated live extraction, interview feedback, and resume-edit requests were checked. A silent local demo draft was recorded with fictional data; the app has not been merged into `main`, pushed, deployed, published on video, or submitted. Current product requirements: [scope](scope.md), [PRD](prd.md), [spec](spec.md); completion items: [checklist](checklist.md).
 
 ## What changed from v2
 
@@ -68,7 +68,7 @@ The full screenshot matrices are local, untracked artifacts; four representative
 
 - Review the final screenshots and the clean single-commit root snapshot. The existing private repository retains older private-path history; do not make it public or merge `v3`/`main` into the snapshot.
 - Recheck the snapshot's full tree and history, then publish it in a separate public repository with the source, planning documents, assets, and run instructions. The owner chooses whether to add the event's recommended open-source license.
-- Record a demo of the working app with fabricated inputs. Keep it under three minutes, upload it publicly to YouTube or Vimeo, and verify the link without signing in. A local app recording is sufficient under the [event rules](https://learn-ai-basics.devpost.com/rules).
+- Review the 57-second local demo draft in ignored `images/internshield-demo-draft.webm`, then prepare the final video. Keep it under three minutes, upload it publicly to YouTube or Vimeo, and verify the link without signing in. A local app recording is sufficient under the [event rules](https://learn-ai-basics.devpost.com/rules).
 - Have the owner write the project name, short description, other form answers, and exit survey in their own words. Use the [submission fact sheet](submission-draft.md) for verified details and the [demo storyboard](demo-storyboard.md) for recording mechanics.
 - Submit on Devpost before October 26, 2026 at 5:00 PM ET, then record the actual link and date in the [checklist](checklist.md).
 - Optional deployment: if the owner wants a live app, configure server-only keys and `ALLOWED_ORIGINS`, add shared abuse controls for public traffic, deploy, and smoke-test it. Do not expose keys in client variables or submission materials. Deployment does not replace the required video.

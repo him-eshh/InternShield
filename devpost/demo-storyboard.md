@@ -5,7 +5,7 @@ status: ready-to-record
 
 # InternShield demo storyboard (about 2½ minutes)
 
-**Recording state:** script prepared; video not recorded. Use a fresh browser profile and only the built-in made-up examples and fabricated resume/job text. Check the final capture for private tabs, notifications, browser autofill, local history, and credentials before sharing.
+**Recording state:** a 57-second silent local draft was recorded with a fresh browser context, the built-in made-up Check example, a fictional resume and posting, and live API responses. It shows a guarded Tailor edit accepted and a Practice answer passing 6 of 6 runnable tests. The draft is local only at ignored `images/internshield-demo-draft.webm`; final owner review and public upload are pending. Check the final capture for private tabs, notifications, browser autofill, local history, and credentials before sharing.
 
 | Time | On screen | Say |
 |---|---|---|
@@ -26,4 +26,4 @@ status: ready-to-record
 - Show “Not scored” for discussion and a test-based result for coding/SQL.
 - Add captions, verify readable phone-size text, and check audio before upload.
 - Keep the final video under three minutes, upload it publicly to YouTube or Vimeo, and verify it without signing in. [Event rules](https://learn-ai-basics.devpost.com/rules).
-- Final video link: **[pending recording and owner review]**.
+- Final video link: **[pending owner review and public upload]**.
