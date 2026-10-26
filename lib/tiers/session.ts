@@ -168,7 +168,7 @@ function difficultyFor(s: PracticeState): "easy" | "medium" | "hard" {
   return s.config.difficulty === "mixed" ? LEVELS[Math.min(2, Math.max(0, s.level))] : s.config.difficulty;
 }
 const practiceLevel = (s: PracticeState) => s.config.difficulty === "mixed"
-  ? (s.context.level ? PROFILE_LEVEL[s.context.level] : s.level)
+  ? ((s.context.level && PROFILE_LEVEL[s.context.level]) ?? s.level)
   : LEVELS.indexOf(s.config.difficulty);
 const levelNote = (s: PracticeState) => `Made-up runnable exercise selected for ${LEVELS[practiceLevel(s)]} practice; it is not claimed to come from ${s.context.company ?? "an employer"}.`;
 function byLevel<T extends { id: string }>(items: T[], level: number): T[] {

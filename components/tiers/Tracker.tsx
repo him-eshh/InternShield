@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type DragEvent, type FormEvent, type Keybo
 import { addCard, loadCards, moveCard, removeCard, saveCards, updateDescription, updateNotes } from "@/lib/tiers/tracker";
 import { MAX_JOB_CHARS, TRACKER_COLUMNS, type TrackerCard, type TrackerColumn } from "@/lib/tiers/types";
 import { LEVEL_LABELS, type RiskLevel } from "@/lib/types";
-import { CircleAlert, CircleCheck, TriangleAlert, SquareKanban } from "lucide-react";
+import { Bookmark, CalendarClock, CircleAlert, CircleCheck, CircleCheckBig, Send, TriangleAlert } from "lucide-react";
 import { EmptyIllustration } from "../illustrations";
 import { ArrowLeftIcon, ExternalIcon } from "../icons";
 import { btnPrimary, card as cardCls, chip, fieldInput, linkClass } from "../ui";
@@ -21,6 +21,8 @@ const EMPTY: Record<string, string> = {
   interviewing: "Got an interview? Move it here to practice for it.",
   interviewed: "Finished an interview? Keep the application here while you wait.",
 };
+
+const COL_ICON = { saved: Bookmark, applied: Send, interviewing: CalendarClock, interviewed: CircleCheckBig } as const;
 
 /** Display fallback only; never stored. */
 const nameOf = (c: TrackerCard) => c.company.trim() || "Untitled application";
@@ -195,7 +197,7 @@ export default function Tracker({
           <div>
             <h2 className="font-display text-[24px] font-bold">Your next move starts here</h2>
             <p className="mt-1 max-w-[42ch] text-[16px] text-fg-2">Nothing tracked yet. Save a job from Check or add one to remember your next move.</p>
-            <a href="#add-application" className={`${linkClass} mt-2 inline-flex min-h-11 items-center font-semibold`}>Add an application</a>
+            <a href="#add-application" className={`${btnPrimary} mt-3`}>Add an application</a>
           </div>
         </div>
       )}
@@ -206,7 +208,7 @@ export default function Tracker({
           return (
             <section key={col.id} aria-labelledby={`col-${col.id}`} onDragOver={(e) => e.preventDefault()} onDrop={(e) => drop(e, col.id)} className="min-w-0 border-l border-rule bg-paper-2/30 px-3 pb-3">
               <h2 id={`col-${col.id}`} className="flex items-center gap-2 font-display text-[18px] font-bold">
-                <SquareKanban size={18} strokeWidth={1.75} aria-hidden="true" className="text-ink-strong" />
+                {(() => { const ColIcon = COL_ICON[col.id]; return <ColIcon size={18} strokeWidth={1.75} aria-hidden="true" className="text-ink-strong" />; })()}
                 {col.label}
                 <span className="text-[15px] font-normal text-muted">
                   <span className="sr-only">, </span>
