@@ -521,7 +521,14 @@ function sessionCard(round: RoundKind, turns: SessionTurn[]) {
   const inner = innerFor(round, turns);
   if (round === "sql" && inner.code) {
     const card = buildScorecard({ ...inner, round: "coding", turns: inner.turns.map((t) => ({ ...t, answer: t.answer.replace("\n\nQuery:\n", "\n\nCode:\n") })) });
-    return card ? { ...card, axes: card.axes.map((a) => a.id === "coding" ? { ...a, label: "Query correctness" } : a), ...(inner.code.passed < inner.code.total ? { nextDrill: "Compare your query result with the expected rows; check joins, NULLs and duplicate rows." } : {}) } : null;
+    if (!card) return null;
+    const matched = inner.code.passed >= inner.code.total;
+    // The coding card's tips talk about hidden tests and O(n); say them in query terms.
+    const axes = card.axes.map((a) => a.id === "coding" ? { ...a, label: "Query correctness", evidence: [matched ? "Result matched the expected rows" : "Result did not match the expected rows"] } : a);
+    const nextDrill = !matched ? "Compare your query result with the expected rows; check joins, NULLs and duplicate rows."
+      : card.nextDrill?.includes("time complexity") ? "Write your plan in two or three sentences (tables, joins, filters, grouping) before the query."
+      : card.nextDrill;
+    return { ...card, axes, ...(nextDrill ? { nextDrill } : {}) };
   }
   return buildScorecard(inner);
 }

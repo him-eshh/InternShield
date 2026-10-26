@@ -95,7 +95,7 @@ describe("question-type-aware review prompt (no live model: Groq is mocked)", ()
     expect(json.data.feedback.summary).toBe("Review the quoted answer and practice the suggested next step.");
     expect(json.data.feedback.items[0]).toMatchObject({
       quote: "An answer",
-      strength: "Your answer includes the quoted excerpt.",
+      strength: "Start from this line of your answer; the tip below builds on it.",
       improve: "Go deeper on one decision: explain why you chose it and how you checked the outcome.",
       star: null,
     });

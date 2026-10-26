@@ -313,7 +313,7 @@ function groundFeedback(fb: InterviewFeedback, round: InterviewRound, code: Code
         index: item.index,
         quote: item.quote,
         strength: tested && item.index === lastIndex ? result
-          : item.quote ? "Your answer includes the quoted excerpt." : "A specific strength could not be verified from this answer.",
+          : item.quote ? "Start from this line of your answer; the tip below builds on it." : "A specific strength could not be verified from this answer.",
         improve: practiceStep(round),
         star: null,
       };

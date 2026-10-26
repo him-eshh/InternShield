@@ -266,7 +266,7 @@ describe("v3 per-answer review", () => {
     expect(json.data.followUp).toBe("What would you change next time, and why?");
     expect(json.data.level).toBeUndefined();
     expect(json.data.feedback.summary).toBe("Review the quoted answer and practice the suggested next step.");
-    expect(json.data.feedback.items[0].strength).toBe("Your answer includes the quoted excerpt.");
+    expect(json.data.feedback.items[0].strength).toBe("Start from this line of your answer; the tip below builds on it.");
     expect(json.data.feedback.items).toHaveLength(1);
     expect(h.create).toHaveBeenCalledTimes(1);
   });

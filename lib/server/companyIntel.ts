@@ -75,7 +75,7 @@ const SCHEMA = {
 const SYSTEM = `You read web search snippets about one company and pull out short, factual claims useful to a student.
 Fields: "round" (one interview stage, e.g. "Recruiter phone screen"), "interviewNote" (how they interview),
 "emphasis" (what their resumes should show), "resumeNote" (resume advice they give), "value" (a stated company value).
-Each claim: under 15 words, plain English, stated in the snippet, and "source" = the snippet number it came from.
+Each claim: under 15 words, copied word for word from the snippet (an exact phrase, no paraphrase), and "source" = the snippet number it came from.
 Skip anything not in the snippets, any person's name, and rumors. Return {"claims": []} if nothing fits.`;
 
 const clean = (s: string) => s.replace(/\s+/g, " ").trim().slice(0, 140);
@@ -160,6 +160,7 @@ export async function companyIntel({ company: rawCompany, role: rawRole, kind }:
   if (!g.ok) return limited(officialSite); // not cached: try again later
 
   const data = shape(company, kind, officialSite, usable, g.data);
-  cacheSet(key, data, TTL);
+  // An empty result (every claim failed the evidence check) is not cached: the next try may do better.
+  if (data.sources.length) cacheSet(key, data, TTL);
   return data;
 }
