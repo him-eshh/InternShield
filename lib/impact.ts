@@ -105,6 +105,9 @@ export function impactLines(impact: AnswerImpact): ImpactLine[] {
   const lines: ImpactLine[] = [
     ...impact.added.map((f): ImpactLine => ({ tone: "new", text: `${f.kind === "red" ? "New warning sign" : "New good sign"}: ${f.title}` })),
     ...groupRemoved(impact.removed),
+    ...(impact.removed.some((f) => f.kind === "good") && impact.scoreAfter > impact.scoreBefore
+      ? [{ tone: "none", text: "Good signs never outweigh a request for money or private data, so they stop lowering the score" } as ImpactLine]
+      : []),
     ...impact.changed.map((f): ImpactLine => ({ tone: "weight", text: `${f.title} now counts for ${f.after > f.before ? "more" : "less"}` })),
   ];
   return lines.length ? lines : [{ tone: "none", text: "Nothing new turned up, so the evidence stays as it was." }];

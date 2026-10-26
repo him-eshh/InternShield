@@ -289,7 +289,7 @@ export default function ProfilePage() {
           aria-valuetext={`${prog.count} of ${prog.total} done`}
           className="flex flex-1 gap-1"
         >
-          {STEPS.map((step) => <span key={step.id} aria-hidden="true" className={`h-3 min-w-0 flex-1 rounded-[2px] ${prog.done[step.id] ? "bg-ink" : "bg-sunken"}`} />)}
+          {STEPS.map((step, i) => <span key={step.id} aria-hidden="true" className={`h-3 min-w-0 flex-1 rounded-[2px] ${i < prog.count ? "bg-ink" : "bg-sunken"}`} />)}
         </div>
       </div>
 

@@ -528,7 +528,14 @@ function sessionCard(round: RoundKind, turns: SessionTurn[]) {
 /** Discussion answers are recorded without a quality grade; runnable rounds use checked results. */
 function roundBand(round: RoundKind, turns: SessionTurn[]): { band: ScoreBand | "Not scored"; note: string } {
   const answered = turns.filter((t) => !t.skipped);
-  if (!CODE_ROUNDS.includes(round)) return { band: "Not scored", note: answered.map((t) => t.feedback?.improve).find(Boolean) ?? "Review one decision and how you checked its outcome." };
+  if (!CODE_ROUNDS.includes(round)) {
+    const note = answered.map((t) => t.feedback?.improve).find(Boolean);
+    const levels = answered.flatMap((t) => (t.level ? [["strong", "ok", "weak"].indexOf(t.level)] : []));
+    // Discussion rounds get the AI's per-answer level (structure, specifics, outcome); no level means the AI never answered.
+    if (!levels.length) return { band: "Not scored", note: note ?? (answered.length ? "Feedback unavailable - AI was offline." : "Every question was skipped.") };
+    const band = BAND_ORDER[Math.min(2, Math.round(levels.reduce((a, b) => a + b, 0) / levels.length))];
+    return { band, note: note ?? "Review one decision and how you checked its outcome." };
+  }
   if (!turns.some((t) => (t.code?.total ?? 0) > 0)) return { band: "Not scored", note: "No runnable test result was recorded." };
   if (!answered.length) return { band: "Not yet", note: "Every question was skipped." };
   const card = sessionCard(round, turns);

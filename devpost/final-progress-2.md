@@ -42,3 +42,6 @@ Dev server on 3502 pre-existing from earlier session (node listening on 3502; st
 - Shots refreshed (117 in final2/). practice-ERROR-* are stale failures from the old `all` script (cm-content wait); practice-question-hard/summary/etc. come from final2-practice.mjs and exist in all 4 variants.
 - Reviewed home-returning-1440-light and practice-summary-1440-dark: fine.
 - Next: gates (lint, tsc, vitest, build, eval), stop 3502 dev server, final-summary-2.md at/after 07:35.
+
+## Coder review 7:00 AM (REQUIRED): R1-R7 at the end of .git/internshield-relay/final-brief-fix2.md - read and do them now.
+- [ ] R1 profile bar order  - [ ] R2 nav Display menu  - [ ] R3 tailor toast/bar  - [ ] R4 QQ good-signs logic  - [ ] R5 behavioral scoring  - [ ] R6 ERROR shots  - [ ] R7 viewport shots

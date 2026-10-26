@@ -12,7 +12,7 @@ const OPTIONS: { value: MotionPref; label: string; Icon: typeof Monitor }[] = [
 ];
 
 /** Motion setting: System follows the OS, On always animates, Reduced never does. Saved locally; the head script applies it before paint. */
-export default function MotionToggle({ compact = false }: { compact?: boolean }) {
+export default function MotionToggle({ compact = false, inline = false }: { compact?: boolean; inline?: boolean }) {
   const pref = useMotionPref();
   const menu = useRef<HTMLDetailsElement>(null);
 
@@ -28,6 +28,13 @@ export default function MotionToggle({ compact = false }: { compact?: boolean })
 
   const active = OPTIONS.find((o) => o.value === pref) ?? OPTIONS[0];
 
+  const list = OPTIONS.map(({ value, label, Icon }) => (
+    <button key={value} type="button" aria-pressed={pref === value} onClick={() => choose(value)} className={`flex min-h-11 w-full items-center gap-2 rounded-[4px] px-3 text-left text-sm hover:bg-bg-subtle ${pref === value ? "bg-ink-tint font-semibold text-ink-strong" : "text-fg"}`}>
+      <Icon size={17} aria-hidden="true" />{label}
+    </button>
+  ));
+  if (inline) return <div role="group" aria-label="Motion">{list}</div>;
+
   return (
     <details ref={menu} className="group relative inline-block">
       <summary aria-label={`Motion: ${active.label}. Choose animation setting`} className="inline-flex min-h-11 min-w-11 cursor-pointer list-none items-center justify-center gap-2 rounded-full border border-border-strong bg-paper-2 px-3 text-fg [&::-webkit-details-marker]:hidden">
@@ -36,11 +43,7 @@ export default function MotionToggle({ compact = false }: { compact?: boolean })
         <ChevronDown size={15} aria-hidden="true" className={`transition-transform group-open:rotate-180 ${compact ? "hidden xl:block" : ""}`} />
       </summary>
       <div role="group" aria-label="Motion" className="absolute right-0 z-50 mt-2 min-w-44 rounded-[6px] border border-rule bg-paper-2 p-2 shadow-[var(--shadow-2)]">
-        {OPTIONS.map(({ value, label, Icon }) => (
-          <button key={value} type="button" aria-pressed={pref === value} onClick={() => choose(value)} className={`flex min-h-11 w-full items-center gap-2 rounded-[4px] px-3 text-left text-sm hover:bg-bg-subtle ${pref === value ? "bg-ink-tint font-semibold text-ink-strong" : "text-fg"}`}>
-            <Icon size={17} aria-hidden="true" />{label}
-          </button>
-        ))}
+        {list}
         <p className="px-3 pb-1 pt-2 text-xs text-fg-2">System follows your device. On plays animations even if your device asks for less.</p>
       </div>
     </details>
