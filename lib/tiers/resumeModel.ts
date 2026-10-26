@@ -67,7 +67,8 @@ export function buildDoc(rows: RawRow[], pageCount: number, source: ResumeSource
       row.bodyX !== undefined &&
       lastBodyX !== null &&
       lastY !== null &&
-      Math.abs(row.bodyX - lastBodyX) <= 2 &&
+      // Word-exported PDFs often hang wrapped rows ~3pt left of the bullet's first word.
+      Math.abs(row.bodyX - lastBodyX) <= Math.max(2, row.box.h * 0.4) &&
       lastY - row.box.y > 0 &&
       lastY - row.box.y <= row.box.h * 1.9 &&
       row.pageIndex === prev.pageIndex;

@@ -69,6 +69,22 @@ describe("v3 rewrite route enforces edits guard", () => {
     expect((await call(data)).status).toBe(400);
     expect(h.call).not.toHaveBeenCalled();
   });
+  it("retries once with the failed checks when every draft fails, and still guards the retry", async () => {
+    h.call
+      .mockResolvedValueOnce({ ok: true, data: JSON.stringify({ edits: [{ lineId, proposed: "Built a club website with JavaScript." }] }) })
+      .mockResolvedValueOnce({ ok: true, data: JSON.stringify({ edits: [{ lineId, proposed: "Built a club website using JavaScript." }] }) });
+    expect((await (await call()).json()).data.edits).toHaveLength(1);
+    expect(h.call.mock.calls[1][1].user).toContain(`${lineId}: unchanged`);
+    h.call.mockReset();
+    h.call.mockResolvedValue({ ok: true, data: JSON.stringify({ edits: [{ lineId, proposed: "Built a club website with Rust." }] }) });
+    expect((await (await call()).json()).data.edits).toEqual([]);
+    expect(h.call).toHaveBeenCalledTimes(2);
+  });
+  it("marks a wrapped PDF bullet whose sentence continues on the next printed line", async () => {
+    h.call.mockResolvedValue({ ok: true, data: JSON.stringify({ edits: [] }) });
+    await call({ ...body, resume: "Sam Rivera\nEXPERIENCE\n- Built a club website with JavaScript and\nReact for 12 members.\nSKILLS\nPython" });
+    expect(h.call.mock.calls[0][1].user).toContain('"continuesOnNextLine":true');
+  });
   it("keeps Word layout by permitting deletions, never new or reordered words", async () => {
     h.call.mockResolvedValueOnce({ ok: true, data: JSON.stringify({ edits: [{ lineId, proposed: "Built a club website using JavaScript." }] }) });
     expect((await (await call({ ...body, source: "docx" })).json()).data.edits).toEqual([]);
